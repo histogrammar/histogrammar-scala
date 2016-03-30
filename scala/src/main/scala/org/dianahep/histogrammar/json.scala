@@ -21,17 +21,6 @@ package object json {
     while (p.remaining >= 1  &&  (p.get == ' '  ||  p.get == '\t'  ||  p.get == '\n'  ||  p.get == '\r'))
       p.update(1)
   }
-
-  def parse(str: String): Option[Json] = {
-    val p = ParseState(str)
-    whitespace(p)
-    val out = Json.parse(p)
-    whitespace(p)
-    if (p.done)
-      out
-    else
-      None
-  }
 }
 
 package json {
@@ -56,7 +45,16 @@ package json {
 
   sealed trait Json
   object Json {
-    def parse(str: String): Option[Json] = parse(ParseState(str))
+    def parse(str: String): Option[Json] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = Json.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[Json] =
       (JsonNull.parse(p) orElse
         JsonTrue.parse(p) orElse
@@ -71,7 +69,16 @@ package json {
 
   case object JsonNull extends JsonPrimitive {
     def stringify = "null"
-    def parse(str: String): Option[JsonNull.type] = parse(ParseState(str))
+    def parse(str: String): Option[JsonNull.type] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = JsonNull.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[JsonNull.type] =
       if (p.remaining >= 4  &&  p.get(4) == "null") {
         p.update(4)
@@ -92,7 +99,16 @@ package json {
 
   case object JsonTrue extends JsonBoolean {
     def stringify = "true"
-    def parse(str: String): Option[JsonBoolean] = parse(ParseState(str))
+    def parse(str: String): Option[JsonBoolean] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = JsonTrue.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[JsonBoolean] =
       if (p.remaining >= 4  &&  p.get(4) == "true") {
         p.update(4)
@@ -104,7 +120,16 @@ package json {
 
   case object JsonFalse extends JsonBoolean {
     def stringify = "false"
-    def parse(str: String): Option[JsonBoolean] = parse(ParseState(str))
+    def parse(str: String): Option[JsonBoolean] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = JsonFalse.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[JsonBoolean] =
       if (p.remaining >= 5  &&  p.get(5) == "false") {
         p.update(5)
@@ -122,7 +147,16 @@ package json {
       case _ => None
     }
 
-    def parse(str: String): Option[JsonNumber] = parse(ParseState(str))
+    def parse(str: String): Option[JsonNumber] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = JsonNumber.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[JsonNumber] =
       if (!p.done  &&  (('0' <= p.get  &&  p.get <= '9')  ||  p.get == '-')) {
         p.save()
@@ -193,7 +227,16 @@ package json {
     }
   }
   object JsonString {
-    def parse(str: String): Option[JsonString] = parse(ParseState(str))
+    def parse(str: String): Option[JsonString] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = JsonString.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[JsonString] =
       if (!p.done  &&  p.get == '"') {
         p.save()
@@ -254,10 +297,20 @@ package json {
   }
 
   case class JsonArray(elements: Json*) extends JsonContainer {
+    override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
     def stringify = "[" + elements.map(_.toString).mkString(", ") + "]"
   }
   object JsonArray {
-    def parse(str: String): Option[JsonArray] = parse(ParseState(str))
+    def parse(str: String): Option[JsonArray] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = JsonArray.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[JsonArray] =
       if (!p.done  &&  p.get == '[') {
         p.update(1)
@@ -301,10 +354,20 @@ package json {
   }
 
   case class JsonObject(pairs: (JsonString, Json)*) extends JsonContainer {
+    override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
     def stringify = "{" + pairs.map({case (k, v) => k.toString + ": " + v.toString}).mkString(", ") + "}"
   }
   object JsonObject {
-    def parse(str: String): Option[JsonObject] = parse(ParseState(str))
+    def parse(str: String): Option[JsonObject] = {
+      val p = ParseState(str)
+      whitespace(p)
+      val out = JsonObject.parse(p)
+      whitespace(p)
+      if (p.done)
+        out
+      else
+        None
+    }
     def parse(p: ParseState): Option[JsonObject] =
       if (!p.done  &&  p.get == '{') {
         p.update(1)

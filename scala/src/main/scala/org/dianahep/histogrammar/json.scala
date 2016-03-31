@@ -35,6 +35,9 @@ package object json {
 }
 
 package json {
+  class InvalidJsonException(str: String) extends Exception(s"invalid JSON: $str")
+  class JsonFormatException(json: Json, context: String) extends Exception(s"wrong JSON format for $context: $json")
+
   case class ParseState(str: String, var pos: Int = 0) {
     private var stack = List[Int]()
     def save() {
@@ -304,8 +307,8 @@ package json {
   case class JsonArray(elements: Json*) extends JsonContainer {
     override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
     def stringify = "[" + elements.map(_.toString).mkString(", ") + "]"
-    def all[T <: Json] = elements.forall(_.isInstance[T])
-    def any[T <: Json] = elements.exists(_.isInstance[T])
+    // def all[T <: Json] = elements.forall({case x: T => true; case _ => false})
+    // def any[T <: Json] = elements.exists({case x: T => true; case _ => false})
     def to[T <: Json] = elements.map(_.asInstanceOf[T])
   }
   object JsonArray {
@@ -356,8 +359,8 @@ package json {
   case class JsonObject(pairs: (JsonString, Json)*) extends JsonContainer {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
     def stringify = "{" + pairs.map({case (k, v) => k.toString + ": " + v.toString}).mkString(", ") + "}"
-    def all[T <: Json] = pairs.forall(_._2.isInstance[T])
-    def any[T <: Json] = pairs.exists(_._2.isInstance[T])
+    // def all[T <: Json] = pairs.forall(_._2.isInstanceOf[T])
+    // def any[T <: Json] = pairs.exists(_._2.isInstanceOf[T])
     def to[T <: Json] = pairs.map({case (k, v) => (k.value, v.asInstanceOf[T])})
   }
   object JsonObject {

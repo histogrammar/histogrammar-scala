@@ -1,25 +1,36 @@
 package org.dianahep
 
 import scala.language.implicitConversions
+import scala.reflect.runtime.universe.Type
+import scala.reflect.runtime.universe.WeakTypeTag
+import scala.reflect.runtime.universe.weakTypeOf
 
 import org.dianahep.histogrammar.json._
 
 package object histogrammar {
-  type Weighting[DATUM] = Weighted[DATUM] => Double
-
   implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
   implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}
 
-  implicit def filterToWeighting[WEIGHTED <: Weighted[_]](filter: WEIGHTED => Boolean) = {x: WEIGHTED => if (filter(x)) 1.0 else 0.0}
-  implicit def noWeighting[DATUM] = {x: Weighted[DATUM] => 1.0}
-  def identity[DATUM](x: DATUM) = x
+  type Selection[DATUM] = Weighted[DATUM] => Double
+  implicit def filterToSelection[DATUM](filter: Weighted[DATUM] => Boolean): Selection[DATUM] =
+    {x: Weighted[DATUM] => if (filter(x)) 1.0 else 0.0}
 
-  AggregatorFactory.register(Count)
-  AggregatorFactory.register(Binned)
+  type ToNumeric[DATUM] = Weighted[DATUM] => Double
+  type ToCategory[DATUM] = Weighted[DATUM] => String
+
+  implicit def uncut[DATUM] = {x: Weighted[DATUM] => 1.0}
+  def identity[DATUM](x: DATUM): DATUM = x
+
+  Factory.register(Count)
 }
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// utility classes
+
+  case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0) {
+    def reweight(w: Double): Weighted[DATUM] = copy(weight = weight*w)
+    def nonzero = weight != 0.0
+  }
 
   case class Cache[DOMAIN, RANGE](function: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
     private var last: Option[(DOMAIN, RANGE)] = None
@@ -34,176 +45,256 @@ package histogrammar {
     def clear() { last = None }
   }
 
-  case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0) {
-    def *(w: Double): Weighted[DATUM] = copy(weight = weight*w)
-  }
+  class AggregatorException(message: String, cause: Exception = null) extends Exception(message, cause)
 
-  //////////////////////////////////////////////////////////////// general definition of an aggregator/container
+  //////////////////////////////////////////////////////////////// general definition of an container/aggregator
 
-  trait AggregatorFactory[T <: Aggregator[_, _]] {
+  // creates aggregators (from provided functions) and containers (from JSON); names are infinitive (no ending)
+  trait Factory {
     def name: String
-    def prototype: T
-    def fromJson(str: String) = Json.parse(str) match {
+
+    def fromJson(str: String): Container[_] = Json.parse(str) match {
       case Some(json) => fromJson(json)
-      case None => throw new IllegalArgumentException(s"could not parse JSON: $str")
+      case None => throw new InvalidJsonException(str)
     }
-    def fromJson(json: Json): T
+    def fromJson(json: Json): Container[_]
   }
-  object AggregatorFactory {
-    private var known = Map[String, AggregatorFactory[_]]()
-    def register(factory: AggregatorFactory[_]) {
-      known = known.update(factory.name, factory)
+  object Factory {
+    private var known = Map[String, Factory]()
+    def register(factory: Factory) {
+      known = known.updated(factory.name, factory)
     }
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
-      case None => throw new IllegalArgumentException(s"not a known type of aggregator: $name")
+      case None => throw new AggregatorException(s"unrecognized aggregator (is it a custom aggregator that hasn't been registered?): $name")
     }
   }
 
-  trait Aggregator[DATUM, SELF] {
-    def apply(x: Weighted[DATUM]): Unit
-    def copy: SELF
-    def +(that: SELF): SELF
-    def weighting: Weighting[DATUM]
+  // immutable container of data; the result of an aggregation; names are past-tense (-ed)
+  trait Container[CONTAINER <: Container[CONTAINER]] extends Serializable {
+    def factory: Factory
 
-    def constructor: String
-    def state: String
+    def +(that: CONTAINER): CONTAINER
 
     def toJson: Json
-    def factory: AggregatorFactory[SELF]
-
-    override def toString() = s"$name($constructor)($state)"
+    override def toString() = s"${factory.name}($toStringParams)"
+    def toStringParams: String
   }
 
-  trait Container[DATUM, SELF, SUB <: Aggregator[DATUM, SUB]] extends Aggregator[DATUM, SELF]
+  // mutable aggregator of data; produces a container; names are gerunds (-ing)
+  trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Container[CONTAINER] {
+    def datumType: Type
+    def selection: Selection[DATUM]
 
-  //////////////////////////////////////////////////////////////// specific aggregators
+    def fill(x: Weighted[DATUM])
 
-  class Count[DATUM]
-             (val weighting: Weighting[DATUM])
-             (var value: Double = 0.0)
-             extends Aggregator[DATUM, Count[DATUM]] {
-    def apply(x: Weighted[DATUM]) {
-      val y = x * weighting(x)
+    def fix: CONTAINER
+
+    // satisfy Container[CONTAINER] contract by passing everything through fix
+    def factory = fix.factory
+    def +(that: CONTAINER) = fix.+(that)
+    def toJson = fix.toJson
+
+    override def toString() = s"${factory.name}[${datumType.toString}]($toStringParams)"
+  }
+
+  //////////////////////////////////////////////////////////////// Count/Counted/Counting
+
+  object Count extends Factory {
+    val name = "Count"
+
+    def apply(value: Double) = new Counted(value)
+    def apply[DATUM : WeakTypeTag](implicit selection: Selection[DATUM]) = new Counting(selection, 0.0)
+
+    def fromJson(json: Json): Container[_] = json match {
+      case JsonFloat(value) => new Counted(value)
+      case _ => throw new JsonFormatException(json, "Count")
+    }
+  }
+
+  class Counted(val value: Double) extends Container[Counted] {
+    def factory = Count
+
+    def +(that: Counted) = new Counted(this.value + that.value)
+
+    def toJson = JsonFloat(value)
+    def toStringParams = value.toString
+  }
+
+  class Counting[DATUM : WeakTypeTag](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counted] {
+    def datumType = weakTypeOf[DATUM]
+    def fill(x: Weighted[DATUM]) {
+      val y = x reweight selection(x)
       value += y.weight
     }
-    def copy = new Count(weighting)(value)
-    def +(that: Count[DATUM]) = new Count(weighting)(this.value + that.value)
-
-    def constructor = ""
-    def state = value.toString
-
-    def toJson: Json = JsonFloat(value)
-    def factory = Count
+    def fix = new Counted(value)
+    def toStringParams = selection.toString
   }
-  object Count extends AggregatorFactory[Count] {
-    val name = "Count"
-    def prototype = Count[Nothing]
 
-    def fromJson(json: Json) = json match {
-      case JsonFloat(value) => new Count[Nothing](value)
-      case _ => throw new IllegalArgumentException(s"wrong JSON format for Count: $json")
+  //////////////////////////////////////////////////////////////// Bin/Binned/Binning
+
+  object Bin extends Factory {
+    val name = "Bin"
+
+    def apply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
+      low: Double,
+      high: Double,
+      values: Seq[V],
+      underflow: U,
+      overflow: O,
+      nanflow: N) =
+      new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
+
+    def apply[DATUM : WeakTypeTag, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
+      key: ToNumeric[DATUM],
+      selection: Selection[DATUM],
+      low: Double,
+      high: Double,
+      values: Seq[Aggregator[DATUM, V]] = Array.fill(100)(Count[DATUM]).toSeq,
+      underflow: Aggregator[DATUM, U] = Count[DATUM],
+      overflow: Aggregator[DATUM, O] = Count[DATUM],
+      nanflow: Aggregator[DATUM, N] = Count[DATUM]) =
+      new Binning[DATUM, V, U, O, N](key, selection, low, high, values, underflow, overflow, nanflow)
+
+    def fromJson(json: Json): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
+        val get = pairs.toMap
+
+        val low = get("low") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, "Bin.low")
+        }
+
+        val high = get("high") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, "Bin.high")
+        }
+
+        val valuesFactory = get("values:type") match {
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, "Bin.values:type")
+        }
+        val values = get("values") match {
+          case JsonArray(sub @ _*) => sub.map(valuesFactory.fromJson(_))
+          case x => throw new JsonFormatException(x, "Bin.values")
+        }
+
+        val underflowFactory = get("underflow:type") match {
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, "Bin.underflow:type")
+        }
+        val underflow = underflowFactory.fromJson(get("underflow"))
+
+        val overflowFactory = get("overflow:type") match {
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, "Bin.overflow:type")
+        }
+        val overflow = overflowFactory.fromJson(get("overflow"))
+
+        val nanflowFactory = get("nanflow:type") match {
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, "Bin.nanflow:type")
+        }
+        val nanflow = nanflowFactory.fromJson(get("nanflow"))
+
+        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, values, underflow, overflow, nanflow)
+
+      case _ => throw new JsonFormatException(json, "Bin")
+    }
+  }
+
+  class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
+    val low: Double,
+    val high: Double,
+    val values: Seq[V],
+    val underflow: U,
+    val overflow: O,
+    val nanflow: N) extends Container[Binned[V, U, O, N]] {
+
+    if (low >= high)
+      throw new AggregatorException(s"low ($low) must be less than high ($high)")
+    if (values.size < 1)
+      throw new AggregatorException(s"values ($values) must have at least one element")
+
+    def factory = Bin
+
+    def +(that: Binned[V, U, O, N]) = {
+      if (this.low != that.low)
+        throw new AggregatorException(s"cannot add Bins because low differs (${this.low} vs ${that.low})")
+      if (this.high != that.high)
+        throw new AggregatorException(s"cannot add Bins because high differs (${this.high} vs ${that.high})")
+      if (this.values.size != that.values.size)
+        throw new AggregatorException(s"cannot add Bins because number of values differs (${this.values.size} vs ${that.values.size})")
+
+      new Binned(
+        low,
+        high,
+        this.values zip that.values map {case (me, you) => me + you},
+        this.underflow + that.underflow,
+        this.overflow + that.overflow,
+        this.nanflow + that.nanflow)
     }
 
-    def apply[DATUM](implicit weighting: Weighting[DATUM]) = new Count(weighting)()
+    def toJson = JsonObject(
+      "low" -> JsonFloat(low),
+      "high" -> JsonFloat(high),
+      "values:type" -> JsonString(values.head.factory.name),
+      "values" -> JsonArray(values.map(_.toJson): _*),
+      "underflow:type" -> JsonString(underflow.factory.name),
+      "underflow" -> underflow.toJson,
+      "overflow:type" -> JsonString(overflow.factory.name),
+      "overflow" -> overflow.toJson,
+      "nanflow:type" -> JsonString(nanflow.factory.name),
+      "nanflow" -> nanflow.toJson)
+
+    def toStringParams = s"""$low, $high, Seq(${values.map(_.toString).mkString(", ")}), $underflow, $overflow, $nanflow"""
   }
 
-  //////////////////////////////////////////////////////////////// specific containers
+  class Binning[DATUM : WeakTypeTag, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
+    val key: ToNumeric[DATUM],
+    val selection: Selection[DATUM],
+    val low: Double,
+    val high: Double,
+    val values: Seq[Aggregator[DATUM, V]],
+    val underflow: Aggregator[DATUM, U],
+    val overflow: Aggregator[DATUM, O],
+    val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, Binned[V, U, O, N]] {
 
-  class Binned[DATUM, SUB <: Aggregator[DATUM, SUB]]
-              (sub: SUB, val num: Int, val low: Double, val high: Double, val key: Weighted[DATUM] => Double, val weighting: Weighting[DATUM])
-              (val values: Vector[SUB] = Vector.fill(num)(sub.copy), val underflow: SUB = sub.copy, val overflow: SUB = sub.copy, val nanflow: SUB = sub.copy)
-              extends Container[DATUM, Binned[DATUM, SUB], SUB] {
     if (low >= high)
-      throw new IllegalArgumentException(s"low ($low) must be less than high ($high)")
-    if (num < 1)
-      throw new IllegalArgumentException(s"num ($num) must be greater than zero")
+      throw new AggregatorException(s"low ($low) must be less than high ($high)")
+    if (values.size < 1)
+      throw new AggregatorException(s"values ($values) must have at least one element")
+
+    def datumType = weakTypeOf[DATUM]
 
     def bin(k: Double): Int =
       if (under(k)  ||  over(k)  ||  nan(k))
         -1
       else
-        Math.floor(num * (k - low) / (high - low)).toInt
+        Math.floor(values.size * (k - low) / (high - low)).toInt
 
     def under(k: Double): Boolean = !k.isNaN  &&  k < low
     def over(k: Double): Boolean = !k.isNaN  &&  k >= high
     def nan(k: Double): Boolean = k.isNaN
 
-    def apply(x: Weighted[DATUM]) {
+    def fill(x: Weighted[DATUM]) {
       val k = key(x)
-      val y = x * weighting(x)
-      if (under(k))
-        underflow(y)
-      else if (over(k))
-        overflow(y)
-      else if (nan(k))
-        nanflow(y)
-      else
-        values(bin(k))(y)
+      val y = x reweight selection(x)
+      if (y.nonzero) {
+        if (under(k))
+          underflow.fill(y)
+        else if (over(k))
+          overflow.fill(y)
+        else if (nan(k))
+          nanflow.fill(y)
+        else
+          values(bin(k)).fill(y)
+      }
     }
 
-    def copy = new Binned(sub.copy, num, low, high, key, weighting)(values.map(_.copy), underflow.copy, overflow.copy, nanflow.copy)
+    def fix = new Binned[V, U, O, N](low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
 
-    def +(that: Binned[DATUM, SUB]) = {
-      if (that.num != this.num)
-        throw new IllegalArgumentException(s"cannot add Binned because num differs (${this.num} vs ${that.num})")
-      if (that.low != this.low)
-        throw new IllegalArgumentException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
-      if (that.high != this.high)
-        throw new IllegalArgumentException(s"cannot add Binned because high differs (${this.high} vs ${that.high})")
-
-      new Binned[DATUM, SUB](sub, num, low, high, key, weighting)(this.values zip that.values map {case (x, y) => x + y}, this.underflow + that.underflow, this.overflow + that.overflow, this.nanflow + that.nanflow)
-    }
-
-    def constructor = s"""${sub.name}(${sub.constructor}), $num, $low, $high"""
-    def state = s"""Vector(${values.map(_.state).mkString(", ")}), ${underflow.state}, ${overflow.state}, ${nanflow.state}"""
-
-    def toJson: Json = JsonObject(
-      "sub" -> JsonString(sub.factory.name),
-      "low" -> JsonFloat(low),
-      "high" -> JsonFloat(high),
-      "values" -> JsonArray(values.map(_.toJson): _*),
-      "underflow" -> underflow.toJson,
-      "overflow" -> overflow.toJson,
-      "nanflow" -> nanflow.toJson)
-    def factory = Binned
-  }
-  object Binned extends AggregatorFactory[Binned] {
-    val name = "Binned"
-    def prototype = Binned[Nothing, Count[Nothing]](Count.prototype, 1, 0.0, 1.0, {x: Nothing => 0.0})
-
-    def fromJson(json: Json) = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("sub", "low", "high", "values", "underflow", "overflow", "nanflow")) =>
-        val subFactory = pairs("sub") match {
-          case JsonString(name) => AggregatorFactory(name)
-          case None => throw new IllegalArgumentException(s"""wrong sub type for Binned: ${pairs("sub")}""")
-        }
-
-        val low = pairs("low") match {
-          case JsonNumber(x) => x
-          case _ => throw new IllegalArgumentException(s"""wrong low type for Binned: ${pairs("low")}""")
-        }
-
-        val high = pairs("high") match {
-          case JsonNumber(x) => x
-          case _ => throw new IllegalArgumentException(s"""wrong high type for Binned: ${pairs("high")}""")
-        }
-
-        val values = pairs("values") match {
-          case JsonArray(subJsons @ _*) => subJsons.map(subFactory.fromJson(_)).toVector
-          case _ => throw new IllegalArgumentException(s"""wrong values type for Binned: ${pairs("values")}""")
-        }
-
-        val underflow = subFactory.fromJson(pairs("underflow"))
-        val overflow = subFactory.fromJson(pairs("overflow"))
-        val nanflow = subFactory.fromJson(pairs("nanflow"))
-
-        new Binned(Count.prototype, values.size, low, high, {x: Nothing => 0.0}, noWeighting)(values, underflow, overflow, nanflow)
-
-      case _ => throw new IllegalArgumentException(s"wrong type or keys for Binned: $json")
-    }
-
-    def apply[DATUM, SUB <: Aggregator[DATUM, SUB]](sub: SUB, num: Int, low: Double, high: Double, key: Weighted[DATUM] => Double, weighting: Weighting[DATUM] = noWeighting[DATUM]) =
-      new Binned[DATUM, SUB](sub, num, low, high, key, weighting)()
+    def toStringParams = s"""$key, $selection, $low, $high, Seq(${values.map(_.toString).mkString(", ")}), $underflow, $overflow, $nanflow"""
   }
 }
+

@@ -13,6 +13,10 @@ package object json {
   implicit def charToJson(x: Char) = JsonString(x.toString)
   implicit def stringToJson(x: String) = JsonString(x)
 
+  implicit class HasKeySet(pairs: Seq[(JsonString, Json)]) {
+    def keySet: Set[String] = pairs.map(_._1.value).toSet
+  }
+
   private[json] def whitespace(p: ParseState) {
     while (p.remaining >= 1  &&  (p.get == ' '  ||  p.get == '\t'  ||  p.get == '\n'  ||  p.get == '\r'))
       p.update(1)
@@ -121,7 +125,15 @@ package json {
         None
   }
 
-  trait JsonNumber extends JsonPrimitive
+  trait JsonNumber extends JsonPrimitive {
+    def toChar: Char
+    def toByte: Byte
+    def toShort: Short
+    def toInt: Int
+    def toLong: Long
+    def toFloat: Float
+    def toDouble: Double
+  }
   object JsonNumber {
     def unapply(x: Json): Option[Double] = x match {
       case JsonInt(y) => Some(y.toDouble)
@@ -164,6 +176,13 @@ package json {
 
   case class JsonInt(value: Long) extends JsonNumber {
     def stringify = value.toString
+    def toChar = value.toChar
+    def toByte = value.toByte
+    def toShort = value.toShort
+    def toInt = value.toInt
+    def toLong = value.toLong
+    def toFloat = value.toFloat
+    def toDouble = value.toDouble
   }
   object JsonInt {
     def parse(str: String): Option[JsonInt] = parseFully(str, parse(_))
@@ -175,6 +194,13 @@ package json {
 
   case class JsonFloat(value: Double) extends JsonNumber {
     def stringify = value.toString
+    def toChar = value.toChar
+    def toByte = value.toByte
+    def toShort = value.toShort
+    def toInt = value.toInt
+    def toLong = value.toLong
+    def toFloat = value.toFloat
+    def toDouble = value.toDouble
   }
   object JsonFloat {
     def parse(str: String): Option[JsonFloat] = parseFully(str, parse(_))
@@ -278,6 +304,9 @@ package json {
   case class JsonArray(elements: Json*) extends JsonContainer {
     override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
     def stringify = "[" + elements.map(_.toString).mkString(", ") + "]"
+    def all[T <: Json] = elements.forall(_.isInstance[T])
+    def any[T <: Json] = elements.exists(_.isInstance[T])
+    def to[T <: Json] = elements.map(_.asInstanceOf[T])
   }
   object JsonArray {
     def apply[V](elements: V*)(implicit fv: V => Json) = new JsonArray(elements.map(fv): _*)
@@ -327,6 +356,9 @@ package json {
   case class JsonObject(pairs: (JsonString, Json)*) extends JsonContainer {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
     def stringify = "{" + pairs.map({case (k, v) => k.toString + ": " + v.toString}).mkString(", ") + "}"
+    def all[T <: Json] = pairs.forall(_._2.isInstance[T])
+    def any[T <: Json] = pairs.exists(_._2.isInstance[T])
+    def to[T <: Json] = pairs.map({case (k, v) => (k.value, v.asInstanceOf[T])})
   }
   object JsonObject {
     def apply[K, V](elements: (K, V)*)(implicit fk: K => JsonString, fv: V => Json) = new JsonObject(elements.map({case (k, v) => (fk(k), fv(v))}): _*)
@@ -385,101 +417,103 @@ package json {
         None
   }
 
-  package check {
-    sealed trait Validity {
-      def apply(x: Json): Boolean
-      def |(that: Validity) = Or(this, that)
-      def &(that: Validity) = And(this, that)
-    }
+  // Nice idea, but I have to unpack everything with pattern-matching anyway...
 
-    case object Null extends Validity {
-      def apply(x: Json) = x match {case JsonNull => true; case _ => false}
-      override def toString() = "check.Null"
-    }
+  // package check {
+  //   sealed trait Validity {
+  //     def apply(x: Json): Boolean
+  //     def |(that: Validity) = Or(this, that)
+  //     def &(that: Validity) = And(this, that)
+  //   }
 
-    case object Primitive extends Validity {
-      def apply(x: Json) = x match {case _: JsonPrimitive => true; case _ => false}
-      override def toString() = "check.Primitive"
-    }
+  //   case object Null extends Validity {
+  //     def apply(x: Json) = x match {case JsonNull => true; case _ => false}
+  //     override def toString() = "check.Null"
+  //   }
 
-    case object Boolean extends Validity {
-      def apply(x: Json) = x match {case _: JsonBoolean => true; case _ => false}
-      override def toString() = "check.Boolean"
-    }
+  //   case object Primitive extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonPrimitive => true; case _ => false}
+  //     override def toString() = "check.Primitive"
+  //   }
 
-    case object Number extends Validity {
-      def apply(x: Json) = x match {case _: JsonNumber => true; case _ => false}
-      override def toString() = "check.Number"
-    }
+  //   case object Boolean extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonBoolean => true; case _ => false}
+  //     override def toString() = "check.Boolean"
+  //   }
 
-    case object Int extends Validity {
-      def apply(x: Json) = x match {case _: JsonInt => true; case _ => false}
-      override def toString() = "check.Int"
-    }
+  //   case object Number extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonNumber => true; case _ => false}
+  //     override def toString() = "check.Number"
+  //   }
 
-    case object Float extends Validity {
-      def apply(x: Json) = x match {case _: JsonFloat => true; case _ => false}
-      override def toString() = "check.Float"
-    }
+  //   case object Int extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonInt => true; case _ => false}
+  //     override def toString() = "check.Int"
+  //   }
 
-    case object String extends Validity {
-      def apply(x: Json) = x match {case _: JsonString => true; case _ => false}
-      override def toString() = "check.String"
-    }
+  //   case object Float extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonFloat => true; case _ => false}
+  //     override def toString() = "check.Float"
+  //   }
 
-    case class String(regex: scala.util.matching.Regex) extends Validity {
-      def apply(x: Json) = x match {case JsonString(y) => !(regex unapplySeq y).isEmpty; case _ => false}
-      override def toString() = s"check.String($regex)"
-    }
+  //   case object String extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonString => true; case _ => false}
+  //     override def toString() = "check.String"
+  //   }
 
-    case object Container extends Validity {
-      def apply(x: Json) = x match {case _: JsonContainer => true; case _ => false}
-      override def toString() = "check.Container"
-    }
+  //   case class String(regex: scala.util.matching.Regex) extends Validity {
+  //     def apply(x: Json) = x match {case JsonString(y) => !(regex unapplySeq y).isEmpty; case _ => false}
+  //     override def toString() = s"check.String($regex)"
+  //   }
 
-    case class Container(items: Validity) extends Validity {
-      def apply(x: Json) = x match {
-        case JsonArray(elements @ _*) => elements.forall(items(_))
-        case JsonObject(pairs @ _*) => pairs.map(_._2).forall(items(_))
-        case _ => false
-      }
-      override def toString() = s"check.Container($items)"
-    }
+  //   case object Container extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonContainer => true; case _ => false}
+  //     override def toString() = "check.Container"
+  //   }
 
-    case object Array extends Validity {
-      def apply(x: Json) = x match {case _: JsonArray => true; case _ => false}
-      override def toString() = "check.Array"
-    }
+  //   case class Container(items: Validity) extends Validity {
+  //     def apply(x: Json) = x match {
+  //       case JsonArray(elements @ _*) => elements.forall(items(_))
+  //       case JsonObject(pairs @ _*) => pairs.map(_._2).forall(items(_))
+  //       case _ => false
+  //     }
+  //     override def toString() = s"check.Container($items)"
+  //   }
 
-    case class Array(items: Validity) extends Validity {
-      def apply(x: Json) = x match {
-        case JsonArray(elements @ _*) => elements.forall(items(_))
-        case _ => false
-      }
-      override def toString() = s"check.Array($items)"
-    }
+  //   case object Array extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonArray => true; case _ => false}
+  //     override def toString() = "check.Array"
+  //   }
 
-    case object Object extends Validity {
-      def apply(x: Json) = x match {case _: JsonObject => true; case _ => false}
-      override def toString() = "check.Object"
-    }
+  //   case class Array(items: Validity) extends Validity {
+  //     def apply(x: Json) = x match {
+  //       case JsonArray(elements @ _*) => elements.forall(items(_))
+  //       case _ => false
+  //     }
+  //     override def toString() = s"check.Array($items)"
+  //   }
 
-    case class Object(items: Validity) extends Validity {
-      def apply(x: Json) = x match {
-        case JsonObject(pairs @ _*) => pairs.map(_._2).forall(items(_))
-        case _ => false
-      }
-      override def toString() = s"check.Object($items)"
-    }
+  //   case object Object extends Validity {
+  //     def apply(x: Json) = x match {case _: JsonObject => true; case _ => false}
+  //     override def toString() = "check.Object"
+  //   }
 
-    case class Or(possibilities: Validity*) extends Validity {
-      def apply(x: Json) = possibilities.exists(p => p(x))
-      override def toString() = possibilities.mkString(" | ")
-    }
+  //   case class Object(items: Validity) extends Validity {
+  //     def apply(x: Json) = x match {
+  //       case JsonObject(pairs @ _*) => pairs.map(_._2).forall(items(_))
+  //       case _ => false
+  //     }
+  //     override def toString() = s"check.Object($items)"
+  //   }
 
-    case class And(possibilities: Validity*) extends Validity {
-      def apply(x: Json) = possibilities.forall(p => p(x))
-      override def toString() = "(" + possibilities.mkString(" & ") + ")"
-    }
-  }
+  //   case class Or(possibilities: Validity*) extends Validity {
+  //     def apply(x: Json) = possibilities.exists(p => p(x))
+  //     override def toString() = possibilities.mkString(" | ")
+  //   }
+
+  //   case class And(possibilities: Validity*) extends Validity {
+  //     def apply(x: Json) = possibilities.forall(p => p(x))
+  //     override def toString() = "(" + possibilities.mkString(" & ") + ")"
+  //   }
+  // }
 }

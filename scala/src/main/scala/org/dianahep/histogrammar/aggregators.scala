@@ -18,10 +18,13 @@ package object histogrammar {
   type ToNumeric[DATUM] = Weighted[DATUM] => Double
   type ToCategory[DATUM] = Weighted[DATUM] => String
 
+  implicit def aggregatorToContainer[CONTAINER <: Container[CONTAINER]](aggregator: Aggregator[_, CONTAINER]): CONTAINER = aggregator.fix
+
   implicit def uncut[DATUM] = {x: Weighted[DATUM] => 1.0}
   def identity[DATUM](x: DATUM): DATUM = x
 
   Factory.register(Count)
+  Factory.register(Bin)
 }
 
 package histogrammar {
@@ -32,7 +35,7 @@ package histogrammar {
     def nonzero = weight != 0.0
   }
 
-  case class Cache[DOMAIN, RANGE](function: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
+  case class Cached[DOMAIN, RANGE](function: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
     private var last: Option[(DOMAIN, RANGE)] = None
     def apply(x: DOMAIN): RANGE = (x, last) match {
       case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
@@ -292,7 +295,7 @@ package histogrammar {
       }
     }
 
-    def fix = new Binned[V, U, O, N](low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
+    def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
 
     def toStringParams = s"""$key, $selection, $low, $high, Seq(${values.map(_.toString).mkString(", ")}), $underflow, $overflow, $nanflow"""
   }

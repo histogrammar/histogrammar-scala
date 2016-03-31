@@ -8,12 +8,25 @@ package object histogrammar {
   implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
   implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}
 
-  implicit def filterToWeight[WEIGHTED <: Weighted[_]](filter: WEIGHTED => Boolean) = {x: WEIGHTED => if (filter(x)) 1.0 else 0.0}
+  implicit def filterToWeighting[WEIGHTED <: Weighted[_]](filter: WEIGHTED => Boolean) = {x: WEIGHTED => if (filter(x)) 1.0 else 0.0}
 
   implicit def noWeighting[DATUM] = {x: Weighted[DATUM] => 1.0}
 }
 
 package histogrammar {
+  case class Cache[DOMAIN, RANGE](function: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
+    private var last: Option[(DOMAIN, RANGE)] = None
+    def apply(x: DOMAIN): RANGE = (x, last) match {
+      case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if ((xref eq oldx)  ||  (xref == oldx)) => oldy
+      case (_, Some((oldx, oldy))) if (x == oldx) => oldy
+      case _ =>
+        val y = function(x)
+        last = Some(x -> y)
+        y
+    }
+    def clear() { last = None }
+  }
+
   case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0) {
     def *(w: Double): Weighted[DATUM] = copy(weight = weight*w)
   }

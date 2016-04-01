@@ -8,10 +8,20 @@ package object histogrammar {
   implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
   implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}
 
-  implicit def filterToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
-  implicit def weightToSelection[DATUM](f: DATUM => Double) = Selection({x: Weighted[DATUM] => f(x.datum)})
-  implicit def weightedFilterToSelection[DATUM](f: Weighted[DATUM] => Boolean) = Selection({x: Weighted[DATUM] => if (f(x)) 1.0 else 0.0})
-  implicit def weightedWeightToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
+  implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
+  implicit def byteToSelection[DATUM](f: DATUM => Byte) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
+  implicit def shortToSelection[DATUM](f: DATUM => Short) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
+  implicit def intToSelection[DATUM](f: DATUM => Int) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
+  implicit def longToSelection[DATUM](f: DATUM => Long) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
+  implicit def floatToSelection[DATUM](f: DATUM => Float) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
+  implicit def doubleToSelection[DATUM](f: DATUM => Double) = Selection({x: Weighted[DATUM] => f(x.datum)})
+  implicit def weightedBooleanToSelection[DATUM](f: Weighted[DATUM] => Boolean) = Selection({x: Weighted[DATUM] => if (f(x)) 1.0 else 0.0})
+  implicit def weightedByteToSelection[DATUM](f: Weighted[DATUM] => Byte) = Selection({x: Weighted[DATUM] => f(x).toDouble})
+  implicit def weightedShortToSelection[DATUM](f: Weighted[DATUM] => Short) = Selection({x: Weighted[DATUM] => f(x).toDouble})
+  implicit def weightedIntToSelection[DATUM](f: Weighted[DATUM] => Int) = Selection({x: Weighted[DATUM] => f(x).toDouble})
+  implicit def weightedLongToSelection[DATUM](f: Weighted[DATUM] => Long) = Selection({x: Weighted[DATUM] => f(x).toDouble})
+  implicit def weightedFloatToSelection[DATUM](f: Weighted[DATUM] => Float) = Selection({x: Weighted[DATUM] => f(x).toDouble})
+  implicit def weightedDoubleToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
 
   type NumericalFcn[DATUM] = Weighted[DATUM] => Double
   type CategoricalFcn[DATUM] = Weighted[DATUM] => String
@@ -109,6 +119,7 @@ package histogrammar {
     // satisfy Container[CONTAINER] contract by passing everything through fix
     def factory = fix.factory
     def +(that: CONTAINER) = fix.+(that)
+    def +(that: Aggregator[DATUM, CONTAINER]) = fix.+(that.fix)
     def toJsonFragment = fix.toJsonFragment
   }
 
@@ -118,6 +129,7 @@ package histogrammar {
     val name = "Counted"
 
     def apply(value: Double) = new Counted(value)
+    def unapply(x: Counted) = Some(x.value)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonFloat(value) => new Counted(value)
@@ -135,6 +147,7 @@ package histogrammar {
 
   object Counting {
     def apply[DATUM](selection: Selection[DATUM] = uncut[DATUM]) = new Counting(selection, 0.0)
+    def unapply(x: Counting[_]) = Some(x.value)
   }
   class Counting[DATUM](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counted] {
     def fill(x: Weighted[DATUM]) {
@@ -151,6 +164,7 @@ package histogrammar {
     val name = "Summed"
 
     def apply(value: Double) = new Summed(value)
+    def unapply(x: Summed) = Some(x.value)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonFloat(value) => new Summed(value)
@@ -168,6 +182,7 @@ package histogrammar {
 
   object Summing {
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = uncut[DATUM]) = new Summing(quantity, selection, 0.0)
+    def unapply(x: Summing[_]) = Some(x.value)
   }
   class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summed] {
     def fill(x: Weighted[DATUM]) {
@@ -184,6 +199,7 @@ package histogrammar {
     val name = "Averaged"
 
     def apply(count: Double, mean: Double) = new Averaged(count, mean)
+    def unapply(x: Averaged) = Some((x.count, x.mean))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("count", "mean")) =>
@@ -217,6 +233,7 @@ package histogrammar {
 
   object Averaging {
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = uncut[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
+    def unapply(x: Averaging[_]) = Some((x.count, x.mean))
   }
   class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaged] {
 
@@ -236,6 +253,7 @@ package histogrammar {
     val name = "Deviated"
 
     def apply(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
+    def unapply(x: Deviated) = Some((x.count, x.mean, x.variance))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("count", "mean", "variance")) =>
@@ -275,6 +293,7 @@ package histogrammar {
 
   object Deviating {
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = uncut[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
+    def unapply(x: Deviating[_]) = Some((x.count, x.mean, x.variance))
   }
   class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, var variance: Double) extends Aggregator[DATUM, Deviated] {
 
@@ -307,6 +326,8 @@ package histogrammar {
         overflow: O,
         nanflow: N) =
       new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
+
+    def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
@@ -413,6 +434,8 @@ package histogrammar {
         overflow: Aggregator[DATUM, O] = Counting[DATUM](),
         nanflow: Aggregator[DATUM, N] = Counting[DATUM]()) =
       new Binning[DATUM, V, U, O, N](low, high, key, selection, Array.fill(num)(value).toSeq, underflow, overflow, nanflow)
+
+    def unapply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
   }
   class Binning[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,

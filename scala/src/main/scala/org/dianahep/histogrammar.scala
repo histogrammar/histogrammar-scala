@@ -29,6 +29,9 @@ package object histogrammar {
   def uncut[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
 
   Factory.register(Counted)
+  Factory.register(Summed)
+  Factory.register(Averaged)
+  Factory.register(Deviated)
   Factory.register(Binned)
 }
 
@@ -143,6 +146,11 @@ package histogrammar {
 
     def toJsonFragment = JsonFloat(value)
     override def toString() = s"Counted"
+    override def equals(that: Any) = that match {
+      case that: Counted => this.value == that.value
+      case _ => false
+    }
+    override def hashCode() = value.hashCode
   }
 
   object Counting {
@@ -156,6 +164,11 @@ package histogrammar {
     }
     def fix = new Counted(value)
     override def toString() = s"Counting"
+    override def equals(that: Any) = that match {
+      case that: Counting[DATUM] => this.selection == that.selection  &&  this.value == that.value
+      case _ => false
+    }
+    override def hashCode() = (selection, value).hashCode
   }
 
   //////////////////////////////////////////////////////////////// Summed/Summing
@@ -178,6 +191,11 @@ package histogrammar {
 
     def toJsonFragment = JsonFloat(value)
     override def toString() = s"Summed"
+    override def equals(that: Any) = that match {
+      case that: Summed => this.value == that.value
+      case _ => false
+    }
+    override def hashCode() = value.hashCode
   }
 
   object Summing {
@@ -191,6 +209,11 @@ package histogrammar {
     }
     def fix = new Summed(value)
     override def toString() = s"Summing"
+    override def equals(that: Any) = that match {
+      case that: Summing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.value == that.value
+      case _ => false
+    }
+    override def hashCode() = (quantity, selection, value).hashCode
   }
 
   //////////////////////////////////////////////////////////////// Averaged/Averaging
@@ -229,6 +252,11 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
     override def toString() = s"Averaged"
+    override def equals(that: Any) = that match {
+      case that: Averaged => this.count == that.count  &&  this.mean == that.mean
+      case _ => false
+    }
+    override def hashCode() = (count, mean).hashCode
   }
 
   object Averaging {
@@ -236,7 +264,6 @@ package histogrammar {
     def unapply(x: Averaging[_]) = Some((x.count, x.mean))
   }
   class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaged] {
-
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 
@@ -252,6 +279,11 @@ package histogrammar {
 
     def fix = new Averaged(count, mean)
     override def toString() = s"Averaging"
+    override def equals(that: Any) = that match {
+      case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count == that.count  &&  this.mean == that.mean
+      case _ => false
+    }
+    override def hashCode() = (quantity, selection, count, mean).hashCode
   }
 
   //////////////////////////////////////////////////////////////// Deviated/Deviating
@@ -305,6 +337,11 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
     override def toString() = s"Deviated"
+    override def equals(that: Any) = that match {
+      case that: Deviated => this.count == that.count  &&  this.mean == that.mean  &&  this.variance == that.variance
+      case _ => false
+    }
+    override def hashCode() = (count, mean, variance).hashCode
   }
 
   object Deviating {
@@ -312,7 +349,6 @@ package histogrammar {
     def unapply(x: Deviating[_]) = Some((x.count, x.mean, x.variance))
   }
   class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, var variance: Double) extends Aggregator[DATUM, Deviated] {
-
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 
@@ -331,6 +367,11 @@ package histogrammar {
     }
     def fix = new Deviated(count, mean, variance)
     override def toString() = s"Deviating"
+    override def equals(that: Any) = that match {
+      case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count == that.count  &&  this.mean == that.mean  &&  this.variance == that.variance
+      case _ => false
+    }
+    override def hashCode() = (quantity, selection, count, mean, variance).hashCode
   }
 
   //////////////////////////////////////////////////////////////// Binned/Binning
@@ -440,6 +481,11 @@ package histogrammar {
       "nanflow" -> nanflow.toJsonFragment)
 
     override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def equals(that: Any) = that match {
+      case that: Binned[V, U, O, N] => this.low == that.low  &&  this.high == that.high  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
+      case _ => false
+    }
+    override def hashCode() = (low, high, values, underflow, overflow, nanflow).hashCode
   }
 
   object Binning {
@@ -499,5 +545,10 @@ package histogrammar {
 
     def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
     override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def equals(that: Any) = that match {
+      case that: Binning[DATUM, V, U, O, N] => this.low == that.low  &&  this.high == that.high  &&  this.key == that.key  &&  this.selection == that.selection  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
+      case _ => false
+    }
+    override def hashCode() = (low, high, key, selection, values, underflow, overflow, nanflow).hashCode
   }
 }

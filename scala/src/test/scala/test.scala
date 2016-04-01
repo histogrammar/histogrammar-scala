@@ -249,6 +249,27 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
+  it must "work in reverse" in {
+    for (i <- 0 to 10) {
+      val (left, right) = backward.splitAt(i)
+
+      val leftAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.int})
+      val rightAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.int})
+
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
+
+      val (Averaging(_, leftResult), Averaging(_, rightResult)) = (leftAveraging, rightAveraging)
+
+      leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+
+      val Averaged(_, finalResult) = leftAveraging + rightAveraging
+
+      finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
+    }
+  }
+
   //////////////////////////////////////////////////////////////// Deviated/Deviating
 
   "Deviating/Deviated" must "work unfiltered" in {
@@ -314,25 +335,59 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
+  it must "work in reverse" in {
+    for (i <- 0 to 10) {
+      val (left, right) = backward.splitAt(i)
+
+      val leftDeviating = Deviating({x: Struct => x.double}, {x: Struct => x.int})
+      val rightDeviating = Deviating({x: Struct => x.double}, {x: Struct => x.int})
+
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
+
+      val (Deviating(_, _, leftResult), Deviating(_, _, rightResult)) = (leftDeviating, rightDeviating)
+
+      leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+
+      val Deviated(_, _, finalResult) = leftDeviating + rightDeviating
+
+      finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
+    }
+  }
+
   //////////////////////////////////////////////////////////////// Binned/Binning
 
   "Binning/Binned" must "work with Counting/Counted" in {
     val one = Binning(5, -3.0, 7.0, {x: Double => x})()
-
     simple.foreach(one.fill(_))
+    one.fix.values.toList should be (List(Counted(3.0), Counted(2.0), Counted(2.0), Counted(1.0), Counted(0.0)))
+    one.fix.underflow should be (Counted(1.0))
+    one.fix.overflow should be (Counted(1.0))
+    one.fix.nanflow should be (Counted(0.0))
 
-    println(one.ascii)
+    val two = Binning(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool})()
+    struct.foreach(two.fill(_))
+    two.fix.values.toList should be (List(Counted(2.0), Counted(1.0), Counted(1.0), Counted(1.0), Counted(0.0)))
+    two.fix.underflow should be (Counted(0.0))
+    two.fix.overflow should be (Counted(0.0))
+    two.fix.nanflow should be (Counted(0.0))
+  }
 
-    case class Datum(one: Double, two: Double, three: String)
+  "Binning/Binned" must "work with Summing/Summed" in {
+    val one = Binning(5, -3.0, 7.0, {x: Double => x})(Summing({x: Double => 10.0}), Summing({x: Double => 10.0}), Summing({x: Double => 10.0}), Summing({x: Double => 10.0}))
+    simple.foreach(one.fill(_))
+    one.fix.values.toList should be (List(Summed(30.0), Summed(20.0), Summed(20.0), Summed(10.0), Summed(0.0)))
+    one.fix.underflow should be (Summed(10.0))
+    one.fix.overflow should be (Summed(10.0))
+    one.fix.nanflow should be (Summed(0.0))
 
-    val hist = Histogramming(50, 5.0, 15.0, {d: Datum => d.two})
-
-    0 until 10000 foreach {i =>
-      hist.fill(Datum(scala.util.Random.nextDouble(), scala.util.Random.nextGaussian() + 8.0, "whatever"))
-    }
-
-    println(hist.ascii)
-
+    val two = Binning(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool})(Summing({x: Struct => 10.0}), Summing({x: Struct => 10.0}), Summing({x: Struct => 10.0}), Summing({x: Struct => 10.0}))
+    struct.foreach(two.fill(_))
+    two.fix.values.toList should be (List(Summed(20.0), Summed(10.0), Summed(10.0), Summed(10.0), Summed(0.0)))
+    two.fix.underflow should be (Summed(0.0))
+    two.fix.overflow should be (Summed(0.0))
+    two.fix.nanflow should be (Summed(0.0))
   }
 
 }

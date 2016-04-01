@@ -426,4 +426,33 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson[Binned[Summed, Summed, Summed, Summed]](two.toJson.stringify) should be (two.fix)
   }
 
+  //////////////////////////////////////////////////////////////// Mapped/Mapping
+
+  "Mapped/Mapping" must "work with multiple types" in {
+    val one = Histogramming(5, -3.0, 7.0, {x: Double => x})
+    val two = Counting[Double]()
+    val three = Deviating({x: Double => x + 100.0})
+
+    val mapping = Mapping("one" -> one, "two" -> two, "three" -> three)
+
+    simple.foreach(mapping.fill(_))
+
+    val mapped = mapping.fix
+
+    val onefix = mapped[Binned[Counted, Counted, Counted, Counted]]("one")
+    onefix.values.toList should be (List(Counted(3.0), Counted(2.0), Counted(2.0), Counted(1.0), Counted(0.0)))
+    onefix.underflow should be (Counted(1.0))
+    onefix.overflow should be (Counted(1.0))
+    onefix.nanflow should be (Counted(0.0))
+    onefix should be (one.fix)
+
+    mapped[Counted]("two") should be (Counted(10.0))
+
+    mapped[Deviated]("three").count should be (10.0 +- 1e-12)
+    mapped[Deviated]("three").mean should be (100.33 +- 1e-12)
+    mapped[Deviated]("three").variance should be (10.8381 +- 1e-12)
+
+    Factory.fromJson[Mapped](mapping.toJson.stringify) should be (mapped)
+  }
+
 }

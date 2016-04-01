@@ -5,7 +5,7 @@ import scala.language.implicitConversions
 package object histogram {
   type Histogrammed = Binned[Counted, Counted, Counted, Counted]
   type Histogramming[DATUM] = Binning[DATUM, Counted, Counted, Counted, Counted]
-  def Histogramming[DATUM](num: Int, low: Double, high: Double, key: NumericalFcn[DATUM], selection: Selection[DATUM] = uncut[DATUM]) =
+  def Histogramming[DATUM](num: Int, low: Double, high: Double, key: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
     Binning(num, low, high, key, selection)()
 
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist)

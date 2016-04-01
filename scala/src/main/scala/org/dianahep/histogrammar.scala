@@ -11,10 +11,10 @@ package object histogrammar {
   implicit def filterToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
   implicit def weightToSelection[DATUM](f: DATUM => Double) = Selection({x: Weighted[DATUM] => f(x.datum)})
   implicit def weightedFilterToSelection[DATUM](f: Weighted[DATUM] => Boolean) = Selection({x: Weighted[DATUM] => if (f(x)) 1.0 else 0.0})
-  implicit def weightedWeightToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection({x: Weighted[DATUM] => f(x)})
+  implicit def weightedWeightToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
 
-  type ToNumeric[DATUM] = Weighted[DATUM] => Double
-  type ToCategory[DATUM] = Weighted[DATUM] => String
+  type NumericalFcn[DATUM] = Weighted[DATUM] => Double
+  type CategoricalFcn[DATUM] = Weighted[DATUM] => String
 
   def uncut[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
 
@@ -145,6 +145,155 @@ package histogrammar {
     override def toString() = s"Counting"
   }
 
+  //////////////////////////////////////////////////////////////// Summed/Summing
+
+  object Summed extends Factory {
+    val name = "Summed"
+
+    def apply(value: Double) = new Summed(value)
+
+    def fromJsonFragment(json: Json): Container[_] = json match {
+      case JsonFloat(value) => new Summed(value)
+      case _ => throw new JsonFormatException(json, "Summed")
+    }
+  }
+  class Summed(val value: Double) extends Container[Summed] {
+    def factory = Summed
+
+    def +(that: Summed) = new Summed(this.value + that.value)
+
+    def toJsonFragment = JsonFloat(value)
+    override def toString() = s"Summed"
+  }
+
+  object Summing {
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = uncut[DATUM]) = new Summing(quantity, selection, 0.0)
+  }
+  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summed] {
+    def fill(x: Weighted[DATUM]) {
+      val y = quantity(x) reweight selection(x)
+      value += y.datum * y.weight
+    }
+    def fix = new Summed(value)
+    override def toString() = s"Summing"
+  }
+
+  //////////////////////////////////////////////////////////////// Averaged/Averaging
+
+  object Averaged extends Factory {
+    val name = "Averaged"
+
+    def apply(count: Double, mean: Double) = new Averaged(count, mean)
+
+    def fromJsonFragment(json: Json): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("count", "mean")) =>
+        val get = pairs.toMap
+
+        val count = get("count") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, "Averaged.count")
+        }
+
+        val mean = get("mean") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, "Averaged.mean")
+        }
+
+        new Averaged(count, mean)
+
+      case _ => throw new JsonFormatException(json, "Averaged")
+    }
+  }
+  class Averaged(val count: Double, val mean: Double) extends Container[Averaged] {
+    def factory = Averaged
+
+    def +(that: Averaged) = new Averaged(
+      this.count + that.count,
+      (this.mean*this.count + that.mean*that.count) / (this.count + that.count))
+
+    def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
+    override def toString() = s"Averaged"
+  }
+
+  object Averaging {
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = uncut[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
+  }
+  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaged] {
+
+    def fill(x: Weighted[DATUM]) {
+      val y = quantity(x) reweight selection(x)
+      count += y.weight
+      mean += mean + y.weight/count * (y.datum - mean)
+    }
+
+    def fix = new Averaged(count, mean)
+    override def toString() = s"Averaging"
+  }
+
+  //////////////////////////////////////////////////////////////// Deviated/Deviating
+
+  object Deviated extends Factory {
+    val name = "Deviated"
+
+    def apply(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
+
+    def fromJsonFragment(json: Json): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("count", "mean", "variance")) =>
+        val get = pairs.toMap
+
+        val count = get("count") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, "Deviated.count")
+        }
+
+        val mean = get("mean") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, "Deviated.mean")
+        }
+
+        val variance = get("variance") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, "Deviated.variance")
+        }
+
+        new Deviated(count, mean, variance)
+
+      case _ => throw new JsonFormatException(json, "Deviated")
+    }
+  }
+  class Deviated(val count: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
+    def factory = Deviated
+
+    def +(that: Deviated) = new Deviated(
+      this.count + that.count,
+      (this.mean*this.count + that.mean*that.count) / (this.count + that.count),
+      (this.variance*this.count + that.variance*that.count) / (this.count + that.count))
+
+    def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
+    override def toString() = s"Deviated"
+  }
+
+  object Deviating {
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = uncut[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
+  }
+  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, var variance: Double) extends Aggregator[DATUM, Deviated] {
+
+    def fill(x: Weighted[DATUM]) {
+      val y = quantity(x) reweight selection(x)
+
+      val oldS = variance * count
+      val oldMean = mean
+
+      count += y.weight
+      mean += mean + y.weight/count * (y.datum - mean)
+
+      val newS = oldS + y.weight * (y.datum - oldMean) * (y.datum - mean)
+      variance = newS / count
+    }
+    def fix = new Deviated(count, mean, variance)
+    override def toString() = s"Deviating"
+  }
+
   //////////////////////////////////////////////////////////////// Binned/Binning
 
   object Binned extends Factory {
@@ -257,7 +406,7 @@ package histogrammar {
       (num: Int,
         low: Double,
         high: Double,
-        key: ToNumeric[DATUM],
+        key: NumericalFcn[DATUM],
         selection: Selection[DATUM] = uncut[DATUM])
       (value: => Aggregator[DATUM, V] = Counting[DATUM](),
         underflow: Aggregator[DATUM, U] = Counting[DATUM](),
@@ -268,7 +417,7 @@ package histogrammar {
   class Binning[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
-    val key: ToNumeric[DATUM],
+    val key: NumericalFcn[DATUM],
     val selection: Selection[DATUM],
     val values: Seq[Aggregator[DATUM, V]],
     val underflow: Aggregator[DATUM, U],

@@ -54,6 +54,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     else
       (x zip w map {case (xi, wi) => xi * xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum - Math.pow((x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum, 2)
 
+  //////////////////////////////////////////////////////////////// Counted/Counting
+
   "Counting/Counted" must "work unfiltered" in {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
@@ -116,6 +118,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalResult should be (struct.map(_.int).sum)
     }
   }
+
+  //////////////////////////////////////////////////////////////// Summed/Summing
 
   "Summing/Summed" must "work unfiltered" in {
     for (i <- 0 to 10) {
@@ -180,6 +184,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
+  //////////////////////////////////////////////////////////////// Averaged/Averaging
+
   "Averaging/Averaged" must "work unfiltered" in {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
@@ -243,6 +249,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
+  //////////////////////////////////////////////////////////////// Deviated/Deviating
+
   "Deviating/Deviated" must "work unfiltered" in {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
@@ -305,4 +313,26 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
     }
   }
+
+  //////////////////////////////////////////////////////////////// Binned/Binning
+
+  "Binning/Binned" must "work with Counting/Counted" in {
+    val one = Binning(5, -3.0, 7.0, {x: Double => x})()
+
+    simple.foreach(one.fill(_))
+
+    println(one.ascii)
+
+    case class Datum(one: Double, two: Double, three: String)
+
+    val hist = Histogramming(50, 5.0, 15.0, {d: Datum => d.two})
+
+    0 until 10000 foreach {i =>
+      hist.fill(Datum(scala.util.Random.nextDouble(), scala.util.Random.nextGaussian() + 8.0, "whatever"))
+    }
+
+    println(hist.ascii)
+
+  }
+
 }

@@ -14,7 +14,8 @@ package object histogram {
 
 package histogram {
   class HistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]) {
-    def ascii = {
+    def ascii: String = ascii(80)
+    def ascii(width: Int): String = {
       val minCount = hist.values.map(_.value).min
       val maxCount = hist.values.map(_.value).max
       val range = maxCount - minCount
@@ -25,53 +26,56 @@ package histogram {
       def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
 
       val prefixValues = hist.values.zipWithIndex map {case (v, i) =>
-        val binlow = sigfigs(i * binWidth + hist.low, 3)
-        val binhigh = sigfigs((i + 1) * binWidth + hist.low, 3)
-        val value = sigfigs(v.value, 4)
-        (binlow, binhigh, value)
+        (i * binWidth + hist.low, (i + 1) * binWidth + hist.low, v.value)
       }
-      val widestBinlow = prefixValues.map(_._1.size).max
-      val widestBinhigh = prefixValues.map(_._2.size).max
-      val widestValue = prefixValues.map(_._3.size).max
-      val formatter = s"[%-${widestBinlow}s, %-${widestBinhigh}s) %-${widestValue}s "
-      val prefixWidth = widestBinlow + widestBinhigh + widestValue + 6
+      val prefixValuesStr = prefixValues map {case (binlow, binhigh, value) => (sigfigs(Math.abs(binlow), 3), sigfigs(Math.abs(binhigh), 3), sigfigs(Math.abs(value), 4))}
 
-      val width = 80 - prefixWidth
-      val zeroIndex = Math.round(width * (0.0 - minEdge) / (maxEdge - minEdge)).toInt
-      val zeroLine1 = " " * prefixWidth + (if (zeroIndex > 0) " " else "") + " " * zeroIndex + "0" + " " * (width - zeroIndex - 10) + " " + f"$maxEdge%10g"
-      val zeroLine2 = " " * prefixWidth + (if (zeroIndex > 0) "+" else "") + "-" * zeroIndex + "+" + "-" * (width - zeroIndex - 1) + "-" + "+"
+      val widestBinlow = Math.max(prefixValuesStr.map(_._1.size).max, 2)
+      val widestBinhigh = Math.max(prefixValuesStr.map(_._2.size).max, 2)
+      val widestValue = Math.max(prefixValuesStr.map(_._3.size).max, 2)
+      val formatter = s"[ %s%-${widestBinlow}s, %s%-${widestBinhigh}s) %s%-${widestValue}s "
+      val prefixWidth = widestBinlow + widestBinhigh + widestValue + 9
 
-      val underflowIndex = Math.round(width * (hist.underflow.value - minEdge) / (maxEdge - minEdge)).toInt
-      val underflowFormatter = s"%-${widestBinlow + widestBinhigh + 4}s %-${widestValue}s "
+      val reducedWidth = width - prefixWidth
+      val zeroIndex = Math.round(reducedWidth * (0.0 - minEdge) / (maxEdge - minEdge)).toInt
+      val zeroLine1 = " " * prefixWidth + " " + (if (zeroIndex > 0) " " else "") + " " * zeroIndex + "0" + " " * (reducedWidth - zeroIndex - 10) + " " + f"$maxEdge%10g"
+      val zeroLine2 = " " * prefixWidth + " " + (if (zeroIndex > 0) "+" else "") + "-" * zeroIndex + "+" + "-" * (reducedWidth - zeroIndex - 1) + "-" + "+"
+
+      val lines = hist.values zip prefixValues zip prefixValuesStr map {case ((v, (binlow, binhigh, value)), (binlowAbs, binhighAbs, valueAbs)) =>
+        val binlowSign = if (binlow < 0) "-" else " "
+        val binhighSign = if (binhigh < 0) "-" else " "
+        val valueSign = if (value < 0) "-" else " "
+        val peakIndex = Math.round(reducedWidth * (v.value - minEdge) / (maxEdge - minEdge)).toInt
+        if (peakIndex < zeroIndex)
+          formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, valueSign, valueAbs) + (if (zeroIndex > 0) "|" else "") + " " * peakIndex + "*" * (zeroIndex - peakIndex) + "|" + " " * (reducedWidth - zeroIndex) + "|"
+        else
+          formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, valueSign, valueAbs) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (peakIndex - zeroIndex) + " " * (reducedWidth - peakIndex) + "|"
+      }
+
+      val underflowIndex = Math.round(reducedWidth * (hist.underflow.value - minEdge) / (maxEdge - minEdge)).toInt
+      val underflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
       val underflowLine =
         if (underflowIndex < zeroIndex)
-          underflowFormatter.format("underflow", sigfigs(hist.underflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * underflowIndex + "*" * (zeroIndex - underflowIndex) + "|" + " " * (width - zeroIndex) + "|"
+          underflowFormatter.format("underflow", sigfigs(hist.underflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * underflowIndex + "*" * (zeroIndex - underflowIndex) + "|" + " " * (reducedWidth - zeroIndex) + "|"
         else
-          underflowFormatter.format("underflow", sigfigs(hist.underflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (underflowIndex - zeroIndex) + " " * (width - underflowIndex) + "|"
+          underflowFormatter.format("underflow", sigfigs(hist.underflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (underflowIndex - zeroIndex) + " " * (reducedWidth - underflowIndex) + "|"
 
-      val overflowIndex = Math.round(width * (hist.overflow.value - minEdge) / (maxEdge - minEdge)).toInt
-      val overflowFormatter = s"%-${widestBinlow + widestBinhigh + 4}s %-${widestValue}s "
+      val overflowIndex = Math.round(reducedWidth * (hist.overflow.value - minEdge) / (maxEdge - minEdge)).toInt
+      val overflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
       val overflowLine =
         if (overflowIndex < zeroIndex)
-          overflowFormatter.format("overflow", sigfigs(hist.overflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * overflowIndex + "*" * (zeroIndex - overflowIndex) + "|" + " " * (width - zeroIndex) + "|"
+          overflowFormatter.format("overflow", sigfigs(hist.overflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * overflowIndex + "*" * (zeroIndex - overflowIndex) + "|" + " " * (reducedWidth - zeroIndex) + "|"
         else
-          overflowFormatter.format("overflow", sigfigs(hist.overflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (overflowIndex - zeroIndex) + " " * (width - overflowIndex) + "|"
+          overflowFormatter.format("overflow", sigfigs(hist.overflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (overflowIndex - zeroIndex) + " " * (reducedWidth - overflowIndex) + "|"
 
-      val nanflowIndex = Math.round(width * (hist.nanflow.value - minEdge) / (maxEdge - minEdge)).toInt
-      val nanflowFormatter = s"%-${widestBinlow + widestBinhigh + 4}s %-${widestValue}s "
+      val nanflowIndex = Math.round(reducedWidth * (hist.nanflow.value - minEdge) / (maxEdge - minEdge)).toInt
+      val nanflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
       val nanflowLine =
         if (nanflowIndex < zeroIndex)
-          nanflowFormatter.format("nanflow", sigfigs(hist.nanflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * nanflowIndex + "*" * (zeroIndex - nanflowIndex) + "|" + " " * (width - zeroIndex) + "|"
+          nanflowFormatter.format("nanflow", sigfigs(hist.nanflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * nanflowIndex + "*" * (zeroIndex - nanflowIndex) + "|" + " " * (reducedWidth - zeroIndex) + "|"
         else
-          nanflowFormatter.format("nanflow", sigfigs(hist.nanflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (nanflowIndex - zeroIndex) + " " * (width - nanflowIndex) + "|"
+          nanflowFormatter.format("nanflow", sigfigs(hist.nanflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (nanflowIndex - zeroIndex) + " " * (reducedWidth - nanflowIndex) + "|"
 
-      val lines = hist.values zip prefixValues map {case (v, (binlow, binhigh, value)) =>
-        val peakIndex = Math.round(width * (v.value - minEdge) / (maxEdge - minEdge)).toInt
-        if (peakIndex < zeroIndex)
-          formatter.format(binlow, binhigh, value) + (if (zeroIndex > 0) "|" else "") + " " * peakIndex + "*" * (zeroIndex - peakIndex) + "|" + " " * (width - zeroIndex) + "|"
-        else
-          formatter.format(binlow, binhigh, value) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (peakIndex - zeroIndex) + " " * (width - peakIndex) + "|"
-      }
       (List(zeroLine1, zeroLine2, underflowLine) ++ lines ++ List(overflowLine, nanflowLine, zeroLine2)).mkString("\n")      
     }
   }

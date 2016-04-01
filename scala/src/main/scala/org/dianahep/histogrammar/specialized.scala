@@ -3,7 +3,8 @@ package org.dianahep.histogrammar
 import scala.language.implicitConversions
 
 package object specialized {
-  implicit def toHistogram(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist)
+  implicit def binnedToHistogram(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist)
+  implicit def binningToHistogram[DEBUG](hist: Binning[DEBUG, Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist.fix)
 }
 
 package specialized {
@@ -51,6 +52,14 @@ package specialized {
         else
           overflowFormatter.format("overflow", sigfigs(hist.overflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (overflowIndex - zeroIndex) + " " * (width - overflowIndex) + "|"
 
+      val nanflowIndex = Math.round(width * (hist.nanflow.value - minEdge) / (maxEdge - minEdge)).toInt
+      val nanflowFormatter = s"%-${widestBinlow + widestBinhigh + 4}s %-${widestValue}s "
+      val nanflowLine =
+        if (nanflowIndex < zeroIndex)
+          nanflowFormatter.format("nanflow", sigfigs(hist.nanflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * nanflowIndex + "*" * (zeroIndex - nanflowIndex) + "|" + " " * (width - zeroIndex) + "|"
+        else
+          nanflowFormatter.format("nanflow", sigfigs(hist.nanflow.value, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (nanflowIndex - zeroIndex) + " " * (width - nanflowIndex) + "|"
+
       val lines = hist.values zip prefixValues map {case (v, (binlow, binhigh, value)) =>
         val peakIndex = Math.round(width * (v.value - minEdge) / (maxEdge - minEdge)).toInt
         if (peakIndex < zeroIndex)
@@ -58,7 +67,7 @@ package specialized {
         else
           formatter.format(binlow, binhigh, value) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (peakIndex - zeroIndex) + " " * (width - peakIndex) + "|"
       }
-      (List(zeroLine1, zeroLine2, underflowLine) ++ lines ++ List(overflowLine, zeroLine2)).mkString("\n")      
+      (List(zeroLine1, zeroLine2, underflowLine) ++ lines ++ List(overflowLine, nanflowLine, zeroLine2)).mkString("\n")      
     }
   }
 }

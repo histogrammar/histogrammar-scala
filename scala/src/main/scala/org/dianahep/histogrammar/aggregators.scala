@@ -1,9 +1,6 @@
 package org.dianahep
 
 import scala.language.implicitConversions
-import scala.reflect.runtime.universe.Type
-import scala.reflect.runtime.universe.WeakTypeTag
-import scala.reflect.runtime.universe.weakTypeOf
 
 import org.dianahep.histogrammar.json._
 
@@ -18,13 +15,13 @@ package object histogrammar {
   type ToNumeric[DATUM] = Weighted[DATUM] => Double
   type ToCategory[DATUM] = Weighted[DATUM] => String
 
-  implicit def aggregatorToContainer[CONTAINER <: Container[CONTAINER]](aggregator: Aggregator[_, CONTAINER]): CONTAINER = aggregator.fix
+  // implicit def aggregatorToContainer[CONTAINER <: Container[CONTAINER]](aggregator: Aggregator[_, CONTAINER]): CONTAINER = aggregator.fix
 
-  implicit def uncut[DATUM] = {x: Weighted[DATUM] => 1.0}
+  def uncut[DATUM] = {x: Weighted[DATUM] => 1.0}
   def identity[DATUM](x: DATUM): DATUM = x
 
-  Factory.register(Count)
-  Factory.register(Bin)
+  Factory.register(Counted)
+  Factory.register(Binned)
 }
 
 package histogrammar {
@@ -52,7 +49,7 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// general definition of an container/aggregator
 
-  // creates aggregators (from provided functions) and containers (from JSON); names are infinitive (no ending)
+  // creates aggregators (from provided functions) and containers (from JSON)
   trait Factory {
     def name: String
 
@@ -73,20 +70,17 @@ package histogrammar {
     }
   }
 
-  // immutable container of data; the result of an aggregation; names are past-tense (-ed)
+  // immutable container of data; the result of an aggregation
   trait Container[CONTAINER <: Container[CONTAINER]] extends Serializable {
     def factory: Factory
 
     def +(that: CONTAINER): CONTAINER
 
     def toJson: Json
-    override def toString() = s"${factory.name}($toStringParams)"
-    def toStringParams: String
   }
 
-  // mutable aggregator of data; produces a container; names are gerunds (-ing)
+  // mutable aggregator of data; produces a container
   trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Container[CONTAINER] {
-    def datumType: Type
     def selection: Selection[DATUM]
 
     def fill(x: Weighted[DATUM])
@@ -97,67 +91,54 @@ package histogrammar {
     def factory = fix.factory
     def +(that: CONTAINER) = fix.+(that)
     def toJson = fix.toJson
-
-    override def toString() = s"${factory.name}[${datumType.toString}]($toStringParams)"
   }
 
-  //////////////////////////////////////////////////////////////// Count/Counted/Counting
+  //////////////////////////////////////////////////////////////// Counted/Counting
 
-  object Count extends Factory {
-    val name = "Count"
+  object Counted extends Factory {
+    val name = "Counted"
 
     def apply(value: Double) = new Counted(value)
-    def apply[DATUM : WeakTypeTag](implicit selection: Selection[DATUM]) = new Counting(selection, 0.0)
 
     def fromJson(json: Json): Container[_] = json match {
       case JsonFloat(value) => new Counted(value)
-      case _ => throw new JsonFormatException(json, "Count")
+      case _ => throw new JsonFormatException(json, "Counted")
     }
   }
-
   class Counted(val value: Double) extends Container[Counted] {
-    def factory = Count
+    def factory = Counted
 
     def +(that: Counted) = new Counted(this.value + that.value)
 
     def toJson = JsonFloat(value)
-    def toStringParams = value.toString
+    override def toString() = s"Counted"
   }
 
-  class Counting[DATUM : WeakTypeTag](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counted] {
-    def datumType = weakTypeOf[DATUM]
+  object Counting {
+    def apply[DATUM](selection: Selection[DATUM] = uncut[DATUM]) = new Counting(selection, 0.0)
+  }
+  class Counting[DATUM](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counted] {
     def fill(x: Weighted[DATUM]) {
       val y = x reweight selection(x)
       value += y.weight
     }
     def fix = new Counted(value)
-    def toStringParams = selection.toString
+    override def toString() = s"Counting"
   }
 
-  //////////////////////////////////////////////////////////////// Bin/Binned/Binning
+  //////////////////////////////////////////////////////////////// Binned/Binning
 
-  object Bin extends Factory {
-    val name = "Bin"
+  object Binned extends Factory {
+    val name = "Binned"
 
-    def apply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
-      low: Double,
-      high: Double,
-      values: Seq[V],
-      underflow: U,
-      overflow: O,
-      nanflow: N) =
+    def apply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+      (low: Double,
+        high: Double)
+      (values: Seq[V],
+        underflow: U,
+        overflow: O,
+        nanflow: N) =
       new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
-
-    def apply[DATUM : WeakTypeTag, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
-      key: ToNumeric[DATUM],
-      selection: Selection[DATUM],
-      low: Double,
-      high: Double,
-      values: Seq[Aggregator[DATUM, V]] = Array.fill(100)(Count[DATUM]).toSeq,
-      underflow: Aggregator[DATUM, U] = Count[DATUM],
-      overflow: Aggregator[DATUM, O] = Count[DATUM],
-      nanflow: Aggregator[DATUM, N] = Count[DATUM]) =
-      new Binning[DATUM, V, U, O, N](key, selection, low, high, values, underflow, overflow, nanflow)
 
     def fromJson(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
@@ -165,47 +146,46 @@ package histogrammar {
 
         val low = get("low") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, "Bin.low")
+          case x => throw new JsonFormatException(x, "Binned.low")
         }
 
         val high = get("high") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, "Bin.high")
+          case x => throw new JsonFormatException(x, "Binned.high")
         }
 
         val valuesFactory = get("values:type") match {
           case JsonString(name) => Factory(name)
-          case x => throw new JsonFormatException(x, "Bin.values:type")
+          case x => throw new JsonFormatException(x, "Binned.values:type")
         }
         val values = get("values") match {
           case JsonArray(sub @ _*) => sub.map(valuesFactory.fromJson(_))
-          case x => throw new JsonFormatException(x, "Bin.values")
+          case x => throw new JsonFormatException(x, "Binned.values")
         }
 
         val underflowFactory = get("underflow:type") match {
           case JsonString(name) => Factory(name)
-          case x => throw new JsonFormatException(x, "Bin.underflow:type")
+          case x => throw new JsonFormatException(x, "Binned.underflow:type")
         }
         val underflow = underflowFactory.fromJson(get("underflow"))
 
         val overflowFactory = get("overflow:type") match {
           case JsonString(name) => Factory(name)
-          case x => throw new JsonFormatException(x, "Bin.overflow:type")
+          case x => throw new JsonFormatException(x, "Binned.overflow:type")
         }
         val overflow = overflowFactory.fromJson(get("overflow"))
 
         val nanflowFactory = get("nanflow:type") match {
           case JsonString(name) => Factory(name)
-          case x => throw new JsonFormatException(x, "Bin.nanflow:type")
+          case x => throw new JsonFormatException(x, "Binned.nanflow:type")
         }
         val nanflow = nanflowFactory.fromJson(get("nanflow"))
 
         new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, values, underflow, overflow, nanflow)
 
-      case _ => throw new JsonFormatException(json, "Bin")
+      case _ => throw new JsonFormatException(json, "Binned")
     }
   }
-
   class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
@@ -219,15 +199,15 @@ package histogrammar {
     if (values.size < 1)
       throw new AggregatorException(s"values ($values) must have at least one element")
 
-    def factory = Bin
+    def factory = Binned
 
     def +(that: Binned[V, U, O, N]) = {
       if (this.low != that.low)
-        throw new AggregatorException(s"cannot add Bins because low differs (${this.low} vs ${that.low})")
+        throw new AggregatorException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
       if (this.high != that.high)
-        throw new AggregatorException(s"cannot add Bins because high differs (${this.high} vs ${that.high})")
+        throw new AggregatorException(s"cannot add Binned because high differs (${this.high} vs ${that.high})")
       if (this.values.size != that.values.size)
-        throw new AggregatorException(s"cannot add Bins because number of values differs (${this.values.size} vs ${that.values.size})")
+        throw new AggregatorException(s"cannot add Binned because number of values differs (${this.values.size} vs ${that.values.size})")
 
       new Binned(
         low,
@@ -250,14 +230,27 @@ package histogrammar {
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJson)
 
-    def toStringParams = s"""$low, $high, Seq(${values.map(_.toString).mkString(", ")}), $underflow, $overflow, $nanflow"""
+    override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
   }
 
-  class Binning[DATUM : WeakTypeTag, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
-    val key: ToNumeric[DATUM],
-    val selection: Selection[DATUM],
+  object Binning {
+    def apply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+      (num: Int,
+        low: Double,
+        high: Double,
+        key: ToNumeric[DATUM],
+        selection: Selection[DATUM] = uncut[DATUM])
+      (value: => Aggregator[DATUM, V] = Counting[DATUM](),
+        underflow: Aggregator[DATUM, U] = Counting[DATUM](),
+        overflow: Aggregator[DATUM, O] = Counting[DATUM](),
+        nanflow: Aggregator[DATUM, N] = Counting[DATUM]()) =
+      new Binning[DATUM, V, U, O, N](low, high, key, selection, Array.fill(num)(value).toSeq, underflow, overflow, nanflow)
+  }
+  class Binning[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
+    val key: ToNumeric[DATUM],
+    val selection: Selection[DATUM],
     val values: Seq[Aggregator[DATUM, V]],
     val underflow: Aggregator[DATUM, U],
     val overflow: Aggregator[DATUM, O],
@@ -267,8 +260,6 @@ package histogrammar {
       throw new AggregatorException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
       throw new AggregatorException(s"values ($values) must have at least one element")
-
-    def datumType = weakTypeOf[DATUM]
 
     def bin(k: Double): Int =
       if (under(k)  ||  over(k)  ||  nan(k))
@@ -296,8 +287,6 @@ package histogrammar {
     }
 
     def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
-
-    def toStringParams = s"""$key, $selection, $low, $high, Seq(${values.map(_.toString).mkString(", ")}), $underflow, $overflow, $nanflow"""
+    override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
   }
 }
-

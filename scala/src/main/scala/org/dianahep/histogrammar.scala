@@ -8,15 +8,15 @@ package object histogrammar {
   implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
   implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}
 
-  type Selection[DATUM] = Weighted[DATUM] => Double
-  implicit def filterToSelection[DATUM](filter: Weighted[DATUM] => Boolean): Selection[DATUM] =
-    {x: Weighted[DATUM] => if (filter(x)) 1.0 else 0.0}
+  implicit def filterToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
+  implicit def weightToSelection[DATUM](f: DATUM => Double) = Selection({x: Weighted[DATUM] => f(x.datum)})
+  implicit def weightedFilterToSelection[DATUM](f: Weighted[DATUM] => Boolean) = Selection({x: Weighted[DATUM] => if (f(x)) 1.0 else 0.0})
+  implicit def weightedWeightToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection({x: Weighted[DATUM] => f(x)})
 
   type ToNumeric[DATUM] = Weighted[DATUM] => Double
   type ToCategory[DATUM] = Weighted[DATUM] => String
 
-  def uncut[DATUM] = {x: Weighted[DATUM] => 1.0}
-  def identity[DATUM](x: DATUM): DATUM = x
+  def uncut[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
 
   Factory.register(Counted)
   Factory.register(Binned)
@@ -30,13 +30,17 @@ package histogrammar {
     def nonzero = weight != 0.0
   }
 
-  case class Cached[DOMAIN, RANGE](function: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
+  case class Selection[DATUM](f: Weighted[DATUM] => Double) extends Function1[Weighted[DATUM], Double] {
+    def apply(x: Weighted[DATUM]) = f(x)
+  }
+
+  case class Cached[DOMAIN, RANGE](f: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
     private var last: Option[(DOMAIN, RANGE)] = None
     def apply(x: DOMAIN): RANGE = (x, last) match {
       case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
       case (_,            Some((oldx, oldy)))         if (x == oldx)    => oldy
       case _ =>
-        val y = function(x)
+        val y = f(x)
         last = Some(x -> y)
         y
     }

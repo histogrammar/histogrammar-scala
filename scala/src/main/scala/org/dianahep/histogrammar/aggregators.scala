@@ -15,8 +15,6 @@ package object histogrammar {
   type ToNumeric[DATUM] = Weighted[DATUM] => Double
   type ToCategory[DATUM] = Weighted[DATUM] => String
 
-  // implicit def aggregatorToContainer[CONTAINER <: Container[CONTAINER]](aggregator: Aggregator[_, CONTAINER]): CONTAINER = aggregator.fix
-
   def uncut[DATUM] = {x: Weighted[DATUM] => 1.0}
   def identity[DATUM](x: DATUM): DATUM = x
 
@@ -52,21 +50,37 @@ package histogrammar {
   // creates aggregators (from provided functions) and containers (from JSON)
   trait Factory {
     def name: String
-
-    def fromJson(str: String): Container[_] = Json.parse(str) match {
-      case Some(json) => fromJson(json)
-      case None => throw new InvalidJsonException(str)
-    }
-    def fromJson(json: Json): Container[_]
+    def fromJsonFragment(json: Json): Container[_]
   }
   object Factory {
     private var known = Map[String, Factory]()
+
     def register(factory: Factory) {
       known = known.updated(factory.name, factory)
     }
+
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
       case None => throw new AggregatorException(s"unrecognized aggregator (is it a custom aggregator that hasn't been registered?): $name")
+    }
+
+    def fromJson[CONTAINER <: Container[CONTAINER]](str: String): CONTAINER = Json.parse(str) match {
+      case Some(json) => fromJson(json).asInstanceOf[CONTAINER]
+      case None => throw new InvalidJsonException(str)
+    }
+
+    def fromJson[CONTAINER <: Container[CONTAINER]](json: Json): CONTAINER = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
+        val get = pairs.toMap
+
+        val name = get("type") match {
+          case JsonString(x) => x
+          case x => throw new JsonFormatException(x, "type")
+        }
+
+        Factory(name).fromJsonFragment(get("data")).asInstanceOf[CONTAINER]
+
+      case _ => throw new JsonFormatException(json, "Factory")
     }
   }
 
@@ -76,7 +90,8 @@ package histogrammar {
 
     def +(that: CONTAINER): CONTAINER
 
-    def toJson: Json
+    def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
+    def toJsonFragment: Json
   }
 
   // mutable aggregator of data; produces a container
@@ -90,7 +105,7 @@ package histogrammar {
     // satisfy Container[CONTAINER] contract by passing everything through fix
     def factory = fix.factory
     def +(that: CONTAINER) = fix.+(that)
-    def toJson = fix.toJson
+    def toJsonFragment = fix.toJsonFragment
   }
 
   //////////////////////////////////////////////////////////////// Counted/Counting
@@ -100,7 +115,7 @@ package histogrammar {
 
     def apply(value: Double) = new Counted(value)
 
-    def fromJson(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonFloat(value) => new Counted(value)
       case _ => throw new JsonFormatException(json, "Counted")
     }
@@ -110,7 +125,7 @@ package histogrammar {
 
     def +(that: Counted) = new Counted(this.value + that.value)
 
-    def toJson = JsonFloat(value)
+    def toJsonFragment = JsonFloat(value)
     override def toString() = s"Counted"
   }
 
@@ -140,7 +155,7 @@ package histogrammar {
         nanflow: N) =
       new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
 
-    def fromJson(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
         val get = pairs.toMap
 
@@ -159,7 +174,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, "Binned.values:type")
         }
         val values = get("values") match {
-          case JsonArray(sub @ _*) => sub.map(valuesFactory.fromJson(_))
+          case JsonArray(sub @ _*) => sub.map(valuesFactory.fromJsonFragment(_))
           case x => throw new JsonFormatException(x, "Binned.values")
         }
 
@@ -167,19 +182,19 @@ package histogrammar {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, "Binned.underflow:type")
         }
-        val underflow = underflowFactory.fromJson(get("underflow"))
+        val underflow = underflowFactory.fromJsonFragment(get("underflow"))
 
         val overflowFactory = get("overflow:type") match {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, "Binned.overflow:type")
         }
-        val overflow = overflowFactory.fromJson(get("overflow"))
+        val overflow = overflowFactory.fromJsonFragment(get("overflow"))
 
         val nanflowFactory = get("nanflow:type") match {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, "Binned.nanflow:type")
         }
-        val nanflow = nanflowFactory.fromJson(get("nanflow"))
+        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
         new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, values, underflow, overflow, nanflow)
 
@@ -218,17 +233,17 @@ package histogrammar {
         this.nanflow + that.nanflow)
     }
 
-    def toJson = JsonObject(
+    def toJsonFragment = JsonObject(
       "low" -> JsonFloat(low),
       "high" -> JsonFloat(high),
       "values:type" -> JsonString(values.head.factory.name),
-      "values" -> JsonArray(values.map(_.toJson): _*),
+      "values" -> JsonArray(values.map(_.toJsonFragment): _*),
       "underflow:type" -> JsonString(underflow.factory.name),
-      "underflow" -> underflow.toJson,
+      "underflow" -> underflow.toJsonFragment,
       "overflow:type" -> JsonString(overflow.factory.name),
-      "overflow" -> overflow.toJson,
+      "overflow" -> overflow.toJsonFragment,
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJson)
+      "nanflow" -> nanflow.toJsonFragment)
 
     override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
   }

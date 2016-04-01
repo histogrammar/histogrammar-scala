@@ -3,13 +3,17 @@ package org.dianahep.histogrammar
 import scala.language.implicitConversions
 
 package object specialized {
-  implicit def binnedToHistogram(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist)
-  implicit def binningToHistogram[DEBUG](hist: Binning[DEBUG, Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist.fix)
+  type Histogram = Binned[Counted, Counted, Counted, Counted]
+  def histogram[DATUM](num: Int, low: Double, high: Double, key: ToNumeric[DATUM], selection: Selection[DATUM] = uncut[DATUM]) =
+    Binning(num, low, high, key, selection)()
+
+  implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist)
+  implicit def binningToHistogramMethods[DEBUG](hist: Binning[DEBUG, Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist.fix)
 }
 
 package specialized {
   class HistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]) {
-    def show = {
+    def ascii = {
       val minCount = hist.values.map(_.value).min
       val maxCount = hist.values.map(_.value).max
       val range = maxCount - minCount

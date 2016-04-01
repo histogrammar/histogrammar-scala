@@ -57,7 +57,9 @@ package json {
     def done = str.size == pos
   }
 
-  sealed trait Json
+  sealed trait Json {
+    def stringify: String
+  }
   object Json {
     def parse(str: String): Option[Json] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[Json] =
@@ -306,9 +308,7 @@ package json {
 
   case class JsonArray(elements: Json*) extends JsonContainer {
     override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
-    def stringify = "[" + elements.map(_.toString).mkString(", ") + "]"
-    // def all[T <: Json] = elements.forall({case x: T => true; case _ => false})
-    // def any[T <: Json] = elements.exists({case x: T => true; case _ => false})
+    def stringify = "[" + elements.map(_.stringify).mkString(", ") + "]"
     def to[T <: Json] = elements.map(_.asInstanceOf[T])
   }
   object JsonArray {
@@ -358,9 +358,7 @@ package json {
 
   case class JsonObject(pairs: (JsonString, Json)*) extends JsonContainer {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
-    def stringify = "{" + pairs.map({case (k, v) => k.toString + ": " + v.toString}).mkString(", ") + "}"
-    // def all[T <: Json] = pairs.forall(_._2.isInstanceOf[T])
-    // def any[T <: Json] = pairs.exists(_._2.isInstanceOf[T])
+    def stringify = "{" + pairs.map({case (k, v) => k.stringify + ": " + v.stringify}).mkString(", ") + "}"
     def to[T <: Json] = pairs.map({case (k, v) => (k.value, v.asInstanceOf[T])})
   }
   object JsonObject {

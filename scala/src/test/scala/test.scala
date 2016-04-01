@@ -11,16 +11,28 @@ class DefaultSuite extends FlatSpec with Matchers {
   "stuff" must "work" in {
     case class Datum(one: Double, two: Double, three: String)
 
-    val hist = Binning(50, 5.0, 15.0, {d: Datum => d.two})()
+    val hist = histogram(50, 5.0, 15.0, {d: Datum => d.two})
 
     0 until 10000 foreach {i =>
       hist.fill(Datum(scala.util.Random.nextDouble(), scala.util.Random.nextGaussian() + 8.0, "whatever"))
     }
 
+    println(hist.ascii)
+
     println(hist)
     println(hist.fix)
 
-    println(hist.show)
+    val stringified = hist.toJson.stringify
+
+    println(stringified)
+
+    val reconstituted = Factory.fromJson[Histogram](stringified)
+
+    println(reconstituted)
+
+    println(reconstituted.ascii)
+
+    println((hist.fix + reconstituted).ascii)
 
   }
 }

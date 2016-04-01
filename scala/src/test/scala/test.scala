@@ -39,12 +39,9 @@ class DefaultSuite extends FlatSpec with Matchers {
   def mean(x: List[Double], w: List[Double]) =
     if (w.filter(_ > 0.0).isEmpty)
       0.0
-    else {
-      println(x zip w map {case (xi, wi) => (xi, Math.max(wi, 0.0))})
-      println(w.map(Math.max(_, 0.0)))
-
+    else
       (x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum
-    }
+
   def variance(x: List[Double]) =
     if (x.isEmpty)
       0.0
@@ -55,7 +52,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     if (w.filter(_ > 0.0).isEmpty)
       0.0
     else
-      (x zip w map {case (xi, wi) => Math.pow(xi * Math.max(wi, 0.0), 2)} sum) / w.filter(_ > 0.0).sum - Math.pow((x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum, 2)
+      (x zip w map {case (xi, wi) => xi * xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum - Math.pow((x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum, 2)
 
   "Counting/Counted" must "work unfiltered" in {
     for (i <- 0 to 10) {
@@ -228,7 +225,6 @@ class DefaultSuite extends FlatSpec with Matchers {
   it must "work with a weighting factor" in {
     for (i <- 0 to 10) {
       val (left, right) = struct.splitAt(i)
-      println(left, right)
 
       val leftAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.int})
       val rightAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.int})
@@ -244,6 +240,69 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Averaged(_, finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
+    }
+  }
+
+  "Deviating/Deviated" must "work unfiltered" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val leftDeviating = Deviating({x: Double => x})
+      val rightDeviating = Deviating({x: Double => x})
+
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
+
+      val (Deviating(_, _, leftResult), Deviating(_, _, rightResult)) = (leftDeviating, rightDeviating)
+
+      leftResult should be (variance(left) +- 1e-12)
+      rightResult should be (variance(right) +- 1e-12)
+
+      val Deviated(_, _, finalResult) = leftDeviating + rightDeviating
+
+      finalResult should be (variance(simple) +- 1e-12)
+    }
+  }
+
+  it must "work with a filter" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
+
+      val leftDeviating = Deviating({x: Struct => x.double}, {x: Struct => x.bool})
+      val rightDeviating = Deviating({x: Struct => x.double}, {x: Struct => x.bool})
+
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
+
+      val (Deviating(_, _, leftResult), Deviating(_, _, rightResult)) = (leftDeviating, rightDeviating)
+
+      leftResult should be (variance(left.filter(_.bool).map(_.double)) +- 1e-12)
+      rightResult should be (variance(right.filter(_.bool).map(_.double)) +- 1e-12)
+
+      val Deviated(_, _, finalResult) = leftDeviating + rightDeviating
+
+      finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
+    }
+  }
+
+  it must "work with a weighting factor" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
+
+      val leftDeviating = Deviating({x: Struct => x.double}, {x: Struct => x.int})
+      val rightDeviating = Deviating({x: Struct => x.double}, {x: Struct => x.int})
+
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
+
+      val (Deviating(_, _, leftResult), Deviating(_, _, rightResult)) = (leftDeviating, rightDeviating)
+
+      leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+
+      val Deviated(_, _, finalResult) = leftDeviating + rightDeviating
+
+      finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
     }
   }
 }

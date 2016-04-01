@@ -242,7 +242,11 @@ package histogrammar {
 
       if (y.contributes) {
         count += y.weight
-        mean = mean + y.weight/count * (y.datum - mean)
+
+        val delta = y.datum - mean
+        val shift = delta * y.weight / count
+
+        mean += shift
       }
     }
 
@@ -285,10 +289,19 @@ package histogrammar {
   class Deviated(val count: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
     def factory = Deviated
 
-    def +(that: Deviated) = new Deviated(
-      this.count + that.count,
-      (this.mean*this.count + that.mean*that.count) / (this.count + that.count),
-      (this.variance*this.count + that.variance*that.count) / (this.count + that.count))
+    def +(that: Deviated) = {
+      val ca = this.count
+      val cb = that.count
+      val mua = this.mean
+      val mub = that.mean
+      val sa = this.variance * this.count
+      val sb = that.variance * that.count
+
+      val muab = (ca*mua + cb*mub) / (ca + cb)
+      val sab = sa + sb + ca*mua*mua + cb*mub*mub - 2.0*muab*(ca*mua + cb*mub) + muab*muab*(ca + cb)
+
+      new Deviated(ca * cb, muab, sab / (ca + cb))
+    }
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
     override def toString() = s"Deviated"
@@ -304,14 +317,16 @@ package histogrammar {
       val y = quantity(x) reweight selection(x)
 
       if (y.contributes) {
-        val oldS = variance * count
-        val oldMean = mean
+        val originalCount = count
 
         count += y.weight
-        mean = mean + y.weight/count * (y.datum - mean)
 
-        val newS = oldS + y.weight * (y.datum - oldMean) * (y.datum - mean)
-        variance = newS / count
+        val delta = y.datum - mean
+        val shift = delta * y.weight / count
+        val varianceTimesCount = originalCount * (variance + delta * shift)
+
+        mean += shift
+        variance = varianceTimesCount / count
       }
     }
     def fix = new Deviated(count, mean, variance)

@@ -37,7 +37,7 @@ package histogrammar {
 
   case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0) {
     def reweight(w: Double): Weighted[DATUM] = copy(weight = weight*w)
-    def nonzero = weight != 0.0
+    def contributes = weight > 0.0
   }
 
   case class Selection[DATUM](f: Weighted[DATUM] => Double) extends Function1[Weighted[DATUM], Double] {
@@ -239,8 +239,11 @@ package histogrammar {
 
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
-      count += y.weight
-      mean += mean + y.weight/count * (y.datum - mean)
+
+      if (y.contributes) {
+        count += y.weight
+        mean = mean + y.weight/count * (y.datum - mean)
+      }
     }
 
     def fix = new Averaged(count, mean)
@@ -300,14 +303,16 @@ package histogrammar {
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 
-      val oldS = variance * count
-      val oldMean = mean
+      if (y.contributes) {
+        val oldS = variance * count
+        val oldMean = mean
 
-      count += y.weight
-      mean += mean + y.weight/count * (y.datum - mean)
+        count += y.weight
+        mean = mean + y.weight/count * (y.datum - mean)
 
-      val newS = oldS + y.weight * (y.datum - oldMean) * (y.datum - mean)
-      variance = newS / count
+        val newS = oldS + y.weight * (y.datum - oldMean) * (y.datum - mean)
+        variance = newS / count
+      }
     }
     def fix = new Deviated(count, mean, variance)
     override def toString() = s"Deviating"
@@ -465,7 +470,7 @@ package histogrammar {
     def fill(x: Weighted[DATUM]) {
       val k = key(x)
       val y = x reweight selection(x)
-      if (y.nonzero) {
+      if (y.contributes) {
         if (under(k))
           underflow.fill(y)
         else if (over(k))

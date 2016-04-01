@@ -1,5 +1,7 @@
 package test.scala.histogrammar
 
+import scala.language.postfixOps
+
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.Matchers
@@ -23,6 +25,37 @@ class DefaultSuite extends FlatSpec with Matchers {
     Struct(true, 5, 0.0, "eight"),
     Struct(false, 6, -3.0, "nine"),
     Struct(true, 7, -1.7, "ten"))
+
+  val backward = struct.reverse
+
+  // straightforward mean and variance to complement the Tony Finch calculations used in the module
+
+  def mean(x: List[Double]) =
+    if (x.isEmpty)
+      0.0
+    else
+      x.sum / x.size
+
+  def mean(x: List[Double], w: List[Double]) =
+    if (w.filter(_ > 0.0).isEmpty)
+      0.0
+    else {
+      println(x zip w map {case (xi, wi) => (xi, Math.max(wi, 0.0))})
+      println(w.map(Math.max(_, 0.0)))
+
+      (x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum
+    }
+  def variance(x: List[Double]) =
+    if (x.isEmpty)
+      0.0
+    else
+      x.map(Math.pow(_, 2)).sum / x.size - Math.pow(x.sum / x.size, 2)
+
+  def variance(x: List[Double], w: List[Double]) =
+    if (w.filter(_ > 0.0).isEmpty)
+      0.0
+    else
+      (x zip w map {case (xi, wi) => Math.pow(xi * Math.max(wi, 0.0), 2)} sum) / w.filter(_ > 0.0).sum - Math.pow((x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum, 2)
 
   "Counting/Counted" must "work unfiltered" in {
     for (i <- 0 to 10) {
@@ -99,8 +132,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       val (Summing(leftResult), Summing(rightResult)) = (leftSumming, rightSumming)
 
-      leftResult should be (left.sum)
-      rightResult should be (right.sum)
+      leftResult should be (left.sum +- 1e-12)
+      rightResult should be (right.sum +- 1e-12)
 
       val Summed(finalResult) = leftSumming + rightSumming
 
@@ -120,8 +153,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       val (Summing(leftResult), Summing(rightResult)) = (leftSumming, rightSumming)
 
-      leftResult should be (left.filter(_.bool).map(_.double).sum)
-      rightResult should be (right.filter(_.bool).map(_.double).sum)
+      leftResult should be (left.filter(_.bool).map(_.double).sum +- 1e-12)
+      rightResult should be (right.filter(_.bool).map(_.double).sum +- 1e-12)
 
       val Summed(finalResult) = leftSumming + rightSumming
 
@@ -141,12 +174,76 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       val (Summing(leftResult), Summing(rightResult)) = (leftSumming, rightSumming)
 
-      leftResult should be (left.map({x => x.int * x.double}).sum)
-      rightResult should be (right.map({x => x.int * x.double}).sum)
+      leftResult should be (left.map({x => x.int * x.double}).sum +- 1e-12)
+      rightResult should be (right.map({x => x.int * x.double}).sum +- 1e-12)
 
       val Summed(finalResult) = leftSumming + rightSumming
 
       finalResult should be (struct.map({x => x.int * x.double}).sum +- 1e-12)
+    }
+  }
+
+  "Averaging/Averaged" must "work unfiltered" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val leftAveraging = Averaging({x: Double => x})
+      val rightAveraging = Averaging({x: Double => x})
+
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
+
+      val (Averaging(_, leftResult), Averaging(_, rightResult)) = (leftAveraging, rightAveraging)
+
+      leftResult should be (mean(left) +- 1e-12)
+      rightResult should be (mean(right) +- 1e-12)
+
+      val Averaged(_, finalResult) = leftAveraging + rightAveraging
+
+      finalResult should be (mean(simple) +- 1e-12)
+    }
+  }
+
+  it must "work with a filter" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
+
+      val leftAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.bool})
+      val rightAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.bool})
+
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
+
+      val (Averaging(_, leftResult), Averaging(_, rightResult)) = (leftAveraging, rightAveraging)
+
+      leftResult should be (mean(left.filter(_.bool).map(_.double)) +- 1e-12)
+      rightResult should be (mean(right.filter(_.bool).map(_.double)) +- 1e-12)
+
+      val Averaged(_, finalResult) = leftAveraging + rightAveraging
+
+      finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
+    }
+  }
+
+  it must "work with a weighting factor" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
+      println(left, right)
+
+      val leftAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.int})
+      val rightAveraging = Averaging({x: Struct => x.double}, {x: Struct => x.int})
+
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
+
+      val (Averaging(_, leftResult), Averaging(_, rightResult)) = (leftAveraging, rightAveraging)
+
+      leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+
+      val Averaged(_, finalResult) = leftAveraging + rightAveraging
+
+      finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
     }
   }
 }

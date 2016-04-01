@@ -86,4 +86,67 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalResult should be (struct.map(_.int).sum)
     }
   }
+
+  "Summing/Summed" must "work unfiltered" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val leftSumming = Summing({x: Double => x})
+      val rightSumming = Summing({x: Double => x})
+
+      left.foreach(leftSumming.fill(_))
+      right.foreach(rightSumming.fill(_))
+
+      val (Summing(leftResult), Summing(rightResult)) = (leftSumming, rightSumming)
+
+      leftResult should be (left.sum)
+      rightResult should be (right.sum)
+
+      val Summed(finalResult) = leftSumming + rightSumming
+
+      finalResult should be (simple.sum +- 1e-12)
+    }
+  }
+
+  it must "work with a filter" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
+
+      val leftSumming = Summing({x: Struct => x.double}, {x: Struct => x.bool})
+      val rightSumming = Summing({x: Struct => x.double}, {x: Struct => x.bool})
+
+      left.foreach(leftSumming.fill(_))
+      right.foreach(rightSumming.fill(_))
+
+      val (Summing(leftResult), Summing(rightResult)) = (leftSumming, rightSumming)
+
+      leftResult should be (left.filter(_.bool).map(_.double).sum)
+      rightResult should be (right.filter(_.bool).map(_.double).sum)
+
+      val Summed(finalResult) = leftSumming + rightSumming
+
+      finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
+    }
+  }
+
+  it must "work with a weighting factor" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
+
+      val leftSumming = Summing({x: Struct => x.double}, {x: Struct => x.int})
+      val rightSumming = Summing({x: Struct => x.double}, {x: Struct => x.int})
+
+      left.foreach(leftSumming.fill(_))
+      right.foreach(rightSumming.fill(_))
+
+      val (Summing(leftResult), Summing(rightResult)) = (leftSumming, rightSumming)
+
+      leftResult should be (left.map({x => x.int * x.double}).sum)
+      rightResult should be (right.map({x => x.int * x.double}).sum)
+
+      val Summed(finalResult) = leftSumming + rightSumming
+
+      finalResult should be (struct.map({x => x.int * x.double}).sum +- 1e-12)
+    }
+  }
 }

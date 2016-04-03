@@ -75,7 +75,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (simple.size)
 
-      Factory.fromJson[Counted](leftCounting.toJson.stringify) should be (leftCounting.fix)
+      ContainerFactory.fromJson[Counted](leftCounting.toJson.stringify) should be (leftCounting.fix)
     }
   }
 
@@ -98,7 +98,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (struct.filter(_.bool).size)
 
-      Factory.fromJson[Counted](leftCounting.toJson.stringify) should be (leftCounting.fix)
+      ContainerFactory.fromJson[Counted](leftCounting.toJson.stringify) should be (leftCounting.fix)
     }
   }
 
@@ -121,7 +121,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (struct.map(_.int).sum)
 
-      Factory.fromJson[Counted](leftCounting.toJson.stringify) should be (leftCounting.fix)
+      ContainerFactory.fromJson[Counted](leftCounting.toJson.stringify) should be (leftCounting.fix)
     }
   }
 
@@ -146,7 +146,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (simple.sum +- 1e-12)
 
-      Factory.fromJson[Summed](leftSumming.toJson.stringify) should be (leftSumming.fix)
+      ContainerFactory.fromJson[Summed](leftSumming.toJson.stringify) should be (leftSumming.fix)
     }
   }
 
@@ -169,7 +169,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
 
-      Factory.fromJson[Summed](leftSumming.toJson.stringify) should be (leftSumming.fix)
+      ContainerFactory.fromJson[Summed](leftSumming.toJson.stringify) should be (leftSumming.fix)
     }
   }
 
@@ -192,7 +192,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (struct.map({x => x.int * x.double}).sum +- 1e-12)
 
-      Factory.fromJson[Summed](leftSumming.toJson.stringify) should be (leftSumming.fix)
+      ContainerFactory.fromJson[Summed](leftSumming.toJson.stringify) should be (leftSumming.fix)
     }
   }
 
@@ -217,7 +217,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(simple) +- 1e-12)
 
-      Factory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
+      ContainerFactory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
     }
   }
 
@@ -240,7 +240,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
-      Factory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
+      ContainerFactory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
     }
   }
 
@@ -263,7 +263,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
-      Factory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
+      ContainerFactory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
     }
   }
 
@@ -286,7 +286,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
-      Factory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
+      ContainerFactory.fromJson[Averaged](leftAveraging.toJson.stringify) should be (leftAveraging.fix)
     }
   }
 
@@ -311,7 +311,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(simple) +- 1e-12)
 
-      Factory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
+      ContainerFactory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
     }
   }
 
@@ -334,7 +334,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
-      Factory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
+      ContainerFactory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
     }
   }
 
@@ -357,7 +357,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
-      Factory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
+      ContainerFactory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
     }
   }
 
@@ -380,7 +380,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
-      Factory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
+      ContainerFactory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
     }
   }
 
@@ -394,7 +394,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.fix.overflow should be (Counted(1.0))
     one.fix.nanflow should be (Counted(0.0))
 
-    Factory.fromJson[Binned[Counted, Counted, Counted, Counted]](one.toJson.stringify) should be (one.fix)
+    ContainerFactory.fromJson[Binned[Counted, Counted, Counted, Counted]](one.toJson.stringify) should be (one.fix)
 
     val two = Binning(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool})()
     struct.foreach(two.fill(_))
@@ -403,7 +403,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     two.fix.overflow should be (Counted(0.0))
     two.fix.nanflow should be (Counted(0.0))
 
-    Factory.fromJson[Binned[Counted, Counted, Counted, Counted]](two.toJson.stringify) should be (two.fix)
+    ContainerFactory.fromJson[Binned[Counted, Counted, Counted, Counted]](two.toJson.stringify) should be (two.fix)
   }
 
   "Binning/Binned" must "work with Summing/Summed" in {
@@ -414,7 +414,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.fix.overflow should be (Summed(10.0))
     one.fix.nanflow should be (Summed(0.0))
 
-    Factory.fromJson[Binned[Summed, Summed, Summed, Summed]](one.toJson.stringify) should be (one.fix)
+    ContainerFactory.fromJson[Binned[Summed, Summed, Summed, Summed]](one.toJson.stringify) should be (one.fix)
 
     val two = Binning(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool})(Summing({x: Struct => 10.0}), Summing({x: Struct => 10.0}), Summing({x: Struct => 10.0}), Summing({x: Struct => 10.0}))
     struct.foreach(two.fill(_))
@@ -423,7 +423,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     two.fix.overflow should be (Summed(0.0))
     two.fix.nanflow should be (Summed(0.0))
 
-    Factory.fromJson[Binned[Summed, Summed, Summed, Summed]](two.toJson.stringify) should be (two.fix)
+    ContainerFactory.fromJson[Binned[Summed, Summed, Summed, Summed]](two.toJson.stringify) should be (two.fix)
   }
 
   //////////////////////////////////////////////////////////////// Mapped/Mapping
@@ -452,7 +452,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     mapped[Deviated]("three").mean should be (100.33 +- 1e-12)
     mapped[Deviated]("three").variance should be (10.8381 +- 1e-12)
 
-    Factory.fromJson[Mapped](mapping.toJson.stringify) should be (mapped)
+    ContainerFactory.fromJson[Mapped](mapping.toJson.stringify) should be (mapped)
   }
 
 }

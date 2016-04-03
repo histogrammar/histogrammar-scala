@@ -9,7 +9,7 @@ package object histogram {
     Binning(num, low, high, key, selection)()
 
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist)
-  implicit def binningToHistogramMethods[DEBUG](hist: Binning[DEBUG, Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist.fix)
+  implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist.fix)
 }
 
 package histogram {

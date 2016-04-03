@@ -28,16 +28,16 @@ package object histogrammar {
 
   implicit def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
 
-  Factory.register(Counted)
-  Factory.register(Summed)
-  Factory.register(Averaged)
-  Factory.register(Deviated)
-  Factory.register(Binned)
-  Factory.register(Mapped)
+  ContainerFactory.register(Counted)
+  ContainerFactory.register(Summed)
+  ContainerFactory.register(Averaged)
+  ContainerFactory.register(Deviated)
+  ContainerFactory.register(Binned)
+  ContainerFactory.register(Mapped)
 }
 
 package histogrammar {
-  //////////////////////////////////////////////////////////////// utility classes
+  //////////////////////////////////////////////////////////////// data model (user's data are implicitly converted to this)
 
   case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0) {
     def reweight(w: Double): Weighted[DATUM] = copy(weight = weight*w)
@@ -48,32 +48,19 @@ package histogrammar {
     def apply(x: Weighted[DATUM]) = f(x)
   }
 
-  case class Cached[DOMAIN, RANGE](f: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
-    private var last: Option[(DOMAIN, RANGE)] = None
-    def apply(x: DOMAIN): RANGE = (x, last) match {
-      case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
-      case (_,            Some((oldx, oldy)))         if (x == oldx)    => oldy
-      case _ =>
-        val y = f(x)
-        last = Some(x -> y)
-        y
-    }
-    def clear() { last = None }
-  }
-
   class AggregatorException(message: String, cause: Exception = null) extends Exception(message, cause)
 
   //////////////////////////////////////////////////////////////// general definition of an container/aggregator
 
-  // creates aggregators (from provided functions) and containers (from JSON)
-  trait Factory {
+  // creates containers (from arguments or JSON)
+  trait ContainerFactory {
     def name: String
     def fromJsonFragment(json: Json): Container[_]
   }
-  object Factory {
-    private var known = Map[String, Factory]()
+  object ContainerFactory {
+    private var known = Map[String, ContainerFactory]()
 
-    def register(factory: Factory) {
+    def register(factory: ContainerFactory) {
       known = known.updated(factory.name, factory)
     }
 
@@ -96,21 +83,24 @@ package histogrammar {
           case x => throw new JsonFormatException(x, "type")
         }
 
-        Factory(name).fromJsonFragment(get("data")).asInstanceOf[CONTAINER]
+        ContainerFactory(name).fromJsonFragment(get("data")).asInstanceOf[CONTAINER]
 
-      case _ => throw new JsonFormatException(json, "Factory")
+      case _ => throw new JsonFormatException(json, "ContainerFactory")
     }
   }
 
   // immutable container of data; the result of an aggregation
   trait Container[CONTAINER <: Container[CONTAINER]] extends Serializable {
-    def factory: Factory
+    def factory: ContainerFactory
 
     def +(that: CONTAINER): CONTAINER
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
   }
+
+  // creates aggregators (from arguments)
+  trait AggregatorFactory
 
   // mutable aggregator of data; produces a container
   trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Container[CONTAINER] {
@@ -129,7 +119,7 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Counted/Counting
 
-  object Counted extends Factory {
+  object Counted extends ContainerFactory {
     val name = "Counted"
 
     def apply(value: Double) = new Counted(value)
@@ -154,7 +144,7 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  object Counting {
+  object Counting extends AggregatorFactory {
     def apply[DATUM](selection: Selection[DATUM] = unweighted[DATUM]) = new Counting(selection, 0.0)
     def unapply(x: Counting[_]) = Some(x.value)
   }
@@ -174,7 +164,7 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Summed/Summing
 
-  object Summed extends Factory {
+  object Summed extends ContainerFactory {
     val name = "Summed"
 
     def apply(value: Double) = new Summed(value)
@@ -199,7 +189,7 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  object Summing {
+  object Summing extends AggregatorFactory {
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing(quantity, selection, 0.0)
     def unapply(x: Summing[_]) = Some(x.value)
   }
@@ -219,7 +209,7 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Averaged/Averaging
 
-  object Averaged extends Factory {
+  object Averaged extends ContainerFactory {
     val name = "Averaged"
 
     def apply(count: Double, mean: Double) = new Averaged(count, mean)
@@ -260,7 +250,7 @@ package histogrammar {
     override def hashCode() = (count, mean).hashCode
   }
 
-  object Averaging {
+  object Averaging extends AggregatorFactory {
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
     def unapply(x: Averaging[_]) = Some((x.count, x.mean))
   }
@@ -289,7 +279,7 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Deviated/Deviating
 
-  object Deviated extends Factory {
+  object Deviated extends ContainerFactory {
     val name = "Deviated"
 
     def apply(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
@@ -345,7 +335,7 @@ package histogrammar {
     override def hashCode() = (count, mean, variance).hashCode
   }
 
-  object Deviating {
+  object Deviating extends AggregatorFactory {
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
     def unapply(x: Deviating[_]) = Some((x.count, x.mean, x.variance))
   }
@@ -377,7 +367,7 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Binned/Binning
 
-  object Binned extends Factory {
+  object Binned extends ContainerFactory {
     val name = "Binned"
 
     def apply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
@@ -406,7 +396,7 @@ package histogrammar {
         }
 
         val valuesFactory = get("values:type") match {
-          case JsonString(name) => Factory(name)
+          case JsonString(name) => ContainerFactory(name)
           case x => throw new JsonFormatException(x, "Binned.values:type")
         }
         val values = get("values") match {
@@ -415,19 +405,19 @@ package histogrammar {
         }
 
         val underflowFactory = get("underflow:type") match {
-          case JsonString(name) => Factory(name)
+          case JsonString(name) => ContainerFactory(name)
           case x => throw new JsonFormatException(x, "Binned.underflow:type")
         }
         val underflow = underflowFactory.fromJsonFragment(get("underflow"))
 
         val overflowFactory = get("overflow:type") match {
-          case JsonString(name) => Factory(name)
+          case JsonString(name) => ContainerFactory(name)
           case x => throw new JsonFormatException(x, "Binned.overflow:type")
         }
         val overflow = overflowFactory.fromJsonFragment(get("overflow"))
 
         val nanflowFactory = get("nanflow:type") match {
-          case JsonString(name) => Factory(name)
+          case JsonString(name) => ContainerFactory(name)
           case x => throw new JsonFormatException(x, "Binned.nanflow:type")
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
@@ -499,7 +489,7 @@ package histogrammar {
     override def hashCode() = (low, high, values, underflow, overflow, nanflow).hashCode
   }
 
-  object Binning {
+  object Binning extends AggregatorFactory {
     def apply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (num: Int,
         low: Double,
@@ -566,7 +556,7 @@ package histogrammar {
   //////////////////////////////////////////////////////////////// Mapped/Mapping
 
   // this is a *heterogeneous* map, so some runtime casting is necessary; also note that data is broadcast to all members
-  object Mapped extends Factory {
+  object Mapped extends ContainerFactory {
     val name = "Mapped"
 
     def apply(pairs: (String, Container[_])*) = new Mapped(pairs: _*)
@@ -578,7 +568,7 @@ package histogrammar {
           case (JsonString(key), JsonObject(typedata @ _*)) if (typedata.keySet == Set("type", "data")) =>
             val get = typedata.toMap
             (get("type"), get("data")) match {
-              case (JsonString(factory), sub) => (key.toString, Factory(factory).fromJsonFragment(sub))
+              case (JsonString(factory), sub) => (key.toString, ContainerFactory(factory).fromJsonFragment(sub))
               case _ => throw new JsonFormatException(json, s"""Mapped key "$key"""")
             }
           case _ => throw new JsonFormatException(json, s"Mapped key")
@@ -624,7 +614,7 @@ package histogrammar {
     override def hashCode() = pairsMap.hashCode
   }
 
-  object Mapping {
+  object Mapping extends AggregatorFactory {
     def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*)(implicit selection: Selection[DATUM] = unweighted[DATUM]) = new Mapping(selection, pairs: _*)
     def unapplySeq[DATUM](x: Mapping[DATUM]) = Some(x.pairs)
   }
@@ -651,4 +641,5 @@ package histogrammar {
     }
     override def hashCode() = (selection, pairsMap).hashCode
   }
+
 }

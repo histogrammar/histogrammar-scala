@@ -24,6 +24,9 @@ package object histogrammar {
   implicit def weightedDoubleToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
 
   type NumericalFcn[DATUM] = Weighted[DATUM] => Double
+  type NumericalFcn2D[DATUM] = Weighted[DATUM] => (Double, Double)
+  type NumericalFcn3D[DATUM] = Weighted[DATUM] => (Double, Double, Double)
+  type NumericalFcnND[DATUM] = Weighted[DATUM] => Seq[Double]
   type CategoricalFcn[DATUM] = Weighted[DATUM] => String
 
   implicit def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
@@ -34,6 +37,13 @@ package object histogrammar {
   ContainerFactory.register(Deviated)
   ContainerFactory.register(Binned)
   ContainerFactory.register(Mapped)
+  ContainerFactory.register(Branched)
+
+  implicit def tupleToBranched2[C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[C1, C2]) = new Branched2(x._1, x._2)
+  implicit def tupleToBranched3[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[C1, C2, C3]) = new Branched3(x._1, x._2, x._3)
+
+  implicit def tupleToBranching2[DATUM, C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[Aggregator[DATUM, C1], Aggregator[DATUM, C2]]) = new Branching2(unweighted[DATUM], x._1, x._2)
+  implicit def tupleToBranching3[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3]]) = new Branching3(unweighted[DATUM], x._1, x._2, x._3)
 }
 
 package histogrammar {
@@ -562,7 +572,7 @@ package histogrammar {
     def apply(pairs: (String, Container[_])*) = new Mapped(pairs: _*)
     def unapplySeq(x: Mapped) = Some(x.pairs)
 
-    def fromJsonFragment(json: Json) = json match {
+    def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) =>
         new Mapped(pairs map {
           case (JsonString(key), JsonObject(typedata @ _*)) if (typedata.keySet == Set("type", "data")) =>
@@ -640,6 +650,83 @@ package histogrammar {
       case _ => false
     }
     override def hashCode() = (selection, pairsMap).hashCode
+  }
+
+  //////////////////////////////////////////////////////////////// Branched/Branching
+
+  // this is a *type-safe* tuple, with explicit cases for 2 through ?? branches
+  object Branched extends ContainerFactory {
+    val name = "Branched"
+
+    def apply[C1 <: Container[C1], C2 <: Container[C2]](_1: C1, _2: C2) = new Branched2[C1, C2](_1, _2)
+    def apply[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](_1: C1, _2: C2, _3: C3) = new Branched3[C1, C2, C3](_1, _2, _3)
+
+    def unapply[C1 <: Container[C1], C2 <: Container[C2]](x: Branched2[C1, C2]) = Some((x._1, x._2))
+    def unapply[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Branched3[C1, C2, C3]) = Some((x._1, x._2, x._3))
+
+    def fromJsonFragment(json: Json): Container[_] = json match {
+      case JsonArray(elements @ _*) if (elements.size >= 2) =>
+        val subs = elements.zipWithIndex map {
+          case (JsonObject(pairs @ _*), i) if (pairs.keySet == Set("type", "data")) =>
+            val get = pairs.toMap
+            (get("type"), get("data")) match {
+              case (JsonString(factory), sub) => ContainerFactory(factory).fromJsonFragment(sub)
+              case _ => throw new JsonFormatException(json, s"Branched item $i")
+            }
+          case _ => throw new JsonFormatException(json, "Branched item")
+        }
+        if (subs.size == 2) new Branched2[Container[_], Container[_]](subs(0), subs(1)).asInstanceOf[Container[_]]
+        else if (subs.size == 3) new Branched3[Container[_], Container[_], Container[_]](subs(0), subs(1), subs(2)).asInstanceOf[Container[_]]
+        else
+          throw new JsonFormatException(json, "Branched (too many branches)")
+
+      case _ => throw new JsonFormatException(json, "Branched")
+    }
+
+    private[histogrammar] def typedata[CONTAINER <: Container[CONTAINER]](sub: CONTAINER) = JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
+  }
+  class Branched2[C1 <: Container[C1], C2 <: Container[C2]](_1: C1, _2: C2) extends Tuple2[C1, C2](_1, _2) with Container[Branched2[C1, C2]] {
+    def factory = Branched
+    def +(that: Branched2[C1, C2]) = new Branched2[C1, C2](this._1 + that._1, this._2 + that._2)
+    def toJsonFragment = JsonArray(Branched.typedata(_1), Branched.typedata(_2))
+    override def toString = s"""Branched2[${_1}, ${_2}]"""
+  }
+  class Branched3[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](_1: C1, _2: C2, _3: C3) extends Tuple3[C1, C2, C3](_1, _2, _3) with Container[Branched3[C1, C2, C3]] {
+    def factory = Branched
+    def +(that: Branched3[C1, C2, C3]) = new Branched3[C1, C2, C3](this._1 + that._1, this._2 + that._2, this._3 + that._3)
+    def toJsonFragment = JsonArray(Branched.typedata(_1), Branched.typedata(_2), Branched.typedata(_3))
+    override def toString = s"""Branched3[${_1}, ${_2}, ${_3}]"""
+  }
+
+  object Branching extends AggregatorFactory {
+    def apply[DATUM, C1 <: Container[C1], C2 <: Container[C2]](_1: Aggregator[DATUM, C1], _2: Aggregator[DATUM, C2])(implicit selection: Selection[DATUM] = unweighted[DATUM]) = new Branching2[DATUM, C1, C2](selection, _1, _2)
+    def apply[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](_1: Aggregator[DATUM, C1], _2: Aggregator[DATUM, C2], _3: Aggregator[DATUM, C3])(implicit selection: Selection[DATUM] = unweighted[DATUM]) = new Branching3[DATUM, C1, C2, C3](selection, _1, _2, _3)
+
+    def unapply[C1 <: Container[C1], C2 <: Container[C2]](x: Branched2[C1, C2]) = Some((x._1, x._2))
+    def unapply[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Branched3[C1, C2, C3]) = Some((x._1, x._2, x._3))
+  }
+  class Branching2[DATUM, C1 <: Container[C1], C2 <: Container[C2]](val selection: Selection[DATUM], _1: Aggregator[DATUM, C1], _2: Aggregator[DATUM, C2]) extends Tuple2[Aggregator[DATUM, C1], Aggregator[DATUM, C2]](_1, _2) with Aggregator[DATUM, Branched2[C1, C2]] {
+    def fill(x: Weighted[DATUM]) {
+      val y = x reweight selection(x)
+      if (y.contributes) {
+        _1.fill(x)
+        _2.fill(x)
+      }
+    }
+    def fix = new Branched2[C1, C2](_1.fix, _2.fix)
+    override def toString = s"""Branching2[${_1}, ${_2}]"""
+  }
+  class Branching3[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](val selection: Selection[DATUM], _1: Aggregator[DATUM, C1], _2: Aggregator[DATUM, C2], _3: Aggregator[DATUM, C3]) extends Tuple3[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3]](_1, _2, _3) with Aggregator[DATUM, Branched3[C1, C2, C3]] {
+    def fill(x: Weighted[DATUM]) {
+      val y = x reweight selection(x)
+      if (y.contributes) {
+        _1.fill(x)
+        _2.fill(x)
+        _3.fill(x)
+      }
+    }
+    def fix = new Branched3[C1, C2, C3](_1.fix, _2.fix, _3.fix)
+    override def toString = s"""Branching3[${_1}, ${_2}, ${_3}]"""
   }
 
 }

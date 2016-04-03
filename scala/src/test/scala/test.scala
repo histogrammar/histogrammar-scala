@@ -455,4 +455,49 @@ class DefaultSuite extends FlatSpec with Matchers {
     ContainerFactory.fromJson[Mapped](mapping.toJson.stringify) should be (mapped)
   }
 
+  it must "permit histograms to have different cuts" in {
+    val one = Histogramming(10, -10, 10, {x: Double => x}, {x: Double => x > 0})
+    val two = Histogramming(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
+    val three = Histogramming(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
+
+    val mapping = Mapping("one" -> one, "two" -> two, "three" -> three)
+
+    simple.foreach(mapping.fill(_))
+
+    val mapped = mapping.fix
+
+    mapped[Histogrammed]("one").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
+    mapped[Histogrammed]("two").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
+    mapped[Histogrammed]("three").numericValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+  }
+
+  //////////////////////////////////////////////////////////////// Branched/Branching
+
+  "Branched/Branching" must "work with multiple types" in {
+    val one = Histogramming(5, -3.0, 7.0, {x: Double => x})
+    val two = Counting[Double]()
+    val three = Deviating({x: Double => x + 100.0})
+
+    val branching = (one, two, three)
+
+    simple.foreach(branching.fill(_))
+
+    val branched = branching.fix
+
+    val onefix = branched._1
+    onefix.values.toList should be (List(Counted(3.0), Counted(2.0), Counted(2.0), Counted(1.0), Counted(0.0)))
+    onefix.underflow should be (Counted(1.0))
+    onefix.overflow should be (Counted(1.0))
+    onefix.nanflow should be (Counted(0.0))
+    onefix should be (one.fix)
+
+    branched._2 should be (Counted(10.0))
+
+    branched._3.count should be (10.0 +- 1e-12)
+    branched._3.mean should be (100.33 +- 1e-12)
+    branched._3.variance should be (10.8381 +- 1e-12)
+
+    ContainerFactory.fromJson[Branched3[Histogrammed, Counted, Deviated]](branching.toJson.stringify) should be (branched)
+  }
+
 }

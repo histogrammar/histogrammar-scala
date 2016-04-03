@@ -14,6 +14,11 @@ package object histogram {
 
 package histogram {
   class HistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]) {
+    def numericValues: Seq[Double] = hist.values.map(_.value)
+    def numericOverflow: Double = hist.overflow.value
+    def numericUnderflow: Double = hist.underflow.value
+    def numericNanflow: Double = hist.nanflow.value
+
     def ascii: String = ascii(80)
     def ascii(width: Int): String = {
       val minCount = hist.values.map(_.value).min

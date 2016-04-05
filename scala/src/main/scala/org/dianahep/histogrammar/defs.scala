@@ -73,16 +73,17 @@ package histogrammar {
   }
 
   // mutable aggregator of data; produces a container
-  trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Container[CONTAINER] {
+  trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Serializable {
     def factory: Factory
 
     def fill(x: Weighted[DATUM])
 
     def fix: CONTAINER
 
-    // satisfy Container[CONTAINER] contract by passing everything through fix
+    // provide the same methods as Container by passing everything through fix
     def +(that: CONTAINER) = fix.+(that)
     def +(that: Aggregator[DATUM, CONTAINER]) = fix.+(that.fix)
+    def toJson = fix.toJson
     def toJsonFragment = fix.toJsonFragment
   }
 }

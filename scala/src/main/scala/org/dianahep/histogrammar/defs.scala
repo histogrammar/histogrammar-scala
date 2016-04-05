@@ -23,17 +23,17 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// general definition of an container/aggregator
 
-  // creates containers (from arguments or JSON)
-  trait ContainerFactory {
+  // creates containers (from arguments or JSON) and aggregators (from arguments)
+  trait Factory {
     def name: String
     def fromJsonFragment(json: Json): Container[_]
   }
-  object ContainerFactory {
-    private var known = Map[String, ContainerFactory]()
+  object Factory {
+    private var known = scala.collection.immutable.Map[String, Factory]()
 
     def registered = known.keys.toList
 
-    def register(factory: ContainerFactory) {
+    def register(factory: Factory) {
       known = known.updated(factory.name, factory)
     }
 
@@ -56,15 +56,15 @@ package histogrammar {
           case x => throw new JsonFormatException(x, "type")
         }
 
-        ContainerFactory(name).fromJsonFragment(get("data")).asInstanceOf[CONTAINER]
+        Factory(name).fromJsonFragment(get("data")).asInstanceOf[CONTAINER]
 
-      case _ => throw new JsonFormatException(json, "ContainerFactory")
+      case _ => throw new JsonFormatException(json, "Factory")
     }
   }
 
   // immutable container of data; the result of an aggregation
   trait Container[CONTAINER <: Container[CONTAINER]] extends Serializable {
-    def factory: ContainerFactory
+    def factory: Factory
 
     def +(that: CONTAINER): CONTAINER
 
@@ -72,17 +72,15 @@ package histogrammar {
     def toJsonFragment: Json
   }
 
-  // creates aggregators (from arguments)
-  trait AggregatorFactory
-
   // mutable aggregator of data; produces a container
   trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Container[CONTAINER] {
+    def factory: Factory
+
     def fill(x: Weighted[DATUM])
 
     def fix: CONTAINER
 
     // satisfy Container[CONTAINER] contract by passing everything through fix
-    def factory = fix.factory
     def +(that: CONTAINER) = fix.+(that)
     def +(that: Aggregator[DATUM, CONTAINER]) = fix.+(that.fix)
     def toJsonFragment = fix.toJsonFragment
@@ -92,14 +90,14 @@ package histogrammar {
 package object histogrammar {
   //////////////////////////////////////////////////////////////// register container factories
 
-  ContainerFactory.register(Counted)
-  ContainerFactory.register(Summed)
-  ContainerFactory.register(Averaged)
-  ContainerFactory.register(Deviated)
-  ContainerFactory.register(Binned)
-  ContainerFactory.register(SparselyBinned)
-  ContainerFactory.register(Mapped)
-  ContainerFactory.register(Branched)
+  Factory.register(Count)
+  Factory.register(Sum)
+  Factory.register(Average)
+  Factory.register(Deviate)
+  Factory.register(Bin)
+  Factory.register(SparselyBin)
+  Factory.register(Map)
+  Factory.register(Branch)
 
   //////////////////////////////////////////////////////////////// define implicits
 
@@ -110,6 +108,8 @@ package object histogrammar {
   type CategoricalFcn[DATUM] = Weighted[DATUM] => String
 
   def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
+
+  implicit def countingTypeDoesntMatter[DATUM](counting: Counting[Nothing]) = counting.asInstanceOf[Counting[DATUM]]
 
   implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
   implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}

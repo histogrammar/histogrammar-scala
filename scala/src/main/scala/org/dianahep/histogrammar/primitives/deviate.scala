@@ -3,13 +3,17 @@ package org.dianahep
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
-  //////////////////////////////////////////////////////////////// Deviated/Deviating
+  //////////////////////////////////////////////////////////////// Deviate/Deviated/Deviating
 
-  object Deviated extends ContainerFactory {
-    val name = "Deviated"
+  object Deviate extends Factory {
+    val name = "Deviate"
 
-    def apply(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
+    def ed(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
+    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = ing(quantity, selection)
+
     def unapply(x: Deviated) = Some((x.count, x.mean, x.variance))
+    def unapply(x: Deviating[_]) = Some((x.count, x.mean, x.variance))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("count", "mean", "variance")) =>
@@ -17,26 +21,27 @@ package histogrammar {
 
         val count = get("count") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, "Deviated.count")
+          case x => throw new JsonFormatException(x, name + ".count")
         }
 
         val mean = get("mean") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, "Deviated.mean")
+          case x => throw new JsonFormatException(x, name + ".mean")
         }
 
         val variance = get("variance") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, "Deviated.variance")
+          case x => throw new JsonFormatException(x, name + ".variance")
         }
 
         new Deviated(count, mean, variance)
 
-      case _ => throw new JsonFormatException(json, "Deviated")
+      case _ => throw new JsonFormatException(json, name)
     }
   }
+
   class Deviated(val count: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
-    def factory = Deviated
+    def factory = Deviate
 
     def +(that: Deviated) = {
       val ca = this.count
@@ -61,11 +66,9 @@ package histogrammar {
     override def hashCode() = (count, mean, variance).hashCode
   }
 
-  object Deviating extends AggregatorFactory {
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
-    def unapply(x: Deviating[_]) = Some((x.count, x.mean, x.variance))
-  }
   class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, var variance: Double) extends Aggregator[DATUM, Deviated] {
+    def factory = Deviate
+
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 

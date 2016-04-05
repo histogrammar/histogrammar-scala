@@ -3,21 +3,47 @@ package org.dianahep
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
-  //////////////////////////////////////////////////////////////// Binned/Binning
+  //////////////////////////////////////////////////////////////// Bin/Binned/Binning
  
-  object Binned extends ContainerFactory {
-    val name = "Binned"
+  object Bin extends Factory {
+    val name = "Bin"
 
-    def apply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+    def default[DATUM] = Count[DATUM]()
+
+    def ed[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (low: Double,
-        high: Double)
-      (values: Seq[V],
-        underflow: U,
-        overflow: O,
-        nanflow: N) =
-      new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
+       high: Double,
+       values: Seq[V],
+       underflow: U,
+       overflow: O,
+       nanflow: N) = new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
+
+    def ing[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+      (num: Int,
+       low: Double,
+       high: Double,
+       quantity: NumericalFcn[DATUM],
+       selection: Selection[DATUM] = unweighted[DATUM],
+       value: => Aggregator[DATUM, V] = default[DATUM],
+       underflow: Aggregator[DATUM, U] = default[DATUM],
+       overflow: Aggregator[DATUM, O] = default[DATUM],
+       nanflow: Aggregator[DATUM, N] = default[DATUM]) =
+      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Array.fill(num)(value).toSeq, underflow, overflow, nanflow)
+
+    def apply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+      (num: Int,
+       low: Double,
+       high: Double,
+       quantity: NumericalFcn[DATUM],
+       selection: Selection[DATUM] = unweighted[DATUM],
+       value: => Aggregator[DATUM, V] = default[DATUM],
+       underflow: Aggregator[DATUM, U] = default[DATUM],
+       overflow: Aggregator[DATUM, O] = default[DATUM],
+       nanflow: Aggregator[DATUM, N] = default[DATUM]) =
+      ing(num, low, high, quantity, selection, value, underflow, overflow, nanflow)
 
     def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
+    def unapply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
 
     trait Methods {
       def num: Int
@@ -41,53 +67,54 @@ package histogrammar {
 
         val low = get("low") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, "Binned.low")
+          case x => throw new JsonFormatException(x, name + ".low")
         }
 
         val high = get("high") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, "Binned.high")
+          case x => throw new JsonFormatException(x, name + ".high")
         }
 
         val valuesFactory = get("values:type") match {
-          case JsonString(name) => ContainerFactory(name)
-          case x => throw new JsonFormatException(x, "Binned.values:type")
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, name + ".values:type")
         }
         val values = get("values") match {
           case JsonArray(sub @ _*) => sub.map(valuesFactory.fromJsonFragment(_))
-          case x => throw new JsonFormatException(x, "Binned.values")
+          case x => throw new JsonFormatException(x, name + ".values")
         }
 
         val underflowFactory = get("underflow:type") match {
-          case JsonString(name) => ContainerFactory(name)
-          case x => throw new JsonFormatException(x, "Binned.underflow:type")
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, name + ".underflow:type")
         }
         val underflow = underflowFactory.fromJsonFragment(get("underflow"))
 
         val overflowFactory = get("overflow:type") match {
-          case JsonString(name) => ContainerFactory(name)
-          case x => throw new JsonFormatException(x, "Binned.overflow:type")
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, name + ".overflow:type")
         }
         val overflow = overflowFactory.fromJsonFragment(get("overflow"))
 
         val nanflowFactory = get("nanflow:type") match {
-          case JsonString(name) => ContainerFactory(name)
-          case x => throw new JsonFormatException(x, "Binned.nanflow:type")
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, name + ".nanflow:type")
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
         new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, values, underflow, overflow, nanflow)
 
-      case _ => throw new JsonFormatException(json, "Binned")
+      case _ => throw new JsonFormatException(json, name)
     }
   }
+
   class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binned[V, U, O, N]] with Binned.Methods {
+    val nanflow: N) extends Container[Binned[V, U, O, N]] with Bin.Methods {
 
     if (low >= high)
       throw new AggregatorException(s"low ($low) must be less than high ($high)")
@@ -95,7 +122,7 @@ package histogrammar {
       throw new AggregatorException(s"values ($values) must have at least one element")
     def num = values.size
 
-    def factory = Binned
+    def factory = Bin
 
     def +(that: Binned[V, U, O, N]) = {
       if (this.low != that.low)
@@ -144,21 +171,6 @@ package histogrammar {
     override def hashCode() = (low, high, values, underflow, overflow, nanflow).hashCode
   }
 
-  object Binning extends AggregatorFactory {
-    def apply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
-      (num: Int,
-       low: Double,
-       high: Double,
-       quantity: NumericalFcn[DATUM],
-       selection: Selection[DATUM] = unweighted[DATUM])
-      (value: => Aggregator[DATUM, V] = Counting[DATUM](),
-       underflow: Aggregator[DATUM, U] = Counting[DATUM](),
-       overflow: Aggregator[DATUM, O] = Counting[DATUM](),
-       nanflow: Aggregator[DATUM, N] = Counting[DATUM]()) =
-      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Array.fill(num)(value).toSeq, underflow, overflow, nanflow)
-
-    def unapply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
-  }
   class Binning[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
@@ -167,7 +179,9 @@ package histogrammar {
     val values: Seq[Aggregator[DATUM, V]],
     val underflow: Aggregator[DATUM, U],
     val overflow: Aggregator[DATUM, O],
-    val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, Binned[V, U, O, N]] with Binned.Methods {
+    val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, Binned[V, U, O, N]] with Bin.Methods {
+
+    def factory = Bin
 
     if (low >= high)
       throw new AggregatorException(s"low ($low) must be less than high ($high)")

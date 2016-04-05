@@ -5,10 +5,10 @@ import scala.language.implicitConversions
 import org.dianahep.histogrammar._
 
 package object histogram {
+  def Histogram[DATUM](num: Int, low: Double, high: Double, key: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
+    Bin[DATUM, Counted, Counted, Counted, Counted](num, low, high, key, selection)
   type Histogrammed = Binned[Counted, Counted, Counted, Counted]
   type Histogramming[DATUM] = Binning[DATUM, Counted, Counted, Counted, Counted]
-  def Histogramming[DATUM](num: Int, low: Double, high: Double, key: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
-    Binning(num, low, high, key, selection)()
 
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
     new HistogramMethods(hist)
@@ -16,7 +16,7 @@ package object histogram {
     new HistogramMethods(hist.fix)
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
     new HistogramMethods(
-      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Counted(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Counted(0.0), Counted(0.0), hist.nanflow)
+      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.ed(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Count.ed(0.0), Count.ed(0.0), hist.nanflow)
     )
   implicit def sparselyBinningToHistogramMethods[DATUM](hist: SparselyBinning[DATUM, Counted, Counted]): HistogramMethods =
     sparselyBinnedToHistogramMethods(hist.fix)

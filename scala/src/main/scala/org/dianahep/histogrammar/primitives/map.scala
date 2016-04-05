@@ -3,14 +3,18 @@ package org.dianahep
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
-  //////////////////////////////////////////////////////////////// Mapped/Mapping
+  //////////////////////////////////////////////////////////////// Map/Mapped/Mapping
 
   // this is a *heterogeneous* map, so some runtime casting is necessary; also note that data is broadcast to all members
-  object Mapped extends ContainerFactory {
-    val name = "Mapped"
+  object Map extends Factory {
+    val name = "Map"
 
-    def apply(pairs: (String, Container[_])*) = new Mapped(pairs: _*)
+    def ed(pairs: (String, Container[_])*) = new Mapped(pairs: _*)
+    def ing[DATUM](pairs: (String, Aggregator[DATUM, _])*) = new Mapping(pairs: _*)
+    def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*) = ing(pairs: _*)
+
     def unapplySeq(x: Mapped) = Some(x.pairs)
+    def unapplySeq[DATUM](x: Mapping[DATUM]) = Some(x.pairs)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) =>
@@ -18,17 +22,18 @@ package histogrammar {
           case (JsonString(key), JsonObject(typedata @ _*)) if (typedata.keySet == Set("type", "data")) =>
             val get = typedata.toMap
             (get("type"), get("data")) match {
-              case (JsonString(factory), sub) => (key.toString, ContainerFactory(factory).fromJsonFragment(sub))
-              case _ => throw new JsonFormatException(json, s"""Mapped key "$key"""")
+              case (JsonString(factory), sub) => (key.toString, Factory(factory).fromJsonFragment(sub))
+              case _ => throw new JsonFormatException(json, name + s""" key "$key"""")
             }
-          case _ => throw new JsonFormatException(json, s"Mapped key")
+          case _ => throw new JsonFormatException(json, name + s" key")
         }: _*)
 
-      case _ => throw new JsonFormatException(json, "Mapped")
+      case _ => throw new JsonFormatException(json, name)
     }
   }
+
   class Mapped(val pairs: (String, Container[_])*) extends Container[Mapped] {
-    def factory = Mapped
+    def factory = Map
 
     val pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
@@ -64,11 +69,9 @@ package histogrammar {
     override def hashCode() = pairsMap.hashCode
   }
 
-  object Mapping extends AggregatorFactory {
-    def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*) = new Mapping(pairs: _*)
-    def unapplySeq[DATUM](x: Mapping[DATUM]) = Some(x.pairs)
-  }
   class Mapping[DATUM](val pairs: (String, Aggregator[DATUM, _])*) extends Aggregator[DATUM, Mapped] {
+    def factory = Map
+
     val pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
     def values: Iterable[Aggregator[DATUM, _]] = pairs.toIterable.map(_._2)

@@ -148,7 +148,13 @@ package json {
 
     def parse(str: String): Option[JsonNumber] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonNumber] =
-      if (!p.done  &&  (('0' <= p.get  &&  p.get <= '9')  ||  p.get == '-')) {
+      if (p.remaining >= 6  &&  p.get(6) == "\"-inf\"")
+        Some(JsonFloat(java.lang.Double.NEGATIVE_INFINITY))
+      else if (p.remaining >= 5  &&  p.get(5) == "\"inf\"")
+        Some(JsonFloat(java.lang.Double.POSITIVE_INFINITY))
+      else if (p.remaining >= 5  &&  p.get(5) == "\"nan\"")
+        Some(JsonFloat(java.lang.Double.NaN))
+      else if (!p.done  &&  (('0' <= p.get  &&  p.get <= '9')  ||  p.get == '-')) {
         p.save()
         val sb = new java.lang.StringBuilder
         while (!p.done  &&  (('0' <= p.get  &&  p.get <= '9')  ||  p.get == '-'  ||  p.get == '+'  ||  p.get == 'e'  ||  p.get == 'E'  ||  p.get == '.')) {
@@ -198,7 +204,15 @@ package json {
   }
 
   case class JsonFloat(value: Double) extends JsonNumber {
-    def stringify = value.toString
+    def stringify =
+      if (value.isInfinity  &&  value < 0.0)
+        "\"-inf\""
+      else if (value.isInfinity  &&  value > 0.0)
+        "\"inf\""
+      else if (value.isNaN)
+        "\"nan\""
+    else
+      value.toString
     def toChar = value.toChar
     def toByte = value.toByte
     def toShort = value.toShort

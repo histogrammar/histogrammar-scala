@@ -511,6 +511,27 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson[Stacked[Summed]](stacking.toJson.stringify) should be (stacking.fix)
   }
 
+  //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
+
+  "Partition/Partitioned/Partitioning" must "work with Count/Counting/Counted" in {
+    val partitioning = Partition(Count[Double](), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(partitioning.fill(_))
+
+    partitioning.fix.cuts.toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> Count.ed(4.0), 0.0 -> Count.ed(3.0), 2.0 -> Count.ed(2.0), 4.0 -> Count.ed(0.0), 6.0 -> Count.ed(1.0), 8.0 -> Count.ed(0.0)))
+
+    Factory.fromJson[Partitioned[Counted]](partitioning.toJson.stringify) should be (partitioning.fix)
+  }
+
+  it must "work with Sum/Summing/Summed" in {
+    val partitioning = Partition(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(partitioning.fill(_))
+
+    partitioning.fix.cuts(0)._2.value should be (-11.2 +- 1e-12)
+    partitioning.fix.cuts(1)._2.value should be (1.6 +- 1e-12)
+
+    Factory.fromJson[Partitioned[Summed]](partitioning.toJson.stringify) should be (partitioning.fix)
+  }
+
   //////////////////////////////////////////////////////////////// Map/Mapped/Mapping
 
   "Map/Mapped/Mapping" must "work with multiple types" in {

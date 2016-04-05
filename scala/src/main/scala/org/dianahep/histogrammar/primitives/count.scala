@@ -37,7 +37,8 @@ package histogrammar {
   class Counting[DATUM](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counted] {
     def fill(x: Weighted[DATUM]) {
       val y = x reweight selection(x)
-      value += y.weight
+      if (y.contributes)
+        value += y.weight
     }
     def fix = new Counted(value)
     override def toString() = s"Counting"

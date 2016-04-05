@@ -37,7 +37,8 @@ package histogrammar {
   class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summed] {
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
-      value += y.datum * y.weight
+      if (y.contributes)
+        value += y.datum * y.weight
     }
     def fix = new Summed(value)
     override def toString() = s"Summing"

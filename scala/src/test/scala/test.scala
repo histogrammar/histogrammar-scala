@@ -15,16 +15,16 @@ class DefaultSuite extends FlatSpec with Matchers {
   case class Struct(bool: Boolean, int: Int, double: Double, string: String)
 
   val struct = List(
-    Struct(true, -2, 3.4, "one"),
-    Struct(false, -1, 2.2, "two"),
-    Struct(true, 0, -1.8, "three"),
-    Struct(false, 1, 0.0, "four"),
-    Struct(false, 2, 7.3, "five"),
-    Struct(false, 3, -4.7, "six"),
-    Struct(true, 4, 1.6, "seven"),
-    Struct(true, 5, 0.0, "eight"),
-    Struct(false, 6, -3.0, "nine"),
-    Struct(true, 7, -1.7, "ten"))
+    Struct(true,  -2,  3.4, "one"),
+    Struct(false, -1,  2.2, "two"),
+    Struct(true,   0, -1.8, "three"),
+    Struct(false,  1,  0.0, "four"),
+    Struct(false,  2,  7.3, "five"),
+    Struct(false,  3, -4.7, "six"),
+    Struct(true,   4,  1.6, "seven"),
+    Struct(true,   5,  0.0, "eight"),
+    Struct(false,  6, -3.0, "nine"),
+    Struct(true,   7, -1.7, "ten"))
 
   val backward = struct.reverse
 
@@ -114,12 +114,12 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       val (Counting(leftResult), Counting(rightResult)) = (leftCounting, rightCounting)
 
-      leftResult should be (left.map(_.int).sum)
-      rightResult should be (right.map(_.int).sum)
+      leftResult should be (left.filter(_.int >= 0).map(_.int).sum)
+      rightResult should be (right.filter(_.int >= 0).map(_.int).sum)
 
       val Counted(finalResult) = leftCounting + rightCounting
 
-      finalResult should be (struct.map(_.int).sum)
+      finalResult should be (struct.filter(_.int >= 0).map(_.int).sum)
 
       ContainerFactory.fromJson[Counted](leftCounting.toJson.stringify) should be (leftCounting.fix)
     }
@@ -185,12 +185,12 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       val (Summing(leftResult), Summing(rightResult)) = (leftSumming, rightSumming)
 
-      leftResult should be (left.map({x => x.int * x.double}).sum +- 1e-12)
-      rightResult should be (right.map({x => x.int * x.double}).sum +- 1e-12)
+      leftResult should be (left.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
+      rightResult should be (right.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
       val Summed(finalResult) = leftSumming + rightSumming
 
-      finalResult should be (struct.map({x => x.int * x.double}).sum +- 1e-12)
+      finalResult should be (struct.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
       ContainerFactory.fromJson[Summed](leftSumming.toJson.stringify) should be (leftSumming.fix)
     }

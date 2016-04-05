@@ -149,20 +149,20 @@ package histogrammar {
       (num: Int,
        low: Double,
        high: Double,
-       key: NumericalFcn[DATUM],
+       quantity: NumericalFcn[DATUM],
        selection: Selection[DATUM] = unweighted[DATUM])
       (value: => Aggregator[DATUM, V] = Counting[DATUM](),
        underflow: Aggregator[DATUM, U] = Counting[DATUM](),
        overflow: Aggregator[DATUM, O] = Counting[DATUM](),
        nanflow: Aggregator[DATUM, N] = Counting[DATUM]()) =
-      new Binning[DATUM, V, U, O, N](low, high, key, selection, Array.fill(num)(value).toSeq, underflow, overflow, nanflow)
+      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Array.fill(num)(value).toSeq, underflow, overflow, nanflow)
 
     def unapply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
   }
   class Binning[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
-    val key: NumericalFcn[DATUM],
+    val quantity: NumericalFcn[DATUM],
     val selection: Selection[DATUM],
     val values: Seq[Aggregator[DATUM, V]],
     val underflow: Aggregator[DATUM, U],
@@ -176,7 +176,7 @@ package histogrammar {
     def num = values.size
 
     def fill(x: Weighted[DATUM]) {
-      val k = key(x)
+      val k = quantity(x)
       val y = x reweight selection(x)
       if (y.contributes) {
         if (under(k))
@@ -193,9 +193,9 @@ package histogrammar {
     def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
     override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
-      case that: Binning[DATUM, V, U, O, N] => this.low == that.low  &&  this.high == that.high  &&  this.key == that.key  &&  this.selection == that.selection  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
+      case that: Binning[DATUM, V, U, O, N] => this.low == that.low  &&  this.high == that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (low, high, key, selection, values, underflow, overflow, nanflow).hashCode
+    override def hashCode() = (low, high, quantity, selection, values, underflow, overflow, nanflow).hashCode
   }
 }

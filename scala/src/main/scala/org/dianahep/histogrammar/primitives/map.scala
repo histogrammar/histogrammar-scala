@@ -65,10 +65,10 @@ package histogrammar {
   }
 
   object Mapping extends AggregatorFactory {
-    def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*)(implicit selection: Selection[DATUM] = unweighted[DATUM]) = new Mapping(selection, pairs: _*)
+    def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*) = new Mapping(pairs: _*)
     def unapplySeq[DATUM](x: Mapping[DATUM]) = Some(x.pairs)
   }
-  class Mapping[DATUM](val selection: Selection[DATUM], val pairs: (String, Aggregator[DATUM, _])*) extends Aggregator[DATUM, Mapped] {
+  class Mapping[DATUM](val pairs: (String, Aggregator[DATUM, _])*) extends Aggregator[DATUM, Mapped] {
     val pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
     def values: Iterable[Aggregator[DATUM, _]] = pairs.toIterable.map(_._2)
@@ -78,17 +78,16 @@ package histogrammar {
     def getOrElse[AGGREGATOR <: Aggregator[DATUM, _]](x: String, default: => AGGREGATOR) = pairsMap.getOrElse(x, default).asInstanceOf[AGGREGATOR]
 
     def fill(x: Weighted[DATUM]) {
-      val y = x reweight selection(x)
-      if (y.contributes)
+      if (x.contributes)
         values.foreach(_.fill(x))
     }
 
     def fix = new Mapped(pairs map {case (key, sub) => (key, sub.fix.asInstanceOf[Container[_]])}: _*)
     override def toString() = s"Mapping[size=${pairs.size}]"
     override def equals(that: Any) = that match {
-      case that: Mapping[DATUM] => this.selection == that.selection  &&  this.pairsMap == that.pairsMap
+      case that: Mapping[DATUM] => this.pairsMap == that.pairsMap
       case _ => false
     }
-    override def hashCode() = (selection, pairsMap).hashCode
+    override def hashCode() = pairsMap.hashCode
   }
 }

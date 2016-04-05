@@ -129,21 +129,21 @@ package histogrammar {
   object SparselyBinning extends AggregatorFactory {
     def apply[DATUM, V <: Container[V], N <: Container[N]]
       (binWidth: Double,
-       key: NumericalFcn[DATUM],
+       quantity: NumericalFcn[DATUM],
        selection: Selection[DATUM] = unweighted[DATUM],
        origin: Double = 0.0)
       (value: => Aggregator[DATUM, V] = Counting[DATUM](),
        nanflow: Aggregator[DATUM, N] = Counting[DATUM]()) =
-      new SparselyBinning[DATUM, V, N](binWidth, origin, key, selection, value, mutable.HashMap[Long, Aggregator[DATUM, V]](), nanflow)
+      new SparselyBinning[DATUM, V, N](binWidth, origin, quantity, selection, value, mutable.HashMap[Long, Aggregator[DATUM, V]](), nanflow)
 
     def unapply[DATUM, V <: Container[V], N <: Container[N]](x: SparselyBinning[DATUM, V, N]) = Some((x.binWidth, x.origin, x.values, x.nanflow))
   }
-  class SparselyBinning[DATUM, V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val key: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val values: mutable.Map[Long, Aggregator[DATUM, V]], val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, SparselyBinned[V, N]] with SparselyBinned.Methods[V] {
+  class SparselyBinning[DATUM, V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val values: mutable.Map[Long, Aggregator[DATUM, V]], val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, SparselyBinned[V, N]] with SparselyBinned.Methods[V] {
     if (binWidth <= 0.0)
       throw new AggregatorException(s"binWidth ($binWidth) must be greater than zero")
 
     def fill(x: Weighted[DATUM]) {
-      val k = key(x)
+      val k = quantity(x)
       val y = x reweight selection(x)
       if (y.contributes) {
         if (nan(k))

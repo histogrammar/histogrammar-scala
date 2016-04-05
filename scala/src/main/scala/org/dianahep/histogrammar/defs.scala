@@ -31,6 +31,8 @@ package histogrammar {
   object ContainerFactory {
     private var known = Map[String, ContainerFactory]()
 
+    def registered = known.keys.toList
+
     def register(factory: ContainerFactory) {
       known = known.updated(factory.name, factory)
     }
@@ -75,8 +77,6 @@ package histogrammar {
 
   // mutable aggregator of data; produces a container
   trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Container[CONTAINER] {
-    def selection: Selection[DATUM]
-
     def fill(x: Weighted[DATUM])
 
     def fix: CONTAINER
@@ -109,7 +109,7 @@ package object histogrammar {
   type NumericalFcnND[DATUM] = Weighted[DATUM] => Seq[Double]
   type CategoricalFcn[DATUM] = Weighted[DATUM] => String
 
-  implicit def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
+  def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
 
   implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
   implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}
@@ -139,13 +139,13 @@ package object histogrammar {
   implicit def tupleToBranched9[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](x: Tuple9[C1, C2, C3, C4, C5, C6, C7, C8, C9]) = new Branched9(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9)
   implicit def tupleToBranched10[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], C10 <: Container[C10]](x: Tuple10[C1, C2, C3, C4, C5, C6, C7, C8, C9, C10]) = new Branched10(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9, x._10)
 
-  implicit def tupleToBranching2[DATUM, C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[Aggregator[DATUM, C1], Aggregator[DATUM, C2]]) = new Branching2(unweighted[DATUM], x._1, x._2)
-  implicit def tupleToBranching3[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3]]) = new Branching3(unweighted[DATUM], x._1, x._2, x._3)
-  implicit def tupleToBranching4[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](x: Tuple4[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4]]) = new Branching4(unweighted[DATUM], x._1, x._2, x._3, x._4)
-  implicit def tupleToBranching5[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](x: Tuple5[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5]]) = new Branching5(unweighted[DATUM], x._1, x._2, x._3, x._4, x._5)
-  implicit def tupleToBranching6[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](x: Tuple6[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6]]) = new Branching6(unweighted[DATUM], x._1, x._2, x._3, x._4, x._5, x._6)
-  implicit def tupleToBranching7[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](x: Tuple7[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7]]) = new Branching7(unweighted[DATUM], x._1, x._2, x._3, x._4, x._5, x._6, x._7)
-  implicit def tupleToBranching8[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](x: Tuple8[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8]]) = new Branching8(unweighted[DATUM], x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8)
-  implicit def tupleToBranching9[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](x: Tuple9[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9]]) = new Branching9(unweighted[DATUM], x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9)
-  implicit def tupleToBranching10[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], C10 <: Container[C10]](x: Tuple10[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9], Aggregator[DATUM, C10]]) = new Branching10(unweighted[DATUM], x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9, x._10)
+  implicit def tupleToBranching2[DATUM, C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[Aggregator[DATUM, C1], Aggregator[DATUM, C2]]) = new Branching2(x._1, x._2)
+  implicit def tupleToBranching3[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3]]) = new Branching3(x._1, x._2, x._3)
+  implicit def tupleToBranching4[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](x: Tuple4[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4]]) = new Branching4(x._1, x._2, x._3, x._4)
+  implicit def tupleToBranching5[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](x: Tuple5[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5]]) = new Branching5(x._1, x._2, x._3, x._4, x._5)
+  implicit def tupleToBranching6[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](x: Tuple6[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6]]) = new Branching6(x._1, x._2, x._3, x._4, x._5, x._6)
+  implicit def tupleToBranching7[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](x: Tuple7[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7]]) = new Branching7(x._1, x._2, x._3, x._4, x._5, x._6, x._7)
+  implicit def tupleToBranching8[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](x: Tuple8[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8]]) = new Branching8(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8)
+  implicit def tupleToBranching9[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](x: Tuple9[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9]]) = new Branching9(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9)
+  implicit def tupleToBranching10[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], C10 <: Container[C10]](x: Tuple10[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9], Aggregator[DATUM, C10]]) = new Branching10(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9, x._10)
 }

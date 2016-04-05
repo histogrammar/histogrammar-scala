@@ -1,6 +1,8 @@
-package org.dianahep.histogrammar
+package org.dianahep.histogrammar.specialized
 
 import scala.language.implicitConversions
+
+import org.dianahep.histogrammar._
 
 package object histogram {
   type Histogrammed = Binned[Counted, Counted, Counted, Counted]

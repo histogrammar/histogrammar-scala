@@ -95,6 +95,7 @@ package object histogrammar {
   Factory.register(Sum)
   Factory.register(Average)
   Factory.register(Deviate)
+  Factory.register(AbsoluteErr)
   Factory.register(Bin)
   Factory.register(SparselyBin)
   Factory.register(Fraction)

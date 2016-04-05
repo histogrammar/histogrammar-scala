@@ -54,6 +54,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     else
       (x zip w map {case (xi, wi) => xi * xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum - Math.pow((x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum, 2)
 
+  def mae(x: List[Double]) =
+    if (x.isEmpty)
+      0.0
+    else
+      x.map(Math.abs).sum / x.size
+
+  def mae(x: List[Double], w: List[Double]) =
+    if (w.filter(_ > 0.0).isEmpty)
+      0.0
+    else
+      (x zip w map {case (xi, wi) => Math.abs(xi) * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum
+
   //////////////////////////////////////////////////////////////// Count/Counted/Counting
 
   "Count/Counting/Counted" must "work unfiltered" in {
@@ -381,6 +393,31 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
       Factory.fromJson[Deviated](leftDeviating.toJson.stringify) should be (leftDeviating.fix)
+    }
+  }
+
+  //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErring/AbsoluteErred
+
+  "AbsoluteErr/AbsoluteErring/AbsoluteErred" must "work unfiltered" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val leftAbsoluteErring = AbsoluteErr({x: Double => x})
+      val rightAbsoluteErring = AbsoluteErr({x: Double => x})
+
+      left.foreach(leftAbsoluteErring.fill(_))
+      right.foreach(rightAbsoluteErring.fill(_))
+
+      val (AbsoluteErr(_, leftResult), AbsoluteErr(_, rightResult)) = (leftAbsoluteErring, rightAbsoluteErring)
+
+      leftResult should be (mae(left) +- 1e-12)
+      rightResult should be (mae(right) +- 1e-12)
+
+      val AbsoluteErr(_, finalResult) = leftAbsoluteErring + rightAbsoluteErring
+
+      finalResult should be (mae(simple) +- 1e-12)
+
+      Factory.fromJson[AbsoluteErred](leftAbsoluteErring.toJson.stringify) should be (leftAbsoluteErring.fix)
     }
   }
 

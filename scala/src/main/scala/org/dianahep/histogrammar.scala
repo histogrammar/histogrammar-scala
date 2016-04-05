@@ -587,14 +587,17 @@ package histogrammar {
 
     def unapply[V <: Container[V], N <: Container[N]](x: SparselyBinned[V, N]) = Some((x.binWidth, x.origin, x.values, x.nanflow))
 
-    trait Methods {
+    trait Methods[V <: Container[V]] {
       def binWidth: Double
       def origin: Double
 
       def numFilled: Int
       def num: Long
+      def minBin: Long
+      def maxBin: Long
       def low: Double
       def high: Double
+      def at(i: Long): Option[V]
 
       def bin(k: Double): Long =
         if (nan(k))
@@ -643,7 +646,7 @@ package histogrammar {
       case _ => throw new JsonFormatException(json, "SparselyBinned")
     }
   }
-  class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val values: SortedSet[(Long, V)], val nanflow: N) extends Container[SparselyBinned[V, N]] with SparselyBinned.Methods {
+  class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val values: SortedSet[(Long, V)], val nanflow: N) extends Container[SparselyBinned[V, N]] with SparselyBinned.Methods[V] {
     if (binWidth <= 0.0)
       throw new AggregatorException(s"binWidth ($binWidth) must be greater than zero")
 
@@ -669,8 +672,11 @@ package histogrammar {
 
     def numFilled = values.size
     def num = if (values.isEmpty) -1L else values.last._1 - values.head._1
-    def low = if (values.isEmpty) java.lang.Double.NaN else values.head._1 * binWidth + origin
-    def high = if (values.isEmpty) java.lang.Double.NaN else (values.last._1 + 1L) * binWidth + origin
+    def minBin = if (values.isEmpty) java.lang.Long.MIN_VALUE else values.head._1
+    def maxBin = if (values.isEmpty) java.lang.Long.MIN_VALUE else values.last._1
+    def low = if (values.isEmpty) java.lang.Double.NaN else minBin * binWidth + origin
+    def high = if (values.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
+    def at(i: Long) = values.find(_._1 == i).map(_._2)
 
     def toJsonFragment = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
@@ -700,7 +706,7 @@ package histogrammar {
 
     def unapply[DATUM, V <: Container[V], N <: Container[N]](x: SparselyBinning[DATUM, V, N]) = Some((x.binWidth, x.origin, x.values, x.nanflow))
   }
-  class SparselyBinning[DATUM, V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val key: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val values: mutable.Map[Long, Aggregator[DATUM, V]], val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, SparselyBinned[V, N]] with SparselyBinned.Methods {
+  class SparselyBinning[DATUM, V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val key: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val values: mutable.Map[Long, Aggregator[DATUM, V]], val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, SparselyBinned[V, N]] with SparselyBinned.Methods[V] {
     if (binWidth <= 0.0)
       throw new AggregatorException(s"binWidth ($binWidth) must be greater than zero")
 
@@ -721,8 +727,11 @@ package histogrammar {
 
     def numFilled = values.size
     def num = if (values.isEmpty) -1L else values.map(_._1).max - values.map(_._1).min
-    def low = if (values.isEmpty) java.lang.Double.NaN else values.map(_._1).min * binWidth + origin
-    def high = if (values.isEmpty) java.lang.Double.NaN else (values.map(_._1).max + 1L) * binWidth + origin
+    def minBin = if (values.isEmpty) java.lang.Long.MIN_VALUE else values.map(_._1).min
+    def maxBin = if (values.isEmpty) java.lang.Long.MIN_VALUE else values.map(_._1).max
+    def low = if (values.isEmpty) java.lang.Double.NaN else minBin * binWidth + origin
+    def high = if (values.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
+    def at(i: Long) = values.get(i).map(_.fix)
 
     def fix = new SparselyBinned(binWidth, origin, SortedSet(values.toSeq map {case (i, v) => (i -> v.fix)}: _*)(Ordering.by[(Long, V), Long](_._1)), nanflow.fix)
 

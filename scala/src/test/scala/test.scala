@@ -442,6 +442,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.high should be (8.0)
     one.fix.high should be (8.0)
 
+    // println(one.ascii)
+
     ContainerFactory.fromJson[SparselyBinned[Counted, Counted]](one.toJson.stringify) should be (one.fix)
   }
 

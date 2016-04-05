@@ -8,8 +8,16 @@ package object histogram {
   def Histogramming[DATUM](num: Int, low: Double, high: Double, key: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
     Binning(num, low, high, key, selection)()
 
-  implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist)
-  implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counted, Counted, Counted, Counted]): HistogramMethods = new HistogramMethods(hist.fix)
+  implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
+    new HistogramMethods(hist)
+  implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counted, Counted, Counted, Counted]): HistogramMethods =
+    new HistogramMethods(hist.fix)
+  implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
+    new HistogramMethods(
+      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Counted(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Counted(0.0), Counted(0.0), hist.nanflow)
+    )
+  implicit def sparselyBinningToHistogramMethods[DATUM](hist: SparselyBinning[DATUM, Counted, Counted]): HistogramMethods =
+    sparselyBinnedToHistogramMethods(hist.fix)
 }
 
 package histogram {

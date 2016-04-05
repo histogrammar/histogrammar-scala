@@ -452,7 +452,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     val two = Count[Double]()
     val three = Deviate({x: Double => x + 100.0})
 
-    val mapping = Map("one" -> one, "two" -> two, "three" -> three)
+    val mapping = scala.collection.immutable.Map("one" -> one, "two" -> two, "three" -> three)
 
     simple.foreach(mapping.fill(_))
 
@@ -479,7 +479,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
     val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
 
-    val mapping = Map("one" -> one, "two" -> two, "three" -> three)
+    val mapping = scala.collection.immutable.Map("one" -> one, "two" -> two, "three" -> three)
 
     simple.foreach(mapping.fill(_))
 

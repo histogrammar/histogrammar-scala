@@ -97,6 +97,8 @@ package object histogrammar {
   Factory.register(Deviate)
   Factory.register(Bin)
   Factory.register(SparselyBin)
+  Factory.register(Fraction)
+  Factory.register(Stack)
   Factory.register(Map)
   Factory.register(Tuple)
 

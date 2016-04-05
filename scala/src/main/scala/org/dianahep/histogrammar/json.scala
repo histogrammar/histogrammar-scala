@@ -55,6 +55,7 @@ package json {
     def update(n: Int) = {pos += n}
     def remaining = str.size - pos
     def done = str.size == pos
+    def debug = str.substring(pos, str.size)
   }
 
   sealed trait Json {
@@ -148,12 +149,18 @@ package json {
 
     def parse(str: String): Option[JsonNumber] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonNumber] =
-      if (p.remaining >= 6  &&  p.get(6) == "\"-inf\"")
+      if (p.remaining >= 6  &&  p.get(6) == "\"-inf\"") {
+        p.update(6)
         Some(JsonFloat(java.lang.Double.NEGATIVE_INFINITY))
-      else if (p.remaining >= 5  &&  p.get(5) == "\"inf\"")
+      }
+      else if (p.remaining >= 5  &&  p.get(5) == "\"inf\"") {
+        p.update(5)
         Some(JsonFloat(java.lang.Double.POSITIVE_INFINITY))
-      else if (p.remaining >= 5  &&  p.get(5) == "\"nan\"")
+      }
+      else if (p.remaining >= 5  &&  p.get(5) == "\"nan\"") {
+        p.update(5)
         Some(JsonFloat(java.lang.Double.NaN))
+      }
       else if (!p.done  &&  (('0' <= p.get  &&  p.get <= '9')  ||  p.get == '-')) {
         p.save()
         val sb = new java.lang.StringBuilder

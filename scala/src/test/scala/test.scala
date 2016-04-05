@@ -448,33 +448,67 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
 
   "Fraction/Fractioned/Fractioning" must "work with Count/Counting/Counted" in {
-    val fracing = Fraction({x: Double => x > 0.0}, Count[Double]())
-    simple.foreach(fracing.fill(_))
+    val fracking = Fraction({x: Double => x > 0.0}, Count[Double]())
+    simple.foreach(fracking.fill(_))
 
-    val fraced = fracing.fix
+    val fracked = fracking.fix
 
-    fraced.numerator.value should be (4.0)
-    fraced.denominator.value should be (10.0)
+    fracked.numerator.value should be (4.0)
+    fracked.denominator.value should be (10.0)
+
+    Factory.fromJson[Fractioned[Counted]](fracking.toJson.stringify) should be (fracked)
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val fracing = Fraction({x: Double => x > 0.0}, Sum({x: Double => x}))
-    simple.foreach(fracing.fill(_))
+    val fracking = Fraction({x: Double => x > 0.0}, Sum({x: Double => x}))
+    simple.foreach(fracking.fill(_))
 
-    val fraced = fracing.fix
+    val fracked = fracking.fix
 
-    fraced.numerator.value should be (14.5 +- 1e-12)
-    fraced.denominator.value should be (3.3 +- 1e-12)
+    fracked.numerator.value should be (14.5 +- 1e-12)
+    fracked.denominator.value should be (3.3 +- 1e-12)
+
+    Factory.fromJson[Fractioned[Counted]](fracking.toJson.stringify) should be (fracked)
   }
 
   it must "work with Histogram/Histogramming/Histogrammed" in {
-    val fracing = Fraction({x: Double => x > 0.0}, Histogram(5, -3.0, 7.0, {x: Double => x}))
-    simple.foreach(fracing.fill(_))
+    val fracking = Fraction({x: Double => x > 0.0}, Histogram(5, -3.0, 7.0, {x: Double => x}))
+    simple.foreach(fracking.fill(_))
 
-    val fraced = fracing.fix
+    val fracked = fracking.fix
 
-    fraced.numerator.values.toList should be (List(Count.ed(0.0), Count.ed(0.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
-    fraced.denominator.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
+    fracked.numerator.values.toList should be (List(Count.ed(0.0), Count.ed(0.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
+    fracked.denominator.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
+
+    fracked match {
+      case Fraction(
+        Bin(Seq(Count(0.0), Count(0.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _),
+        Bin(Seq(Count(3.0), Count(2.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _)) => 1 should be (1)
+      case _ => 0 should be (1)
+    }
+
+    Factory.fromJson[Fractioned[Counted]](fracking.toJson.stringify) should be (fracked)
+  }
+
+  //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
+
+  "Stack/Stacked/Stacking" must "work with Count/Counting/Counted" in {
+    val stacking = Stack(Count[Double](), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(stacking.fill(_))
+
+    stacking.fix.cuts.toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> Count.ed(10.0), 0.0 -> Count.ed(6.0), 2.0 -> Count.ed(3.0), 4.0 -> Count.ed(1.0), 6.0 -> Count.ed(1.0), 8.0 -> Count.ed(0.0)))
+
+    Factory.fromJson[Stacked[Counted]](stacking.toJson.stringify) should be (stacking.fix)
+  }
+
+  it must "work with Sum/Summing/Summed" in {
+    val stacking = Stack(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(stacking.fill(_))
+
+    stacking.fix.cuts(0)._2.value should be (3.3 +- 1e-12)
+    stacking.fix.cuts(1)._2.value should be (14.5 +- 1e-12)
+
+    Factory.fromJson[Stacked[Summed]](stacking.toJson.stringify) should be (stacking.fix)
   }
 
   //////////////////////////////////////////////////////////////// Map/Mapped/Mapping

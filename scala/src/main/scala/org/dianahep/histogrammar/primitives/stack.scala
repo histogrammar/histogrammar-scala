@@ -9,13 +9,13 @@ package histogrammar {
     val name = "Stack"
 
     def ed[V <: Container[V]](cuts: (Double, V)*) = new Stacked(cuts: _*)
-    def ing[DATUM, V <: Container[V]](expression: NumericalFcn[DATUM], value: => Aggregator[DATUM, V], cuts: Double*) =
+    def ing[DATUM, V <: Container[V]](value: => Aggregator[DATUM, V], expression: NumericalFcn[DATUM], cuts: Double*) =
       new Stacking(expression, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
-    def apply[DATUM, V <: Container[V]](expression: NumericalFcn[DATUM], value: => Aggregator[DATUM, V], cuts: Double*) =
-      ing(expression, value, cuts: _*)
+    def apply[DATUM, V <: Container[V]](value: => Aggregator[DATUM, V], expression: NumericalFcn[DATUM], cuts: Double*) =
+      ing(value, expression, cuts: _*)
 
     def unapplySeq[V <: Container[V]](x: Stacked[V]) = Some(x.cuts)
-    def unapply[DATUM, V <: Container[V]](x: Stacking[DATUM, V]) = Some(x.cuts)
+    def unapplySeq[DATUM, V <: Container[V]](x: Stacking[DATUM, V]) = Some(x.cuts)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>

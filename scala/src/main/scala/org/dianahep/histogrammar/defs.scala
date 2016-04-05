@@ -8,6 +8,8 @@ import scala.language.implicitConversions
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
+  class AggregatorException(message: String, cause: Exception = null) extends Exception(message, cause)
+
   //////////////////////////////////////////////////////////////// data model (user's data are implicitly converted to this)
 
   case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0) {
@@ -18,8 +20,6 @@ package histogrammar {
   case class Selection[DATUM](f: Weighted[DATUM] => Double) extends Function1[Weighted[DATUM], Double] {
     def apply(x: Weighted[DATUM]) = f(x)
   }
-
-  class AggregatorException(message: String, cause: Exception = null) extends Exception(message, cause)
 
   //////////////////////////////////////////////////////////////// general definition of an container/aggregator
 

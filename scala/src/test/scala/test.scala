@@ -386,7 +386,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
-  "Bin/Binning/Binned" must "work with Counting/Counted" in {
+  "Bin/Binning/Binned" must "work with Count/Counting/Counted" in {
     val one = Bin(5, -3.0, 7.0, {x: Double => x})
     simple.foreach(one.fill(_))
     one.fix.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
@@ -406,7 +406,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson[Binned[Counted, Counted, Counted, Counted]](two.toJson.stringify) should be (two.fix)
   }
 
-  "Binning/Binned" must "work with Summing/Summed" in {
+  "Binning/Binned" must "work with Sum/Summing/Summed" in {
     val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted[Double], Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
     simple.foreach(one.fill(_))
     one.fix.values.toList should be (List(Sum.ed(30.0), Sum.ed(20.0), Sum.ed(20.0), Sum.ed(10.0), Sum.ed(0.0)))
@@ -428,7 +428,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
 
-  "SparselyBin/SparselyBinned/SparselyBinning" must "work with Counting/Counted" in {
+  "SparselyBin/SparselyBinned/SparselyBinning" must "work with Count/Counting/Counted" in {
     val one = SparselyBin(1.0, {x: Double => x})
     simple.foreach(one.fill(_))
     one.fix.values.toList should be (List(-5 -> Count.ed(1.0), -3 -> Count.ed(1.0), -2 -> Count.ed(2.0), 0 -> Count.ed(2.0), 1 -> Count.ed(1.0), 2 -> Count.ed(1.0), 3 -> Count.ed(1.0), 7 -> Count.ed(1.0)))
@@ -443,6 +443,38 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.fix.high should be (8.0)
 
     Factory.fromJson[SparselyBinned[Counted, Counted]](one.toJson.stringify) should be (one.fix)
+  }
+
+  //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
+
+  "Fraction/Fractioned/Fractioning" must "work with Count/Counting/Counted" in {
+    val fracing = Fraction({x: Double => x > 0.0}, Count[Double]())
+    simple.foreach(fracing.fill(_))
+
+    val fraced = fracing.fix
+
+    fraced.numerator.value should be (4.0)
+    fraced.denominator.value should be (10.0)
+  }
+
+  it must "work with Sum/Summing/Summed" in {
+    val fracing = Fraction({x: Double => x > 0.0}, Sum({x: Double => x}))
+    simple.foreach(fracing.fill(_))
+
+    val fraced = fracing.fix
+
+    fraced.numerator.value should be (14.5 +- 1e-12)
+    fraced.denominator.value should be (3.3 +- 1e-12)
+  }
+
+  it must "work with Histogram/Histogramming/Histogrammed" in {
+    val fracing = Fraction({x: Double => x > 0.0}, Histogram(5, -3.0, 7.0, {x: Double => x}))
+    simple.foreach(fracing.fill(_))
+
+    val fraced = fracing.fix
+
+    fraced.numerator.values.toList should be (List(Count.ed(0.0), Count.ed(0.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
+    fraced.denominator.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
   }
 
   //////////////////////////////////////////////////////////////// Map/Mapped/Mapping

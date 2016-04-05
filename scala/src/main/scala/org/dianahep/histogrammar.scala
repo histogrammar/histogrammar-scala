@@ -39,6 +39,7 @@ package object histogrammar {
   ContainerFactory.register(Averaged)
   ContainerFactory.register(Deviated)
   ContainerFactory.register(Binned)
+  ContainerFactory.register(SparselyBinned)
   ContainerFactory.register(Mapped)
   ContainerFactory.register(Branched)
 
@@ -379,7 +380,7 @@ package histogrammar {
   }
 
   //////////////////////////////////////////////////////////////// Binned/Binning
-
+ 
   object Binned extends ContainerFactory {
     val name = "Binned"
 
@@ -393,6 +394,22 @@ package histogrammar {
       new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
 
     def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
+
+    trait Methods {
+      def num: Int
+      def low: Double
+      def high: Double
+
+      def bin(k: Double): Int =
+        if (under(k)  ||  over(k)  ||  nan(k))
+          -1
+        else
+          Math.floor(num * (k - low) / (high - low)).toInt
+
+      def under(k: Double): Boolean = !k.isNaN  &&  k < low
+      def over(k: Double): Boolean = !k.isNaN  &&  k >= high
+      def nan(k: Double): Boolean = k.isNaN
+    }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
@@ -446,12 +463,13 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binned[V, U, O, N]] {
+    val nanflow: N) extends Container[Binned[V, U, O, N]] with Binned.Methods {
 
     if (low >= high)
       throw new AggregatorException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
       throw new AggregatorException(s"values ($values) must have at least one element")
+    def num = values.size
 
     def factory = Binned
 
@@ -525,22 +543,13 @@ package histogrammar {
     val values: Seq[Aggregator[DATUM, V]],
     val underflow: Aggregator[DATUM, U],
     val overflow: Aggregator[DATUM, O],
-    val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, Binned[V, U, O, N]] {
+    val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, Binned[V, U, O, N]] with Binned.Methods {
 
     if (low >= high)
       throw new AggregatorException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
       throw new AggregatorException(s"values ($values) must have at least one element")
-
-    def bin(k: Double): Int =
-      if (under(k)  ||  over(k)  ||  nan(k))
-        -1
-      else
-        Math.floor(values.size * (k - low) / (high - low)).toInt
-
-    def under(k: Double): Boolean = !k.isNaN  &&  k < low
-    def over(k: Double): Boolean = !k.isNaN  &&  k >= high
-    def nan(k: Double): Boolean = k.isNaN
+    def num = values.size
 
     def fill(x: Weighted[DATUM]) {
       val k = key(x)
@@ -577,6 +586,24 @@ package histogrammar {
       new SparselyBinned[V, N](binWidth, origin, values, nanflow)
 
     def unapply[V <: Container[V], N <: Container[N]](x: SparselyBinned[V, N]) = Some((x.binWidth, x.origin, x.values, x.nanflow))
+
+    trait Methods {
+      def binWidth: Double
+      def origin: Double
+
+      def numFilled: Int
+      def num: Long
+      def low: Double
+      def high: Double
+
+      def bin(k: Double): Long =
+        if (nan(k))
+          java.lang.Long.MIN_VALUE
+        else
+          Math.floor((k - origin) / binWidth).toLong
+
+      def nan(k: Double): Boolean = k.isNaN
+    }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("binWidth", "origin", "values:type", "values", "nanflow:type", "nanflow")) =>
@@ -616,7 +643,7 @@ package histogrammar {
       case _ => throw new JsonFormatException(json, "SparselyBinned")
     }
   }
-  class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val values: SortedSet[(Long, V)], val nanflow: N) extends Container[SparselyBinned[V, N]] {
+  class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val values: SortedSet[(Long, V)], val nanflow: N) extends Container[SparselyBinned[V, N]] with SparselyBinned.Methods {
     if (binWidth <= 0.0)
       throw new AggregatorException(s"binWidth ($binWidth) must be greater than zero")
 
@@ -640,6 +667,11 @@ package histogrammar {
       new SparselyBinned(binWidth, origin, newvalues, this.nanflow + that.nanflow)
     }
 
+    def numFilled = values.size
+    def num = if (values.isEmpty) -1L else values.last._1 - values.head._1
+    def low = if (values.isEmpty) java.lang.Double.NaN else values.head._1 * binWidth + origin
+    def high = if (values.isEmpty) java.lang.Double.NaN else (values.last._1 + 1L) * binWidth + origin
+
     def toJsonFragment = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
       "origin" -> JsonFloat(origin),
@@ -648,7 +680,7 @@ package histogrammar {
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment)
 
-    override def toString() = s"""SparselyBinned[binWidth=$binWidth, origin=$origin, values=[${if (values.isEmpty) "?" else values.head.toString}, size=${values.size}], nanflow=$nanflow]"""
+    override def toString() = s"""SparselyBinned[binWidth=$binWidth, origin=$origin, values=[${if (values.isEmpty) "?" else values.head._2.toString}, size=${values.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
       case that: SparselyBinned[V, N] => this.binWidth == that.binWidth  &&  this.origin == that.origin  &&  this.values == that.values  &&  this.nanflow == that.nanflow
       case _ => false
@@ -659,26 +691,18 @@ package histogrammar {
   object SparselyBinning extends AggregatorFactory {
     def apply[DATUM, V <: Container[V], N <: Container[N]]
       (binWidth: Double,
-       origin: Double = 0.0,
        key: NumericalFcn[DATUM],
-       selection: Selection[DATUM] = unweighted[DATUM])
+       selection: Selection[DATUM] = unweighted[DATUM],
+       origin: Double = 0.0)
       (value: => Aggregator[DATUM, V] = Counting[DATUM](),
        nanflow: Aggregator[DATUM, N] = Counting[DATUM]()) =
       new SparselyBinning[DATUM, V, N](binWidth, origin, key, selection, value, mutable.HashMap[Long, Aggregator[DATUM, V]](), nanflow)
 
     def unapply[DATUM, V <: Container[V], N <: Container[N]](x: SparselyBinning[DATUM, V, N]) = Some((x.binWidth, x.origin, x.values, x.nanflow))
   }
-  class SparselyBinning[DATUM, V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val key: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val values: mutable.Map[Long, Aggregator[DATUM, V]], val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, SparselyBinned[V, N]] {
+  class SparselyBinning[DATUM, V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val key: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val values: mutable.Map[Long, Aggregator[DATUM, V]], val nanflow: Aggregator[DATUM, N]) extends Aggregator[DATUM, SparselyBinned[V, N]] with SparselyBinned.Methods {
     if (binWidth <= 0.0)
       throw new AggregatorException(s"binWidth ($binWidth) must be greater than zero")
-
-    def bin(k: Double): Long =
-      if (nan(k))
-        java.lang.Long.MIN_VALUE
-      else
-        Math.floor((k - origin) / binWidth).toLong
-
-    def nan(k: Double): Boolean = k.isNaN
 
     def fill(x: Weighted[DATUM]) {
       val k = key(x)
@@ -694,6 +718,11 @@ package histogrammar {
         }
       }
     }
+
+    def numFilled = values.size
+    def num = if (values.isEmpty) -1L else values.map(_._1).max - values.map(_._1).min
+    def low = if (values.isEmpty) java.lang.Double.NaN else values.map(_._1).min * binWidth + origin
+    def high = if (values.isEmpty) java.lang.Double.NaN else (values.map(_._1).max + 1L) * binWidth + origin
 
     def fix = new SparselyBinned(binWidth, origin, SortedSet(values.toSeq map {case (i, v) => (i -> v.fix)}: _*)(Ordering.by[(Long, V), Long](_._1)), nanflow.fix)
 

@@ -426,6 +426,25 @@ class DefaultSuite extends FlatSpec with Matchers {
     ContainerFactory.fromJson[Binned[Summed, Summed, Summed, Summed]](two.toJson.stringify) should be (two.fix)
   }
 
+  //////////////////////////////////////////////////////////////// SparselyBinned/SparselyBinning
+
+  "SparselyBinned/SparselyBinning" must "work with Counting/Counted" in {
+    val one = SparselyBinning(1.0, {x: Double => x})()
+    simple.foreach(one.fill(_))
+    one.fix.values.toList should be (List(-5 -> Counted(1.0), -3 -> Counted(1.0), -2 -> Counted(2.0), 0 -> Counted(2.0), 1 -> Counted(1.0), 2 -> Counted(1.0), 3 -> Counted(1.0), 7 -> Counted(1.0)))
+
+    one.numFilled should be (8)
+    one.fix.numFilled should be (8)
+    one.num should be (12)
+    one.fix.num should be (12)
+    one.low should be (-5.0)
+    one.fix.low should be (-5.0)
+    one.high should be (8.0)
+    one.fix.high should be (8.0)
+
+    ContainerFactory.fromJson[SparselyBinned[Counted, Counted]](one.toJson.stringify) should be (one.fix)
+  }
+
   //////////////////////////////////////////////////////////////// Mapped/Mapping
 
   "Mapped/Mapping" must "work with multiple types" in {

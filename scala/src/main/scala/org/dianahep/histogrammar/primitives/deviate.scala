@@ -66,23 +66,32 @@ package histogrammar {
     override def hashCode() = (count, mean, variance).hashCode
   }
 
-  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, var variance: Double) extends Aggregator[DATUM, Deviated] {
+  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, _variance: Double) extends Aggregator[DATUM, Deviated] {
     def factory = Deviate
+
+    private var varianceTimesCount = count * _variance
+
+    def variance =
+      if (count == 0.0)
+        _variance
+      else
+        varianceTimesCount / count
+
+    def variance_(_variance: Double) {
+      varianceTimesCount = count * _variance
+    }
 
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 
       if (y.contributes) {
-        val originalCount = count
-
         count += y.weight
 
         val delta = y.datum - mean
         val shift = delta * y.weight / count
-        val varianceTimesCount = originalCount * (variance + delta * shift)
 
         mean += shift
-        variance = varianceTimesCount / count
+        varianceTimesCount += y.weight * delta * (y.datum - mean)
       }
     }
     def fix = new Deviated(count, mean, variance)

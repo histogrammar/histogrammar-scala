@@ -125,9 +125,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
-  //////////////////////////////////////////////////////////////// Summed/Summing
+  //////////////////////////////////////////////////////////////// Sum/Summed/Summing
 
-  "Summing/Summed" must "work unfiltered" in {
+  "Sum/Summing/Summed" must "work unfiltered" in {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
@@ -196,9 +196,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
-  //////////////////////////////////////////////////////////////// Averaged/Averaging
+  //////////////////////////////////////////////////////////////// Average/Averaged/Averaging
 
-  "Averaging/Averaged" must "work unfiltered" in {
+  "Average/Averaging/Averaged" must "work unfiltered" in {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
@@ -290,9 +290,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
-  //////////////////////////////////////////////////////////////// Deviated/Deviating
+  //////////////////////////////////////////////////////////////// Deviate/Deviated/Deviating
 
-  "Deviating/Deviated" must "work unfiltered" in {
+  "Deviate/Deviating/Deviated" must "work unfiltered" in {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
@@ -384,9 +384,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
-  //////////////////////////////////////////////////////////////// Binned/Binning
+  //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
-  "Binning/Binned" must "work with Counting/Counted" in {
+  "Bin/Binning/Binned" must "work with Counting/Counted" in {
     val one = Bin(5, -3.0, 7.0, {x: Double => x})
     simple.foreach(one.fill(_))
     one.fix.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
@@ -426,9 +426,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson[Binned[Summed, Summed, Summed, Summed]](two.toJson.stringify) should be (two.fix)
   }
 
-  //////////////////////////////////////////////////////////////// SparselyBinned/SparselyBinning
+  //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
 
-  "SparselyBinned/SparselyBinning" must "work with Counting/Counted" in {
+  "SparselyBin/SparselyBinned/SparselyBinning" must "work with Counting/Counted" in {
     val one = SparselyBin(1.0, {x: Double => x})
     simple.foreach(one.fill(_))
     one.fix.values.toList should be (List(-5 -> Count.ed(1.0), -3 -> Count.ed(1.0), -2 -> Count.ed(2.0), 0 -> Count.ed(2.0), 1 -> Count.ed(1.0), 2 -> Count.ed(1.0), 3 -> Count.ed(1.0), 7 -> Count.ed(1.0)))
@@ -445,9 +445,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson[SparselyBinned[Counted, Counted]](one.toJson.stringify) should be (one.fix)
   }
 
-  //////////////////////////////////////////////////////////////// Mapped/Mapping
+  //////////////////////////////////////////////////////////////// Map/Mapped/Mapping
 
-  "Mapped/Mapping" must "work with multiple types" in {
+  "Map/Mapped/Mapping" must "work with multiple types" in {
     val one = Histogram(5, -3.0, 7.0, {x: Double => x})
     val two = Count[Double]()
     val three = Deviate({x: Double => x + 100.0})
@@ -490,33 +490,33 @@ class DefaultSuite extends FlatSpec with Matchers {
     mapped[Histogrammed]("three").numericValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
   }
 
-  //////////////////////////////////////////////////////////////// Branched/Branching
+  //////////////////////////////////////////////////////////////// Tuple/Tupled/Tupling
 
-  "Branched/Branching" must "work with multiple types" in {
+  "Tuple/Tupled/Tupling" must "work with multiple types" in {
     val one = Histogram(5, -3.0, 7.0, {x: Double => x})
     val two = Count[Double]()
     val three = Deviate({x: Double => x + 100.0})
 
-    val branching = (one, two, three)
+    val tupling = (one, two, three)
 
-    simple.foreach(branching.fill(_))
+    simple.foreach(tupling.fill(_))
 
-    val branched = branching.fix
+    val tupled = tupling.fix
 
-    val onefix = branched._1
+    val onefix = tupled._1
     onefix.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
     onefix.underflow should be (Count.ed(1.0))
     onefix.overflow should be (Count.ed(1.0))
     onefix.nanflow should be (Count.ed(0.0))
     onefix should be (one.fix)
 
-    branched._2 should be (Count.ed(10.0))
+    tupled._2 should be (Count.ed(10.0))
 
-    branched._3.count should be (10.0 +- 1e-12)
-    branched._3.mean should be (100.33 +- 1e-12)
-    branched._3.variance should be (10.8381 +- 1e-12)
+    tupled._3.count should be (10.0 +- 1e-12)
+    tupled._3.mean should be (100.33 +- 1e-12)
+    tupled._3.variance should be (10.8381 +- 1e-12)
 
-    Factory.fromJson[Branched3[Histogrammed, Counted, Deviated]](branching.toJson.stringify) should be (branched)
+    Factory.fromJson[Tupled3[Histogrammed, Counted, Deviated]](tupling.toJson.stringify) should be (tupled)
   }
 
 }

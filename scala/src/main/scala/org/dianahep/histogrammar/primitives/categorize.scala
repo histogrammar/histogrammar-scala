@@ -10,18 +10,13 @@ package histogrammar {
   object Categorize extends Factory {
     val name = "Categorize"
 
-    def default[DATUM] = Count[DATUM]()
-
     def ed[V <: Container[V]](pairs: (String, V)*) = new Categorized(pairs: _*)
 
-    def ing[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => Aggregator[DATUM, V] = default[DATUM]) =
-      new Categorizing(quantity, selection, {() => value}, mutable.HashMap[String, Aggregator[DATUM, V]]())
-
-    def apply[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => Aggregator[DATUM, V] = default[DATUM]) =
-      ing(quantity, selection, value)
+    def apply[DATUM, V <: Aggregator[DATUM, V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM], value: => V) =
+      new Categorizing(quantity, selection, value, mutable.HashMap[String, V]())
 
     def unapplySeq[V <: Container[V]](x: Categorized[V]) = Some(x.pairs)
-    def unapplySeq[DATUM, V <: Container[V]](x: Categorizing[DATUM, V]) = Some(x.pairs)
+    def unapplySeq[DATUM, V <: Aggregator[DATUM, V]](x: Categorizing[DATUM, V]) = Some(x.pairs)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
@@ -53,31 +48,18 @@ package histogrammar {
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
     def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
     def keySet: Set[String] = keys.toSet
-    def apply[CONTAINER <: Container[CONTAINER]](x: String) = pairsMap(x).asInstanceOf[CONTAINER]
-    def get[CONTAINER <: Container[CONTAINER]](x: String) = pairsMap.get(x).asInstanceOf[CONTAINER]
-    def getOrElse[CONTAINER <: Container[CONTAINER]](x: String, default: => CONTAINER) = pairsMap.getOrElse(x, default).asInstanceOf[CONTAINER]
+    def apply(x: String) = pairsMap(x)
+    def get(x: String) = pairsMap.get(x)
+    def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
-    def +(that: Categorized[V]) = new Categorized[V](
-      (this.keySet union that.keySet).toSeq map {key =>
-        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-          (key, this.pairsMap(key) + that.pairsMap(key))
-        else if (this.pairsMap contains key)
-          (key, this.pairsMap(key))
-        else
-          (key, that.pairsMap(key))
-      }: _*)
-    def +[DATUM](that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
-      that.quantity,
-      that.selection,
-      that.create,
-      (this.keySet union that.keySet).toSeq map {key =>
-        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-          (key, this.pairsMap(key) + that.pairsMap(key))
-        else if (this.pairsMap contains key)
-          (key, this.pairsMap(key))
-        else
-          (key, that.pairsMap(key))
-      }: _*)
+    def +(that: Categorized[V]) = new Categorized((this.keySet union that.keySet).toSeq map {key =>
+      if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+        (key, this.pairsMap(key) + that.pairsMap(key))
+      else if (this.pairsMap contains key)
+        (key, this.pairsMap(key))
+      else
+        (key, that.pairsMap(key))
+    }: _*)
 
     def toJsonFragment = JsonObject(
       "type" -> JsonString(if (pairs.isEmpty) "?" else pairs.head._2.factory.name),
@@ -90,56 +72,45 @@ package histogrammar {
     }
   }
 
-  class Categorizing[DATUM, V <: Container[V]](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], val create: () => Aggregator[DATUM, V], val pairs: mutable.HashMap[String, Aggregator[DATUM, V]]) extends Aggregator[DATUM, Categorized[V]] {
+  class Categorizing[DATUM, V <: Aggregator[DATUM, V]](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], value: => V, val pairs: mutable.HashMap[String, V]) extends Aggregator[DATUM, Categorizing[DATUM, V]] {
     def factory = Categorize
 
     def pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    def values: Iterable[Aggregator[DATUM, _]] = pairs.toIterable.map(_._2)
+    def values: Iterable[V] = pairs.toIterable.map(_._2)
     def keySet: Set[String] = keys.toSet
-    def apply[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap(x).asInstanceOf[AGGREGATOR]
-    def get[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap.get(x).asInstanceOf[AGGREGATOR]
-    def getOrElse[AGGREGATOR <: Aggregator[DATUM, _]](x: String, default: => AGGREGATOR) = pairsMap.getOrElse(x, default).asInstanceOf[AGGREGATOR]
+    def apply(x: String) = pairsMap(x)
+    def get(x: String) = pairsMap.get(x)
+    def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
-    def +(that: Categorized[V]) = new Categorizing[DATUM, V](
-      this.quantity,
-      this.selection,
-      this.create,
-      (this.keySet union that.keySet).toSeq map {key =>
-        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-          (key, this.pairsMap(key) + that.pairsMap(key))
-        else if (this.pairsMap contains key)
-          (key, this.pairsMap(key))
-        else
-          (key, that.pairsMap(key))
-      }: _*)
     def +(that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
       this.quantity,
       this.selection,
-      this.create,
-      (this.keySet union that.keySet).toSeq map {key =>
+      this.value,
+      mutable.HashMap[String, V]((this.keySet union that.keySet).toSeq map {key =>
         if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
           (key, this.pairsMap(key) + that.pairsMap(key))
         else if (this.pairsMap contains key)
           (key, this.pairsMap(key))
         else
           (key, that.pairsMap(key))
-      }: _*)
+      }: _*))
     
     def fill(x: Weighted[DATUM]) {
       val k = quantity(x)
       val y = x reweight selection(x)
-
       if (y.contributes) {
         if (!(pairs contains k))
-          pairs(k) = create()
+          pairs(k) = value
         pairs(k).fill(y)
       }
     }
 
-    def toContainer = new Categorized(pairs.toSeq map {case (k, v) => (k, v.toContainer)}: _*)
+    def toJsonFragment = JsonObject(
+      "type" -> JsonString(if (pairs.isEmpty) "?" else pairs.head._2.factory.name),
+      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
-    override def toString() = s"Categorizing[${create()}, size=${pairs.size}]"
+    override def toString() = s"Categorizing[$value, size=${pairs.size}]"
     override def equals(that: Any) = that match {
       case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.pairs == that.pairs
       case _ => false

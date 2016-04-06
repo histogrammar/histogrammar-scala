@@ -10,8 +10,7 @@ package histogrammar {
     val name = "NameMap"
 
     def ed(pairs: (String, Container[_])*) = new NameMapped(pairs: _*)
-    def ing[DATUM](pairs: (String, Aggregator[DATUM, _])*) = new NameMapping(pairs: _*)
-    def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*) = ing(pairs: _*)
+    def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*) = new NameMapping(pairs: _*)
 
     def unapplySeq(x: NameMapped) = Some(x.pairs)
     def unapplySeq[DATUM](x: NameMapping[DATUM]) = Some(x.pairs)
@@ -48,22 +47,12 @@ package histogrammar {
 
     def +(that: NameMapped) =
       if (this.keySet != that.keySet)
-        throw new AggregatorException(s"""cannot add NameMap because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
+        throw new AggregatorException(s"""cannot add NameMapped because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
       else
         new NameMapped(this.pairs.map({case (key, mysub) =>
           val yoursub = that.pairsMap(key)
           if (mysub.factory != yoursub.factory)
-            throw new AggregatorException(s"""cannot add NameMap because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
-          (key, combine(mysub, yoursub))
-        }): _*)
-    def +[DATUM](that: NameMapping[DATUM]) =
-      if (this.keySet != that.keySet)
-        throw new AggregatorException(s"""cannot add NameMap because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
-      else
-        new NameMapping[DATUM](this.pairs.map({case (key, mysub) =>
-          val yoursub = that.pairsMap(key)
-          if (mysub.factory != yoursub.factory)
-            throw new AggregatorException(s"""cannot add NameMap because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
+            throw new AggregatorException(s"""cannot add NameMapped because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
           (key, combine(mysub, yoursub))
         }): _*)
 
@@ -79,44 +68,39 @@ package histogrammar {
     override def hashCode() = pairsMap.hashCode
   }
 
-  class NameMapping[DATUM](val pairs: (String, Aggregator[DATUM, _])*) extends Aggregator[DATUM, NameMapped] {
+  class NameMapping[DATUM](val pairs: (String, Aggregator[DATUM, _])*) extends Aggregator[DATUM, NameMapping[DATUM]] {
     def factory = NameMap
 
     val pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    def values: Iterable[Aggregator[DATUM, _]] = pairs.toIterable.map(_._2)
+    def values[AGGREGATOR <: Aggregator[DATUM, _]]: Iterable[AGGREGATOR] = pairs.toIterable.map(_._2.asInstanceOf[AGGREGATOR])
     def keySet: Set[String] = keys.toSet
     def apply[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap(x).asInstanceOf[AGGREGATOR]
     def get[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap.get(x).asInstanceOf[AGGREGATOR]
     def getOrElse[AGGREGATOR <: Aggregator[DATUM, _]](x: String, default: => AGGREGATOR) = pairsMap.getOrElse(x, default).asInstanceOf[AGGREGATOR]
 
-    def +(that: NameMapped) =
-      if (this.keySet != that.keySet)
-        throw new AggregatorException(s"""cannot add NameMap because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
-      else
-        new NameMapping[DATUM](this.pairs.map({case (key, mysub) =>
-          val yoursub = that.pairsMap(key)
-          if (mysub.factory != yoursub.factory)
-            throw new AggregatorException(s"""cannot add NameMap because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
-          (key, combine(mysub, yoursub))
-        }): _*)
+    private def combine[DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]](one: Aggregator[_, _], two: Aggregator[_, _]) =
+      one.asInstanceOf[AGGREGATOR] + two.asInstanceOf[AGGREGATOR]
+
     def +(that: NameMapping[DATUM]) =
       if (this.keySet != that.keySet)
-        throw new AggregatorException(s"""cannot add NameMap because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
+        throw new AggregatorException(s"""cannot add NameMapping because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
       else
         new NameMapping[DATUM](this.pairs.map({case (key, mysub) =>
           val yoursub = that.pairsMap(key)
           if (mysub.factory != yoursub.factory)
-            throw new AggregatorException(s"""cannot add NameMap because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
+            throw new AggregatorException(s"""cannot add NameMapping because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
           (key, combine(mysub, yoursub))
         }): _*)
 
     def fill(x: Weighted[DATUM]) {
       if (x.contributes)
-        values.foreach(_.fill(x))
+        values foreach {v: Aggregator[DATUM, _] => v.fill(x)}
     }
 
-    def toContainer = new NameMapped(pairs map {case (key, sub) => (key, sub.toContainer.asInstanceOf[Container[_]])}: _*)
+    def toJsonFragment = JsonObject(pairs map {case (key, sub) =>
+      key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
+    }: _*)
 
     override def toString() = s"NameMapping[size=${pairs.size}]"
     override def equals(that: Any) = that match {

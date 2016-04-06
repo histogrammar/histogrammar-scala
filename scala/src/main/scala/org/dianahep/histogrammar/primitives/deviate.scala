@@ -9,8 +9,7 @@ package histogrammar {
     val name = "Deviate"
 
     def ed(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = ing(quantity, selection)
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
 
     def unapply(x: Deviated) = Some((x.count, x.mean, x.variance))
     def unapply(x: Deviating[_]) = Some((x.count, x.mean, x.variance))
@@ -54,13 +53,9 @@ package histogrammar {
                                                           that.count, that.mean, that.variance * that.count)
       new Deviated(newcount, newmean, newvariance)
     }
-    def +[DATUM](that: Deviating[DATUM]) = {
-      val (newcount, newmean, newvariance) = Deviate.plus(this.count, this.mean, this.variance * this.count,
-                                                          that.count, that.mean, that.variance * that.count)
-      new Deviating[DATUM](that.quantity, that.selection, newcount, newmean, newvariance)
-    }
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
+
     override def toString() = s"Deviated"
     override def equals(that: Any) = that match {
       case that: Deviated => this.count === that.count  &&  this.mean === that.mean  &&  this.variance === that.variance
@@ -69,7 +64,7 @@ package histogrammar {
     override def hashCode() = (count, mean, variance).hashCode
   }
 
-  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, _variance: Double) extends Aggregator[DATUM, Deviated] {
+  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, _variance: Double) extends Aggregator[DATUM, Deviating[DATUM]] {
     def factory = Deviate
 
     private var varianceTimesCount = count * _variance
@@ -84,11 +79,6 @@ package histogrammar {
       varianceTimesCount = count * _variance
     }
 
-    def +(that: Deviated) = {
-      val (newcount, newmean, newvariance) = Deviate.plus(this.count, this.mean, this.variance * this.count,
-                                                          that.count, that.mean, that.variance * that.count)
-      new Deviating[DATUM](this.quantity, this.selection, newcount, newmean, newvariance)
-    }
     def +(that: Deviating[DATUM]) = {
       val (newcount, newmean, newvariance) = Deviate.plus(this.count, this.mean, this.variance * this.count,
                                                           that.count, that.mean, that.variance * that.count)
@@ -109,7 +99,7 @@ package histogrammar {
       }
     }
 
-    def toContainer = new Deviated(count, mean, variance)
+    def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
     override def toString() = s"Deviating"
     override def equals(that: Any) = that match {

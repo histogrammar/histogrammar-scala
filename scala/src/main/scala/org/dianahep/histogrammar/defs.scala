@@ -107,18 +107,33 @@ package histogrammar {
 package object histogrammar {
   //////////////////////////////////////////////////////////////// define implicits
 
-  type NumericalFcn[DATUM] = Weighted[DATUM] => Double
-  type NumericalFcn2[DATUM] = Weighted[DATUM] => (Double, Double)
-  type NumericalFcn3[DATUM] = Weighted[DATUM] => (Double, Double, Double)
-  type NumericalFcn4[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double)
-  type NumericalFcn5[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double)
-  type NumericalFcn6[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double)
-  type NumericalFcn7[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double)
-  type NumericalFcn8[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double, Double)
-  type NumericalFcn9[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double, Double, Double)
-  type NumericalFcn10[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double, Double, Double, Double)
-  type NumericalFcnN[DATUM] = Weighted[DATUM] => Seq[Double]
-  type CategoricalFcn[DATUM] = Weighted[DATUM] => String
+  type Categorical = String
+
+  type Numerical = Double
+  type Numerical2 = (Double, Double)
+  type Numerical3 = (Double, Double, Double)
+  type Numerical4 = (Double, Double, Double, Double)
+  type Numerical5 = (Double, Double, Double, Double, Double)
+  type Numerical6 = (Double, Double, Double, Double, Double, Double)
+  type Numerical7 = (Double, Double, Double, Double, Double, Double, Double)
+  type Numerical8 = (Double, Double, Double, Double, Double, Double, Double, Double)
+  type Numerical9 = (Double, Double, Double, Double, Double, Double, Double, Double, Double)
+  type Numerical10 = (Double, Double, Double, Double, Double, Double, Double, Double, Double, Double)
+  type NumericalN = Seq[Double]
+
+  type CategoricalFcn[DATUM] = Weighted[DATUM] => Categorical
+
+  type NumericalFcn[DATUM] = Weighted[DATUM] => Numerical
+  type NumericalFcn2[DATUM] = Weighted[DATUM] => Numerical2
+  type NumericalFcn3[DATUM] = Weighted[DATUM] => Numerical3
+  type NumericalFcn4[DATUM] = Weighted[DATUM] => Numerical4
+  type NumericalFcn5[DATUM] = Weighted[DATUM] => Numerical5
+  type NumericalFcn6[DATUM] = Weighted[DATUM] => Numerical6
+  type NumericalFcn7[DATUM] = Weighted[DATUM] => Numerical7
+  type NumericalFcn8[DATUM] = Weighted[DATUM] => Numerical8
+  type NumericalFcn9[DATUM] = Weighted[DATUM] => Numerical9
+  type NumericalFcn10[DATUM] = Weighted[DATUM] => Numerical10
+  type NumericalFcnN[DATUM] = Weighted[DATUM] => NumericalN
 
   def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
   

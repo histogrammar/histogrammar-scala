@@ -38,7 +38,8 @@ package histogrammar {
   class Fractioned[V <: Container[V]](val numerator: V, val denominator: V) extends Container[Fractioned[V]] {
     def factory = Fraction
 
-    def +(that: Fractioned[V]) = new Fractioned(this.numerator + that.numerator, this.denominator + that.denominator)
+    def +(that: Fractioned[V]) = new Fractioned[V](this.numerator + that.numerator, this.denominator + that.denominator)
+    def +[DATUM](that: Fractioning[DATUM, V]) = new Fractioning[DATUM, V](that.numeratorSelection, this.numerator + that.numerator, this.denominator + that.denominator)
 
     def toJsonFragment = JsonObject(
       "type" -> JsonString(numerator.factory.name),
@@ -55,15 +56,20 @@ package histogrammar {
   class Fractioning[DATUM, V <: Container[V]](val numeratorSelection: Selection[DATUM], val numerator: Aggregator[DATUM, V], val denominator: Aggregator[DATUM, V]) extends Aggregator[DATUM, Fractioned[V]] {
     def factory = Fraction
 
+    def +(that: Fractioned[V]) = new Fractioning[DATUM, V](this.numeratorSelection, this.numerator + that.numerator, this.denominator + that.denominator)
+    def +(that: Fractioning[DATUM, V]) = new Fractioning[DATUM, V](this.numeratorSelection, this.numerator + that.numerator, this.denominator + that.denominator)
+
     def fill(x: Weighted[DATUM]) {
       val y = x reweight numeratorSelection(x)
+
       if (x.contributes)
         denominator.fill(x)
       if (y.contributes)
         numerator.fill(y)
     }
 
-    def fix = new Fractioned(numerator.fix, denominator.fix)
+    def toContainer = new Fractioned(numerator.toContainer, denominator.toContainer)
+
     override def toString() = s"Fractioning[numerator=$numerator, denominator=$denominator]"
     override def equals(that: Any) = that match {
       case that: Fractioning[DATUM, V] => this.numeratorSelection == that.numeratorSelection  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator

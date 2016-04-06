@@ -106,6 +106,25 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def plusErrors(
+      thislow: Double, thishigh: Double, thisSize: Int, thisValues: Factory, thisUnderflow: Factory, thisOverflow: Factory, thisNanflow: Factory,
+      thatlow: Double, thathigh: Double, thatSize: Int, thatValues: Factory, thatUnderflow: Factory, thatOverflow: Factory, thatNanflow: Factory) {
+      if (thislow != thatlow)
+        throw new AggregatorException(s"cannot add Bins because low differs ($thislow vs $thatlow)")
+      if (thishigh != thathigh)
+        throw new AggregatorException(s"cannot add Bins because high differs ($thishigh vs $thathigh)")
+      if (thisSize != thatSize)
+        throw new AggregatorException(s"cannot add Bins because number of values differs ($thisSize vs $thatSize)")
+      if (thisValues != thatValues)
+        throw new AggregatorException(s"cannot add Bins because values type differs ($thisValues vs $thatValues)")
+      if (thisUnderflow != thatUnderflow)
+        throw new AggregatorException(s"cannot add Bins because underflow type differs (${thisUnderflow.name} vs ${thatUnderflow.name})")
+      if (thisOverflow != thatOverflow)
+        throw new AggregatorException(s"cannot add Bins because overflow type differs (${thisOverflow.name} vs ${thatOverflow.name})")
+      if (thisNanflow != thatNanflow)
+        throw new AggregatorException(s"cannot add Bins because nanflow type differs (${thisNanflow.name} vs ${thatNanflow.name})")
+    }
   }
 
   class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
@@ -125,26 +144,24 @@ package histogrammar {
     def factory = Bin
 
     def +(that: Binned[V, U, O, N]) = {
-      if (this.low != that.low)
-        throw new AggregatorException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
-      if (this.high != that.high)
-        throw new AggregatorException(s"cannot add Binned because high differs (${this.high} vs ${that.high})")
-      if (this.values.size != that.values.size)
-        throw new AggregatorException(s"cannot add Binned because number of values differs (${this.values.size} vs ${that.values.size})")
-      if (this.values.isEmpty)
-        throw new AggregatorException(s"cannot add Binned because number of values is zero")
-      if (this.values.head.factory != that.values.head.factory)
-        throw new AggregatorException(s"cannot add Binned because values type differs (${this.values.head.factory.name} vs ${that.values.head.factory.name})")
-      if (this.underflow.factory != that.underflow.factory)
-        throw new AggregatorException(s"cannot add Binned because underflow type differs (${this.underflow.factory.name} vs ${that.underflow.factory.name})")
-      if (this.overflow.factory != that.overflow.factory)
-        throw new AggregatorException(s"cannot add Binned because overflow type differs (${this.overflow.factory.name} vs ${that.overflow.factory.name})")
-      if (this.nanflow.factory != that.nanflow.factory)
-        throw new AggregatorException(s"cannot add Binned because nanflow type differs (${this.nanflow.factory.name} vs ${that.nanflow.factory.name})")
-
-      new Binned(
+      Bin.plusErrors(this.low, this.high, this.values.size, this.values.head.factory, this.underflow.factory, this.overflow.factory, this.nanflow.factory,
+                     that.low, that.high, that.values.size, that.values.head.factory, that.underflow.factory, that.overflow.factory, that.nanflow.factory)
+      new Binned[V, U, O, N](
         low,
         high,
+        this.values zip that.values map {case (me, you) => me + you},
+        this.underflow + that.underflow,
+        this.overflow + that.overflow,
+        this.nanflow + that.nanflow)
+    }
+    def +[DATUM](that: Binning[DATUM, V, U, O, N]) = {
+      Bin.plusErrors(this.low, this.high, this.values.size, this.values.head.factory, this.underflow.factory, this.overflow.factory, this.nanflow.factory,
+                     that.low, that.high, that.values.size, that.values.head.factory, that.underflow.factory, that.overflow.factory, that.nanflow.factory)
+      new Binning[DATUM, V, U, O, N](
+        low,
+        high,
+        that.quantity,
+        that.selection,
         this.values zip that.values map {case (me, you) => me + you},
         this.underflow + that.underflow,
         this.overflow + that.overflow,
@@ -189,9 +206,37 @@ package histogrammar {
       throw new AggregatorException(s"values ($values) must have at least one element")
     def num = values.size
 
+    def +(that: Binned[V, U, O, N]) = {
+      Bin.plusErrors(this.low, this.high, this.values.size, this.values.head.factory, this.underflow.factory, this.overflow.factory, this.nanflow.factory,
+                     that.low, that.high, that.values.size, that.values.head.factory, that.underflow.factory, that.overflow.factory, that.nanflow.factory)
+      new Binning[DATUM, V, U, O, N](
+        low,
+        high,
+        this.quantity,
+        this.selection,
+        this.values zip that.values map {case (me, you) => me + you},
+        this.underflow + that.underflow,
+        this.overflow + that.overflow,
+        this.nanflow + that.nanflow)
+    }
+    def +(that: Binning[DATUM, V, U, O, N]) = {
+      Bin.plusErrors(this.low, this.high, this.values.size, this.values.head.factory, this.underflow.factory, this.overflow.factory, this.nanflow.factory,
+                     that.low, that.high, that.values.size, that.values.head.factory, that.underflow.factory, that.overflow.factory, that.nanflow.factory)
+      new Binning[DATUM, V, U, O, N](
+        low,
+        high,
+        this.quantity,
+        this.selection,
+        this.values zip that.values map {case (me, you) => me + you},
+        this.underflow + that.underflow,
+        this.overflow + that.overflow,
+        this.nanflow + that.nanflow)
+    }
+
     def fill(x: Weighted[DATUM]) {
       val k = quantity(x)
       val y = x reweight selection(x)
+
       if (y.contributes) {
         if (under(k))
           underflow.fill(y)
@@ -204,7 +249,8 @@ package histogrammar {
       }
     }
 
-    def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
+    def toContainer = new Binned(low, high, values.map(_.toContainer), underflow.toContainer, overflow.toContainer, nanflow.toContainer)
+
     override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
       case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow

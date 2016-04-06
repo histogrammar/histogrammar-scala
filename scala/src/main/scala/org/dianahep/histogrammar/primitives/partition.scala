@@ -57,11 +57,20 @@ package histogrammar {
 
     def +(that: Partitioned[V]) =
       if (this.cuts.size != that.cuts.size)
-        throw new AggregatorException(s"cannot add Partitioned because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
       else
         new Partitioned(this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
           if (mycut != yourcut)
-            throw new AggregatorException(s"cannot add Partitioned because cut differs ($mycut vs $yourcut)")
+            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
+          (mycut, me + you)
+        }: _*)
+    def +[DATUM](that: Partitioning[DATUM, V]) =
+      if (this.cuts.size != that.cuts.size)
+        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      else
+        new Partitioning[DATUM](that.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+          if (mycut != yourcut)
+            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
           (mycut, me + you)
         }: _*)
 
@@ -82,6 +91,25 @@ package histogrammar {
     if (cuts.size < 1)
       throw new AggregatorException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Partition.ing factory method adds)")
 
+    def +(that: Partitioned[V]) =
+      if (this.cuts.size != that.cuts.size)
+        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      else
+        new Partitioning[DATUM](this.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+          if (mycut != yourcut)
+            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
+          (mycut, me + you)
+        }: _*)
+    def +(that: Partitioning[DATUM, V]) =
+      if (this.cuts.size != that.cuts.size)
+        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      else
+        new Partitioning[DATUM](this.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+          if (mycut != yourcut)
+            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
+          (mycut, me + you)
+        }: _*)
+
     private val range = cuts zip (cuts.tail :+ (java.lang.Double.NaN, null))
 
     def fill(x: Weighted[DATUM]) {
@@ -94,7 +122,8 @@ package histogrammar {
       }
     }
 
-    def fix = new Partitioned(cuts map {case (atleast, sub) => (atleast, sub.fix)}: _*)
+    def toContainer = new Partitioned(cuts map {case (atleast, sub) => (atleast, sub.toContainer)}: _*)
+
     override def toString() = s"""Partitioning[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
       case that: Partitioning[DATUM, V] => this.expression == that.expression  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})

@@ -25,6 +25,7 @@ package histogrammar {
     def factory = Sum
 
     def +(that: Summed) = new Summed(this.value + that.value)
+    def +[DATUM](that: Summing[DATUM]) = new Summing[DATUM](that.quantity, that.selection, this.value + that.value)
 
     def toJsonFragment = JsonFloat(value)
     override def toString() = s"Summed"
@@ -38,13 +39,16 @@ package histogrammar {
   class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summed] {
     def factory = Sum
 
+    def +(that: Summed) = new Summing[DATUM](this.quantity, this.selection, this.value + that.value)
+    def +(that: Summing[DATUM]) = new Summing[DATUM](this.quantity, this.selection, this.value + that.value)
+
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
       if (y.contributes)
         value += y.datum * y.weight
     }
 
-    def fix = new Summed(value)
+    def toContainer = new Summed(value)
 
     override def toString() = s"Summing"
     override def equals(that: Any) = that match {

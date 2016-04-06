@@ -83,6 +83,7 @@ package histogrammar {
     def factory: Factory
 
     def +(that: CONTAINER): CONTAINER
+    def +[DATUM](that: Aggregator[DATUM, CONTAINER]): Aggregator[DATUM, CONTAINER]
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
@@ -93,14 +94,13 @@ package histogrammar {
     def factory: Factory
 
     def fill(x: Weighted[DATUM])
+    def +(that: CONTAINER): Aggregator[DATUM, CONTAINER]
+    def +(that: Aggregator[DATUM, CONTAINER]): Aggregator[DATUM, CONTAINER]
 
-    def fix: CONTAINER
+    def toContainer: CONTAINER
 
-    // provide the same methods as Container by passing everything through fix
-    def +(that: CONTAINER) = fix.+(that)
-    def +(that: Aggregator[DATUM, CONTAINER]) = fix.+(that.fix)
-    def toJson = fix.toJson
-    def toJsonFragment = fix.toJsonFragment
+    def toJson: Json = toContainer.toJson
+    def toJsonFragment: Json = toContainer.toJsonFragment
   }
 }
 

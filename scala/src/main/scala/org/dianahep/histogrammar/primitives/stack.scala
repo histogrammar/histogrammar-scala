@@ -57,11 +57,20 @@ package histogrammar {
 
     def +(that: Stacked[V]) =
       if (this.cuts.size != that.cuts.size)
-        throw new AggregatorException(s"cannot add Stacked because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+        throw new AggregatorException(s"cannot add Stacks because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
       else
-        new Stacked(this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+        new Stacked[V](this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
           if (mycut != yourcut)
-            throw new AggregatorException(s"cannot add Stacked because cut differs ($mycut vs $yourcut)")
+            throw new AggregatorException(s"cannot add Stacks because cut differs ($mycut vs $yourcut)")
+          (mycut, me + you)
+        }: _*)
+    def +[DATUM](that: Stacking[DATUM, V]) =
+      if (this.cuts.size != that.cuts.size)
+        throw new AggregatorException(s"cannot add Stacks because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      else
+        new Stacking[DATUM, V](that.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+          if (mycut != yourcut)
+            throw new AggregatorException(s"cannot add Stacks because cut differs ($mycut vs $yourcut)")
           (mycut, me + you)
         }: _*)
 
@@ -82,6 +91,25 @@ package histogrammar {
     if (cuts.size < 1)
       throw new AggregatorException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
 
+    def +(that: Stacked[V]) =
+      if (this.cuts.size != that.cuts.size)
+        throw new AggregatorException(s"cannot add Stacks because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      else
+        new Stacking[DATUM, V](this.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+          if (mycut != yourcut)
+            throw new AggregatorException(s"cannot add Stacks because cut differs ($mycut vs $yourcut)")
+          (mycut, me + you)
+        }: _*)
+    def +(that: Stacking[DATUM, V]) =
+      if (this.cuts.size != that.cuts.size)
+        throw new AggregatorException(s"cannot add Stacks because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      else
+        new Stacking[DATUM, V](this.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+          if (mycut != yourcut)
+            throw new AggregatorException(s"cannot add Stacks because cut differs ($mycut vs $yourcut)")
+          (mycut, me + you)
+        }: _*)
+
     def fill(x: Weighted[DATUM]) {
       if (x.contributes) {
         val value = expression(x)
@@ -92,7 +120,8 @@ package histogrammar {
       }
     }
 
-    def fix = new Stacked(cuts map {case (atleast, sub) => (atleast, sub.fix)}: _*)
+    def toContainer = new Stacked(cuts map {case (atleast, sub) => (atleast, sub.toContainer)}: _*)
+
     override def toString() = s"""Stacking[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
       case that: Stacking[DATUM, V] => this.expression == that.expression  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})

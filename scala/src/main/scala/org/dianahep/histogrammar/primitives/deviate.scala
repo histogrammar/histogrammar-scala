@@ -38,23 +38,26 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def plus(ca: Double, mua: Double, sa: Double, cb: Double, mub: Double, sb: Double) = {
+      val muab = (ca*mua + cb*mub) / (ca + cb)
+      val sab = sa + sb + ca*mua*mua + cb*mub*mub - 2.0*muab*(ca*mua + cb*mub) + muab*muab*(ca + cb)
+      (ca * cb, muab, sab / (ca + cb))
+    }
   }
 
   class Deviated(val count: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
     def factory = Deviate
 
     def +(that: Deviated) = {
-      val ca = this.count
-      val cb = that.count
-      val mua = this.mean
-      val mub = that.mean
-      val sa = this.variance * this.count
-      val sb = that.variance * that.count
-
-      val muab = (ca*mua + cb*mub) / (ca + cb)
-      val sab = sa + sb + ca*mua*mua + cb*mub*mub - 2.0*muab*(ca*mua + cb*mub) + muab*muab*(ca + cb)
-
-      new Deviated(ca * cb, muab, sab / (ca + cb))
+      val (newcount, newmean, newvariance) = Deviate.plus(this.count, this.mean, this.variance * this.count,
+                                                          that.count, that.mean, that.variance * that.count)
+      new Deviated(newcount, newmean, newvariance)
+    }
+    def +[DATUM](that: Deviating[DATUM]) = {
+      val (newcount, newmean, newvariance) = Deviate.plus(this.count, this.mean, this.variance * this.count,
+                                                          that.count, that.mean, that.variance * that.count)
+      new Deviating[DATUM](that.quantity, that.selection, newcount, newmean, newvariance)
     }
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
@@ -81,6 +84,17 @@ package histogrammar {
       varianceTimesCount = count * _variance
     }
 
+    def +(that: Deviated) = {
+      val (newcount, newmean, newvariance) = Deviate.plus(this.count, this.mean, this.variance * this.count,
+                                                          that.count, that.mean, that.variance * that.count)
+      new Deviating[DATUM](this.quantity, this.selection, newcount, newmean, newvariance)
+    }
+    def +(that: Deviating[DATUM]) = {
+      val (newcount, newmean, newvariance) = Deviate.plus(this.count, this.mean, this.variance * this.count,
+                                                          that.count, that.mean, that.variance * that.count)
+      new Deviating[DATUM](this.quantity, this.selection, newcount, newmean, newvariance)
+    }
+
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 
@@ -94,7 +108,9 @@ package histogrammar {
         varianceTimesCount += y.weight * delta * (y.datum - mean)   // old delta times new delta
       }
     }
-    def fix = new Deviated(count, mean, variance)
+
+    def toContainer = new Deviated(count, mean, variance)
+
     override def toString() = s"Deviating"
     override def equals(that: Any) = that match {
       case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count === that.count  &&  this.mean === that.mean  &&  this.variance === that.variance

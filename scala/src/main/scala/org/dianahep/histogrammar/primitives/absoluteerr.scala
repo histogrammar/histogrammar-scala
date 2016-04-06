@@ -33,14 +33,21 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def plus(one: (Double, Double), two: (Double, Double)) = (one._1 + two._1, (one._1*one._2 + two._1*two._2) / (one._1 + two._1))
   }
 
   class AbsoluteErred(val count: Double, val mae: Double) extends Container[AbsoluteErred] {
     def factory = AbsoluteErr
 
-    def +(that: AbsoluteErred) = new AbsoluteErred(
-      this.count + that.count,
-      (this.mae*this.count + that.mae*that.count) / (this.count + that.count))
+    def +(that: AbsoluteErred) = {
+      val (newcount, newmae) = AbsoluteErr.plus((this.count, this.mae), (that.count, that.mae))
+      new AbsoluteErred(newcount, newmae)
+    }
+    def +[DATUM](that: AbsoluteErring[DATUM]) = {
+      val (newcount, newmae) = AbsoluteErr.plus((this.count, this.mae), (that.count, that.mae))
+      new AbsoluteErring[DATUM](that.quantity, that.selection, newcount, newmae)
+    }
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mae" -> JsonFloat(mae))
     override def toString() = s"AbsoluteErred"
@@ -53,6 +60,15 @@ package histogrammar {
 
   class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, _mae: Double) extends Aggregator[DATUM, AbsoluteErred] {
     def factory = AbsoluteErr
+
+    def +(that: AbsoluteErred) = {
+      val (newcount, newmae) = AbsoluteErr.plus((this.count, this.mae), (that.count, that.mae))
+      new AbsoluteErring[DATUM](this.quantity, this.selection, newcount, newmae)
+    }
+    def +(that: AbsoluteErring[DATUM]) = {
+      val (newcount, newmae) = AbsoluteErr.plus((this.count, this.mae), (that.count, that.mae))
+      new AbsoluteErring[DATUM](this.quantity, this.selection, newcount, newmae)
+    }
 
     private var absoluteSum = count * _mae
 
@@ -75,7 +91,8 @@ package histogrammar {
       }
     }
 
-    def fix = new AbsoluteErred(count, mae)
+    def toContainer = new AbsoluteErred(count, mae)
+
     override def toString() = s"AbsoluteErring"
     override def equals(that: Any) = that match {
       case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count === that.count  &&  this.mae === that.mae

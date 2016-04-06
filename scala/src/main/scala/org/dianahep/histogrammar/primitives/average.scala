@@ -33,14 +33,21 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def plus(one: (Double, Double), two: (Double, Double)) = (one._1 + two._1, (one._1*one._2 + two._1*two._2) / (one._1 + two._1))
   }
 
   class Averaged(val count: Double, val mean: Double) extends Container[Averaged] {
     def factory = Average
 
-    def +(that: Averaged) = new Averaged(
-      this.count + that.count,
-      (this.mean*this.count + that.mean*that.count) / (this.count + that.count))
+    def +(that: Averaged) = {
+      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
+      new Averaged(count, mean)
+    }
+    def +[DATUM](that: Averaging[DATUM]) = {
+      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
+      new Averaging[DATUM](that.quantity, that.selection, newcount, newmean)
+    }
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
     override def toString() = s"Averaged"
@@ -53,6 +60,15 @@ package histogrammar {
 
   class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaged] {
     def factory = Average
+
+    def +(that: Averaged) = {
+      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
+      new Averaging[DATUM](this.quantity, this.selection, count, mean)
+    }
+    def +(that: Averaging[DATUM]) = {
+      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
+      new Averaging[DATUM](this.quantity, this.selection, newcount, newmean)
+    }
 
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
@@ -67,7 +83,8 @@ package histogrammar {
       }
     }
 
-    def fix = new Averaged(count, mean)
+    def toContainer = new Averaged(count, mean)
+
     override def toString() = s"Averaging"
     override def equals(that: Any) = that match {
       case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count === that.count  &&  this.mean === that.mean

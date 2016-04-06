@@ -13,13 +13,13 @@ package object histogram {
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
     new HistogramMethods(hist)
   implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counted, Counted, Counted, Counted]): HistogramMethods =
-    new HistogramMethods(hist.fix)
+    new HistogramMethods(hist.toContainer)
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
     new HistogramMethods(
       new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.ed(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Count.ed(0.0), Count.ed(0.0), hist.nanflow)
     )
   implicit def sparselyBinningToHistogramMethods[DATUM](hist: SparselyBinning[DATUM, Counted, Counted]): HistogramMethods =
-    sparselyBinnedToHistogramMethods(hist.fix)
+    sparselyBinnedToHistogramMethods(hist.toContainer)
 }
 
 package histogram {

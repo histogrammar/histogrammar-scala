@@ -19,20 +19,23 @@ package histogrammar {
       case JsonNumber(x) => new Minimized(x)
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def plus(one: Double, two: Double) =
+      if (one.isNaN)
+        two
+      else if (two.isNaN)
+        one
+      else if (one < two)
+        one
+      else
+        two
   }
 
   class Minimized(val min: Double) extends Container[Minimized] {
     def factory = Minimize
 
-    def +(that: Minimized) = new Minimized(
-      if (this.min.isNaN)
-        that.min
-      else if (that.min.isNaN)
-        this.min
-      else if (this.min < that.min)
-        this.min
-      else
-        that.min)
+    def +(that: Minimized) = new Minimized(Minimize.plus(this.min, that.min))
+    def +[DATUM](that: Minimizing[DATUM]) = new Minimizing[DATUM](that.quantity, that.selection, Minimize.plus(this.min, that.min))
 
     def toJsonFragment = JsonFloat(min)
     override def toString() = s"Minimized"
@@ -46,6 +49,9 @@ package histogrammar {
   class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Aggregator[DATUM, Minimized] {
     def factory = Minimize
 
+    def +(that: Minimized) = new Minimizing[DATUM](this.quantity, this.selection, Minimize.plus(this.min, that.min))
+    def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.selection, Minimize.plus(this.min, that.min))
+
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 
@@ -53,7 +59,8 @@ package histogrammar {
         min = y.datum
     }
 
-    def fix = new Minimized(min)
+    def toContainer = new Minimized(min)
+
     override def toString() = s"Minimizing"
     override def equals(that: Any) = that match {
       case that: Minimizing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.min === that.min
@@ -78,20 +85,23 @@ package histogrammar {
       case JsonNumber(x) => new Maximized(x)
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def plus(one: Double, two: Double) =
+      if (one.isNaN)
+        two
+      else if (two.isNaN)
+        one
+      else if (one > two)
+        one
+      else
+        two
   }
 
   class Maximized(val max: Double) extends Container[Maximized] {
     def factory = Maximize
 
-    def +(that: Maximized) = new Maximized(
-      if (this.max.isNaN)
-        that.max
-      else if (that.max.isNaN)
-        this.max
-      else if (this.max > that.max)
-        this.max
-      else
-        that.max)
+    def +(that: Maximized) = new Maximized(Maximize.plus(this.max, that.max))
+    def +[DATUM](that: Maximizing[DATUM]) = new Maximizing[DATUM](that.quantity, that.selection, Maximize.plus(this.max, that.max))
 
     def toJsonFragment = JsonFloat(max)
     override def toString() = s"Maximized"
@@ -105,6 +115,9 @@ package histogrammar {
   class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Aggregator[DATUM, Maximized] {
     def factory = Maximize
 
+    def +(that: Maximized) = new Maximizing[DATUM](this.quantity, this.selection, Maximize.plus(this.max, that.max))
+    def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.selection, Maximize.plus(this.max, that.max))
+
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
 
@@ -112,7 +125,8 @@ package histogrammar {
         max = y.datum
     }
 
-    def fix = new Maximized(max)
+    def toContainer = new Maximized(max)
+
     override def toString() = s"Maximizing"
     override def equals(that: Any) = that match {
       case that: Maximizing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.max === that.max

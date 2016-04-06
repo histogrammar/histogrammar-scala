@@ -16,8 +16,8 @@ package histogrammar {
 
     def default[DATUM] = Count[DATUM]()
 
-    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, origin: Double)(values: SortedSet[(Long, V)] = SortedSet[(Long, V)]()(Ordering.by[(Long, V), Long](_._1)), nanflow: N) =
-      new SparselyBinned[V, N](binWidth, origin, values, nanflow)
+    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, values: SortedSet[(Long, V)], nanflow: N, origin: Double) =
+      new SparselyBinned[V, N](binWidth, values, nanflow, origin)
 
     def ing[DATUM, V <: Container[V], N <: Container[N]]
       (binWidth: Double,
@@ -49,7 +49,6 @@ package histogrammar {
       def maxBin: Long
       def low: Double
       def high: Double
-      def at(i: Long): Option[V]
 
       def bin(k: Double): Long =
         if (nan(k))
@@ -61,17 +60,12 @@ package histogrammar {
     }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("binWidth", "origin", "values:type", "values", "nanflow:type", "nanflow")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("binWidth", "values:type", "values", "nanflow:type", "nanflow", "origin")) =>
         val get = pairs.toMap
 
         val binWidth = get("binWidth") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".binWidth")
-        }
-
-        val origin = get("origin") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".origin")
         }
 
         val valuesFactory = get("values:type") match {
@@ -93,13 +87,18 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
-        new SparselyBinned[Container[_], Container[_]](binWidth, origin, values.asInstanceOf[SortedSet[(Long, Container[_])]], nanflow)
+        val origin = get("origin") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".origin")
+        }
+
+        new SparselyBinned[Container[_], Container[_]](binWidth, values.asInstanceOf[SortedSet[(Long, Container[_])]], nanflow, origin)
 
       case _ => throw new JsonFormatException(json, name)
     }
   }
 
-  class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val origin: Double, val values: SortedSet[(Long, V)], val nanflow: N) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods[V] {
+  class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val values: SortedSet[(Long, V)], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods[V] {
     def factory = SparselyBin
 
     if (binWidth <= 0.0)
@@ -107,7 +106,7 @@ package histogrammar {
 
     def +(that: SparselyBinned[V, N]) = {
       if (this.origin != that.origin)
-        throw new AggregatorException(s"cannot add SparselyBinned because origin differs (${this.origin} vs ${that.origin})")
+        throw new AggregatorException(s"cannot add SparselyBins because origin differs (${this.origin} vs ${that.origin})")
 
       val thislookup = this.values.toMap
       val thatlookup = that.values.toMap
@@ -120,7 +119,24 @@ package histogrammar {
           }
         }: _*)(Ordering.by[(Long, V), Long](_._1))
 
-      new SparselyBinned(binWidth, origin, newvalues, this.nanflow + that.nanflow)
+      new SparselyBinned[V, N](binWidth, newvalues, this.nanflow + that.nanflow, origin)
+    }
+    def +[DATUM](that: SparselyBinning[DATUM, V, N]) = {
+      if (this.origin != that.origin)
+        throw new AggregatorException(s"cannot add SparselyBins because origin differs (${this.origin} vs ${that.origin})")
+
+      val thislookup = this.values.toMap
+      val thatlookup = that.values.toMap
+
+      val newvalues =
+        SortedSet((this.values union that.values).toSeq map {case (i, v) =>
+          (thislookup.get(i), thatlookup.get(i)) match {
+            case (Some(v1), Some(v2)) => i -> (v1 + v2)
+            case _ => i -> v
+          }
+        }: _*)(Ordering.by[(Long, V), Long](_._1))
+
+      new SparselyBinning[DATUM, V, N](binWidth, that.quantity, that.selection, that.value, newvalues, this.nanflow + that.nanflow, origin)
     }
 
     def numFilled = values.size
@@ -133,18 +149,18 @@ package histogrammar {
 
     def toJsonFragment = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
-      "origin" -> JsonFloat(origin),
       "values:type" -> JsonString(if (values.isEmpty) "?" else values.head._2.factory.name),
       "values" -> JsonObject(values.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment)}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment)
+      "nanflow" -> nanflow.toJsonFragment,
+      "origin" -> JsonFloat(origin))
 
-    override def toString() = s"""SparselyBinned[binWidth=$binWidth, origin=$origin, values=[${if (values.isEmpty) "?" else values.head._2.toString}, size=${values.size}], nanflow=$nanflow]"""
+    override def toString() = s"""SparselyBinned[binWidth=$binWidth, values=[${if (values.isEmpty) "?" else values.head._2.toString}, size=${values.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {
-      case that: SparselyBinned[V, N] => this.binWidth === that.binWidth  &&  this.origin === that.origin  &&  this.values == that.values  &&  this.nanflow == that.nanflow
+      case that: SparselyBinned[V, N] => this.binWidth === that.binWidth  &&  this.values == that.values  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false
     }
-    override def hashCode() = (binWidth, origin, values, nanflow).hashCode
+    override def hashCode() = (binWidth, values, nanflow, origin).hashCode
   }
 
   class SparselyBinning[DATUM, V <: Container[V], N <: Container[N]](val binWidth: Double, val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val values: mutable.Map[Long, Aggregator[DATUM, V]], val nanflow: Aggregator[DATUM, N], val origin: Double) extends Aggregator[DATUM, SparselyBinned[V, N]] with SparselyBin.Methods[V] {
@@ -153,9 +169,45 @@ package histogrammar {
     if (binWidth <= 0.0)
       throw new AggregatorException(s"binWidth ($binWidth) must be greater than zero")
 
+    def +(that: SparselyBinned[V, N]) = {
+      if (this.origin != that.origin)
+        throw new AggregatorException(s"cannot add SparselyBins because origin differs (${this.origin} vs ${that.origin})")
+
+      val thislookup = this.values.toMap
+      val thatlookup = that.values.toMap
+
+      val newvalues =
+        SortedSet((this.values union that.values).toSeq map {case (i, v) =>
+          (thislookup.get(i), thatlookup.get(i)) match {
+            case (Some(v1), Some(v2)) => i -> (v1 + v2)
+            case _ => i -> v
+          }
+        }: _*)(Ordering.by[(Long, V), Long](_._1))
+
+      new SparselyBinning[DATUM, V, N](binWidth, this.quantity, this.selection, this.value, newvalues, this.nanflow + that.nanflow, origin)
+    }
+    def +(that: SparselyBinning[DATUM, V, N]) = {
+      if (this.origin != that.origin)
+        throw new AggregatorException(s"cannot add SparselyBins because origin differs (${this.origin} vs ${that.origin})")
+
+      val thislookup = this.values.toMap
+      val thatlookup = that.values.toMap
+
+      val newvalues =
+        SortedSet((this.values union that.values).toSeq map {case (i, v) =>
+          (thislookup.get(i), thatlookup.get(i)) match {
+            case (Some(v1), Some(v2)) => i -> (v1 + v2)
+            case _ => i -> v
+          }
+        }: _*)(Ordering.by[(Long, V), Long](_._1))
+
+      new SparselyBinning[DATUM, V, N](binWidth, this.quantity, this.selection, this.value, newvalues, this.nanflow + that.nanflow, origin)
+    }
+
     def fill(x: Weighted[DATUM]) {
       val k = quantity(x)
       val y = x reweight selection(x)
+
       if (y.contributes) {
         if (nan(k))
           nanflow.fill(y)
@@ -174,15 +226,15 @@ package histogrammar {
     def maxBin = if (values.isEmpty) java.lang.Long.MIN_VALUE else values.map(_._1).max
     def low = if (values.isEmpty) java.lang.Double.NaN else minBin * binWidth + origin
     def high = if (values.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
-    def at(i: Long) = values.get(i).map(_.fix)
+    def at(i: Long) = values.get(i)
 
-    def fix = new SparselyBinned(binWidth, origin, SortedSet(values.toSeq map {case (i, v) => (i -> v.fix)}: _*)(Ordering.by[(Long, V), Long](_._1)), nanflow.fix)
+    def toContainer = new SparselyBinned(binWidth, origin, SortedSet(values.toSeq map {case (i, v) => (i -> v.toContainer)}: _*)(Ordering.by[(Long, V), Long](_._1)), nanflow.toContainer)
 
-    override def toString() = s"""SparselyBinning[binWidth=$binWidth, origin=$origin, values=[${value.toString}, size=${values.size}], nanflow=$nanflow]"""
+    override def toString() = s"""SparselyBinning[binWidth=$binWidth, values=[${value.toString}, size=${values.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {
-      case that: SparselyBinning[DATUM, V, N] => this.binWidth === that.binWidth  &&  this.origin === that.origin  &&  this.values == that.values  &&  this.nanflow == that.nanflow
+      case that: SparselyBinning[DATUM, V, N] => this.binWidth === that.binWidth  &&  this.values == that.values  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false
     }
-    override def hashCode() = (binWidth, origin, values, nanflow).hashCode
+    override def hashCode() = (binWidth, values, nanflow, origin).hashCode
   }
 }

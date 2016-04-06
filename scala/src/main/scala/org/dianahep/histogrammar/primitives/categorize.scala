@@ -15,7 +15,7 @@ package histogrammar {
     def ed[V <: Container[V]](pairs: (String, V)*) = new Categorized(pairs: _*)
 
     def ing[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => Aggregator[DATUM, V] = default[DATUM]) =
-      new Categorizing(quantity, selection, value, mutable.HashMap[String, Aggregator[DATUM, V]]())
+      new Categorizing(quantity, selection, {() => value}, mutable.HashMap[String, Aggregator[DATUM, V]]())
 
     def apply[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => Aggregator[DATUM, V] = default[DATUM]) =
       ing(quantity, selection, value)
@@ -57,14 +57,27 @@ package histogrammar {
     def get[CONTAINER <: Container[CONTAINER]](x: String) = pairsMap.get(x).asInstanceOf[CONTAINER]
     def getOrElse[CONTAINER <: Container[CONTAINER]](x: String, default: => CONTAINER) = pairsMap.getOrElse(x, default).asInstanceOf[CONTAINER]
 
-    def +(that: Categorized[V]) = new Categorized((this.keySet union that.keySet).toSeq map {key =>
-      if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-        (key, this.pairsMap(key) + that.pairsMap(key))
-      else if (this.pairsMap contains key)
-        (key, this.pairsMap(key))
-      else
-        (key, that.pairsMap(key))
-    }: _*)
+    def +(that: Categorized[V]) = new Categorized[V](
+      (this.keySet union that.keySet).toSeq map {key =>
+        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+          (key, this.pairsMap(key) + that.pairsMap(key))
+        else if (this.pairsMap contains key)
+          (key, this.pairsMap(key))
+        else
+          (key, that.pairsMap(key))
+      }: _*)
+    def +[DATUM](that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
+      that.quantity,
+      that.selection,
+      that.create,
+      (this.keySet union that.keySet).toSeq map {key =>
+        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+          (key, this.pairsMap(key) + that.pairsMap(key))
+        else if (this.pairsMap contains key)
+          (key, this.pairsMap(key))
+        else
+          (key, that.pairsMap(key))
+      }: _*)
 
     def toJsonFragment = JsonObject(
       "type" -> JsonString(if (pairs.isEmpty) "?" else pairs.head._2.factory.name),
@@ -77,7 +90,7 @@ package histogrammar {
     }
   }
 
-  class Categorizing[DATUM, V <: Container[V]](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], value: => Aggregator[DATUM, V], val pairs: mutable.HashMap[String, Aggregator[DATUM, V]]) extends Aggregator[DATUM, Categorized[V]] {
+  class Categorizing[DATUM, V <: Container[V]](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], val create: () => Aggregator[DATUM, V], val pairs: mutable.HashMap[String, Aggregator[DATUM, V]]) extends Aggregator[DATUM, Categorized[V]] {
     def factory = Categorize
 
     def pairsMap = pairs.toMap
@@ -87,19 +100,46 @@ package histogrammar {
     def apply[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap(x).asInstanceOf[AGGREGATOR]
     def get[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap.get(x).asInstanceOf[AGGREGATOR]
     def getOrElse[AGGREGATOR <: Aggregator[DATUM, _]](x: String, default: => AGGREGATOR) = pairsMap.getOrElse(x, default).asInstanceOf[AGGREGATOR]
+
+    def +(that: Categorized[V]) = new Categorizing[DATUM, V](
+      this.quantity,
+      this.selection,
+      this.create,
+      (this.keySet union that.keySet).toSeq map {key =>
+        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+          (key, this.pairsMap(key) + that.pairsMap(key))
+        else if (this.pairsMap contains key)
+          (key, this.pairsMap(key))
+        else
+          (key, that.pairsMap(key))
+      }: _*)
+    def +(that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
+      this.quantity,
+      this.selection,
+      this.create,
+      (this.keySet union that.keySet).toSeq map {key =>
+        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+          (key, this.pairsMap(key) + that.pairsMap(key))
+        else if (this.pairsMap contains key)
+          (key, this.pairsMap(key))
+        else
+          (key, that.pairsMap(key))
+      }: _*)
     
     def fill(x: Weighted[DATUM]) {
       val k = quantity(x)
       val y = x reweight selection(x)
+
       if (y.contributes) {
         if (!(pairs contains k))
-          pairs(k) = value
+          pairs(k) = create()
         pairs(k).fill(y)
       }
     }
 
-    def fix = new Categorized(pairs.toSeq map {case (k, v) => (k, v.fix)}: _*)
-    override def toString() = s"Categorizing[$value, size=${pairs.size}]"
+    def toContainer = new Categorized(pairs.toSeq map {case (k, v) => (k, v.toContainer)}: _*)
+
+    override def toString() = s"Categorizing[${create()}, size=${pairs.size}]"
     override def equals(that: Any) = that match {
       case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.pairs == that.pairs
       case _ => false

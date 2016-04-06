@@ -96,6 +96,7 @@ package object histogrammar {
   Factory.register(Average)
   Factory.register(Deviate)
   Factory.register(AbsoluteErr)
+  Factory.register(Minimize)
   Factory.register(Bin)
   Factory.register(SparselyBin)
   Factory.register(Fraction)
@@ -113,11 +114,15 @@ package object histogrammar {
   type CategoricalFcn[DATUM] = Weighted[DATUM] => String
 
   def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
-
+  
   implicit def countingTypeDoesntMatter[DATUM](counting: Counting[_]) = counting.asInstanceOf[Counting[DATUM]]
 
   implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
   implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}
+
+  implicit class nanEquality(val x: Double) extends AnyVal {
+    def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
+  }
 
   implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
   implicit def byteToSelection[DATUM](f: DATUM => Byte) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})

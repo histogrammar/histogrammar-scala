@@ -45,7 +45,7 @@ package histogrammar {
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mae" -> JsonFloat(mae))
     override def toString() = s"AbsoluteErred"
     override def equals(that: Any) = that match {
-      case that: AbsoluteErred => this.count == that.count  &&  this.mae == that.mae
+      case that: AbsoluteErred => this.count === that.count  &&  this.mae === that.mae
       case _ => false
     }
     override def hashCode() = (count, mae).hashCode
@@ -78,7 +78,7 @@ package histogrammar {
     def fix = new AbsoluteErred(count, mae)
     override def toString() = s"AbsoluteErring"
     override def equals(that: Any) = that match {
-      case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count == that.count  &&  this.mae == that.mae
+      case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count === that.count  &&  this.mae === that.mae
       case _ => false
     }
     override def hashCode() = (quantity, selection, count, mae).hashCode

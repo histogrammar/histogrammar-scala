@@ -141,7 +141,7 @@ package histogrammar {
 
     override def toString() = s"""SparselyBinned[binWidth=$binWidth, origin=$origin, values=[${if (values.isEmpty) "?" else values.head._2.toString}, size=${values.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
-      case that: SparselyBinned[V, N] => this.binWidth == that.binWidth  &&  this.origin == that.origin  &&  this.values == that.values  &&  this.nanflow == that.nanflow
+      case that: SparselyBinned[V, N] => this.binWidth === that.binWidth  &&  this.origin === that.origin  &&  this.values == that.values  &&  this.nanflow == that.nanflow
       case _ => false
     }
     override def hashCode() = (binWidth, origin, values, nanflow).hashCode
@@ -180,7 +180,7 @@ package histogrammar {
 
     override def toString() = s"""SparselyBinning[binWidth=$binWidth, origin=$origin, values=[${value.toString}, size=${values.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
-      case that: SparselyBinning[DATUM, V, N] => this.binWidth == that.binWidth  &&  this.origin == that.origin  &&  this.values == that.values  &&  this.nanflow == that.nanflow
+      case that: SparselyBinning[DATUM, V, N] => this.binWidth === that.binWidth  &&  this.origin === that.origin  &&  this.values == that.values  &&  this.nanflow == that.nanflow
       case _ => false
     }
     override def hashCode() = (binWidth, origin, values, nanflow).hashCode

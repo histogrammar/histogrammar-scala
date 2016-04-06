@@ -398,7 +398,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
   //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErring/AbsoluteErred
 
-  "AbsoluteErr/AbsoluteErring/AbsoluteErred" must "work unfiltered" in {
+  "AbsoluteErr/AbsoluteErring/AbsoluteErred" must "work" in {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
@@ -418,6 +418,34 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalResult should be (mae(simple) +- 1e-12)
 
       Factory.fromJson[AbsoluteErred](leftAbsoluteErring.toJson.stringify) should be (leftAbsoluteErring.fix)
+    }
+  }
+
+  //////////////////////////////////////////////////////////////// Minimize/Minimizing/Minimized
+
+  "Minimize/Minimizing/Minimized" must "work" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val leftMinimizing = Minimize({x: Double => x})
+      val rightMinimizing = Minimize({x: Double => x})
+
+      left.foreach(leftMinimizing.fill(_))
+      right.foreach(rightMinimizing.fill(_))
+
+      val (Minimize(leftResult), Minimize(rightResult)) = (leftMinimizing, rightMinimizing)
+
+      if (left.isEmpty) leftResult.isNaN should be (true)
+      else leftResult should be (left.min +- 1e-12)
+      if (right.isEmpty) rightResult.isNaN should be (true)
+      else rightResult should be (right.min +- 1e-12)
+
+      val Minimize(finalResult) = leftMinimizing + rightMinimizing
+
+      if (simple.isEmpty) finalResult.isNaN should be (true)
+      else finalResult should be (simple.min +- 1e-12)
+
+      Factory.fromJson[Minimized](leftMinimizing.toJson.stringify) should be (leftMinimizing.fix)
     }
   }
 

@@ -45,7 +45,7 @@ package histogrammar {
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
     override def toString() = s"Averaged"
     override def equals(that: Any) = that match {
-      case that: Averaged => this.count == that.count  &&  this.mean == that.mean
+      case that: Averaged => this.count === that.count  &&  this.mean === that.mean
       case _ => false
     }
     override def hashCode() = (count, mean).hashCode
@@ -70,7 +70,7 @@ package histogrammar {
     def fix = new Averaged(count, mean)
     override def toString() = s"Averaging"
     override def equals(that: Any) = that match {
-      case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count == that.count  &&  this.mean == that.mean
+      case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count === that.count  &&  this.mean === that.mean
       case _ => false
     }
     override def hashCode() = (quantity, selection, count, mean).hashCode

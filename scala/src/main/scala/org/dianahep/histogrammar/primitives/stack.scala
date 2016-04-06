@@ -71,7 +71,7 @@ package histogrammar {
 
     override def toString() = s"""Stacked[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
-      case that: Stacked[V] => this.cuts == that.cuts
+      case that: Stacked[V] => this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2}
       case _ => false
     }
   }
@@ -95,7 +95,7 @@ package histogrammar {
     def fix = new Stacked(cuts map {case (atleast, sub) => (atleast, sub.fix)}: _*)
     override def toString() = s"""Stacking[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
-      case that: Stacking[DATUM, V] => this.expression == that.expression  &&  this.cuts == that.cuts
+      case that: Stacking[DATUM, V] => this.expression == that.expression  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
   }

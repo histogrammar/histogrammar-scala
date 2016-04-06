@@ -60,7 +60,7 @@ package histogrammar {
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
     override def toString() = s"Deviated"
     override def equals(that: Any) = that match {
-      case that: Deviated => this.count == that.count  &&  this.mean == that.mean  &&  this.variance == that.variance
+      case that: Deviated => this.count === that.count  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
     }
     override def hashCode() = (count, mean, variance).hashCode
@@ -91,13 +91,13 @@ package histogrammar {
         val shift = delta * y.weight / count
 
         mean += shift
-        varianceTimesCount += y.weight * delta * (y.datum - mean)
+        varianceTimesCount += y.weight * delta * (y.datum - mean)   // old delta times new delta
       }
     }
     def fix = new Deviated(count, mean, variance)
     override def toString() = s"Deviating"
     override def equals(that: Any) = that match {
-      case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count == that.count  &&  this.mean == that.mean  &&  this.variance == that.variance
+      case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count === that.count  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
     }
     override def hashCode() = (quantity, selection, count, mean, variance).hashCode

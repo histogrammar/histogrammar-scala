@@ -29,7 +29,7 @@ package histogrammar {
     def toJsonFragment = JsonFloat(value)
     override def toString() = s"Counted"
     override def equals(that: Any) = that match {
-      case that: Counted => this.value == that.value
+      case that: Counted => this.value === that.value
       case _ => false
     }
     override def hashCode() = value.hashCode
@@ -46,7 +46,7 @@ package histogrammar {
     def fix = new Counted(value)
     override def toString() = s"Counting"
     override def equals(that: Any) = that match {
-      case that: Counting[DATUM] => this.selection == that.selection  &&  this.value == that.value
+      case that: Counting[DATUM] => this.selection == that.selection  &&  this.value === that.value
       case _ => false
     }
     override def hashCode() = (selection, value).hashCode

@@ -25,9 +25,9 @@ package histogrammar {
     def factory = Count
 
     def +(that: Counted) = new Counted(this.value + that.value)
-    def +[DATUM](that: Counting[DATUM]) = new Counting[DATUM](that.selection, this.value + that.value)
 
     def toJsonFragment = JsonFloat(value)
+
     override def toString() = s"Counted"
     override def equals(that: Any) = that match {
       case that: Counted => this.value === that.value
@@ -36,10 +36,9 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  class Counting[DATUM](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counted] {
+  class Counting[DATUM](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counting[DATUM]] {
     def factory = Count
 
-    def +(that: Counted) = new Counting[DATUM](this.selection, this.value + that.value)
     def +(that: Counting[DATUM]) = new Counting[DATUM](this.selection, this.value + that.value)
 
     def fill(x: Weighted[DATUM]) {
@@ -48,7 +47,7 @@ package histogrammar {
         value += y.weight
     }
 
-    def toContainer = new Counted(value)
+    def toJsonFragment = JsonFloat(value)
 
     override def toString() = s"Counting"
     override def equals(that: Any) = that match {

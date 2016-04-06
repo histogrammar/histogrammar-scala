@@ -38,20 +38,20 @@ package histogrammar {
     }
 
     register(Count)
-    register(Sum)
-    register(Average)
-    register(Deviate)
-    register(AbsoluteErr)
-    register(Minimize)
-    register(Maximize)
+    // register(Sum)
+    // register(Average)
+    // register(Deviate)
+    // register(AbsoluteErr)
+    // register(Minimize)
+    // register(Maximize)
     register(Bin)
     register(SparselyBin)
-    register(Fraction)
-    register(Stack)
-    register(Partition)
-    register(Categorize)
-    register(NameMap)
-    register(Tuple)
+    // register(Fraction)
+    // register(Stack)
+    // register(Partition)
+    // register(Categorize)
+    // register(NameMap)
+    // register(Tuple)
 
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
@@ -59,7 +59,7 @@ package histogrammar {
     }
 
     def fromJson[CONTAINER <: Container[CONTAINER]](str: String): CONTAINER = Json.parse(str) match {
-      case Some(json) => fromJson(json).asInstanceOf[CONTAINER]
+      case Some(json) => fromJson[CONTAINER](json)
       case None => throw new InvalidJsonException(str)
     }
 
@@ -83,24 +83,22 @@ package histogrammar {
     def factory: Factory
 
     def +(that: CONTAINER): CONTAINER
-    def +[DATUM](that: Aggregator[DATUM, CONTAINER]): Aggregator[DATUM, CONTAINER]
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
   }
 
   // mutable aggregator of data; produces a container
-  trait Aggregator[DATUM, CONTAINER <: Container[CONTAINER]] extends Serializable {
+  trait Aggregator[DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]] extends Serializable {
     def factory: Factory
 
+    def +(that: AGGREGATOR): AGGREGATOR
     def fill(x: Weighted[DATUM])
-    def +(that: CONTAINER): Aggregator[DATUM, CONTAINER]
-    def +(that: Aggregator[DATUM, CONTAINER]): Aggregator[DATUM, CONTAINER]
 
-    def toContainer: CONTAINER
+    def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
+    def toJsonFragment: Json
 
-    def toJson: Json = toContainer.toJson
-    def toJsonFragment: Json = toContainer.toJsonFragment
+    def toContainer[CONTAINER <: Container[CONTAINER]] = Factory.fromJson(toJson).asInstanceOf[CONTAINER]
   }
 }
 
@@ -108,32 +106,9 @@ package object histogrammar {
   //////////////////////////////////////////////////////////////// define implicits
 
   type Categorical = String
-
   type Numerical = Double
-  type Numerical2 = (Double, Double)
-  type Numerical3 = (Double, Double, Double)
-  type Numerical4 = (Double, Double, Double, Double)
-  type Numerical5 = (Double, Double, Double, Double, Double)
-  type Numerical6 = (Double, Double, Double, Double, Double, Double)
-  type Numerical7 = (Double, Double, Double, Double, Double, Double, Double)
-  type Numerical8 = (Double, Double, Double, Double, Double, Double, Double, Double)
-  type Numerical9 = (Double, Double, Double, Double, Double, Double, Double, Double, Double)
-  type Numerical10 = (Double, Double, Double, Double, Double, Double, Double, Double, Double, Double)
-  type NumericalN = Seq[Double]
-
   type CategoricalFcn[DATUM] = Weighted[DATUM] => Categorical
-
   type NumericalFcn[DATUM] = Weighted[DATUM] => Numerical
-  type NumericalFcn2[DATUM] = Weighted[DATUM] => Numerical2
-  type NumericalFcn3[DATUM] = Weighted[DATUM] => Numerical3
-  type NumericalFcn4[DATUM] = Weighted[DATUM] => Numerical4
-  type NumericalFcn5[DATUM] = Weighted[DATUM] => Numerical5
-  type NumericalFcn6[DATUM] = Weighted[DATUM] => Numerical6
-  type NumericalFcn7[DATUM] = Weighted[DATUM] => Numerical7
-  type NumericalFcn8[DATUM] = Weighted[DATUM] => Numerical8
-  type NumericalFcn9[DATUM] = Weighted[DATUM] => Numerical9
-  type NumericalFcn10[DATUM] = Weighted[DATUM] => Numerical10
-  type NumericalFcnN[DATUM] = Weighted[DATUM] => NumericalN
 
   def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
   
@@ -145,6 +120,22 @@ package object histogrammar {
   implicit class nanEquality(val x: Double) extends AnyVal {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
+
+  implicit def countingToCounted(x: Counting[_]) = x.toContainer
+  // implicit def summingToSummed(x: Summing[_]) = x.toContainer
+  // implicit def averagingToAveraged(x: Averaging[_]) = x.toContainer
+  // implicit def deviatingToDeviated(x: Deviating[_]) = x.toContainer
+  // implicit def absoluteErringToAbsoluteErred(x: AbsoluteErring[_]) = x.toContainer
+  // implicit def minimizingToMinimized(x: Minimizing[_]) = x.toContainer
+  // implicit def maximizingToMaximized(x: Maximizing[_]) = x.toContainer
+  implicit def binningToBinned(x: Binning[_, _, _, _, _]) = x.toContainer
+  implicit def sparselyBinningToSparselyBinned(x: SparselyBinning[_, _, _]) = x.toContainer
+  // implicit def fractioningToFractioned(x: Fractioning[_, _]) = x.toContainer
+  // implicit def stackingToStacked(x: Stacking[_, _]) = x.toContainer
+  // implicit def partitioningToPartitioned(x: Partitioning[_, _]) = x.toContainer
+  // implicit def categorizingToCategorized(x: Categorizing[_, _]) = x.toContainer
+  // implicit def nameMappingToNameMapped(x: NameMapping[_]) = x.toContainer
+  // implicit def tuplingToTupled2(x: Tupling2[_, _, _]) = x.toContainer
 
   implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
   implicit def byteToSelection[DATUM](f: DATUM => Byte) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
@@ -161,26 +152,26 @@ package object histogrammar {
   implicit def weightedFloatToSelection[DATUM](f: Weighted[DATUM] => Float) = Selection({x: Weighted[DATUM] => f(x).toDouble})
   implicit def weightedDoubleToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
 
-  implicit def mapToNameMapped(map: scala.collection.immutable.Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)
-  implicit def mapToNameMapping[DATUM](map: scala.collection.immutable.Map[String, Aggregator[DATUM, _]]) = new NameMapping(map.toSeq: _*)
+  // implicit def mapToNameMapped(map: scala.collection.immutable.Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)
+  // implicit def mapToNameMapping[DATUM](map: scala.collection.immutable.Map[String, Aggregator[DATUM, _]]) = new NameMapping(map.toSeq: _*)
 
-  implicit def tupleToTupled2[C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[C1, C2]) = new Tupled2(x._1, x._2)
-  implicit def tupleToTupled3[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[C1, C2, C3]) = new Tupled3(x._1, x._2, x._3)
-  implicit def tupleToTupled4[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](x: Tuple4[C1, C2, C3, C4]) = new Tupled4(x._1, x._2, x._3, x._4)
-  implicit def tupleToTupled5[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](x: Tuple5[C1, C2, C3, C4, C5]) = new Tupled5(x._1, x._2, x._3, x._4, x._5)
-  implicit def tupleToTupled6[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](x: Tuple6[C1, C2, C3, C4, C5, C6]) = new Tupled6(x._1, x._2, x._3, x._4, x._5, x._6)
-  implicit def tupleToTupled7[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](x: Tuple7[C1, C2, C3, C4, C5, C6, C7]) = new Tupled7(x._1, x._2, x._3, x._4, x._5, x._6, x._7)
-  implicit def tupleToTupled8[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](x: Tuple8[C1, C2, C3, C4, C5, C6, C7, C8]) = new Tupled8(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8)
-  implicit def tupleToTupled9[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](x: Tuple9[C1, C2, C3, C4, C5, C6, C7, C8, C9]) = new Tupled9(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9)
-  implicit def tupleToTupled10[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], C10 <: Container[C10]](x: Tuple10[C1, C2, C3, C4, C5, C6, C7, C8, C9, C10]) = new Tupled10(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9, x._10)
+  // implicit def tupleToTupled2[C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[C1, C2]) = new Tupled2(x._1, x._2)
+  // implicit def tupleToTupled3[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[C1, C2, C3]) = new Tupled3(x._1, x._2, x._3)
+  // implicit def tupleToTupled4[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](x: Tuple4[C1, C2, C3, C4]) = new Tupled4(x._1, x._2, x._3, x._4)
+  // implicit def tupleToTupled5[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](x: Tuple5[C1, C2, C3, C4, C5]) = new Tupled5(x._1, x._2, x._3, x._4, x._5)
+  // implicit def tupleToTupled6[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](x: Tuple6[C1, C2, C3, C4, C5, C6]) = new Tupled6(x._1, x._2, x._3, x._4, x._5, x._6)
+  // implicit def tupleToTupled7[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](x: Tuple7[C1, C2, C3, C4, C5, C6, C7]) = new Tupled7(x._1, x._2, x._3, x._4, x._5, x._6, x._7)
+  // implicit def tupleToTupled8[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](x: Tuple8[C1, C2, C3, C4, C5, C6, C7, C8]) = new Tupled8(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8)
+  // implicit def tupleToTupled9[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](x: Tuple9[C1, C2, C3, C4, C5, C6, C7, C8, C9]) = new Tupled9(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9)
+  // implicit def tupleToTupled10[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], C10 <: Container[C10]](x: Tuple10[C1, C2, C3, C4, C5, C6, C7, C8, C9, C10]) = new Tupled10(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9, x._10)
 
-  implicit def tupleToTupling2[DATUM, C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[Aggregator[DATUM, C1], Aggregator[DATUM, C2]]) = new Tupling2(x._1, x._2)
-  implicit def tupleToTupling3[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3]]) = new Tupling3(x._1, x._2, x._3)
-  implicit def tupleToTupling4[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](x: Tuple4[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4]]) = new Tupling4(x._1, x._2, x._3, x._4)
-  implicit def tupleToTupling5[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](x: Tuple5[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5]]) = new Tupling5(x._1, x._2, x._3, x._4, x._5)
-  implicit def tupleToTupling6[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](x: Tuple6[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6]]) = new Tupling6(x._1, x._2, x._3, x._4, x._5, x._6)
-  implicit def tupleToTupling7[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](x: Tuple7[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7]]) = new Tupling7(x._1, x._2, x._3, x._4, x._5, x._6, x._7)
-  implicit def tupleToTupling8[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](x: Tuple8[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8]]) = new Tupling8(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8)
-  implicit def tupleToTupling9[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](x: Tuple9[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9]]) = new Tupling9(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9)
-  implicit def tupleToTupling10[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], C10 <: Container[C10]](x: Tuple10[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9], Aggregator[DATUM, C10]]) = new Tupling10(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9, x._10)
+  // implicit def tupleToTupling2[DATUM, C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[Aggregator[DATUM, C1], Aggregator[DATUM, C2]]) = new Tupling2(x._1, x._2)
+  // implicit def tupleToTupling3[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3]]) = new Tupling3(x._1, x._2, x._3)
+  // implicit def tupleToTupling4[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](x: Tuple4[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4]]) = new Tupling4(x._1, x._2, x._3, x._4)
+  // implicit def tupleToTupling5[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](x: Tuple5[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5]]) = new Tupling5(x._1, x._2, x._3, x._4, x._5)
+  // implicit def tupleToTupling6[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](x: Tuple6[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6]]) = new Tupling6(x._1, x._2, x._3, x._4, x._5, x._6)
+  // implicit def tupleToTupling7[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](x: Tuple7[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7]]) = new Tupling7(x._1, x._2, x._3, x._4, x._5, x._6, x._7)
+  // implicit def tupleToTupling8[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](x: Tuple8[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8]]) = new Tupling8(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8)
+  // implicit def tupleToTupling9[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](x: Tuple9[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9]]) = new Tupling9(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9)
+  // implicit def tupleToTupling10[DATUM, C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], C10 <: Container[C10]](x: Tuple10[Aggregator[DATUM, C1], Aggregator[DATUM, C2], Aggregator[DATUM, C3], Aggregator[DATUM, C4], Aggregator[DATUM, C5], Aggregator[DATUM, C6], Aggregator[DATUM, C7], Aggregator[DATUM, C8], Aggregator[DATUM, C9], Aggregator[DATUM, C10]]) = new Tupling10(x._1, x._2, x._3, x._4, x._5, x._6, x._7, x._8, x._9, x._10)
 }

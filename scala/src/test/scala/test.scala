@@ -636,9 +636,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson[Categorized[Counted]](categorizing.toJson.stringify) should be (categorizing.fix)
   }
 
-  //////////////////////////////////////////////////////////////// Map/Mapped/Mapping
+  //////////////////////////////////////////////////////////////// NameMap/NameMapped/NameMapping
 
-  "Map/Mapped/Mapping" must "work with multiple types" in {
+  "NameMap/NameMapped/NameMapping" must "work with multiple types" in {
     val one = Histogram(5, -3.0, 7.0, {x: Double => x})
     val two = Count[Double]()
     val three = Deviate({x: Double => x + 100.0})
@@ -662,7 +662,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     mapped[Deviated]("three").mean should be (100.33 +- 1e-12)
     mapped[Deviated]("three").variance should be (10.8381 +- 1e-12)
 
-    Factory.fromJson[Mapped](mapping.toJson.stringify) should be (mapped)
+    Factory.fromJson[NameMapped](mapping.toJson.stringify) should be (mapped)
   }
 
   it must "permit histograms to have different cuts" in {

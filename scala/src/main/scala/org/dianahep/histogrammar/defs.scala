@@ -50,7 +50,7 @@ package histogrammar {
     register(Stack)
     register(Partition)
     register(Categorize)
-    register(Map)
+    register(NameMap)
     register(Tuple)
 
     def apply(name: String) = known.get(name) match {
@@ -146,8 +146,8 @@ package object histogrammar {
   implicit def weightedFloatToSelection[DATUM](f: Weighted[DATUM] => Float) = Selection({x: Weighted[DATUM] => f(x).toDouble})
   implicit def weightedDoubleToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
 
-  implicit def mapToMapped(map: scala.collection.immutable.Map[String, Container[_]]) = new Mapped(map.toSeq: _*)
-  implicit def mapToMapping[DATUM](map: scala.collection.immutable.Map[String, Aggregator[DATUM, _]]) = new Mapping(map.toSeq: _*)
+  implicit def mapToNameMapped(map: scala.collection.immutable.Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)
+  implicit def mapToNameMapping[DATUM](map: scala.collection.immutable.Map[String, Aggregator[DATUM, _]]) = new NameMapping(map.toSeq: _*)
 
   implicit def tupleToTupled2[C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[C1, C2]) = new Tupled2(x._1, x._2)
   implicit def tupleToTupled3[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[C1, C2, C3]) = new Tupled3(x._1, x._2, x._3)

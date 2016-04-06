@@ -37,6 +37,21 @@ package histogrammar {
       known = known.updated(factory.name, factory)
     }
 
+    register(Count)
+    register(Sum)
+    register(Average)
+    register(Deviate)
+    register(AbsoluteErr)
+    register(Minimize)
+    register(Maximize)
+    register(Bin)
+    register(SparselyBin)
+    register(Fraction)
+    register(Stack)
+    register(Partition)
+    register(Map)
+    register(Tuple)
+
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
       case None => throw new AggregatorException(s"unrecognized aggregator (is it a custom aggregator that hasn't been registered?): $name")
@@ -89,29 +104,19 @@ package histogrammar {
 }
 
 package object histogrammar {
-  //////////////////////////////////////////////////////////////// register container factories
-
-  Factory.register(Count)
-  Factory.register(Sum)
-  Factory.register(Average)
-  Factory.register(Deviate)
-  Factory.register(AbsoluteErr)
-  Factory.register(Minimize)
-  Factory.register(Maximize)
-  Factory.register(Bin)
-  Factory.register(SparselyBin)
-  Factory.register(Fraction)
-  Factory.register(Stack)
-  Factory.register(Partition)
-  Factory.register(Map)
-  Factory.register(Tuple)
-
   //////////////////////////////////////////////////////////////// define implicits
 
   type NumericalFcn[DATUM] = Weighted[DATUM] => Double
-  type NumericalFcn2D[DATUM] = Weighted[DATUM] => (Double, Double)
-  type NumericalFcn3D[DATUM] = Weighted[DATUM] => (Double, Double, Double)
-  type NumericalFcnND[DATUM] = Weighted[DATUM] => Seq[Double]
+  type NumericalFcn2[DATUM] = Weighted[DATUM] => (Double, Double)
+  type NumericalFcn3[DATUM] = Weighted[DATUM] => (Double, Double, Double)
+  type NumericalFcn4[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double)
+  type NumericalFcn5[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double)
+  type NumericalFcn6[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double)
+  type NumericalFcn7[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double)
+  type NumericalFcn8[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double, Double)
+  type NumericalFcn9[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double, Double, Double)
+  type NumericalFcn10[DATUM] = Weighted[DATUM] => (Double, Double, Double, Double, Double, Double, Double, Double, Double, Double)
+  type NumericalFcnN[DATUM] = Weighted[DATUM] => Seq[Double]
   type CategoricalFcn[DATUM] = Weighted[DATUM] => String
 
   def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})

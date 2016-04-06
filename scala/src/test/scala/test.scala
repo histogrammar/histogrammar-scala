@@ -449,6 +449,34 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
+  //////////////////////////////////////////////////////////////// Maximize/Maximizing/Maximized
+
+  "Maximize/Maximizing/Maximized" must "work" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val leftMaximizing = Maximize({x: Double => x})
+      val rightMaximizing = Maximize({x: Double => x})
+
+      left.foreach(leftMaximizing.fill(_))
+      right.foreach(rightMaximizing.fill(_))
+
+      val (Maximize(leftResult), Maximize(rightResult)) = (leftMaximizing, rightMaximizing)
+
+      if (left.isEmpty) leftResult.isNaN should be (true)
+      else leftResult should be (left.max +- 1e-12)
+      if (right.isEmpty) rightResult.isNaN should be (true)
+      else rightResult should be (right.max +- 1e-12)
+
+      val Maximize(finalResult) = leftMaximizing + rightMaximizing
+
+      if (simple.isEmpty) finalResult.isNaN should be (true)
+      else finalResult should be (simple.max +- 1e-12)
+
+      Factory.fromJson[Maximized](leftMaximizing.toJson.stringify) should be (leftMaximizing.fix)
+    }
+  }
+
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
   "Bin/Binning/Binned" must "work with Count/Counting/Counted" in {

@@ -97,6 +97,7 @@ package object histogrammar {
   Factory.register(Deviate)
   Factory.register(AbsoluteErr)
   Factory.register(Minimize)
+  Factory.register(Maximize)
   Factory.register(Bin)
   Factory.register(SparselyBin)
   Factory.register(Fraction)

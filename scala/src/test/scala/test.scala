@@ -625,6 +625,17 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson[Partitioned[Summed]](partitioning.toJson.stringify) should be (partitioning.fix)
   }
 
+  //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
+
+  "Categorize/Categorized/Categorizing" must "work" in {
+    val categorizing = Categorize({x: Struct => x.string.substring(0, 1)})
+    struct.foreach(categorizing.fill(_))
+
+    categorizing.fix.pairsMap should be (scala.collection.immutable.Map("n" -> Count.ed(1.0), "e" -> Count.ed(1.0), "t" -> Count.ed(3.0), "s" -> Count.ed(2.0), "f" -> Count.ed(2.0), "o" -> Count.ed(1.0)))
+
+    Factory.fromJson[Categorized[Counted]](categorizing.toJson.stringify) should be (categorizing.fix)
+  }
+
   //////////////////////////////////////////////////////////////// Map/Mapped/Mapping
 
   "Map/Mapped/Mapping" must "work with multiple types" in {

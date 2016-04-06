@@ -49,6 +49,7 @@ package histogrammar {
     register(Fraction)
     register(Stack)
     register(Partition)
+    register(Categorize)
     register(Map)
     register(Tuple)
 

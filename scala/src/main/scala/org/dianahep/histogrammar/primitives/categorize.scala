@@ -10,10 +10,14 @@ package histogrammar {
   object Categorize extends Factory {
     val name = "Categorize"
 
+    def default[DATUM] = Count[DATUM]()
+
     def ed[V <: Container[V]](pairs: (String, V)*) = new Categorized(pairs: _*)
-    def ing[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM], value: => Aggregator[DATUM, V]) =
+
+    def ing[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => Aggregator[DATUM, V] = default[DATUM]) =
       new Categorizing(quantity, selection, value, mutable.HashMap[String, Aggregator[DATUM, V]]())
-    def apply[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM], value: => Aggregator[DATUM, V]) =
+
+    def apply[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => Aggregator[DATUM, V] = default[DATUM]) =
       ing(quantity, selection, value)
 
     def unapplySeq[V <: Container[V]](x: Categorized[V]) = Some(x.pairs)

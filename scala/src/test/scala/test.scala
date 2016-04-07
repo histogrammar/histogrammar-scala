@@ -461,21 +461,21 @@ class DefaultSuite extends FlatSpec with Matchers {
     two.toContainer[Histogrammed].nanflow should be (Count.ed(0.0))
   }
 
-  // "Binning/Binned" must "work with Sum/Summing/Summed" in {
-  //   val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted[Double], Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
-  //   simple.foreach(one.fill(_))
-  //   one.toContainer.values.toList should be (List(Sum.ed(30.0), Sum.ed(20.0), Sum.ed(20.0), Sum.ed(10.0), Sum.ed(0.0)))
-  //   one.toContainer.underflow should be (Sum.ed(10.0))
-  //   one.toContainer.overflow should be (Sum.ed(10.0))
-  //   one.toContainer.nanflow should be (Sum.ed(0.0))
+  "Binning/Binned" must "work with Sum/Summing/Summed" in {
+    val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted[Double], Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
+    simple.foreach(one.fill(_))
+    one.toContainer[Binned[Summed, Summed, Summed, Summed]].values.toList should be (List(Sum.ed(30.0), Sum.ed(20.0), Sum.ed(20.0), Sum.ed(10.0), Sum.ed(0.0)))
+    one.toContainer[Binned[Summed, Summed, Summed, Summed]].underflow should be (Sum.ed(10.0))
+    one.toContainer[Binned[Summed, Summed, Summed, Summed]].overflow should be (Sum.ed(10.0))
+    one.toContainer[Binned[Summed, Summed, Summed, Summed]].nanflow should be (Sum.ed(0.0))
 
-  //   val two = Bin(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool}, Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}))
-  //   struct.foreach(two.fill(_))
-  //   two.toContainer.values.toList should be (List(Sum.ed(20.0), Sum.ed(10.0), Sum.ed(10.0), Sum.ed(10.0), Sum.ed(0.0)))
-  //   two.toContainer.underflow should be (Sum.ed(0.0))
-  //   two.toContainer.overflow should be (Sum.ed(0.0))
-  //   two.toContainer.nanflow should be (Sum.ed(0.0))
-  // }
+    val two = Bin(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool}, Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}))
+    struct.foreach(two.fill(_))
+    two.toContainer[Binned[Summed, Summed, Summed, Summed]].values.toList should be (List(Sum.ed(20.0), Sum.ed(10.0), Sum.ed(10.0), Sum.ed(10.0), Sum.ed(0.0)))
+    two.toContainer[Binned[Summed, Summed, Summed, Summed]].underflow should be (Sum.ed(0.0))
+    two.toContainer[Binned[Summed, Summed, Summed, Summed]].overflow should be (Sum.ed(0.0))
+    two.toContainer[Binned[Summed, Summed, Summed, Summed]].nanflow should be (Sum.ed(0.0))
+  }
 
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
 
@@ -618,31 +618,30 @@ class DefaultSuite extends FlatSpec with Matchers {
     mapped[Histogrammed]("three").numericValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
   }
 
-  // //////////////////////////////////////////////////////////////// Tuple/Tupled/Tupling
+  //////////////////////////////////////////////////////////////// Tuple/Tupled/Tupling
 
-  // "Tuple/Tupled/Tupling" must "work with multiple types" in {
-  //   val one = Histogram(5, -3.0, 7.0, {x: Double => x})
-  //   val two = Count[Double]()
-  //   val three = Deviate({x: Double => x + 100.0})
+  "Tuple/Tupled/Tupling" must "work with multiple types" in {
+    val one = Histogram(5, -3.0, 7.0, {x: Double => x})
+    val two = Count[Double]()
+    val three = Deviate({x: Double => x + 100.0})
 
-  //   val tupling = (one, two, three)
+    val tupling = Tuple[Double, Histogramming[Double], Counting[Double], Deviating[Double]](one, two, three)
 
-  //   simple.foreach(tupling.fill(_))
+    simple.foreach(tupling.fill(_))
 
-  //   val tupled = tupling.toContainer
+    val tupled = tupling.toContainer[Tupled3[Histogrammed, Counted, Deviated]]
 
-  //   val onefix = tupled._1
-  //   onefix.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
-  //   onefix.underflow should be (Count.ed(1.0))
-  //   onefix.overflow should be (Count.ed(1.0))
-  //   onefix.nanflow should be (Count.ed(0.0))
-  //   onefix should be (one.toContainer)
+    val onefix = tupled._1
+    onefix.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
+    onefix.underflow should be (Count.ed(1.0))
+    onefix.overflow should be (Count.ed(1.0))
+    onefix.nanflow should be (Count.ed(0.0))
 
-  //   tupled._2 should be (Count.ed(10.0))
+    tupled._2 should be (Count.ed(10.0))
 
-  //   tupled._3.count should be (10.0 +- 1e-12)
-  //   tupled._3.mean should be (100.33 +- 1e-12)
-  //   tupled._3.variance should be (10.8381 +- 1e-12)
-  // }
+    tupled._3.count should be (10.0 +- 1e-12)
+    tupled._3.mean should be (100.33 +- 1e-12)
+    tupled._3.variance should be (10.8381 +- 1e-12)
+  }
 
 }

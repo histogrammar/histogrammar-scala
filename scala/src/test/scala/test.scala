@@ -592,9 +592,9 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     simple.foreach(mapping.fill(_))
 
-    mapping[Histogramming[_]]("one").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
-    mapping[Histogramming[_]]("two").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
-    mapping[Histogramming[_]]("three").numericValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+    mapping[Histogramming[_]]("one").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
+    mapping[Histogramming[_]]("two").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
+    mapping[Histogramming[_]]("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
   }
 
   //////////////////////////////////////////////////////////////// Tuple/Tupled/Tupling
@@ -620,4 +620,61 @@ class DefaultSuite extends FlatSpec with Matchers {
     three.variance should be (10.8381 +- 1e-12)
   }
 
+
+  //////////////////////////////////////////////////////////////// Usability in fold/aggregate
+
+  "Aggregators/Combiners" must "be usable in Spark's aggregate (which has the same signature as Scala's foldLeft + reduce)" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val partialHists = Seq(
+        left.foldLeft(Bin(5, -3.0, 7.0, {x: Double => x}))({(hist, x) => hist.fill(x); hist}),
+        right.foldLeft(Bin(5, -3.0, 7.0, {x: Double => x}))({(hist, x) => hist.fill(x); hist}))
+
+      val finalHist = partialHists.reduce(_ + _)
+
+      finalHist.numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist.numericalUnderflow should be (1.0)
+      finalHist.numericalOverflow should be (1.0)
+      finalHist.numericalNanflow should be (0.0)
+    }
+
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
+
+      val partialHists = Seq(
+        left.foldLeft(hist1)(increment(hist1)),
+        right.foldLeft(hist2)(increment(hist2)))
+
+      val finalHist = partialHists.reduce(combine(hist1))
+
+      finalHist.numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist.numericalUnderflow should be (1.0)
+      finalHist.numericalOverflow should be (1.0)
+      finalHist.numericalNanflow should be (0.0)
+    }
+
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val hist1 = NameMap[Double]("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}), "counter" -> Count[Double]())
+      val hist2 = NameMap[Double]("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}), "counter" -> Count[Double]())
+
+      val partialHists = Seq(
+        left.foldLeft(hist1)(increment(hist1)),
+        right.foldLeft(hist2)(increment(hist2)))
+
+      val finalHist = partialHists.reduce(combine(hist1))
+
+      finalHist[Histogramming[_]]("hist").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist[Histogramming[_]]("hist").numericalUnderflow should be (1.0)
+      finalHist[Histogramming[_]]("hist").numericalOverflow should be (1.0)
+      finalHist[Histogramming[_]]("hist").numericalNanflow should be (0.0)
+
+      finalHist[Counting[_]]("counter").value should be (10.0)
+    }
+  }
 }

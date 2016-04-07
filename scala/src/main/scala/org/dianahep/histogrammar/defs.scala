@@ -32,16 +32,16 @@ package histogrammar {
 
     register(Count)
     register(Sum)
-    // register(Average)
+    register(Average)
     register(Deviate)
-    // register(AbsoluteErr)
-    // register(Minimize)
-    // register(Maximize)
+    register(AbsoluteErr)
+    register(Minimize)
+    register(Maximize)
     register(Bin)
     register(SparselyBin)
     register(Fraction)
-    // register(Stack)
-    // register(Partition)
+    register(Stack)
+    register(Partition)
     register(Categorize)
     register(NameMap)
     register(Tuple)
@@ -122,6 +122,13 @@ package object histogrammar {
   implicit class nanEquality(val x: Double) extends AnyVal {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
+
+  def increment[DATUM, CONTAINER <: Container[CONTAINER]](zero: CONTAINER with Aggregation[DATUM]) =
+    {(h: CONTAINER with Aggregation[DATUM], x: DATUM) => h.fill(x); h}
+
+  def combine[DATUM, CONTAINER <: Container[CONTAINER]](zero: CONTAINER with Aggregation[DATUM]) =
+    {(h1: CONTAINER with Aggregation[DATUM], h2: CONTAINER with Aggregation[DATUM]) => h1 + h2}
+
 
   // // Scala maps become NameMaps
   // implicit def mapToNameMapped(map: Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)

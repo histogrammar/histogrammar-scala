@@ -28,7 +28,7 @@ package object histogram {
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
     new HistogramMethods(hist)
 
-  implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counting[DATUM], Counting[DATUM], Counting[DATUM], Counting[DATUM]]): HistogramMethods =
+  implicit def binningToHistogramMethods(hist: Binning[_, _, _, _, _]): HistogramMethods =
     new HistogramMethods(Factory.fromJson[Binned[Counted, Counted, Counted, Counted]](hist.toJson))
 
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
@@ -36,16 +36,16 @@ package object histogram {
       new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.container(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Count.container(0.0), Count.container(0.0), hist.nanflow)
     )
 
-  implicit def sparselyBinningToHistogramMethods[DATUM](hist: SparselyBinning[DATUM, Counting[DATUM], Counting[DATUM]]): HistogramMethods =
+  implicit def sparselyBinningToHistogramMethods(hist: SparselyBinning[_, _, _]): HistogramMethods =
     sparselyBinnedToHistogramMethods(Factory.fromJson[SparselyBinned[Counted, Counted]](hist.toJson))
 }
 
 package histogram {
   class HistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]) {
-    def numericValues: Seq[Double] = hist.values.map(_.value)
-    def numericOverflow: Double = hist.overflow.value
-    def numericUnderflow: Double = hist.underflow.value
-    def numericNanflow: Double = hist.nanflow.value
+    def numericalValues: Seq[Double] = hist.values.map(_.value)
+    def numericalOverflow: Double = hist.overflow.value
+    def numericalUnderflow: Double = hist.underflow.value
+    def numericalNanflow: Double = hist.nanflow.value
 
     def ascii: String = ascii(80)
     def ascii(width: Int): String = {

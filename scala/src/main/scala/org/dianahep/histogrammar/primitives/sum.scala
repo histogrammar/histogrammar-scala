@@ -8,7 +8,7 @@ package histogrammar {
   object Sum extends Factory {
     val name = "Sum"
 
-    def ed(value: Double) = new Summed(value)
+    def container(value: Double) = new Summed(value)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing(quantity, selection, 0.0)
 
     def unapply(x: Summed) = Some(x.value)
@@ -35,15 +35,19 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summing[DATUM]] {
+  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Container[Summing[DATUM]] with Aggregation[DATUM] {
     def factory = Sum
 
     def +(that: Summing[DATUM]) = new Summing(this.quantity, this.selection, this.value + that.value)
 
-    def fill(x: Weighted[DATUM]) {
-      val y = quantity(x) reweight selection(x)
-      if (y.contributes)
-        value += y.datum * y.weight
+    def fillWeighted(x: Weighted[DATUM]) {
+      val Weighted(datum, weight) = x
+
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
+        value += q * w
+      }
     }
 
     def toJsonFragment = JsonFloat(value)

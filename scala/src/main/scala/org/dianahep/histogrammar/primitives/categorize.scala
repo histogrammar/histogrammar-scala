@@ -102,12 +102,15 @@ package histogrammar {
       }: _*))
     
     def fillWeighted(x: Weighted[DATUM]) {
-      val k = quantity(x)
-      val y = x reweight selection(x)
-      if (y.contributes) {
-        if (!(pairs contains k))
-          pairs(k) = value
-        pairs(k).asInstanceOf[Aggregation[DATUM]].fillWeighted(y)
+      val Weighted(datum, weight) = x
+
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
+
+        if (!(pairs contains q))
+          pairs(q) = value
+        pairs(q).asInstanceOf[Aggregation[DATUM]].fillWeighted(Weighted(datum, w))
       }
     }
 

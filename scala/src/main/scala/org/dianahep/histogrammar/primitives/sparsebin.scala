@@ -167,16 +167,19 @@ package histogrammar {
     }
 
     def fillWeighted(x: Weighted[DATUM]) {
-      val k = quantity(x)
-      val y = x reweight selection(x)
-      if (y.contributes) {
-        if (nan(k))
-          nanflow.asInstanceOf[Aggregation[DATUM]].fillWeighted(y)
+      val Weighted(datum, weight) = x
+
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
+
+        if (nan(q))
+          nanflow.asInstanceOf[Aggregation[DATUM]].fillWeighted(Weighted(datum, w))
         else {
-          val b = bin(k)
+          val b = bin(q)
           if (!(values contains b))
             values.update(b, value)
-          values(b).asInstanceOf[Aggregation[DATUM]].fillWeighted(y)
+          values(b).asInstanceOf[Aggregation[DATUM]].fillWeighted(Weighted(datum, w))
         }
       }
     }

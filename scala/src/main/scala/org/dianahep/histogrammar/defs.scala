@@ -12,14 +12,7 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// data model (user's data are implicitly converted to this)
 
-  case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0) {
-    def reweight(w: Double): Weighted[DATUM] = copy(weight = weight*w)
-    def contributes = weight > 0.0
-  }
-
-  case class Selection[DATUM](f: Weighted[DATUM] => Double) extends Function1[Weighted[DATUM], Double] {
-    def apply(x: Weighted[DATUM]) = f(x)
-  }
+  case class Weighted[DATUM](datum: DATUM, weight: Double = 1.0)
 
   //////////////////////////////////////////////////////////////// general definition of an container/aggregator
 
@@ -38,7 +31,7 @@ package histogrammar {
     }
 
     register(Count)
-    // register(Sum)
+    register(Sum)
     // register(Average)
     // register(Deviate)
     // register(AbsoluteErr)
@@ -46,10 +39,10 @@ package histogrammar {
     // register(Maximize)
     register(Bin)
     register(SparselyBin)
-    // register(Fraction)
+    register(Fraction)
     // register(Stack)
     // register(Partition)
-    // register(Categorize)
+    register(Categorize)
     // register(NameMap)
     register(Tuple)
 
@@ -100,46 +93,35 @@ package histogrammar {
 package object histogrammar {
   //////////////////////////////////////////////////////////////// define implicits
 
-  type Categorical = String
-  type Numerical = Double
-  type CategoricalFcn[DATUM] = Weighted[DATUM] => Categorical
-  type NumericalFcn[DATUM] = Weighted[DATUM] => Numerical
+  implicit class Selection[DATUM](f: DATUM => Double) {
+    def apply(x: DATUM) = f(x)
+  }
+  implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: DATUM => if (f(x)) 1.0 else 0.0})
+  implicit def byteToSelection[DATUM](f: DATUM => Byte) = Selection({x: DATUM => f(x).toDouble})
+  implicit def shortToSelection[DATUM](f: DATUM => Short) = Selection({x: DATUM => f(x).toDouble})
+  implicit def intToSelection[DATUM](f: DATUM => Int) = Selection({x: DATUM => f(x).toDouble})
+  implicit def longToSelection[DATUM](f: DATUM => Long) = Selection({x: DATUM => f(x).toDouble})
+  implicit def floatToSelection[DATUM](f: DATUM => Float) = Selection({x: DATUM => f(x).toDouble})
 
-  def unweighted[DATUM] = Selection({x: Weighted[DATUM] => 1.0})
+  def unweighted[DATUM] = Selection[DATUM]({x: DATUM => 1.0})
 
-  // // get the user's functions into our format
-  // implicit def toWeighted[DATUM](datum: DATUM) = Weighted(datum)
-  implicit def domainToWeighted[DOMAIN, RANGE](f: DOMAIN => RANGE) = {x: Weighted[DOMAIN] => f(x.datum)}
+  implicit class NumericalFcn[DATUM](f: DATUM => Double) {
+    def apply(x: DATUM) = f(x)
+  }
+  implicit def byteToNumericalFcn[DATUM](f: DATUM => Byte) = NumericalFcn({x: DATUM => f(x).toDouble})
+  implicit def shortToNumericalFcn[DATUM](f: DATUM => Short) = NumericalFcn({x: DATUM => f(x).toDouble})
+  implicit def intToNumericalFcn[DATUM](f: DATUM => Int) = NumericalFcn({x: DATUM => f(x).toDouble})
+  implicit def longToNumericalFcn[DATUM](f: DATUM => Long) = NumericalFcn({x: DATUM => f(x).toDouble})
+  implicit def floatToNumericalFcn[DATUM](f: DATUM => Float) = NumericalFcn({x: DATUM => f(x).toDouble})
+
+  implicit class CategoricalFcn[DATUM](f: DATUM => String) {
+    def apply(x: DATUM) = f(x)
+  }
 
   // used to check floating-point equality with a new rule: NaN == NaN
   implicit class nanEquality(val x: Double) extends AnyVal {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
-
-  // given a selection function in some type, convert it into our standardized type
-  implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
-  implicit def byteToSelection[DATUM](f: DATUM => Byte) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
-  implicit def shortToSelection[DATUM](f: DATUM => Short) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
-  implicit def intToSelection[DATUM](f: DATUM => Int) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
-  implicit def longToSelection[DATUM](f: DATUM => Long) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
-  implicit def floatToSelection[DATUM](f: DATUM => Float) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
-  implicit def doubleToSelection[DATUM](f: DATUM => Double) = Selection({x: Weighted[DATUM] => f(x.datum)})
-  implicit def weightedBooleanToSelection[DATUM](f: Weighted[DATUM] => Boolean) = Selection({x: Weighted[DATUM] => if (f(x)) 1.0 else 0.0})
-  implicit def weightedByteToSelection[DATUM](f: Weighted[DATUM] => Byte) = Selection({x: Weighted[DATUM] => f(x).toDouble})
-  implicit def weightedShortToSelection[DATUM](f: Weighted[DATUM] => Short) = Selection({x: Weighted[DATUM] => f(x).toDouble})
-  implicit def weightedIntToSelection[DATUM](f: Weighted[DATUM] => Int) = Selection({x: Weighted[DATUM] => f(x).toDouble})
-  implicit def weightedLongToSelection[DATUM](f: Weighted[DATUM] => Long) = Selection({x: Weighted[DATUM] => f(x).toDouble})
-  implicit def weightedFloatToSelection[DATUM](f: Weighted[DATUM] => Float) = Selection({x: Weighted[DATUM] => f(x).toDouble})
-  implicit def weightedDoubleToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
-
-  // // don't distinguish between simple aggregators and containers that don't contain other aggregators/containers
-  // implicit def countingToCounted(x: Counting[_]) = x.toContainer[Counted]
-  // implicit def summingToSummed(x: Summing[_]) = x.toContainer[Summed]
-  // implicit def averagingToAveraged(x: Averaging[_]) = x.toContainer[Averaged]
-  // implicit def deviatingToDeviated(x: Deviating[_]) = x.toContainer[Deviated]
-  // implicit def absoluteErringToAbsoluteErred(x: AbsoluteErring[_]) = x.toContainer[AbsoluteErred]
-  // implicit def minimizingToMinimized(x: Minimizing[_]) = x.toContainer[Minimized]
-  // implicit def maximizingToMaximized(x: Maximizing[_]) = x.toContainer[Maximized]
 
   // // Scala maps become NameMaps
   // implicit def mapToNameMapped(map: scala.collection.immutable.Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)

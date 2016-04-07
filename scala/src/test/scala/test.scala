@@ -131,70 +131,70 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
-  // //////////////////////////////////////////////////////////////// Sum/Summed/Summing
+  //////////////////////////////////////////////////////////////// Sum/Summed/Summing
 
-  // "Sum/Summing/Summed" must "work unfiltered" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = simple.splitAt(i)
+  "Sum/Summing/Summed" must "work unfiltered" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-  //     val leftSumming = Sum({x: Double => x})
-  //     val rightSumming = Sum({x: Double => x})
+      val leftSumming = Sum({x: Double => x})
+      val rightSumming = Sum({x: Double => x})
 
-  //     left.foreach(leftSumming.fill(_))
-  //     right.foreach(rightSumming.fill(_))
+      left.foreach(leftSumming.fill(_))
+      right.foreach(rightSumming.fill(_))
 
-  //     val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
+      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
 
-  //     leftResult should be (left.sum +- 1e-12)
-  //     rightResult should be (right.sum +- 1e-12)
+      leftResult should be (left.sum +- 1e-12)
+      rightResult should be (right.sum +- 1e-12)
 
-  //     val Sum(finalResult) = leftSumming + rightSumming
+      val Sum(finalResult) = leftSumming + rightSumming
 
-  //     finalResult should be (simple.sum +- 1e-12)
-  //   }
-  // }
+      finalResult should be (simple.sum +- 1e-12)
+    }
+  }
 
-  // it must "work with a filter" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = struct.splitAt(i)
+  it must "work with a filter" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
 
-  //     val leftSumming = Sum({x: Struct => x.double}, {x: Struct => x.bool})
-  //     val rightSumming = Sum({x: Struct => x.double}, {x: Struct => x.bool})
+      val leftSumming = Sum({x: Struct => x.double}, {x: Struct => x.bool})
+      val rightSumming = Sum({x: Struct => x.double}, {x: Struct => x.bool})
 
-  //     left.foreach(leftSumming.fill(_))
-  //     right.foreach(rightSumming.fill(_))
+      left.foreach(leftSumming.fill(_))
+      right.foreach(rightSumming.fill(_))
 
-  //     val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
+      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
 
-  //     leftResult should be (left.filter(_.bool).map(_.double).sum +- 1e-12)
-  //     rightResult should be (right.filter(_.bool).map(_.double).sum +- 1e-12)
+      leftResult should be (left.filter(_.bool).map(_.double).sum +- 1e-12)
+      rightResult should be (right.filter(_.bool).map(_.double).sum +- 1e-12)
 
-  //     val Sum(finalResult) = leftSumming + rightSumming
+      val Sum(finalResult) = leftSumming + rightSumming
 
-  //     finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
-  //   }
-  // }
+      finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
+    }
+  }
 
-  // it must "work with a weighting factor" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = struct.splitAt(i)
+  it must "work with a weighting factor" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
 
-  //     val leftSumming = Sum({x: Struct => x.double}, {x: Struct => x.int})
-  //     val rightSumming = Sum({x: Struct => x.double}, {x: Struct => x.int})
+      val leftSumming = Sum({x: Struct => x.double}, {x: Struct => x.int})
+      val rightSumming = Sum({x: Struct => x.double}, {x: Struct => x.int})
 
-  //     left.foreach(leftSumming.fill(_))
-  //     right.foreach(rightSumming.fill(_))
+      left.foreach(leftSumming.fill(_))
+      right.foreach(rightSumming.fill(_))
 
-  //     val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
+      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
 
-  //     leftResult should be (left.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
-  //     rightResult should be (right.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
+      leftResult should be (left.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
+      rightResult should be (right.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
-  //     val Sum(finalResult) = leftSumming + rightSumming
+      val Sum(finalResult) = leftSumming + rightSumming
 
-  //     finalResult should be (struct.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
-  //   }
-  // }
+      finalResult should be (struct.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
+    }
+  }
 
   // //////////////////////////////////////////////////////////////// Average/Averaged/Averaging
 
@@ -490,44 +490,38 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.high should be (8.0)
   }
 
-  // //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
+  //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
 
-  // "Fraction/Fractioned/Fractioning" must "work with Count/Counting/Counted" in {
-  //   val fracking = Fraction({x: Double => x > 0.0}, Count[Double]())
-  //   simple.foreach(fracking.fill(_))
+  "Fraction/Fractioned/Fractioning" must "work with Count/Counting/Counted" in {
+    val fracking = Fraction({x: Double => x > 0.0}, Count[Double]())
+    simple.foreach(fracking.fill(_))
 
-  //   val fracked = fracking.toContainer[Fractioned[Counted]]
+    fracking.numerator.value should be (4.0)
+    fracking.denominator.value should be (10.0)
+  }
 
-  //   fracked.numerator.value should be (4.0)
-  //   fracked.denominator.value should be (10.0)
-  // }
+  it must "work with Sum/Summing/Summed" in {
+    val fracking = Fraction({x: Double => x > 0.0}, Sum({x: Double => x}))
+    simple.foreach(fracking.fill(_))
 
-  // it must "work with Sum/Summing/Summed" in {
-  //   val fracking = Fraction({x: Double => x > 0.0}, Sum({x: Double => x}))
-  //   simple.foreach(fracking.fill(_))
+    fracking.numerator.value should be (14.5 +- 1e-12)
+    fracking.denominator.value should be (3.3 +- 1e-12)
+  }
 
-  //   val fracked = fracking.toContainer[Fractioned[Summed]]
+  it must "work with Histogram/Histogramming/Histogrammed" in {
+    val fracking = Fraction({x: Double => x > 0.0}, Histogram(5, -3.0, 7.0, {x: Double => x}))
+    simple.foreach(fracking.fill(_))
 
-  //   fracked.numerator.value should be (14.5 +- 1e-12)
-  //   fracked.denominator.value should be (3.3 +- 1e-12)
-  // }
+    fracking.numerator.values.map(_.value).toList should be (List(0.0, 0.0, 2.0, 1.0, 0.0))
+    fracking.denominator.values.map(_.value).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
 
-  // it must "work with Histogram/Histogramming/Histogrammed" in {
-  //   val fracking = Fraction({x: Double => x > 0.0}, Histogram(5, -3.0, 7.0, {x: Double => x}))
-  //   simple.foreach(fracking.fill(_))
-
-  //   val fracked = fracking.toContainer[Fractioned[Histogrammed]]
-
-  //   fracked.numerator.values.toList should be (List(Count.ed(0.0), Count.ed(0.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
-  //   fracked.denominator.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
-
-  //   fracked match {
-  //     case Fraction(
-  //       Bin(Seq(Count(0.0), Count(0.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _),
-  //       Bin(Seq(Count(3.0), Count(2.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _)) => 1 should be (1)
-  //     case _ => 0 should be (1)
-  //   }
-  // }
+    fracking match {
+      case Fraction(
+        Bin(Seq(Count(0.0), Count(0.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _),
+        Bin(Seq(Count(3.0), Count(2.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _)) => 1 should be (1)
+      case _ => 0 should be (1)
+    }
+  }
 
   // //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
 

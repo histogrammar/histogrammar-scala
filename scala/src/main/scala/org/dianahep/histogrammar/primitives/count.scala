@@ -41,9 +41,11 @@ package histogrammar {
     def +(that: Counting[DATUM]) = new Counting[DATUM](this.selection, this.value + that.value)
 
     def fillWeighted(x: Weighted[DATUM]) {
-      val y = x reweight selection(x)
-      if (y.contributes)
-        value += y.weight
+      val Weighted(datum, weight) = x
+
+      val w = weight * selection(datum)
+      if (w > 0.0)
+        value += w
     }
 
     def toJsonFragment = JsonFloat(value)

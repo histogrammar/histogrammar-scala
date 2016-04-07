@@ -139,7 +139,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
       }
@@ -153,7 +153,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
@@ -168,7 +168,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]]  ||  !_4.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
@@ -184,7 +184,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]]  ||  !_4.isInstanceOf[Aggregation[DATUM]]  ||  !_5.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
@@ -201,7 +201,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]]  ||  !_4.isInstanceOf[Aggregation[DATUM]]  ||  !_5.isInstanceOf[Aggregation[DATUM]]  ||  !_6.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
@@ -219,7 +219,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]]  ||  !_4.isInstanceOf[Aggregation[DATUM]]  ||  !_5.isInstanceOf[Aggregation[DATUM]]  ||  !_6.isInstanceOf[Aggregation[DATUM]]  ||  !_7.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
@@ -238,7 +238,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]]  ||  !_4.isInstanceOf[Aggregation[DATUM]]  ||  !_5.isInstanceOf[Aggregation[DATUM]]  ||  !_6.isInstanceOf[Aggregation[DATUM]]  ||  !_7.isInstanceOf[Aggregation[DATUM]]  ||  !_8.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
@@ -258,7 +258,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]]  ||  !_4.isInstanceOf[Aggregation[DATUM]]  ||  !_5.isInstanceOf[Aggregation[DATUM]]  ||  !_6.isInstanceOf[Aggregation[DATUM]]  ||  !_7.isInstanceOf[Aggregation[DATUM]]  ||  !_8.isInstanceOf[Aggregation[DATUM]]  ||  !_9.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
@@ -279,7 +279,7 @@ package histogrammar {
     if (!_1.isInstanceOf[Aggregation[DATUM]]  ||  !_2.isInstanceOf[Aggregation[DATUM]]  ||  !_3.isInstanceOf[Aggregation[DATUM]]  ||  !_4.isInstanceOf[Aggregation[DATUM]]  ||  !_5.isInstanceOf[Aggregation[DATUM]]  ||  !_6.isInstanceOf[Aggregation[DATUM]]  ||  !_7.isInstanceOf[Aggregation[DATUM]]  ||  !_8.isInstanceOf[Aggregation[DATUM]]  ||  !_9.isInstanceOf[Aggregation[DATUM]]  ||  !_10.isInstanceOf[Aggregation[DATUM]])
       throw new AggregatorException(s"Tuple branches should be built with Aggregation enabled (ending in -ing)")
     def fillWeighted(x: Weighted[DATUM]) {
-      if (x.contributes) {
+      if (x.weight > 0.0) {
         _1.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _2.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         _3.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)

@@ -9,8 +9,7 @@ package histogrammar {
     val name = "Sum"
 
     def ed(value: Double) = new Summed(value)
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing(quantity, selection, 0.0)
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = ing(quantity, selection)
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing(quantity, selection, 0.0)
 
     def unapply(x: Summed) = Some(x.value)
     def unapply(x: Summing[_]) = Some(x.value)
@@ -25,9 +24,9 @@ package histogrammar {
     def factory = Sum
 
     def +(that: Summed) = new Summed(this.value + that.value)
-    def +[DATUM](that: Summing[DATUM]) = new Summing[DATUM](that.quantity, that.selection, this.value + that.value)
 
     def toJsonFragment = JsonFloat(value)
+
     override def toString() = s"Summed"
     override def equals(that: Any) = that match {
       case that: Summed => this.value === that.value
@@ -36,11 +35,10 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summed] {
+  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summing[DATUM]] {
     def factory = Sum
 
-    def +(that: Summed) = new Summing[DATUM](this.quantity, this.selection, this.value + that.value)
-    def +(that: Summing[DATUM]) = new Summing[DATUM](this.quantity, this.selection, this.value + that.value)
+    def +(that: Summing[DATUM]) = new Summing(this.quantity, this.selection, this.value + that.value)
 
     def fill(x: Weighted[DATUM]) {
       val y = quantity(x) reweight selection(x)
@@ -48,7 +46,7 @@ package histogrammar {
         value += y.datum * y.weight
     }
 
-    def toContainer = new Summed(value)
+    def toJsonFragment = JsonFloat(value)
 
     override def toString() = s"Summing"
     override def equals(that: Any) = that match {

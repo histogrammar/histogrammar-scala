@@ -461,21 +461,21 @@ class DefaultSuite extends FlatSpec with Matchers {
     two.nanflow.value should be (0.0)
   }
 
-  // "Binning/Binned" must "work with Sum/Summing/Summed" in {
-  //   val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted[Double], Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
-  //   simple.foreach(one.fill(_))
-  //   one.toContainer[Binned[Summed, Summed, Summed, Summed]].values.toList should be (List(Sum.ed(30.0), Sum.ed(20.0), Sum.ed(20.0), Sum.ed(10.0), Sum.ed(0.0)))
-  //   one.toContainer[Binned[Summed, Summed, Summed, Summed]].underflow should be (Sum.ed(10.0))
-  //   one.toContainer[Binned[Summed, Summed, Summed, Summed]].overflow should be (Sum.ed(10.0))
-  //   one.toContainer[Binned[Summed, Summed, Summed, Summed]].nanflow should be (Sum.ed(0.0))
+  "Binning/Binned" must "work with Sum/Summing/Summed" in {
+    val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted[Double], Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
+    simple.foreach(one.fill(_))
+    one.values.map(_.value).toList should be (List(30.0, 20.0, 20.0, 10.0, 0.0))
+    one.underflow.value should be (10.0)
+    one.overflow.value should be (10.0)
+    one.nanflow.value should be (0.0)
 
-  //   val two = Bin(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool}, Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}))
-  //   struct.foreach(two.fill(_))
-  //   two.toContainer[Binned[Summed, Summed, Summed, Summed]].values.toList should be (List(Sum.ed(20.0), Sum.ed(10.0), Sum.ed(10.0), Sum.ed(10.0), Sum.ed(0.0)))
-  //   two.toContainer[Binned[Summed, Summed, Summed, Summed]].underflow should be (Sum.ed(0.0))
-  //   two.toContainer[Binned[Summed, Summed, Summed, Summed]].overflow should be (Sum.ed(0.0))
-  //   two.toContainer[Binned[Summed, Summed, Summed, Summed]].nanflow should be (Sum.ed(0.0))
-  // }
+    val two = Bin(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool}, Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}))
+    struct.foreach(two.fill(_))
+    two.values.map(_.value).toList should be (List(20.0, 10.0, 10.0, 10.0, 0.0))
+    two.underflow.value should be (0.0)
+    two.overflow.value should be (0.0)
+    two.nanflow.value should be (0.0)
+  }
 
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
 
@@ -566,56 +566,46 @@ class DefaultSuite extends FlatSpec with Matchers {
     categorizing.pairsMap map {case (k, v) => (k, v.value)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
   }
 
-  // //////////////////////////////////////////////////////////////// NameMap/NameMapped/NameMapping
+  //////////////////////////////////////////////////////////////// NameMap/NameMapped/NameMapping
 
-  // "NameMap/NameMapped/NameMapping" must "work with multiple types" in {
-  //   val one = Histogram(5, -3.0, 7.0, {x: Double => x})
-  //   val two = Count[Double]()
-  //   val three = Deviate({x: Double => x + 100.0})
+  "NameMap/NameMapped/NameMapping" must "work with multiple types" in {
+    val one = Histogram(5, -3.0, 7.0, {x: Double => x})
+    val two = Count[Double]()
+    val three = Deviate({x: Double => x + 100.0})
 
-  //   val mapping = scala.collection.immutable.Map("one" -> one, "two" -> two, "three" -> three)
+    val mapping = NameMap[Double]("one" -> one, "two" -> two, "three" -> three)
 
-  //   simple.foreach(mapping.fill(_))
+    simple.foreach(mapping.fill(_))
 
-  //   val mapped = mapping.toContainer[NameMapped]
+    one.values.map(_.value).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
+    mapping[Counting[_]]("two").value should be (10.0)
+    mapping[Deviating[_]]("three").count should be (10.0 +- 1e-12)
+    mapping[Deviating[_]]("three").mean should be (100.33 +- 1e-12)
+    mapping[Deviating[_]]("three").variance should be (10.8381 +- 1e-12)
+  }
 
-  //   val onefix = mapped[Binned[Counted, Counted, Counted, Counted]]("one")
-  //   onefix.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
-  //   onefix.underflow should be (Count.ed(1.0))
-  //   onefix.overflow should be (Count.ed(1.0))
-  //   onefix.nanflow should be (Count.ed(0.0))
+  it must "permit histograms to have different cuts" in {
+    val one = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 0})
+    val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
+    val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
 
-  //   mapped[Counted]("two") should be (Count.ed(10.0))
+    val mapping = NameMap[Double]("one" -> one, "two" -> two, "three" -> three)
 
-  //   mapped[Deviated]("three").count should be (10.0 +- 1e-12)
-  //   mapped[Deviated]("three").mean should be (100.33 +- 1e-12)
-  //   mapped[Deviated]("three").variance should be (10.8381 +- 1e-12)
-  // }
+    simple.foreach(mapping.fill(_))
 
-  // it must "permit histograms to have different cuts" in {
-  //   val one = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 0})
-  //   val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
-  //   val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
-
-  //   val mapping = scala.collection.immutable.Map("one" -> one, "two" -> two, "three" -> three)
-
-  //   simple.foreach(mapping.fill(_))
-
-  //   val mapped = mapping.toContainer[NameMapped]
-
-  //   mapped[Histogrammed]("one").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
-  //   mapped[Histogrammed]("two").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
-  //   mapped[Histogrammed]("three").numericValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
-  // }
+    mapping[Histogramming[_]]("one").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
+    mapping[Histogramming[_]]("two").numericValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
+    mapping[Histogramming[_]]("three").numericValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+  }
 
   //////////////////////////////////////////////////////////////// Tuple/Tupled/Tupling
 
   "Tuple/Tupled/Tupling" must "work with multiple types" in {
     val one = Histogram(5, -3.0, 7.0, {x: Double => x})
     val two = Count[Double]()
-    // val three = Deviate({x: Double => x + 100.0})
+    val three = Deviate({x: Double => x + 100.0})
 
-    val tupling = Tuple[Double, Histogramming[Double], Counting[Double]](one, two)
+    val tupling = Tuple[Double, Histogramming[Double], Counting[Double], Deviating[Double]](one, two, three)
 
     simple.foreach(tupling.fill(_))
 
@@ -626,9 +616,9 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     tupling._2.value should be (10.0)
 
-    // tupled._3.count should be (10.0 +- 1e-12)
-    // tupled._3.mean should be (100.33 +- 1e-12)
-    // tupled._3.variance should be (10.8381 +- 1e-12)
+    three.count should be (10.0 +- 1e-12)
+    three.mean should be (100.33 +- 1e-12)
+    three.variance should be (10.8381 +- 1e-12)
   }
 
 }

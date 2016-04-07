@@ -9,8 +9,8 @@ package histogrammar {
   object NameMap extends Factory {
     val name = "NameMap"
 
-    def ed(pairs: (String, Container[_])*) = new NameMapped(pairs: _*)
-    def apply[DATUM](pairs: (String, Aggregator[DATUM, _])*) = new NameMapping(pairs: _*)
+    def container(pairs: (String, Container[_])*) = new NameMapped(pairs: _*)
+    def apply[DATUM](pairs: (String, Container[_])*) = new NameMapping[DATUM](pairs: _*)
 
     def unapplySeq(x: NameMapped) = Some(x.pairs)
     def unapplySeq[DATUM](x: NameMapping[DATUM]) = Some(x.pairs)
@@ -29,6 +29,9 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def combine[CONTAINER <: Container[CONTAINER]](one: Container[_], two: Container[_]) =
+      one.asInstanceOf[CONTAINER] + two.asInstanceOf[CONTAINER]
   }
 
   class NameMapped(val pairs: (String, Container[_])*) extends Container[NameMapped] {
@@ -36,14 +39,11 @@ package histogrammar {
 
     val pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
+    def values[CONTAINER <: Container[_]]: Iterable[CONTAINER] = pairs.toIterable.map(_._2.asInstanceOf[CONTAINER])
     def keySet: Set[String] = keys.toSet
     def apply[CONTAINER <: Container[CONTAINER]](x: String) = pairsMap(x).asInstanceOf[CONTAINER]
     def get[CONTAINER <: Container[CONTAINER]](x: String) = pairsMap.get(x).asInstanceOf[CONTAINER]
     def getOrElse[CONTAINER <: Container[CONTAINER]](x: String, default: => CONTAINER) = pairsMap.getOrElse(x, default).asInstanceOf[CONTAINER]
-
-    private def combine[CONTAINER <: Container[CONTAINER]](one: Container[_], two: Container[_]) =
-      one.asInstanceOf[CONTAINER] + two.asInstanceOf[CONTAINER]
 
     def +(that: NameMapped) =
       if (this.keySet != that.keySet)
@@ -53,7 +53,7 @@ package histogrammar {
           val yoursub = that.pairsMap(key)
           if (mysub.factory != yoursub.factory)
             throw new AggregatorException(s"""cannot add NameMapped because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
-          (key, combine(mysub, yoursub))
+          (key, NameMap.combine(mysub, yoursub))
         }): _*)
 
     def toJsonFragment = JsonObject(pairs map {case (key, sub) =>
@@ -68,19 +68,19 @@ package histogrammar {
     override def hashCode() = pairsMap.hashCode
   }
 
-  class NameMapping[DATUM](val pairs: (String, Aggregator[DATUM, _])*) extends Aggregator[DATUM, NameMapping[DATUM]] {
+  class NameMapping[DATUM](val pairs: (String, Container[_])*) extends Container[NameMapping[DATUM]] with Aggregation[DATUM] {
     def factory = NameMap
+
+    if (!pairs.forall(_._2.isInstanceOf[Aggregation[DATUM]]))
+      throw new AggregatorException(s"NameMapping should be built with Aggregation-enabled pairs (ending in -ing)")
 
     val pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    def values[AGGREGATOR <: Aggregator[DATUM, _]]: Iterable[AGGREGATOR] = pairs.toIterable.map(_._2.asInstanceOf[AGGREGATOR])
+    def values[CONTAINER <: Container[_]]: Iterable[CONTAINER] = pairs.toIterable.map(_._2.asInstanceOf[CONTAINER])
     def keySet: Set[String] = keys.toSet
-    def apply[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap(x).asInstanceOf[AGGREGATOR]
-    def get[AGGREGATOR <: Aggregator[DATUM, _]](x: String) = pairsMap.get(x).asInstanceOf[AGGREGATOR]
-    def getOrElse[AGGREGATOR <: Aggregator[DATUM, _]](x: String, default: => AGGREGATOR) = pairsMap.getOrElse(x, default).asInstanceOf[AGGREGATOR]
-
-    private def combine[DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]](one: Aggregator[_, _], two: Aggregator[_, _]) =
-      one.asInstanceOf[AGGREGATOR] + two.asInstanceOf[AGGREGATOR]
+    def apply[CONTAINER <: Container[_]](x: String) = pairsMap(x).asInstanceOf[CONTAINER]
+    def get[CONTAINER <: Container[_]](x: String) = pairsMap.get(x).asInstanceOf[CONTAINER]
+    def getOrElse[CONTAINER <: Container[_]](x: String, default: => CONTAINER) = pairsMap.getOrElse(x, default).asInstanceOf[CONTAINER]
 
     def +(that: NameMapping[DATUM]) =
       if (this.keySet != that.keySet)
@@ -90,12 +90,12 @@ package histogrammar {
           val yoursub = that.pairsMap(key)
           if (mysub.factory != yoursub.factory)
             throw new AggregatorException(s"""cannot add NameMapping because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
-          (key, combine(mysub, yoursub))
+          (key, NameMap.combine(mysub, yoursub))
         }): _*)
 
-    def fill(x: Weighted[DATUM]) {
-      if (x.contributes)
-        values foreach {v: Aggregator[DATUM, _] => v.fill(x)}
+    def fillWeighted(x: Weighted[DATUM]) {
+      if (x.weight > 0.0)
+        values foreach {v: Container[_] => v.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)}
     }
 
     def toJsonFragment = JsonObject(pairs map {case (key, sub) =>

@@ -8,7 +8,7 @@ package histogrammar {
   object Deviate extends Factory {
     val name = "Deviate"
 
-    def ed(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
+    def container(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
 
     def unapply(x: Deviated) = Some((x.count, x.mean, x.variance))
@@ -64,7 +64,7 @@ package histogrammar {
     override def hashCode() = (count, mean, variance).hashCode
   }
 
-  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, _variance: Double) extends Aggregator[DATUM, Deviating[DATUM]] {
+  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with Aggregation[DATUM] {
     def factory = Deviate
 
     private var varianceTimesCount = count * _variance
@@ -85,17 +85,20 @@ package histogrammar {
       new Deviating[DATUM](this.quantity, this.selection, newcount, newmean, newvariance)
     }
 
-    def fill(x: Weighted[DATUM]) {
-      val y = quantity(x) reweight selection(x)
+    def fillWeighted(x: Weighted[DATUM]) {
+      val Weighted(datum, weight) = x
 
-      if (y.contributes) {
-        count += y.weight
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
 
-        val delta = y.datum - mean
-        val shift = delta * y.weight / count
+        count += w
+
+        val delta = q - mean
+        val shift = delta * w / count
 
         mean += shift
-        varianceTimesCount += y.weight * delta * (y.datum - mean)   // old delta times new delta
+        varianceTimesCount += w * delta * (q - mean)   // old delta times new delta
       }
     }
 

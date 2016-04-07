@@ -196,252 +196,252 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
-  // //////////////////////////////////////////////////////////////// Average/Averaged/Averaging
+  //////////////////////////////////////////////////////////////// Average/Averaged/Averaging
 
-  // "Average/Averaging/Averaged" must "work unfiltered" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = simple.splitAt(i)
+  "Average/Averaging/Averaged" must "work unfiltered" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-  //     val leftAveraging = Average({x: Double => x})
-  //     val rightAveraging = Average({x: Double => x})
+      val leftAveraging = Average({x: Double => x})
+      val rightAveraging = Average({x: Double => x})
 
-  //     left.foreach(leftAveraging.fill(_))
-  //     right.foreach(rightAveraging.fill(_))
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
 
-  //     val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
 
-  //     leftResult should be (mean(left) +- 1e-12)
-  //     rightResult should be (mean(right) +- 1e-12)
+      leftResult should be (mean(left) +- 1e-12)
+      rightResult should be (mean(right) +- 1e-12)
 
-  //     val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(_, finalResult) = leftAveraging + rightAveraging
 
-  //     finalResult should be (mean(simple) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (mean(simple) +- 1e-12)
+    }
+  }
 
-  // it must "work with a filter" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = struct.splitAt(i)
+  it must "work with a filter" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
 
-  //     val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.bool})
-  //     val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.bool})
+      val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.bool})
+      val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.bool})
 
-  //     left.foreach(leftAveraging.fill(_))
-  //     right.foreach(rightAveraging.fill(_))
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
 
-  //     val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
 
-  //     leftResult should be (mean(left.filter(_.bool).map(_.double)) +- 1e-12)
-  //     rightResult should be (mean(right.filter(_.bool).map(_.double)) +- 1e-12)
+      leftResult should be (mean(left.filter(_.bool).map(_.double)) +- 1e-12)
+      rightResult should be (mean(right.filter(_.bool).map(_.double)) +- 1e-12)
 
-  //     val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(_, finalResult) = leftAveraging + rightAveraging
 
-  //     finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
+    }
+  }
 
-  // it must "work with a weighting factor" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = struct.splitAt(i)
+  it must "work with a weighting factor" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
 
-  //     val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
-  //     val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
+      val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
+      val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
 
-  //     left.foreach(leftAveraging.fill(_))
-  //     right.foreach(rightAveraging.fill(_))
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
 
-  //     val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
 
-  //     leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-  //     rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-  //     val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(_, finalResult) = leftAveraging + rightAveraging
 
-  //     finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
+    }
+  }
 
-  // it must "work in reverse" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = backward.splitAt(i)
+  it must "work in reverse" in {
+    for (i <- 0 to 10) {
+      val (left, right) = backward.splitAt(i)
 
-  //     val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
-  //     val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
+      val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
+      val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
 
-  //     left.foreach(leftAveraging.fill(_))
-  //     right.foreach(rightAveraging.fill(_))
+      left.foreach(leftAveraging.fill(_))
+      right.foreach(rightAveraging.fill(_))
 
-  //     val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
 
-  //     leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-  //     rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-  //     val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(_, finalResult) = leftAveraging + rightAveraging
 
-  //     finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
+    }
+  }
 
-  // //////////////////////////////////////////////////////////////// Deviate/Deviated/Deviating
+  //////////////////////////////////////////////////////////////// Deviate/Deviated/Deviating
 
-  // "Deviate/Deviating/Deviated" must "work unfiltered" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = simple.splitAt(i)
+  "Deviate/Deviating/Deviated" must "work unfiltered" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-  //     val leftDeviating = Deviate({x: Double => x})
-  //     val rightDeviating = Deviate({x: Double => x})
+      val leftDeviating = Deviate({x: Double => x})
+      val rightDeviating = Deviate({x: Double => x})
 
-  //     left.foreach(leftDeviating.fill(_))
-  //     right.foreach(rightDeviating.fill(_))
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
 
-  //     val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
 
-  //     leftResult should be (variance(left) +- 1e-12)
-  //     rightResult should be (variance(right) +- 1e-12)
+      leftResult should be (variance(left) +- 1e-12)
+      rightResult should be (variance(right) +- 1e-12)
 
-  //     val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
-  //     finalResult should be (variance(simple) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (variance(simple) +- 1e-12)
+    }
+  }
 
-  // it must "work with a filter" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = struct.splitAt(i)
+  it must "work with a filter" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
 
-  //     val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.bool})
-  //     val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.bool})
+      val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.bool})
+      val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.bool})
 
-  //     left.foreach(leftDeviating.fill(_))
-  //     right.foreach(rightDeviating.fill(_))
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
 
-  //     val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
 
-  //     leftResult should be (variance(left.filter(_.bool).map(_.double)) +- 1e-12)
-  //     rightResult should be (variance(right.filter(_.bool).map(_.double)) +- 1e-12)
+      leftResult should be (variance(left.filter(_.bool).map(_.double)) +- 1e-12)
+      rightResult should be (variance(right.filter(_.bool).map(_.double)) +- 1e-12)
 
-  //     val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
-  //     finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
+    }
+  }
 
-  // it must "work with a weighting factor" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = struct.splitAt(i)
+  it must "work with a weighting factor" in {
+    for (i <- 0 to 10) {
+      val (left, right) = struct.splitAt(i)
 
-  //     val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
-  //     val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
+      val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
+      val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
 
-  //     left.foreach(leftDeviating.fill(_))
-  //     right.foreach(rightDeviating.fill(_))
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
 
-  //     val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
 
-  //     leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-  //     rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-  //     val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
-  //     finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
+    }
+  }
 
-  // it must "work in reverse" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = backward.splitAt(i)
+  it must "work in reverse" in {
+    for (i <- 0 to 10) {
+      val (left, right) = backward.splitAt(i)
 
-  //     val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
-  //     val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
+      val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
+      val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
 
-  //     left.foreach(leftDeviating.fill(_))
-  //     right.foreach(rightDeviating.fill(_))
+      left.foreach(leftDeviating.fill(_))
+      right.foreach(rightDeviating.fill(_))
 
-  //     val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
 
-  //     leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-  //     rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-  //     val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
-  //     finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
+    }
+  }
 
-  // //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErring/AbsoluteErred
+  //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErring/AbsoluteErred
 
-  // "AbsoluteErr/AbsoluteErring/AbsoluteErred" must "work" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = simple.splitAt(i)
+  "AbsoluteErr/AbsoluteErring/AbsoluteErred" must "work" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-  //     val leftAbsoluteErring = AbsoluteErr({x: Double => x})
-  //     val rightAbsoluteErring = AbsoluteErr({x: Double => x})
+      val leftAbsoluteErring = AbsoluteErr({x: Double => x})
+      val rightAbsoluteErring = AbsoluteErr({x: Double => x})
 
-  //     left.foreach(leftAbsoluteErring.fill(_))
-  //     right.foreach(rightAbsoluteErring.fill(_))
+      left.foreach(leftAbsoluteErring.fill(_))
+      right.foreach(rightAbsoluteErring.fill(_))
 
-  //     val (AbsoluteErr(_, leftResult), AbsoluteErr(_, rightResult)) = (leftAbsoluteErring, rightAbsoluteErring)
+      val (AbsoluteErr(_, leftResult), AbsoluteErr(_, rightResult)) = (leftAbsoluteErring, rightAbsoluteErring)
 
-  //     leftResult should be (mae(left) +- 1e-12)
-  //     rightResult should be (mae(right) +- 1e-12)
+      leftResult should be (mae(left) +- 1e-12)
+      rightResult should be (mae(right) +- 1e-12)
 
-  //     val AbsoluteErr(_, finalResult) = leftAbsoluteErring + rightAbsoluteErring
+      val AbsoluteErr(_, finalResult) = leftAbsoluteErring + rightAbsoluteErring
 
-  //     finalResult should be (mae(simple) +- 1e-12)
-  //   }
-  // }
+      finalResult should be (mae(simple) +- 1e-12)
+    }
+  }
 
-  // //////////////////////////////////////////////////////////////// Minimize/Minimizing/Minimized
+  //////////////////////////////////////////////////////////////// Minimize/Minimizing/Minimized
 
-  // "Minimize/Minimizing/Minimized" must "work" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = simple.splitAt(i)
+  "Minimize/Minimizing/Minimized" must "work" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-  //     val leftMinimizing = Minimize({x: Double => x})
-  //     val rightMinimizing = Minimize({x: Double => x})
+      val leftMinimizing = Minimize({x: Double => x})
+      val rightMinimizing = Minimize({x: Double => x})
 
-  //     left.foreach(leftMinimizing.fill(_))
-  //     right.foreach(rightMinimizing.fill(_))
+      left.foreach(leftMinimizing.fill(_))
+      right.foreach(rightMinimizing.fill(_))
 
-  //     val (Minimize(leftResult), Minimize(rightResult)) = (leftMinimizing, rightMinimizing)
+      val (Minimize(leftResult), Minimize(rightResult)) = (leftMinimizing, rightMinimizing)
 
-  //     if (left.isEmpty) leftResult.isNaN should be (true)
-  //     else leftResult should be (left.min +- 1e-12)
-  //     if (right.isEmpty) rightResult.isNaN should be (true)
-  //     else rightResult should be (right.min +- 1e-12)
+      if (left.isEmpty) leftResult.isNaN should be (true)
+      else leftResult should be (left.min +- 1e-12)
+      if (right.isEmpty) rightResult.isNaN should be (true)
+      else rightResult should be (right.min +- 1e-12)
 
-  //     val Minimize(finalResult) = leftMinimizing + rightMinimizing
+      val Minimize(finalResult) = leftMinimizing + rightMinimizing
 
-  //     if (simple.isEmpty) finalResult.isNaN should be (true)
-  //     else finalResult should be (simple.min +- 1e-12)
-  //   }
-  // }
+      if (simple.isEmpty) finalResult.isNaN should be (true)
+      else finalResult should be (simple.min +- 1e-12)
+    }
+  }
 
-  // //////////////////////////////////////////////////////////////// Maximize/Maximizing/Maximized
+  //////////////////////////////////////////////////////////////// Maximize/Maximizing/Maximized
 
-  // "Maximize/Maximizing/Maximized" must "work" in {
-  //   for (i <- 0 to 10) {
-  //     val (left, right) = simple.splitAt(i)
+  "Maximize/Maximizing/Maximized" must "work" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-  //     val leftMaximizing = Maximize({x: Double => x})
-  //     val rightMaximizing = Maximize({x: Double => x})
+      val leftMaximizing = Maximize({x: Double => x})
+      val rightMaximizing = Maximize({x: Double => x})
 
-  //     left.foreach(leftMaximizing.fill(_))
-  //     right.foreach(rightMaximizing.fill(_))
+      left.foreach(leftMaximizing.fill(_))
+      right.foreach(rightMaximizing.fill(_))
 
-  //     val (Maximize(leftResult), Maximize(rightResult)) = (leftMaximizing, rightMaximizing)
+      val (Maximize(leftResult), Maximize(rightResult)) = (leftMaximizing, rightMaximizing)
 
-  //     if (left.isEmpty) leftResult.isNaN should be (true)
-  //     else leftResult should be (left.max +- 1e-12)
-  //     if (right.isEmpty) rightResult.isNaN should be (true)
-  //     else rightResult should be (right.max +- 1e-12)
+      if (left.isEmpty) leftResult.isNaN should be (true)
+      else leftResult should be (left.max +- 1e-12)
+      if (right.isEmpty) rightResult.isNaN should be (true)
+      else rightResult should be (right.max +- 1e-12)
 
-  //     val Maximize(finalResult) = leftMaximizing + rightMaximizing
+      val Maximize(finalResult) = leftMaximizing + rightMaximizing
 
-  //     if (simple.isEmpty) finalResult.isNaN should be (true)
-  //     else finalResult should be (simple.max +- 1e-12)
-  //   }
-  // }
+      if (simple.isEmpty) finalResult.isNaN should be (true)
+      else finalResult should be (simple.max +- 1e-12)
+    }
+  }
 
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 

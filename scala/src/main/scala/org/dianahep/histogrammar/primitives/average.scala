@@ -8,7 +8,7 @@ package histogrammar {
   object Average extends Factory {
     val name = "Average"
 
-    def ed(count: Double, mean: Double) = new Averaged(count, mean)
+    def container(count: Double, mean: Double) = new Averaged(count, mean)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
 
     def unapply(x: Averaged) = Some((x.count, x.mean))
@@ -55,7 +55,7 @@ package histogrammar {
     override def hashCode() = (count, mean).hashCode
   }
 
-  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaging[DATUM]] {
+  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Container[Averaging[DATUM]] with Aggregation[DATUM] {
     def factory = Average
 
     def +(that: Averaging[DATUM]) = {
@@ -63,14 +63,17 @@ package histogrammar {
       new Averaging(this.quantity, this.selection, newcount, newmean)
     }
 
-    def fill(x: Weighted[DATUM]) {
-      val y = quantity(x) reweight selection(x)
+    def fillWeighted(x: Weighted[DATUM]) {
+      val Weighted(datum, weight) = x
 
-      if (y.contributes) {
-        count += y.weight
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
 
-        val delta = y.datum - mean
-        val shift = delta * y.weight / count
+        count += w
+
+        val delta = q - mean
+        val shift = delta * w / count
 
         mean += shift
       }

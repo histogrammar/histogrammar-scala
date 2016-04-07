@@ -8,7 +8,7 @@ package histogrammar {
   object AbsoluteErr extends Factory {
     val name = "AbsoluteErr"
 
-    def ed(count: Double, mae: Double) = new AbsoluteErred(count, mae)
+    def container(count: Double, mae: Double) = new AbsoluteErred(count, mae)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
 
     def unapply(x: AbsoluteErred) = Some((x.count, x.mae))
@@ -55,7 +55,7 @@ package histogrammar {
     override def hashCode() = (count, mae).hashCode
   }
 
-  class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, _mae: Double) extends Aggregator[DATUM, AbsoluteErring[DATUM]] {
+  class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with Aggregation[DATUM] {
     def factory = AbsoluteErr
 
     private var absoluteSum = count * _mae
@@ -75,12 +75,14 @@ package histogrammar {
       new AbsoluteErring[DATUM](this.quantity, this.selection, newcount, newmae)
     }
 
-    def fill(x: Weighted[DATUM]) {
-      val y = quantity(x) reweight selection(x)
+    def fillWeighted(x: Weighted[DATUM]) {
+      val Weighted(datum, weight) = x
 
-      if (y.contributes) {
-        absoluteSum += Math.abs(y.datum)
-        count += y.weight
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
+        absoluteSum += Math.abs(q)
+        count += w
       }
     }
 

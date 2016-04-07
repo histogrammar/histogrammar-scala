@@ -8,7 +8,7 @@ package histogrammar {
   object Minimize extends Factory {
     val name = "Minimize"
 
-    def ed(min: Double) = new Minimized(min)
+    def container(min: Double) = new Minimized(min)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, java.lang.Double.NaN)
 
     def unapply(x: Minimized) = Some(x.min)
@@ -45,16 +45,19 @@ package histogrammar {
     override def hashCode() = min.hashCode
   }
 
-  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Aggregator[DATUM, Minimizing[DATUM]] {
+  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Container[Minimizing[DATUM]] with Aggregation[DATUM] {
     def factory = Minimize
 
     def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.selection, Minimize.plus(this.min, that.min))
 
-    def fill(x: Weighted[DATUM]) {
-      val y = quantity(x) reweight selection(x)
-
-      if (y.contributes  &&  (min.isNaN  ||  y.datum < min))
-        min = y.datum
+    def fillWeighted(x: Weighted[DATUM]) {
+      val Weighted(datum, weight) = x
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
+        if (min.isNaN  ||  q < min)
+          min = q
+      }
     }
 
     def toJsonFragment = JsonFloat(min)
@@ -72,7 +75,7 @@ package histogrammar {
   object Maximize extends Factory {
     val name = "Maximize"
 
-    def ed(max: Double) = new Maximized(max)
+    def container(max: Double) = new Maximized(max)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, java.lang.Double.NaN)
 
     def unapply(x: Maximized) = Some(x.max)
@@ -109,16 +112,19 @@ package histogrammar {
     override def hashCode() = max.hashCode
   }
 
-  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Aggregator[DATUM, Maximizing[DATUM]] {
+  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Container[Maximizing[DATUM]] with Aggregation[DATUM] {
     def factory = Maximize
 
     def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.selection, Maximize.plus(this.max, that.max))
 
-    def fill(x: Weighted[DATUM]) {
-      val y = quantity(x) reweight selection(x)
-
-      if (y.contributes  &&  (max.isNaN  ||  y.datum > max))
-        max = y.datum
+    def fillWeighted(x: Weighted[DATUM]) {
+      val Weighted(datum, weight) = x
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        val q = quantity(datum)
+        if (max.isNaN  ||  q > max)
+          max = q
+      }
     }
 
     def toJsonFragment = JsonFloat(max)

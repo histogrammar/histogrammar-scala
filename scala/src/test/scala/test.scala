@@ -563,14 +563,14 @@ class DefaultSuite extends FlatSpec with Matchers {
   //   partitioning.toContainer[Partitioned[Summed]].cuts(1)._2.value should be (1.6 +- 1e-12)
   // }
 
-  // //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
+  //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
 
-  // "Categorize/Categorized/Categorizing" must "work" in {
-  //   val categorizing = Categorize({x: Struct => x.string.substring(0, 1)}, unweighted[Struct], Count[Struct]())
-  //   struct.foreach(categorizing.fill(_))
+  "Categorize/Categorized/Categorizing" must "work" in {
+    val categorizing = Categorize({x: Struct => x.string.substring(0, 1)})
+    struct.foreach(categorizing.fill(_))
 
-  //   categorizing.toContainer[Categorized[Counted]].pairsMap should be (scala.collection.immutable.Map("n" -> Count.ed(1.0), "e" -> Count.ed(1.0), "t" -> Count.ed(3.0), "s" -> Count.ed(2.0), "f" -> Count.ed(2.0), "o" -> Count.ed(1.0)))
-  // }
+    categorizing.pairsMap map {case (k, v) => (k, v.value)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
+  }
 
   // //////////////////////////////////////////////////////////////// NameMap/NameMapped/NameMapping
 
@@ -625,15 +625,12 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     simple.foreach(tupling.fill(_))
 
-    // val tupled = tupling.toContainer[Tupled3[Histogrammed, Counted, Deviated]]
+    one.values.map(_.value).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
+    one.underflow.value should be (1.0)
+    one.overflow.value should be (1.0)
+    one.nanflow.value should be (0.0)
 
-    // val onefix = tupled._1
-    // onefix.values.toList should be (List(Count.ed(3.0), Count.ed(2.0), Count.ed(2.0), Count.ed(1.0), Count.ed(0.0)))
-    // onefix.underflow should be (Count.ed(1.0))
-    // onefix.overflow should be (Count.ed(1.0))
-    // onefix.nanflow should be (Count.ed(0.0))
-
-    // tupled._2 should be (Count.ed(10.0))
+    tupling._2.value should be (10.0)
 
     // tupled._3.count should be (10.0 +- 1e-12)
     // tupled._3.mean should be (100.33 +- 1e-12)

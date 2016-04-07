@@ -38,19 +38,19 @@ package histogrammar {
     }
 
     register(Count)
-    // register(Sum)
-    // register(Average)
-    // register(Deviate)
-    // register(AbsoluteErr)
-    // register(Minimize)
-    // register(Maximize)
+    register(Sum)
+    register(Average)
+    register(Deviate)
+    register(AbsoluteErr)
+    register(Minimize)
+    register(Maximize)
     register(Bin)
     register(SparselyBin)
-    // register(Fraction)
-    // register(Stack)
-    // register(Partition)
-    // register(Categorize)
-    // register(NameMap)
+    register(Fraction)
+    register(Stack)
+    register(Partition)
+    register(Categorize)
+    register(NameMap)
     // register(Tuple)
 
     def apply(name: String) = known.get(name) match {
@@ -121,21 +121,13 @@ package object histogrammar {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
 
-  implicit def countingToCounted(x: Counting[_]) = x.toContainer
-  // implicit def summingToSummed(x: Summing[_]) = x.toContainer
-  // implicit def averagingToAveraged(x: Averaging[_]) = x.toContainer
-  // implicit def deviatingToDeviated(x: Deviating[_]) = x.toContainer
-  // implicit def absoluteErringToAbsoluteErred(x: AbsoluteErring[_]) = x.toContainer
-  // implicit def minimizingToMinimized(x: Minimizing[_]) = x.toContainer
-  // implicit def maximizingToMaximized(x: Maximizing[_]) = x.toContainer
-  implicit def binningToBinned(x: Binning[_, _, _, _, _]) = x.toContainer
-  implicit def sparselyBinningToSparselyBinned(x: SparselyBinning[_, _, _]) = x.toContainer
-  // implicit def fractioningToFractioned(x: Fractioning[_, _]) = x.toContainer
-  // implicit def stackingToStacked(x: Stacking[_, _]) = x.toContainer
-  // implicit def partitioningToPartitioned(x: Partitioning[_, _]) = x.toContainer
-  // implicit def categorizingToCategorized(x: Categorizing[_, _]) = x.toContainer
-  // implicit def nameMappingToNameMapped(x: NameMapping[_]) = x.toContainer
-  // implicit def tuplingToTupled2(x: Tupling2[_, _, _]) = x.toContainer
+  implicit def countingToCounted(x: Counting[_]) = x.toContainer[Counted]
+  implicit def summingToSummed(x: Summing[_]) = x.toContainer[Summed]
+  // implicit def averagingToAveraged(x: Averaging[_]) = x.toContainer[Averaged]
+  implicit def deviatingToDeviated(x: Deviating[_]) = x.toContainer[Deviated]
+  // implicit def absoluteErringToAbsoluteErred(x: AbsoluteErring[_]) = x.toContainer[AbsoluteErred]
+  // implicit def minimizingToMinimized(x: Minimizing[_]) = x.toContainer[Minimized]
+  // implicit def maximizingToMaximized(x: Maximizing[_]) = x.toContainer[Maximized]
 
   implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: Weighted[DATUM] => if (f(x.datum)) 1.0 else 0.0})
   implicit def byteToSelection[DATUM](f: DATUM => Byte) = Selection({x: Weighted[DATUM] => f(x.datum).toDouble})
@@ -152,8 +144,8 @@ package object histogrammar {
   implicit def weightedFloatToSelection[DATUM](f: Weighted[DATUM] => Float) = Selection({x: Weighted[DATUM] => f(x).toDouble})
   implicit def weightedDoubleToSelection[DATUM](f: Weighted[DATUM] => Double) = Selection(f)
 
-  // implicit def mapToNameMapped(map: scala.collection.immutable.Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)
-  // implicit def mapToNameMapping[DATUM](map: scala.collection.immutable.Map[String, Aggregator[DATUM, _]]) = new NameMapping(map.toSeq: _*)
+  implicit def mapToNameMapped(map: scala.collection.immutable.Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)
+  implicit def mapToNameMapping[DATUM](map: scala.collection.immutable.Map[String, Aggregator[DATUM, _]]) = new NameMapping(map.toSeq: _*)
 
   // implicit def tupleToTupled2[C1 <: Container[C1], C2 <: Container[C2]](x: Tuple2[C1, C2]) = new Tupled2(x._1, x._2)
   // implicit def tupleToTupled3[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](x: Tuple3[C1, C2, C3]) = new Tupled3(x._1, x._2, x._3)

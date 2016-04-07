@@ -9,8 +9,7 @@ package histogrammar {
     val name = "Minimize"
 
     def ed(min: Double) = new Minimized(min)
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, java.lang.Double.NaN)
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = ing(quantity, selection)
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, java.lang.Double.NaN)
 
     def unapply(x: Minimized) = Some(x.min)
     def unapply(x: Minimizing[_]) = Some(x.min)
@@ -35,9 +34,9 @@ package histogrammar {
     def factory = Minimize
 
     def +(that: Minimized) = new Minimized(Minimize.plus(this.min, that.min))
-    def +[DATUM](that: Minimizing[DATUM]) = new Minimizing[DATUM](that.quantity, that.selection, Minimize.plus(this.min, that.min))
 
     def toJsonFragment = JsonFloat(min)
+
     override def toString() = s"Minimized"
     override def equals(that: Any) = that match {
       case that: Minimized => this.min === that.min
@@ -46,10 +45,9 @@ package histogrammar {
     override def hashCode() = min.hashCode
   }
 
-  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Aggregator[DATUM, Minimized] {
+  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Aggregator[DATUM, Minimizing[DATUM]] {
     def factory = Minimize
 
-    def +(that: Minimized) = new Minimizing[DATUM](this.quantity, this.selection, Minimize.plus(this.min, that.min))
     def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.selection, Minimize.plus(this.min, that.min))
 
     def fill(x: Weighted[DATUM]) {
@@ -59,7 +57,7 @@ package histogrammar {
         min = y.datum
     }
 
-    def toContainer = new Minimized(min)
+    def toJsonFragment = JsonFloat(min)
 
     override def toString() = s"Minimizing"
     override def equals(that: Any) = that match {
@@ -75,8 +73,7 @@ package histogrammar {
     val name = "Maximize"
 
     def ed(max: Double) = new Maximized(max)
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, java.lang.Double.NaN)
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = ing(quantity, selection)
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, java.lang.Double.NaN)
 
     def unapply(x: Maximized) = Some(x.max)
     def unapply(x: Maximizing[_]) = Some(x.max)
@@ -101,9 +98,9 @@ package histogrammar {
     def factory = Maximize
 
     def +(that: Maximized) = new Maximized(Maximize.plus(this.max, that.max))
-    def +[DATUM](that: Maximizing[DATUM]) = new Maximizing[DATUM](that.quantity, that.selection, Maximize.plus(this.max, that.max))
 
     def toJsonFragment = JsonFloat(max)
+
     override def toString() = s"Maximized"
     override def equals(that: Any) = that match {
       case that: Maximized => this.max === that.max
@@ -112,10 +109,9 @@ package histogrammar {
     override def hashCode() = max.hashCode
   }
 
-  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Aggregator[DATUM, Maximized] {
+  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Aggregator[DATUM, Maximizing[DATUM]] {
     def factory = Maximize
 
-    def +(that: Maximized) = new Maximizing[DATUM](this.quantity, this.selection, Maximize.plus(this.max, that.max))
     def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.selection, Maximize.plus(this.max, that.max))
 
     def fill(x: Weighted[DATUM]) {
@@ -125,7 +121,7 @@ package histogrammar {
         max = y.datum
     }
 
-    def toContainer = new Maximized(max)
+    def toJsonFragment = JsonFloat(max)
 
     override def toString() = s"Maximizing"
     override def equals(that: Any) = that match {

@@ -9,13 +9,11 @@ package histogrammar {
     val name = "Partition"
 
     def ed[V <: Container[V]](cuts: (Double, V)*) = new Partitioned(cuts: _*)
-    def ing[DATUM, V <: Container[V]](value: => Aggregator[DATUM, V], expression: NumericalFcn[DATUM], cuts: Double*) =
+    def apply[DATUM, V <: Aggregator[DATUM, V]](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       new Partitioning(expression, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
-    def apply[DATUM, V <: Container[V]](value: => Aggregator[DATUM, V], expression: NumericalFcn[DATUM], cuts: Double*) =
-      ing(value, expression, cuts: _*)
 
     def unapplySeq[V <: Container[V]](x: Partitioned[V]) = Some(x.cuts)
-    def unapplySeq[DATUM, V <: Container[V]](x: Partitioning[DATUM, V]) = Some(x.cuts)
+    def unapplySeq[DATUM, V <: Aggregator[DATUM, V]](x: Partitioning[DATUM, V]) = Some(x.cuts)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
@@ -57,20 +55,11 @@ package histogrammar {
 
     def +(that: Partitioned[V]) =
       if (this.cuts.size != that.cuts.size)
-        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+        throw new AggregatorException(s"cannot add Partitioned because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
       else
         new Partitioned(this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
           if (mycut != yourcut)
-            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
-          (mycut, me + you)
-        }: _*)
-    def +[DATUM](that: Partitioning[DATUM, V]) =
-      if (this.cuts.size != that.cuts.size)
-        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
-      else
-        new Partitioning[DATUM](that.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
-          if (mycut != yourcut)
-            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
+            throw new AggregatorException(s"cannot add Partitioned because cut differs ($mycut vs $yourcut)")
           (mycut, me + you)
         }: _*)
 
@@ -85,32 +74,24 @@ package histogrammar {
     }
   }
 
-  class Partitioning[DATUM, V <: Container[V]](val expression: NumericalFcn[DATUM], val cuts: (Double, Aggregator[DATUM, V])*) extends Aggregator[DATUM, Partitioned[V]] {
+  class Partitioning[DATUM, V <: Aggregator[DATUM, V]](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Aggregator[DATUM, Partitioning[DATUM, V]] {
     def factory = Partition
 
     if (cuts.size < 1)
       throw new AggregatorException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Partition.ing factory method adds)")
 
-    def +(that: Partitioned[V]) =
-      if (this.cuts.size != that.cuts.size)
-        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
-      else
-        new Partitioning[DATUM](this.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
-          if (mycut != yourcut)
-            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
-          (mycut, me + you)
-        }: _*)
+    private val range = cuts zip (cuts.tail :+ (java.lang.Double.NaN, null))
+
     def +(that: Partitioning[DATUM, V]) =
       if (this.cuts.size != that.cuts.size)
-        throw new AggregatorException(s"cannot add Partitions because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+        throw new AggregatorException(s"cannot add Partitioning because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
       else
-        new Partitioning[DATUM](this.expression, this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
-          if (mycut != yourcut)
-            throw new AggregatorException(s"cannot add Partitions because cut differs ($mycut vs $yourcut)")
-          (mycut, me + you)
-        }: _*)
-
-    private val range = cuts zip (cuts.tail :+ (java.lang.Double.NaN, null))
+        new Partitioning(this.expression,
+          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+            if (mycut != yourcut)
+              throw new AggregatorException(s"cannot add Partitioning because cut differs ($mycut vs $yourcut)")
+            (mycut, me + you)
+          }: _*)
 
     def fill(x: Weighted[DATUM]) {
       if (x.contributes) {
@@ -122,7 +103,9 @@ package histogrammar {
       }
     }
 
-    def toContainer = new Partitioned(cuts map {case (atleast, sub) => (atleast, sub.toContainer)}: _*)
+    def toJsonFragment = JsonObject(
+      "type" -> JsonString(cuts.head._2.factory.name),
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
     override def toString() = s"""Partitioning[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {

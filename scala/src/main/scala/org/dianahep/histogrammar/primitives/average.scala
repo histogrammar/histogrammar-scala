@@ -9,8 +9,7 @@ package histogrammar {
     val name = "Average"
 
     def ed(count: Double, mean: Double) = new Averaged(count, mean)
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = ing(quantity, selection)
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
 
     def unapply(x: Averaged) = Some((x.count, x.mean))
     def unapply(x: Averaging[_]) = Some((x.count, x.mean))
@@ -34,22 +33,20 @@ package histogrammar {
       case _ => throw new JsonFormatException(json, name)
     }
 
-    private[histogrammar] def plus(one: (Double, Double), two: (Double, Double)) = (one._1 + two._1, (one._1*one._2 + two._1*two._2) / (one._1 + two._1))
+    private[histogrammar] def plus(ca: Double, mua: Double, cb: Double, mub: Double) =
+      (ca + cb, (ca*mua + cb*mub)/(ca + cb))
   }
 
   class Averaged(val count: Double, val mean: Double) extends Container[Averaged] {
     def factory = Average
 
     def +(that: Averaged) = {
-      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
-      new Averaged(count, mean)
-    }
-    def +[DATUM](that: Averaging[DATUM]) = {
-      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
-      new Averaging[DATUM](that.quantity, that.selection, newcount, newmean)
+      val (newcount, newmean) = Average.plus(this.count, this.mean, that.count, that.mean)
+      new Averaged(newcount, newmean)
     }
 
     def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
+
     override def toString() = s"Averaged"
     override def equals(that: Any) = that match {
       case that: Averaged => this.count === that.count  &&  this.mean === that.mean
@@ -58,16 +55,12 @@ package histogrammar {
     override def hashCode() = (count, mean).hashCode
   }
 
-  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaged] {
+  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaging[DATUM]] {
     def factory = Average
 
-    def +(that: Averaged) = {
-      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
-      new Averaging[DATUM](this.quantity, this.selection, count, mean)
-    }
     def +(that: Averaging[DATUM]) = {
-      val (newcount, newmean) = Average.plus((this.count, this.mean), (that.count, that.mean))
-      new Averaging[DATUM](this.quantity, this.selection, newcount, newmean)
+      val (newcount, newmean) = Average.plus(this.count, this.mean, that.count, that.mean)
+      new Averaging(this.quantity, this.selection, newcount, newmean)
     }
 
     def fill(x: Weighted[DATUM]) {
@@ -83,7 +76,7 @@ package histogrammar {
       }
     }
 
-    def toContainer = new Averaged(count, mean)
+    def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
 
     override def toString() = s"Averaging"
     override def equals(that: Any) = that match {

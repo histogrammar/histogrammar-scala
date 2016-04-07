@@ -7,6 +7,8 @@ package histogrammar {
 
   object Sum extends Factory {
     val name = "Sum"
+    val help = "Accumulate the sum of a given quantity."
+    val detailedHelp = """Sum(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(value: Double) = new Summed(value)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing(quantity, selection, 0.0)

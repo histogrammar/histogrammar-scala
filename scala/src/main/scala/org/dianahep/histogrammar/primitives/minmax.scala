@@ -7,6 +7,8 @@ package histogrammar {
 
   object Minimize extends Factory {
     val name = "Minimize"
+    val help = "Find the minimum value of a given quantity. If no data are observed, the result is NaN."
+    val detailedHelp = """Minimize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(min: Double) = new Minimized(min)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, java.lang.Double.NaN)
@@ -74,6 +76,8 @@ package histogrammar {
 
   object Maximize extends Factory {
     val name = "Maximize"
+    val help = "Find the maximum value of a given quantity. If no data are observed, the result is NaN."
+    val detailedHelp = """Maximize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(max: Double) = new Maximized(max)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, java.lang.Double.NaN)

@@ -8,6 +8,8 @@ package histogrammar {
   // this is a *type-safe* tuple, with explicit cases for 2 through 10 items
   object Tuple extends Factory {
     val name = "Tuple"
+    val help = "Accumulate up to ten unnamed aggregators of any type. Every aggregator is filled with every datum."
+    val detailedHelp = """Tuple(_1: C1, _2: C2, ...)"""
 
     def container[C1 <: Container[C1], C2 <: Container[C2]](_1: C1, _2: C2) = new Tupled2[C1, C2](_1, _2)
     def container[C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](_1: C1, _2: C2, _3: C3) = new Tupled3[C1, C2, C3](_1, _2, _3)

@@ -7,6 +7,8 @@ package histogrammar {
 
   object Partition extends Factory {
     val name = "Partition"
+    val help = "Accumulate a suite aggregators, filling the one that is between a pair of given cuts on a given expression."
+    val detailedHelp = """Partition(value: => V, expression: NumericalFcn[DATUM], cuts: Double*)"""
 
     def ed[V <: Container[V]](cuts: (Double, V)*) = new Partitioned(cuts: _*)
     def apply[DATUM, V <: Container[V]](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =

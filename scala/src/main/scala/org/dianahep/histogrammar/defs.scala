@@ -1,8 +1,6 @@
 package org.dianahep
 
-import scala.collection.immutable.SortedSet
-import scala.collection.mutable
-import scala.language.existentials
+import scala.collection.immutable.ListMap
 import scala.language.implicitConversions
 
 import org.dianahep.histogrammar.json._
@@ -19,12 +17,14 @@ package histogrammar {
   // creates containers (from arguments or JSON) and aggregators (from arguments)
   trait Factory {
     def name: String
+    def help: String
+    def detailedHelp: String
     def fromJsonFragment(json: Json): Container[_]
   }
   object Factory {
-    private var known = scala.collection.immutable.Map[String, Factory]()
+    private var known = ListMap[String, Factory]()
 
-    def registered = known.keys.toList
+    def registered = known
 
     def register(factory: Factory) {
       known = known.updated(factory.name, factory)
@@ -91,9 +91,23 @@ package histogrammar {
 }
 
 package object histogrammar {
+  def help = Factory.registered map {case (name, factory) => f"${name}%-15s ${factory.help}"} mkString("\n")
+
+  def increment[DATUM, CONTAINER <: Container[CONTAINER]] =
+    {(h: CONTAINER with Aggregation[DATUM], x: DATUM) => h.fill(x); h}
+
+  def increment[DATUM, CONTAINER <: Container[CONTAINER]](zero: CONTAINER with Aggregation[DATUM]) =
+    {(h: CONTAINER with Aggregation[DATUM], x: DATUM) => h.fill(x); h}
+
+  def combine[DATUM, CONTAINER <: Container[CONTAINER]] =
+    {(h1: CONTAINER with Aggregation[DATUM], h2: CONTAINER with Aggregation[DATUM]) => h1 + h2}
+
+  def combine[DATUM, CONTAINER <: Container[CONTAINER]](zero: CONTAINER with Aggregation[DATUM]) =
+    {(h1: CONTAINER with Aggregation[DATUM], h2: CONTAINER with Aggregation[DATUM]) => h1 + h2}
+
   //////////////////////////////////////////////////////////////// define implicits
 
-  implicit class Selection[DATUM](f: DATUM => Double) {
+  implicit class Selection[DATUM](f: DATUM => Double) extends Serializable {
     def apply(x: DATUM) = f(x)
   }
   implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: DATUM => if (f(x)) 1.0 else 0.0})
@@ -105,7 +119,7 @@ package object histogrammar {
 
   def unweighted[DATUM] = Selection[DATUM]({x: DATUM => 1.0})
 
-  implicit class NumericalFcn[DATUM](f: DATUM => Double) {
+  implicit class NumericalFcn[DATUM](f: DATUM => Double) extends Serializable {
     def apply(x: DATUM) = f(x)
   }
   implicit def byteToNumericalFcn[DATUM](f: DATUM => Byte) = NumericalFcn({x: DATUM => f(x).toDouble})
@@ -114,7 +128,7 @@ package object histogrammar {
   implicit def longToNumericalFcn[DATUM](f: DATUM => Long) = NumericalFcn({x: DATUM => f(x).toDouble})
   implicit def floatToNumericalFcn[DATUM](f: DATUM => Float) = NumericalFcn({x: DATUM => f(x).toDouble})
 
-  implicit class CategoricalFcn[DATUM](f: DATUM => String) {
+  implicit class CategoricalFcn[DATUM](f: DATUM => String) extends Serializable {
     def apply(x: DATUM) = f(x)
   }
 
@@ -122,13 +136,6 @@ package object histogrammar {
   implicit class nanEquality(val x: Double) extends AnyVal {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
-
-  def increment[DATUM, CONTAINER <: Container[CONTAINER]](zero: CONTAINER with Aggregation[DATUM]) =
-    {(h: CONTAINER with Aggregation[DATUM], x: DATUM) => h.fill(x); h}
-
-  def combine[DATUM, CONTAINER <: Container[CONTAINER]](zero: CONTAINER with Aggregation[DATUM]) =
-    {(h1: CONTAINER with Aggregation[DATUM], h2: CONTAINER with Aggregation[DATUM]) => h1 + h2}
-
 
   // // Scala maps become NameMaps
   // implicit def mapToNameMapped(map: Map[String, Container[_]]) = new NameMapped(map.toSeq: _*)

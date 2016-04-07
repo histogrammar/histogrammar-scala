@@ -9,6 +9,8 @@ package histogrammar {
 
   object Categorize extends Factory {
     val name = "Categorize"
+    val help = "Split a given quantity by its categorical (string-based) value and fill only one category per datum."
+    val detailedHelp = """Categorize(quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count())"""
 
     def container[V <: Container[V]](pairs: (String, V)*) = new Categorized(pairs: _*)
 

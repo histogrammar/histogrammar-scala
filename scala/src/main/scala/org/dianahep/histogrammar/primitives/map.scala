@@ -8,6 +8,8 @@ package histogrammar {
   // this is a *heterogeneous* map, so some runtime casting is necessary; also note that data is broadcast to all members
   object NameMap extends Factory {
     val name = "NameMap"
+    val help = "Accumulate any number of aggregators (of any type), keyed by a string. Every one is filled with every input datum."
+    val detailedHelp = """NameMap(pairs: (String, Container[_])*)"""
 
     def container(pairs: (String, Container[_])*) = new NameMapped(pairs: _*)
     def apply[DATUM](pairs: (String, Container[_])*) = new NameMapping[DATUM](pairs: _*)

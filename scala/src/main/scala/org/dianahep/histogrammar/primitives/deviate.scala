@@ -7,6 +7,8 @@ package histogrammar {
 
   object Deviate extends Factory {
     val name = "Deviate"
+    val help = "Accumulate a count, a mean, and a variance of a given quantity (using an algorithm that is stable for large numbers)."
+    val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(count: Double, mean: Double, variance: Double) = new Deviated(count, mean, variance)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)

@@ -7,6 +7,9 @@ package histogrammar {
  
   object Bin extends Factory {
     val name = "Bin"
+    val help = "Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum."
+    val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM],
+           value: => V = Count(), underflow: U = Count(), overflow: O = Count(), nanflow: N = Count())"""
 
     def container[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (low: Double,

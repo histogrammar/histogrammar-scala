@@ -7,6 +7,8 @@ package histogrammar {
 
   object AbsoluteErr extends Factory {
     val name = "AbsoluteErr"
+    val help = "Accumulate a count and a weighted mean absolute error of a given quantity whose nominal value is zero."
+    val detailedHelp = """AbsoluteErr(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(count: Double, mae: Double) = new AbsoluteErred(count, mae)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)

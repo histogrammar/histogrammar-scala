@@ -7,6 +7,8 @@ package histogrammar {
 
   object Count extends Factory {
     val name = "Count"
+    val help = "Count data, ignoring their content (actually, sum their weights)."
+    val detailedHelp = """Count(selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(value: Double) = new Counted(value)
     def apply[DATUM](selection: Selection[DATUM] = unweighted[DATUM]) = new Counting(selection, 0.0)

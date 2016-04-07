@@ -7,6 +7,8 @@ package histogrammar {
 
   object Stack extends Factory {
     val name = "Stack"
+    val help = "Accumulate a suite aggregators, filling all that are above a given cut on a given expression."
+    val detailedHelp = """Stack(value: => V, expression: NumericalFcn[DATUM], cuts: Double*)"""
 
     def container[V <: Container[V]](cuts: (Double, V)*) = new Stacked(cuts: _*)
     def apply[DATUM, V <: Container[V]](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =

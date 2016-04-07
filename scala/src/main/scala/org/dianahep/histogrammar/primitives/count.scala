@@ -8,9 +8,8 @@ package histogrammar {
   object Count extends Factory {
     val name = "Count"
 
-    def ed(value: Double) = new Counted(value)
-    def ing[DATUM](selection: Selection[DATUM] = unweighted[DATUM]) = new Counting(selection, 0.0)
-    def apply[DATUM](selection: Selection[DATUM] = unweighted[DATUM]) = ing(selection)
+    def container(value: Double) = new Counted(value)
+    def apply[DATUM](selection: Selection[DATUM] = unweighted[DATUM]) = new Counting(selection, 0.0)
 
     def unapply(x: Counted) = Some(x.value)
     def unapply(x: Counting[_]) = Some(x.value)
@@ -36,12 +35,12 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  class Counting[DATUM](val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Counting[DATUM]] {
+  class Counting[DATUM](val selection: Selection[DATUM], var value: Double) extends Container[Counting[DATUM]] with Aggregation[DATUM] {
     def factory = Count
 
     def +(that: Counting[DATUM]) = new Counting[DATUM](this.selection, this.value + that.value)
 
-    def fill(x: Weighted[DATUM]) {
+    def fillWeighted(x: Weighted[DATUM]) {
       val y = x reweight selection(x)
       if (y.contributes)
         value += y.weight

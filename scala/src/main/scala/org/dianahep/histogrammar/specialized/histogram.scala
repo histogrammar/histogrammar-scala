@@ -29,15 +29,15 @@ package object histogram {
     new HistogramMethods(hist)
 
   implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counting[DATUM], Counting[DATUM], Counting[DATUM], Counting[DATUM]]): HistogramMethods =
-    new HistogramMethods(hist.toContainer)
+    new HistogramMethods(Factory.fromJson[Binned[Counted, Counted, Counted, Counted]](hist.toJson))
 
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
     new HistogramMethods(
-      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.ed(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Count.ed(0.0), Count.ed(0.0), hist.nanflow)
+      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.container(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Count.container(0.0), Count.container(0.0), hist.nanflow)
     )
 
   implicit def sparselyBinningToHistogramMethods[DATUM](hist: SparselyBinning[DATUM, Counting[DATUM], Counting[DATUM]]): HistogramMethods =
-    sparselyBinnedToHistogramMethods(hist.toContainer)
+    sparselyBinnedToHistogramMethods(Factory.fromJson[SparselyBinned[Counted, Counted]](hist.toJson))
 }
 
 package histogram {

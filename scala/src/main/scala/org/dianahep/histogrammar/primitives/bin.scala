@@ -8,7 +8,7 @@ package histogrammar {
   object Bin extends Factory {
     val name = "Bin"
 
-    def ed[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+    def container[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (low: Double,
        high: Double,
        values: Seq[V],
@@ -16,20 +16,20 @@ package histogrammar {
        overflow: O,
        nanflow: N) = new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
 
-    def apply[DATUM, V <: Aggregator[DATUM, V], U <: Aggregator[DATUM, U], O <: Aggregator[DATUM, O], N <: Aggregator[DATUM, N]]
+    def apply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (num: Int,
        low: Double,
        high: Double,
        quantity: NumericalFcn[DATUM],
-       selection: Selection[DATUM],
-       value: => V,
-       underflow: U,
-       overflow: O,
-       nanflow: N) =
+       selection: Selection[DATUM] = unweighted[DATUM],
+       value: => V = Count(),
+       underflow: U = Count(),
+       overflow: O = Count(),
+       nanflow: N = Count()) =
       new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(num)(value), underflow, overflow, nanflow)
 
     def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
-    def unapply[DATUM, V <: Aggregator[DATUM, V], U <: Aggregator[DATUM, U], O <: Aggregator[DATUM, O], N <: Aggregator[DATUM, N]](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
+    def unapply[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
 
     trait Methods {
       def num: Int
@@ -157,7 +157,7 @@ package histogrammar {
     override def hashCode() = (low, high, values, underflow, overflow, nanflow).hashCode
   }
 
-  class Binning[DATUM, V <: Aggregator[DATUM, V], U <: Aggregator[DATUM, U], O <: Aggregator[DATUM, O], N <: Aggregator[DATUM, N]](
+  class Binning[DATUM, V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
     val quantity: NumericalFcn[DATUM],
@@ -165,7 +165,7 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Aggregator[DATUM, Binning[DATUM, V, U, O, N]] with Bin.Methods {
+    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with Aggregation[DATUM] with Bin.Methods {
 
     def factory = Bin
 
@@ -174,6 +174,15 @@ package histogrammar {
     if (values.size < 1)
       throw new AggregatorException(s"values ($values) must have at least one element")
     def num = values.size
+
+    if (!values.forall(_.isInstanceOf[Aggregation[DATUM]]))
+      throw new AggregatorException(s"Binning should be built with Aggregation-enabled values (ending in -ing)")
+    if (!underflow.isInstanceOf[Aggregation[DATUM]])
+      throw new AggregatorException(s"Binning should be built with Aggregation-enabled underflow (ending in -ing)")
+    if (!overflow.isInstanceOf[Aggregation[DATUM]])
+      throw new AggregatorException(s"Binning should be built with Aggregation-enabled overflow (ending in -ing)")
+    if (!nanflow.isInstanceOf[Aggregation[DATUM]])
+      throw new AggregatorException(s"Binning should be built with Aggregation-enabled nanflow (ending in -ing)")
 
     def +(that: Binning[DATUM, V, U, O, N]) = {
       if (this.low != that.low)
@@ -204,18 +213,18 @@ package histogrammar {
         this.nanflow + that.nanflow)
     }
 
-    def fill(x: Weighted[DATUM]) {
+    def fillWeighted(x: Weighted[DATUM]) {
       val k = quantity(x)
       val y = x reweight selection(x)
       if (y.contributes) {
         if (under(k))
-          underflow.fill(y)
+          underflow.asInstanceOf[Aggregation[DATUM]].fillWeighted(y)
         else if (over(k))
-          overflow.fill(y)
+          overflow.asInstanceOf[Aggregation[DATUM]].fillWeighted(y)
         else if (nan(k))
-          nanflow.fill(y)
+          nanflow.asInstanceOf[Aggregation[DATUM]].fillWeighted(y)
         else
-          values(bin(k)).fill(y)
+          values(bin(k)).asInstanceOf[Aggregation[DATUM]].fillWeighted(y)
       }
     }
 

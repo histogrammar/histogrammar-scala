@@ -523,39 +523,38 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
-  // //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
+  //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
 
-  // "Stack/Stacked/Stacking" must "work with Count/Counting/Counted" in {
-  //   val stacking = Stack(Count[Double](), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
-  //   simple.foreach(stacking.fill(_))
+  "Stack/Stacked/Stacking" must "work with Count/Counting/Counted" in {
+    val stacking = Stack(Count[Double](), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(stacking.fill(_))
 
-  //   stacking.toContainer[Stacked[Counted]].cuts.toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> Count.ed(10.0), 0.0 -> Count.ed(6.0), 2.0 -> Count.ed(3.0), 4.0 -> Count.ed(1.0), 6.0 -> Count.ed(1.0), 8.0 -> Count.ed(0.0)))
-  // }
+    stacking.cuts.map({case (k, v) => (k, v.value)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 10.0, 0.0 -> 6.0, 2.0 -> 3.0, 4.0 -> 1.0, 6.0 -> 1.0, 8.0 -> 0.0))
+  }
 
-  // it must "work with Sum/Summing/Summed" in {
-  //   val stacking = Stack(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
-  //   simple.foreach(stacking.fill(_))
+  it must "work with Sum/Summing/Summed" in {
+    val stacking = Stack(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(stacking.fill(_))
 
-  //   stacking.toContainer[Stacked[Summed]].cuts(0)._2.value should be (3.3 +- 1e-12)
-  //   stacking.toContainer[Stacked[Summed]].cuts(1)._2.value should be (14.5 +- 1e-12)
-  // }
+    stacking.cuts(1)._2.value should be (14.5 +- 1e-12)
+  }
 
-  // //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
+  //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
 
-  // "Partition/Partitioned/Partitioning" must "work with Count/Counting/Counted" in {
-  //   val partitioning = Partition(Count[Double](), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
-  //   simple.foreach(partitioning.fill(_))
+  "Partition/Partitioned/Partitioning" must "work with Count/Counting/Counted" in {
+    val partitioning = Partition(Count[Double](), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(partitioning.fill(_))
+    
+    partitioning.cuts.map({case (k, v) => (k, v.value)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 4.0, 0.0 -> 3.0, 2.0 -> 2.0, 4.0 -> 0.0, 6.0 -> 1.0, 8.0 -> 0.0))
+  }
 
-  //   partitioning.toContainer[Partitioned[Counted]].cuts.toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> Count.ed(4.0), 0.0 -> Count.ed(3.0), 2.0 -> Count.ed(2.0), 4.0 -> Count.ed(0.0), 6.0 -> Count.ed(1.0), 8.0 -> Count.ed(0.0)))
-  // }
+  it must "work with Sum/Summing/Summed" in {
+    val partitioning = Partition(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    simple.foreach(partitioning.fill(_))
 
-  // it must "work with Sum/Summing/Summed" in {
-  //   val partitioning = Partition(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
-  //   simple.foreach(partitioning.fill(_))
-
-  //   partitioning.toContainer[Partitioned[Summed]].cuts(0)._2.value should be (-11.2 +- 1e-12)
-  //   partitioning.toContainer[Partitioned[Summed]].cuts(1)._2.value should be (1.6 +- 1e-12)
-  // }
+    partitioning.cuts(0)._2.value should be (-11.2 +- 1e-12)
+    partitioning.cuts(1)._2.value should be (1.6 +- 1e-12)
+  }
 
   //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
 

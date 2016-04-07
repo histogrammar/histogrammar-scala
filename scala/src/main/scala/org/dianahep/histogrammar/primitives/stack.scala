@@ -8,12 +8,12 @@ package histogrammar {
   object Stack extends Factory {
     val name = "Stack"
 
-    def ed[V <: Container[V]](cuts: (Double, V)*) = new Stacked(cuts: _*)
-    def apply[DATUM, V <: Aggregator[DATUM, V]](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
+    def container[V <: Container[V]](cuts: (Double, V)*) = new Stacked(cuts: _*)
+    def apply[DATUM, V <: Container[V]](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       new Stacking(expression, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
 
     def unapplySeq[V <: Container[V]](x: Stacked[V]) = Some(x.cuts)
-    def unapplySeq[DATUM, V <: Aggregator[DATUM, V]](x: Stacking[DATUM, V]) = Some(x.cuts)
+    def unapplySeq[DATUM, V <: Container[V]](x: Stacking[DATUM, V]) = Some(x.cuts)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
@@ -74,11 +74,14 @@ package histogrammar {
     }
   }
 
-  class Stacking[DATUM, V <: Aggregator[DATUM, V]](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Aggregator[DATUM, Stacking[DATUM, V]] {
+  class Stacking[DATUM, V <: Container[V]](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with Aggregation[DATUM] {
     def factory = Stack
 
     if (cuts.size < 1)
       throw new AggregatorException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
+
+    if (!cuts.forall(_._2.isInstanceOf[Aggregation[DATUM]]))
+      throw new AggregatorException(s"Stacking should be built with Aggregation-enabled cuts (ending in -ing)")
 
     def +(that: Stacking[DATUM, V]) =
       if (this.cuts.size != that.cuts.size)
@@ -91,12 +94,13 @@ package histogrammar {
             (mycut, me + you)
           }: _*)
 
-    def fill(x: Weighted[DATUM]) {
-      if (x.contributes) {
-        val value = expression(x)
+    def fillWeighted(x: Weighted[DATUM]) {
+      val Weighted(datum, weight) = x
+      if (weight > 0.0) {
+        val value = expression(datum)
         cuts foreach {case (threshold, sub) =>
           if (value >= threshold)
-            sub.fill(x)
+            sub.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
         }
       }
     }

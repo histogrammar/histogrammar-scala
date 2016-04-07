@@ -11,28 +11,24 @@ trait MetricOrdering[T] extends Ordering[T] {
   }
 }
 
-trait MetricSortedMap[A, B] extends SortedMap[A, B] {
-  def closest(to: A): (A, B)   // distance A and object B
-  override def ordering: MetricOrdering[A]
-}
+class MetricSortedMap[A, B](elems: (A, B)*)(implicit val ordering: MetricOrdering[A]) extends SortedMap[A, B] {
+  // when the TreeSet searches for an element, keep track of the best distance it finds
+  private val best = new java.lang.ThreadLocal[(Double, A, B)]
+  best.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
 
-class MetricSortedMapDouble[B](elems: (Double, B)*) extends MetricSortedMap[Double, B] {
-  private val best = new java.lang.ThreadLocal[(Double, B)]
-  best.set((-1.0, null.asInstanceOf[B]))
-
-  val ord = new MetricOrdering[(Double, B)] {
-    def distance(x: (Double, B), y: (Double, B)) = {
-      val diff = x._1 - y._1
+  private val ord = new MetricOrdering[(A, B)] {
+    def distance(x: (A, B), y: (A, B)) = {
+      val diff = ordering.distance(x._1, y._1)
       val absdiff = Math.abs(diff)
 
       (x, y) match {
         case ((to, null), (pos, obj)) =>
           if (absdiff < best.get._1)
-            best.set((absdiff, obj))
+            best.set((absdiff, pos, obj))
 
         case ((pos, obj), (to, null)) =>
           if (absdiff < best.get._1)
-            best.set((absdiff, obj))
+            best.set((absdiff, pos, obj))
 
         case _ =>
       }
@@ -41,20 +37,13 @@ class MetricSortedMapDouble[B](elems: (Double, B)*) extends MetricSortedMap[Doub
     }
   }
 
-  private val treeSet = TreeSet[(Double, B)](elems: _*)(ord)
+  // use a TreeSet as a backing (not TreeMap because we need to get the whole pair back when we query it)
+  private val treeSet = TreeSet[(A, B)](elems: _*)(ord)
 
-  // satisfy the contract (I don't care about these methods; could throw UnsupportedOperationException)
-  def +[B1 >: B](kv: (Double, B1)): SortedMap[Double, B1] = new MetricSortedMapDouble[B](elems :+ (kv._1, kv._2.asInstanceOf[B]): _*)
-  def -(key: Double): SortedMap[Double, B] = new MetricSortedMapDouble[B](elems.filter(_._1 != key): _*)
-  def get(key: Double): Option[B] = treeSet.find(_._1 == key).map(_._2)
-  def iterator: Iterator[(Double, B)] = treeSet.iterator
-  def ordering: MetricOrdering[Double] = new MetricOrdering[Double] { def distance(x: Double, y: Double) = x - y }
-  def rangeImpl(from: Option[Double], until: Option[Double]): SortedMap[Double, B] = new MetricSortedMapDouble[B](treeSet.rangeImpl(from.map((_, null.asInstanceOf[B])), until.map((_, null.asInstanceOf[B]))).toSeq: _*)
-
-  // find the closest key and return it, along with its value
-  def closest(to: Double): (Double, B) = {
+  // find the closest key and return: (distance to key, the key, its associated value)
+  def closest(to: A): (Double, A, B) = {
     treeSet.headOption match {
-      case Some((pos, obj)) => best.set((Math.abs(pos - to), obj))
+      case Some((pos, obj)) => best.set((ordering.distance(to, pos), pos, obj))
       case None =>
         throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
     }
@@ -63,26 +52,26 @@ class MetricSortedMapDouble[B](elems: (Double, B)*) extends MetricSortedMap[Doub
 
     best.get
   }
+
+  // satisfy the contract (I don't care about these methods; could throw UnsupportedOperationException)
+  def +[B1 >: B](kv: (A, B1)): SortedMap[A, B1] = new MetricSortedMap[A, B](elems :+ (kv._1, kv._2.asInstanceOf[B]): _*)
+  def -(key: A): SortedMap[A, B] = new MetricSortedMap[A, B](elems.filter(_._1 != key): _*)
+  def get(key: A): Option[B] = treeSet.find(_._1 == key).map(_._2)
+  def iterator: Iterator[(A, B)] = treeSet.iterator
+  def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = new MetricSortedMap[A, B](treeSet.rangeImpl(from.map((_, null.asInstanceOf[B])), until.map((_, null.asInstanceOf[B]))).toSeq: _*)
 }
 
+implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
+  def distance(x: Double, y: Double) = x - y
+}
 
-scala> val stuff = new MetricSortedMapDouble[String](3.3 -> "three", 1.1 -> "one", 5.5 -> "five", 4.4 -> "four", 2.2 -> "two")
-stuff: MetricSortedMapDouble[String] = Map(1.1 -> one, 2.2 -> two, 3.3 -> three, 4.4 -> four, 5.5 -> five)
+val stuff = new MetricSortedMap[Double, String](3.3 -> "three", 1.1 -> "one", 5.5 -> "five", 4.4 -> "four", 2.2 -> "two")
 
-scala> stuff.closest(1.5)
-res0: (Double, String) = (0.3999999999999999,one)
 
-scala> stuff.closest(1000)
-res1: (Double, String) = (994.5,five)
+stuff.closest(1.5)
+stuff.closest(1000)
+stuff.closest(-1000)
+stuff.closest(3.3)
+stuff.closest(3.4)
+stuff.closest(3.2)
 
-scala> stuff.closest(-1000)
-res2: (Double, String) = (1001.1,one)
-
-scala> stuff.closest(3.3)
-res3: (Double, String) = (0.0,three)
-
-scala> stuff.closest(3.4)
-res4: (Double, String) = (0.10000000000000009,three)
-
-scala> stuff.closest(3.2)
-res5: (Double, String) = (0.09999999999999964,three)

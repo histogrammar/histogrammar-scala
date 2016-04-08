@@ -21,17 +21,16 @@ class MetricSortedMap[A, B](elems: (A, B)*)(implicit val ordering: MetricOrderin
       val diff = ordering.distance(x._1, y._1)
       val absdiff = Math.abs(diff)
 
-      (x, y) match {
-        case ((to, null), (pos, obj)) =>
-          if (absdiff < best.get._1)
+      if (absdiff < best.get._1)
+        (x, y) match {
+          case ((to, null), (pos, obj)) =>
             best.set((absdiff, pos, obj))
 
-        case ((pos, obj), (to, null)) =>
-          if (absdiff < best.get._1)
+          case ((pos, obj), (to, null)) =>
             best.set((absdiff, pos, obj))
 
-        case _ =>
-      }
+          case _ =>
+        }
 
       diff
     }
@@ -67,11 +66,9 @@ implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double]
 
 val stuff = new MetricSortedMap[Double, String](3.3 -> "three", 1.1 -> "one", 5.5 -> "five", 4.4 -> "four", 2.2 -> "two")
 
-
 stuff.closest(1.5)
 stuff.closest(1000)
 stuff.closest(-1000)
 stuff.closest(3.3)
 stuff.closest(3.4)
 stuff.closest(3.2)
-

@@ -29,7 +29,7 @@ package histogrammar {
 
     def toJsonFragment = JsonInt(value)
 
-    override def toString() = s"Counted"
+    override def toString() = s"Counted($value)"
     override def equals(that: Any) = that match {
       case that: Counted => this.value == that.value
       case _ => false
@@ -48,7 +48,7 @@ package histogrammar {
 
     def toJsonFragment = JsonInt(value)
 
-    override def toString() = s"Counting"
+    override def toString() = s"Counting($value)"
     override def equals(that: Any) = that match {
       case that: Counting => this.value == that.value
       case _ => false

@@ -73,6 +73,7 @@ package histogrammar {
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
+    def withTypeOf[OTHER <: CONTAINER](other: OTHER) = this.asInstanceOf[OTHER]
   }
 
   // mutable aggregator of data
@@ -87,6 +88,7 @@ package histogrammar {
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
+    def withTypeOf[OTHER <: AGGREGATOR](other: OTHER) = this.asInstanceOf[OTHER]
   }
 }
 

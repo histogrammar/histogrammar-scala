@@ -57,7 +57,7 @@ package histogrammar {
     override def hashCode() = (count, mean).hashCode
   }
 
-  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Container[Averaging[DATUM]] with Aggregation[DATUM] {
+  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Aggregator[DATUM, Averaging[DATUM]] {
     def factory = Average
 
     def +(that: Averaging[DATUM]) = {
@@ -65,9 +65,7 @@ package histogrammar {
       new Averaging(this.quantity, this.selection, newcount, newmean)
     }
 
-    def fillWeighted(x: Weighted[DATUM]) {
-      val Weighted(datum, weight) = x
-
+    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)

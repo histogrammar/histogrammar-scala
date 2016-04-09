@@ -7,23 +7,23 @@ import org.dianahep.histogrammar._
 
 package object histogram {
   type Histogrammed = Binned[Counted, Counted, Counted, Counted]
-  type Histogramming[DATUM] = Binning[DATUM, Counting[DATUM], Counting[DATUM], Counting[DATUM], Counting[DATUM]]
+  type Histogramming[DATUM] = Binning[DATUM, Counting, Counting, Counting, Counting]
   def Histogram[DATUM]
     (num: Int,
       low: Double,
       high: Double,
       quantity: NumericalFcn[DATUM],
       selection: Selection[DATUM] = unweighted[DATUM]) =
-    new Binning[DATUM, Counting[DATUM], Counting[DATUM], Counting[DATUM], Counting[DATUM]](low, high, quantity, selection, Array.fill(num)(Count[DATUM]()).toSeq, Count[DATUM](), Count[DATUM](), Count[DATUM]())
+    new Binning[DATUM, Counting, Counting, Counting, Counting](low, high, quantity, selection, Array.fill(num)(Count()).toSeq, Count(), Count(), Count())
 
   type SparselyHistogrammed = SparselyBinned[Counted, Counted]
-  type SparselyHistogramming[DATUM] = SparselyBinning[DATUM, Counting[DATUM], Counting[DATUM]]
+  type SparselyHistogramming[DATUM] = SparselyBinning[DATUM, Counting, Counting]
   def SparselyHistogram[DATUM]
     (binWidth: Double,
       quantity: NumericalFcn[DATUM],
       selection: Selection[DATUM] = unweighted[DATUM],
       origin: Double = 0.0) =
-    new SparselyBinning[DATUM, Counting[DATUM], Counting[DATUM]](binWidth, quantity, selection, Count[DATUM](), mutable.HashMap[Long, Counting[DATUM]](), Count[DATUM](), origin)
+    new SparselyBinning[DATUM, Counting, Counting](binWidth, quantity, selection, Count(), mutable.HashMap[Long, Counting](), Count(), origin)
 
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
     new HistogramMethods(hist)
@@ -33,7 +33,7 @@ package object histogram {
 
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
     new HistogramMethods(
-      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.container(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0.0))}, Count.container(0.0), Count.container(0.0), hist.nanflow)
+      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.container(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0L))}, Count.container(0L), Count.container(0L), hist.nanflow)
     )
 
   implicit def sparselyBinningToHistogramMethods(hist: SparselyBinning[_, _, _]): HistogramMethods =
@@ -42,7 +42,7 @@ package object histogram {
 
 package histogram {
   class HistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]) {
-    def numericalValues: Seq[Double] = hist.values.map(_.value)
+    def numericalValues: Seq[Long] = hist.values.map(_.value)
     def numericalOverflow: Double = hist.overflow.value
     def numericalUnderflow: Double = hist.underflow.value
     def numericalNanflow: Double = hist.nanflow.value

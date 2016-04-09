@@ -10,12 +10,12 @@ package histogrammar {
     val help = "Accumulate a suite aggregators, filling the one that is between a pair of given cuts on a given expression."
     val detailedHelp = """Partition(value: => V, expression: NumericalFcn[DATUM], cuts: Double*)"""
 
-    def ed[V <: Container[V]](cuts: (Double, V)*) = new Partitioned(cuts: _*)
-    def apply[DATUM, V <: Container[V]](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
+    def container[V <: Container[V]](cuts: (Double, V)*) = new Partitioned(cuts: _*)
+    def apply[DATUM, V <: Aggregator[DATUM, V]](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       new Partitioning(expression, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
 
     def unapplySeq[V <: Container[V]](x: Partitioned[V]) = Some(x.cuts)
-    def unapplySeq[DATUM, V <: Container[V]](x: Partitioning[DATUM, V]) = Some(x.cuts)
+    def unapplySeq[DATUM, V <: Aggregator[DATUM, V]](x: Partitioning[DATUM, V]) = Some(x.cuts)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
@@ -76,14 +76,11 @@ package histogrammar {
     }
   }
 
-  class Partitioning[DATUM, V <: Container[V]](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with Aggregation[DATUM] {
+  class Partitioning[DATUM, V <: Aggregator[DATUM, V]](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Aggregator[DATUM, Partitioning[DATUM, V]] {
     def factory = Partition
 
     if (cuts.size < 1)
       throw new AggregatorException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Partition.ing factory method adds)")
-
-    if (!cuts.forall(_._2.isInstanceOf[Aggregation[DATUM]]))
-      throw new AggregatorException(s"Partitioning should be built with Aggregation-enabled cuts (ending in -ing)")
 
     private val range = cuts zip (cuts.tail :+ (java.lang.Double.NaN, null))
 
@@ -98,13 +95,12 @@ package histogrammar {
             (mycut, me + you)
           }: _*)
 
-    def fillWeighted(x: Weighted[DATUM]) {
-      val Weighted(datum, weight) = x
+    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
       if (weight > 0.0) {
         val value = expression(datum)
         // !(value >= high) is true when high == NaN (even if value == +inf)
         range find {case ((low, sub), (high, _)) => value >= low  &&  !(value >= high)} foreach {case ((_, sub), (_, _)) =>
-          sub.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
+          sub.fillWeighted(datum, weight)
         }
       }
     }

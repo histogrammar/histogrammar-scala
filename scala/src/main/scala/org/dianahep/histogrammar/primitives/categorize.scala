@@ -14,11 +14,11 @@ package histogrammar {
 
     def container[V <: Container[V]](pairs: (String, V)*) = new Categorized(pairs: _*)
 
-    def apply[DATUM, V <: Container[V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
+    def apply[DATUM, V <: Aggregator[DATUM, V]](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
       new Categorizing(quantity, selection, value, mutable.HashMap[String, V]())
 
     def unapplySeq[V <: Container[V]](x: Categorized[V]) = Some(x.pairs)
-    def unapplySeq[DATUM, V <: Container[V]](x: Categorizing[DATUM, V]) = Some(x.pairs)
+    def unapplySeq[DATUM, V <: Aggregator[DATUM, V]](x: Categorizing[DATUM, V]) = Some(x.pairs)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
@@ -74,13 +74,8 @@ package histogrammar {
     }
   }
 
-  class Categorizing[DATUM, V <: Container[V]](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with Aggregation[DATUM] {
+  class Categorizing[DATUM, V <: Aggregator[DATUM, V]](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], value: => V, val pairs: mutable.HashMap[String, V]) extends Aggregator[DATUM, Categorizing[DATUM, V]] {
     def factory = Categorize
-
-    if (!value.isInstanceOf[Aggregation[DATUM]])
-      throw new AggregatorException(s"Categorizing should be built with Aggregation-enabled value (ending in -ing)")
-    if (!pairs.values.forall(_.isInstanceOf[Aggregation[DATUM]]))
-      throw new AggregatorException(s"Categorizing should be built with Aggregation-enabled values (ending in -ing)")
 
     def pairsMap = pairs.toMap
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
@@ -103,16 +98,14 @@ package histogrammar {
           (key, that.pairsMap(key))
       }: _*))
     
-    def fillWeighted(x: Weighted[DATUM]) {
-      val Weighted(datum, weight) = x
-
+    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
 
         if (!(pairs contains q))
           pairs(q) = value
-        pairs(q).asInstanceOf[Aggregation[DATUM]].fillWeighted(Weighted(datum, w))
+        pairs(q).fillWeighted(datum, w)
       }
     }
 

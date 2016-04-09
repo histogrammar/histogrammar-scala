@@ -47,13 +47,12 @@ package histogrammar {
     override def hashCode() = min.hashCode
   }
 
-  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Container[Minimizing[DATUM]] with Aggregation[DATUM] {
+  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Aggregator[DATUM, Minimizing[DATUM]] {
     def factory = Minimize
 
     def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.selection, Minimize.plus(this.min, that.min))
 
-    def fillWeighted(x: Weighted[DATUM]) {
-      val Weighted(datum, weight) = x
+    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -116,13 +115,12 @@ package histogrammar {
     override def hashCode() = max.hashCode
   }
 
-  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Container[Maximizing[DATUM]] with Aggregation[DATUM] {
+  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Aggregator[DATUM, Maximizing[DATUM]] {
     def factory = Maximize
 
     def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.selection, Maximize.plus(this.max, that.max))
 
-    def fillWeighted(x: Weighted[DATUM]) {
-      val Weighted(datum, weight) = x
+    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)

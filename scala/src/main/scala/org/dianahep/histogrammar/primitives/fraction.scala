@@ -11,11 +11,11 @@ package histogrammar {
     val detailedHelp = """Fraction(numeratorSelection: Selection[DATUM], value: => V = Count())"""
 
     def container[V <: Container[V]](numerator: V, denominator: V) = new Fractioned(numerator, denominator)
-    def apply[DATUM, V <: Container[V]](numeratorSelection: Selection[DATUM], value: => V = Count()) =
+    def apply[DATUM, V <: Aggregator[DATUM, V]](numeratorSelection: Selection[DATUM], value: => V = Count()) =
       new Fractioning(numeratorSelection, value, value)
 
     def unapply[V <: Container[V]](x: Fractioned[V]) = Some((x.numerator, x.denominator))
-    def unapply[DATUM, V <: Container[V]](x: Fractioning[DATUM, V]) = Some((x.numerator, x.denominator))
+    def unapply[DATUM, V <: Aggregator[DATUM, V]](x: Fractioning[DATUM, V]) = Some((x.numerator, x.denominator))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "numerator", "denominator")) =>
@@ -52,25 +52,18 @@ package histogrammar {
     }
   }
 
-  class Fractioning[DATUM, V <: Container[V]](val numeratorSelection: Selection[DATUM], val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with Aggregation[DATUM] {
+  class Fractioning[DATUM, V <: Aggregator[DATUM, V]](val numeratorSelection: Selection[DATUM], val numerator: V, val denominator: V) extends Aggregator[DATUM, Fractioning[DATUM, V]] {
     def factory = Fraction
-
-    if (!numerator.isInstanceOf[Aggregation[DATUM]])
-      throw new AggregatorException(s"Fractioning should be built with Aggregation-enabled numerator (ending in -ing)")
-    if (!denominator.isInstanceOf[Aggregation[DATUM]])
-      throw new AggregatorException(s"Fractioning should be built with Aggregation-enabled denominator (ending in -ing)")
 
     def +(that: Fractioning[DATUM, V]) = new Fractioning(this.numeratorSelection, this.numerator + that.numerator, this.denominator + that.denominator)
 
-    def fillWeighted(x: Weighted[DATUM]) {
-      val Weighted(datum, weight) = x
-
+    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
       val w = weight * numeratorSelection(datum)
 
       if (weight > 0.0)
-        denominator.asInstanceOf[Aggregation[DATUM]].fillWeighted(x)
+        denominator.fillWeighted(datum, weight)
       if (w > 0.0)
-        numerator.asInstanceOf[Aggregation[DATUM]].fillWeighted(Weighted(datum, w))
+        numerator.fillWeighted(datum, w)
     }
 
     def toJsonFragment = JsonObject(

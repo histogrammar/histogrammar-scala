@@ -29,7 +29,7 @@ package object histogram {
     new HistogramMethods(hist)
 
   implicit def binningToHistogramMethods(hist: Binning[_, Counting, Counting, Counting, Counting]): HistogramMethods =
-    new HistogramMethods(Factory.fromJson[Binned[Counted, Counted, Counted, Counted]](hist.toJson))
+    new HistogramMethods(Factory.fromJson(hist.toJson).as[Binned[Counted, Counted, Counted, Counted]])
 
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
     new HistogramMethods(
@@ -37,7 +37,7 @@ package object histogram {
     )
 
   implicit def sparselyBinningToHistogramMethods(hist: SparselyBinning[_, _, _]): HistogramMethods =
-    sparselyBinnedToHistogramMethods(Factory.fromJson[SparselyBinned[Counted, Counted]](hist.toJson))
+    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[SparselyBinned[Counted, Counted]])
 }
 
 package histogram {

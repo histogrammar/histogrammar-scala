@@ -440,7 +440,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   "SparselyBin/SparselyBinned/SparselyBinning" must "work with Count/Counting/Counted" in {
     val one = SparselyBin(1.0, {x: Double => x})
     simple.foreach(one.fill(_))
-    Factory.fromJson[SparselyBinned[Counted, Counted]](one.toJson).values.map({case (k, v) => (k, v.value)}).toList should be (List(-5 -> 1.0, -3 -> 1.0, -2 -> 2.0, 0 -> 2.0, 1 -> 1.0, 2 -> 1.0, 3 -> 1.0, 7 -> 1.0))
+    Factory.fromJson(one.toJson).as[SparselyBinned[Counted, Counted]].values.map({case (k, v) => (k, v.value)}).toList should be (List(-5 -> 1.0, -3 -> 1.0, -2 -> 2.0, 0 -> 2.0, 1 -> 1.0, 2 -> 1.0, 3 -> 1.0, 7 -> 1.0))
 
     one.numFilled should be (8)
     one.num should be (12)

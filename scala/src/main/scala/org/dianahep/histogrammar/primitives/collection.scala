@@ -260,16 +260,39 @@ package histogrammar {
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, MultiTypeIndexedNil)))))))))
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, new MultiTypeIndexed(i9, MultiTypeIndexedNil))))))))))
 
-    def fromJsonFragment(json: Json): Container[_] = null
+    def fromJsonFragment(json: Json): Container[_] = json match {
+      case JsonArray(values @ _*) if (values.size >= 1) =>
+        var backwards: MultiTypeIndexedList = MultiTypeIndexedNil
+
+        values.zipWithIndex.toList foreach {
+          case (JsonObject((JsonString(factory), sub)), _) =>
+            val item = Factory(factory).fromJsonFragment(sub).asInstanceOf[C forSome {type C <: Container[C]}]
+            backwards = new MultiTypeIndexed(item, backwards)
+
+          case (_, i) => throw new ContainerException(s"MultiTypeIndexed $i")
+        }
+
+        var out: MultiTypeIndexedList = MultiTypeIndexedNil
+        while (!backwards.isEmpty) {
+          val list = backwards.asInstanceOf[MultiTypeIndexed[C forSome {type C <: Container[C]}, MultiTypeIndexedList]]
+          out = new MultiTypeIndexed(list.head, out)
+          backwards = list.tail
+        }
+        out.asInstanceOf[Container[_]]
+
+      case _ => throw new ContainerException("MultiTypeIndexed")
+    }
   }
 
   sealed trait MultiTypeIndexedList {
     def values: List[Container[_]]
+    def isEmpty: Boolean
     def size: Int
   }
 
   object MultiTypeIndexedNil extends MultiTypeIndexedList {
     def values: List[Container[_]] = Nil
+    def isEmpty: Boolean = true
     def size: Int = 0
   }
 
@@ -278,6 +301,7 @@ package histogrammar {
     def factory = MultiTypeIndex
 
     def values: List[Container[_]] = head :: tail.values
+    def isEmpty: Boolean = false
     def size: Int = 1 + tail.size
 
     def +(that: MultiTypeIndexed[HEAD, TAIL]) = new MultiTypeIndexed[HEAD, TAIL](this.head + that.head, this.tail)

@@ -35,6 +35,7 @@ package histogrammar {
     register(AbsoluteErr)
     register(Minimize)
     register(Maximize)
+
     register(Bin)
     register(SparselyBin)
     register(Fraction)
@@ -42,17 +43,21 @@ package histogrammar {
     register(Partition)
     register(Categorize)
 
+    register(Label)
+    register(Index)
+    register(MultiTypeIndex)
+
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
       case None => throw new ContainerException(s"unrecognized container (is it a custom container that hasn't been registered?): $name")
     }
 
-    def fromJson[CONTAINER <: Container[_]](str: String): CONTAINER = Json.parse(str) match {
-      case Some(json) => fromJson[CONTAINER](json)
+    def fromJson(str: String): Container[_] = Json.parse(str) match {
+      case Some(json) => fromJson(json)
       case None => throw new InvalidJsonException(str)
     }
 
-    def fromJson[CONTAINER <: Container[_]](json: Json): CONTAINER = json match {
+    def fromJson(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
         val get = pairs.toMap
 
@@ -61,7 +66,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, "type")
         }
 
-        Factory(name).fromJsonFragment(get("data")).asInstanceOf[CONTAINER]
+        Factory(name).fromJsonFragment(get("data"))
 
       case _ => throw new JsonFormatException(json, "Factory")
     }
@@ -76,7 +81,7 @@ package histogrammar {
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
-    def as[OTHER <: CONTAINER] = this.asInstanceOf[OTHER]
+    def as[OTHER <: Container[OTHER]] = this.asInstanceOf[OTHER]
   }
 
   // mix-in to provide aggregation (and hence mutability)

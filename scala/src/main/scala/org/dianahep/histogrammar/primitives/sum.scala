@@ -23,6 +23,7 @@ package histogrammar {
   }
 
   class Summed(val value: Double) extends Container[Summed] {
+    type Type = Summed
     def factory = Sum
 
     def +(that: Summed) = new Summed(this.value + that.value)
@@ -38,6 +39,7 @@ package histogrammar {
   }
 
   class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Container[Summing[DATUM]] with Aggregation {
+    type Type = Summing[DATUM]
     type Datum = DATUM
     def factory = Sum
 

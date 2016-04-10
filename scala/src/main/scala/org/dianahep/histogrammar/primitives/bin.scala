@@ -105,6 +105,7 @@ package histogrammar {
     val overflow: O,
     val nanflow: N) extends Container[Binned[V, U, O, N]] with Bin.Methods {
 
+    type Type = Binned[V, U, O, N]
     def factory = Bin
 
     if (low >= high)
@@ -170,6 +171,7 @@ package histogrammar {
     val overflow: O,
     val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with Aggregation with Bin.Methods {
 
+    type Type = Binning[DATUM, V, U, O, N]
     type Datum = DATUM
     def factory = Bin
 

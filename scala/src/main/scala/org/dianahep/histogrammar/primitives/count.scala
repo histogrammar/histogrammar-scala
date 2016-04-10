@@ -23,6 +23,7 @@ package histogrammar {
   }
 
   class Counted(val value: Long) extends Container[Counted] {
+    type Type = Counted
     def factory = Count
 
     def +(that: Counted): Counted = new Counted(this.value + that.value)
@@ -38,6 +39,7 @@ package histogrammar {
   }
 
   class Counting(var value: Long) extends Container[Counting] with Aggregation {
+    type Type = Counting
     type Datum = Any
     def factory = Count
 

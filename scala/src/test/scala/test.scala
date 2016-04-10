@@ -596,23 +596,23 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalHist.numericalNanflow should be (0.0)
     }
 
-    // for (i <- 0 to 10) {
-    //   val (left, right) = simple.splitAt(i)
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-    //   val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
-    //   val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
 
-    //   val partialHists = Seq(
-    //     left.foldLeft(hist1)(increment),
-    //     right.foldLeft(hist2)(increment))
+      val partialHists = Seq(
+        left.foldLeft(hist1)(increment[hist1.Type]),
+        right.foldLeft(hist2)(increment[hist1.Type]))
 
-    //   val finalHist = partialHists.reduce(combine)
+      val finalHist = partialHists.reduce(combine[hist1.Type])
 
-    //   finalHist.numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
-    //   finalHist.numericalUnderflow should be (1.0)
-    //   finalHist.numericalOverflow should be (1.0)
-    //   finalHist.numericalNanflow should be (0.0)
-    // }
+      finalHist.numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist.numericalUnderflow should be (1.0)
+      finalHist.numericalOverflow should be (1.0)
+      finalHist.numericalNanflow should be (0.0)
+    }
 
     // for (i <- 0 to 10) {
     //   val (left, right) = simple.splitAt(i)

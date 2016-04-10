@@ -149,6 +149,7 @@ package histogrammar {
   }
 
   class Indexed[V <: Container[V]](val values: V*) extends Container[Indexed[V]] {
+    type Type = Indexed[V]
     def factory = Index
 
     if (values.isEmpty)
@@ -185,6 +186,7 @@ package histogrammar {
   }
 
   class Indexing[V <: Container[V] with Aggregation](val values: V*) extends Container[Indexing[V]] with Aggregation {
+    type Type = Indexing[V]
     type Datum = V#Datum
     def factory = Index
 

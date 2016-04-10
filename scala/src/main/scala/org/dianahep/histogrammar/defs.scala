@@ -1,5 +1,7 @@
 package org.dianahep
 
+import scala.language.existentials
+
 import scala.collection.immutable.ListMap
 import scala.language.implicitConversions
 
@@ -67,13 +69,14 @@ package histogrammar {
 
   // container of data that is, by itself, immutable
   trait Container[CONTAINER <: Container[CONTAINER]] extends Serializable {
+    type Type
     def factory: Factory
 
     def +(that: CONTAINER): CONTAINER
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
-    def withTypeOf[OTHER <: CONTAINER](other: OTHER) = this.asInstanceOf[OTHER]
+    def as[OTHER <: CONTAINER] = this.asInstanceOf[OTHER]
   }
 
   // mix-in to provide aggregation (and hence mutability)
@@ -90,11 +93,8 @@ package histogrammar {
 package object histogrammar {
   def help = Factory.registered map {case (name, factory) => f"${name}%-15s ${factory.help}"} mkString("\n")
 
-  def increment[DATUM, CONTAINER <: Container[CONTAINER] with Aggregation{type Datum >: DATUM}] =
-    {(h: CONTAINER, x: DATUM) => h.fill(x); h}
-
-  def combine[DATUM, CONTAINER <: Container[CONTAINER] with Aggregation{type Datum >: DATUM}] =
-    {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
+  def increment[CONTAINER <: Container[CONTAINER] with Aggregation] = {(h: CONTAINER, x: h.Datum) => h.fill(x); h}
+  def combine[CONTAINER <: Container[CONTAINER]] = {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
 
   //////////////////////////////////////////////////////////////// define implicits
 

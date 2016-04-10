@@ -26,19 +26,19 @@ package histogrammar {
       known = known.updated(factory.name, factory)
     }
 
-    // register(Count)
+    register(Count)
     register(Sum)
-    // register(Average)
-    // register(Deviate)
-    // register(AbsoluteErr)
-    // register(Minimize)
-    // register(Maximize)
+    register(Average)
+    register(Deviate)
+    register(AbsoluteErr)
+    register(Minimize)
+    register(Maximize)
     register(Bin)
-    // register(SparselyBin)
-    // register(Fraction)
-    // register(Stack)
-    // register(Partition)
-    // register(Categorize)
+    register(SparselyBin)
+    register(Fraction)
+    register(Stack)
+    register(Partition)
+    register(Categorize)
 
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
@@ -90,17 +90,11 @@ package histogrammar {
 package object histogrammar {
   def help = Factory.registered map {case (name, factory) => f"${name}%-15s ${factory.help}"} mkString("\n")
 
-  // def increment[DATUM, CONTAINER <: Container[DATUM, CONTAINER]] =
-  //   {(h: CONTAINER, x: DATUM) => h.fill(x); h}
+  def increment[DATUM, CONTAINER <: Container[CONTAINER] with Aggregation{type Datum >: DATUM}] =
+    {(h: CONTAINER, x: DATUM) => h.fill(x); h}
 
-  // def increment[DATUM, CONTAINER <: Container[DATUM, CONTAINER]](zero: CONTAINER) =
-  //   {(h: CONTAINER, x: DATUM) => h.fill(x); h}
-
-  // def combine[DATUM, CONTAINER <: Container[DATUM, CONTAINER]] =
-  //   {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
-
-  // def combine[DATUM, CONTAINER <: Container[DATUM, CONTAINER]](zero: CONTAINER) =
-  //   {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
+  def combine[DATUM, CONTAINER <: Container[CONTAINER] with Aggregation{type Datum >: DATUM}] =
+    {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
 
   //////////////////////////////////////////////////////////////// define implicits
 

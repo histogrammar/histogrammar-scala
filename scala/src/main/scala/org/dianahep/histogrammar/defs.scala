@@ -44,6 +44,7 @@ package histogrammar {
     register(Categorize)
 
     register(Label)
+    register(UntypedLabel)
     register(Index)
     register(Branch)
 
@@ -103,8 +104,8 @@ package object histogrammar {
   def increment[CONTAINER <: Container[CONTAINER] with Aggregation] = {(h: CONTAINER, x: h.Datum) => h.fill(x); h}
   def combine[CONTAINER <: Container[CONTAINER]] = {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
 
-  def incrementLabel[DATUM] = {(h: Labeling[DATUM], x: DATUM) => h.fill(x); h}
-  def combineLabel[DATUM] = {(h1: Labeling[DATUM], h2: Labeling[DATUM]) => h1 + h2}
+  def incrementUntypedLabel[DATUM] = {(h: UntypedLabeling[DATUM], x: DATUM) => h.fill(x); h}
+  def combineUntypedLabel[DATUM] = {(h1: UntypedLabeling[DATUM], h2: UntypedLabeling[DATUM]) => h1 + h2}
 
   //////////////////////////////////////////////////////////////// define implicits
 

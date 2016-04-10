@@ -534,6 +534,36 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     simple.foreach(labeling.fill(_))
 
+    labeling("one").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+    labeling("two").numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
+    labeling("three").numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
+  }
+
+  it must "permit histograms to have different cuts" in {
+    val one = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 0})
+    val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
+    val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
+
+    val labeling = Label("one" -> one, "two" -> two, "three" -> three)
+
+    simple.foreach(labeling.fill(_))
+
+    labeling("one").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
+    labeling("two").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
+    labeling("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+  }
+
+  //////////////////////////////////////////////////////////////// UntypedLabel/UntypedLabeled/UntypedLabeling
+
+  "UntypedLabel/UntypedLabeled/UntypedLabeling" must "work with a single type" in {
+    val one = Histogram(5, -3.0, 7.0, {x: Double => x})
+    val two = Histogram(10, 0.0, 10.0, {x: Double => x})
+    val three = Histogram(5, -3.0, 7.0, {x: Double => 2*x})
+
+    val labeling = UntypedLabel("one" -> one, "two" -> two, "three" -> three)
+
+    simple.foreach(labeling.fill(_))
+
     labeling("one").as[one.Type].numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
     labeling("two").as[two.Type].numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     labeling("three").as[three.Type].numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
@@ -544,7 +574,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
     val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
 
-    val labeling = Label("one" -> one, "two" -> two, "three" -> three)
+    val labeling = UntypedLabel("one" -> one, "two" -> two, "three" -> three)
 
     simple.foreach(labeling.fill(_))
 
@@ -558,7 +588,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     val two = Sum({x: Double => 1.0})
     val three = Deviate({x: Double => x + 100.0})
 
-    val mapping = Label("one" -> one, "two" -> two, "three" -> three)
+    val mapping = UntypedLabel("one" -> one, "two" -> two, "three" -> three)
 
     simple.foreach(mapping.fill(_))
 
@@ -663,17 +693,38 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
       val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
+
+      val collection1 = Label("hist" -> hist1)
+      val collection2 = Label("hist" -> hist2)
+
+      val partialHists = Seq(
+        left.foldLeft(collection1)(increment[collection1.Type]),
+        right.foldLeft(collection2)(increment[collection1.Type]))
+
+      val finalHist = partialHists.reduce(combine[collection1.Type])
+
+      finalHist("hist").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist("hist").numericalUnderflow should be (1.0)
+      finalHist("hist").numericalOverflow should be (1.0)
+      finalHist("hist").numericalNanflow should be (0.0)
+    }
+
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
       val sum1 = Sum({x: Double => 1.0})
       val sum2 = Sum({x: Double => 1.0})
 
-      val collection1 = Label("hist" -> hist1, "sum" -> sum1)
-      val collection2 = Label("hist" -> hist2, "sum" -> sum2)
+      val collection1 = UntypedLabel("hist" -> hist1, "sum" -> sum1)
+      val collection2 = UntypedLabel("hist" -> hist2, "sum" -> sum2)
 
       val partialHists = Seq(
-        left.foldLeft(collection1)(incrementLabel[Double]),
-        right.foldLeft(collection2)(incrementLabel[Double]))
+        left.foldLeft(collection1)(incrementUntypedLabel[Double]),
+        right.foldLeft(collection2)(incrementUntypedLabel[Double]))
 
-      val finalHist = partialHists.reduce(combineLabel[Double])
+      val finalHist = partialHists.reduce(combineUntypedLabel[Double])
 
       finalHist("hist").as[hist1.Type].numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
       finalHist("hist").as[hist1.Type].numericalUnderflow should be (1.0)

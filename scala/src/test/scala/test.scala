@@ -420,7 +420,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   "Binning/Binned" must "work with Sum/Summing/Summed" in {
-    val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted[Double], Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
+    val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted, Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
     simple.foreach(one.fill(_))
     one.values.map(_.value).toList should be (List(30.0, 20.0, 20.0, 10.0, 0.0))
     one.underflow.value should be (10.0)
@@ -534,9 +534,9 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     simple.foreach(labeling.fill(_))
 
-    labeling("one").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
-    labeling("two").numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
-    labeling("three").numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
+    labeling("one").as[one.Type].numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+    labeling("two").as[two.Type].numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
+    labeling("three").as[three.Type].numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
   }
 
   it must "permit histograms to have different cuts" in {
@@ -548,9 +548,25 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     simple.foreach(labeling.fill(_))
 
-    labeling("one").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
-    labeling("two").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
-    labeling("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+    labeling("one").as[one.Type].numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
+    labeling("two").as[two.Type].numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
+    labeling("three").as[three.Type].numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+  }
+
+  it must "work with multiple types" in {
+    val one = Histogram(5, -3.0, 7.0, {x: Double => x})
+    val two = Sum({x: Double => 1.0})
+    val three = Deviate({x: Double => x + 100.0})
+
+    val mapping = Label("one" -> one, "two" -> two, "three" -> three)
+
+    simple.foreach(mapping.fill(_))
+
+    mapping("one").as[one.Type].values.map(_.value).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
+    mapping("two").as[two.Type].value should be (10.0)
+    mapping("three").as[three.Type].totalWeight should be (10.0 +- 1e-12)
+    mapping("three").as[three.Type].mean should be (100.33 +- 1e-12)
+    mapping("three").as[three.Type].variance should be (10.8381 +- 1e-12)   // just to be different
   }
 
   //////////////////////////////////////////////////////////////// Index/Indexed/Indexing
@@ -645,19 +661,25 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val collection1 = Label("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}))
-      val collection2 = Label("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}))
+      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val sum1 = Sum({x: Double => 1.0})
+      val sum2 = Sum({x: Double => 1.0})
+
+      val collection1 = Label("hist" -> hist1, "sum" -> sum1)
+      val collection2 = Label("hist" -> hist2, "sum" -> sum2)
 
       val partialHists = Seq(
-        left.foldLeft(collection1)(increment[collection1.Type]),
-        right.foldLeft(collection2)(increment[collection1.Type]))
+        left.foldLeft(collection1)(incrementLabel[Double]),
+        right.foldLeft(collection2)(incrementLabel[Double]))
 
-      val finalHist = partialHists.reduce(combine[collection1.Type])
+      val finalHist = partialHists.reduce(combineLabel[Double])
 
-      finalHist("hist").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
-      finalHist("hist").numericalUnderflow should be (1.0)
-      finalHist("hist").numericalOverflow should be (1.0)
-      finalHist("hist").numericalNanflow should be (0.0)
+      finalHist("hist").as[hist1.Type].numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist("hist").as[hist1.Type].numericalUnderflow should be (1.0)
+      finalHist("hist").as[hist1.Type].numericalOverflow should be (1.0)
+      finalHist("hist").as[hist1.Type].numericalNanflow should be (0.0)
+      finalHist("sum").as[sum1.Type].value should be (10.0)
     }
   }
 }

@@ -103,6 +103,9 @@ package object histogrammar {
   def increment[CONTAINER <: Container[CONTAINER] with Aggregation] = {(h: CONTAINER, x: h.Datum) => h.fill(x); h}
   def combine[CONTAINER <: Container[CONTAINER]] = {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
 
+  def incrementLabel[DATUM] = {(h: Labeling[DATUM], x: DATUM) => h.fill(x); h}
+  def combineLabel[DATUM] = {(h1: Labeling[DATUM], h2: Labeling[DATUM]) => h1 + h2}
+
   //////////////////////////////////////////////////////////////// define implicits
 
   implicit class Selection[-DATUM](f: DATUM => Double) extends Serializable {

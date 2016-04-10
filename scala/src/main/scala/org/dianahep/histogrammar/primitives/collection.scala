@@ -5,101 +5,103 @@ import scala.language.existentials
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
+  trait Compatible[-X, -Y]
+  object Compatible {
+    implicit object BothAreCounting extends Compatible[Counting, Counting]
+    implicit object XIsCounting extends Compatible[Counting, AggregationOnData]
+    implicit object YIsCounting extends Compatible[AggregationOnData, Counting]
+    implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
+  }
+
   //////////////////////////////////////////////////////////////// Label/Labeled/Labeling
   object Label extends Factory {
     val name = "Label"
-    val help = "Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum."
-    val detailedHelp = """Label(pairs: (String, V)*)"""
+    val help = "Accumulate containers of any type except Count and label them with strings. Every one is filled with every input datum."
+    val detailedHelp = """Label(pairs: (String -> Container)*)"""
 
-    def fixed[V <: Container[V]](pairs: (String, V)*) = new Labeled[V](pairs: _*)
-    def apply[V <: Container[V] with Aggregation](pairs: (String, V)*) = new Labeling[V](pairs: _*)
+    def fixed(pairs: (String, Container[_])*) = new Labeled(pairs: _*)
+    def apply[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = new Labeling(pairs: _*)
 
-    def unapplySeq[V <: Container[V]](x: Labeled[V]) = Some(x.pairs)
-    def unapplySeq[V <: Container[V] with Aggregation](x: Labeling[V]) = Some(x.pairs)
+    def unapplySeq(x: Labeled) = Some(x.pairs)
+    def unapplySeq[DATUM](x: Labeling[DATUM]) = Some(x.pairs)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
-        val get = pairs.toMap
-
-        val factory =
-          get("type") match {
-            case JsonString(factory) => Factory(factory)
-            case _ => throw new JsonFormatException(json, name + ".type")
-          }
-
-        get("data") match {
-          case JsonObject(labelPairs @ _*) if (labelPairs.size >= 1) =>
-            new Labeled[Container[_]](labelPairs map {case (JsonString(label), sub) => label -> factory.fromJsonFragment(sub)}: _*)
-          case _ =>
-            throw new JsonFormatException(json, name + ".data")
-        }
+      case JsonObject(pairs @ _*) =>
+        new Labeled(pairs map {
+          case (JsonString(label), JsonObject(typedata @ _*)) if (typedata.keySet == Set("type", "data")) =>
+            val get = typedata.toMap
+            (get("type"), get("data")) match {
+              case (JsonString(factory), sub) => (label.toString, Factory(factory).fromJsonFragment(sub))
+              case _ => throw new JsonFormatException(json, name + s""" label "$label"""")
+            }
+          case _ => throw new JsonFormatException(json, name + s" label")
+        }: _*)
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def combine[CONTAINER <: Container[CONTAINER]](one: Container[_], two: Container[_]) =
+      one.asInstanceOf[CONTAINER] + two.asInstanceOf[CONTAINER]
   }
 
-  class Labeled[V <: Container[V]](val pairs: (String, V)*) extends Container[Labeled[V]] {
-    type Type = Labeled[V]
+  class Labeled(val pairs: (String, Container[_])*) extends Container[Labeled] {
     def factory = Label
-
-    if (pairs.isEmpty)
-      throw new ContainerException("Labeled needs at least one element")
 
     val pairsMap = pairs.toMap
     def size = pairs.size
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    def values: Iterable[Container[V]] = pairs.toIterable.map(_._2)
+    def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
     def keySet: Set[String] = keys.toSet
     def apply(x: String) = pairsMap(x)
     def get(x: String) = pairsMap.get(x)
-    def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
+    def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
 
-    def +(that: Labeled[V]) =
+    def +(that: Labeled) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add Labeled because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
       else
-        new Labeled[V](this.pairs map {case (label, mysub) =>
-          val yoursub = that.pairsMap(label)
-          label -> (mysub + yoursub)
-        }: _*)
+        new Labeled(this.pairs.map({case (key, mysub) =>
+          val yoursub = that.pairsMap(key)
+          if (mysub.factory != yoursub.factory)
+            throw new ContainerException(s"""cannot add Labeled because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
+          (key, Label.combine(mysub, yoursub))
+        }): _*)
 
-    def toJsonFragment =
-      JsonObject("type" -> JsonString(factory.name), "data" -> JsonObject(
-        pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
+    def toJsonFragment = JsonObject(pairs map {case (key, sub) =>
+      key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
+    }: _*)
 
-    override def toString() = s"Labeled[${pairs.head.toString}, size=${pairs.size}]"
+    override def toString() = s"Labeled[size=${pairs.size}]"
     override def equals(that: Any) = that match {
-      case that: Labeled[V] => this.pairsMap == that.pairsMap
+      case that: Labeled => this.pairsMap == that.pairsMap
       case _ => false
     }
     override def hashCode() = pairsMap.hashCode
   }
 
-  class Labeling[V <: Container[V] with Aggregation](val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
-    type Type = Labeling[V]
-    type Datum = V#Datum
+  class Labeling[DATUM](val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[Labeling[DATUM]] with AggregationOnData {
+    type Datum = DATUM
     def factory = Label
-
-    if (pairs.isEmpty)
-      throw new ContainerException("Labeling needs at least one element")
 
     val pairsMap = pairs.toMap
     def size = pairs.size
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    def values: Iterable[V] = pairs.toIterable.map(_._2)
+    def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
     def keySet: Set[String] = keys.toSet
     def apply(x: String) = pairsMap(x)
     def get(x: String) = pairsMap.get(x)
-    def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
+    def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
 
-    def +(that: Labeling[V]) =
+    def +(that: Labeling[DATUM]) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add Labeling because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
       else
-        new Labeling[V](this.pairs map {case (label, mysub) =>
-          val yoursub = that.pairsMap(label)
-          label -> (mysub + yoursub)
-        }: _*)
+        new Labeling[DATUM](this.pairs.map({case (key, mysub) =>
+          val yoursub = that.pairsMap(key)
+          if (mysub.factory != yoursub.factory)
+            throw new ContainerException(s"""cannot add Labeling because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
+          (key, Label.combine(mysub, yoursub))
+        }): _*)
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
       var i = 0
@@ -110,19 +112,17 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment =
-      JsonObject("type" -> JsonString(factory.name), "data" -> JsonObject(
-        pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
+    def toJsonFragment = JsonObject(pairs map {case (key, sub) =>
+      key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
+    }: _*)
 
-    override def toString() = s"Labeling[${pairs.head.toString}, size=${pairs.size}]"
+    override def toString() = s"Labeling[size=${pairs.size}]"
     override def equals(that: Any) = that match {
-      case that: Labeled[V] => this.pairsMap == that.pairsMap
+      case that: Labeling[DATUM] => this.pairsMap == that.pairsMap
       case _ => false
     }
     override def hashCode() = pairsMap.hashCode
   }
-
-  //////////////////////////////////////////////////////////////// MultiTypeLabel/MultiTypeLabeled/MultiTypeLabeling
 
   //////////////////////////////////////////////////////////////// Index/Indexed/Indexing
 
@@ -259,14 +259,6 @@ package histogrammar {
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, new Branched(i6, new Branched(i7, BranchedNil))))))))
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, new Branched(i6, new Branched(i7, new Branched(i8, BranchedNil)))))))))
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, new Branched(i6, new Branched(i7, new Branched(i8, new Branched(i9, BranchedNil))))))))))
-
-    trait Compatible[-X, -Y]
-    object Compatible {
-      implicit object BothAreCounting extends Compatible[Counting, Counting]
-      implicit object XIsCounting extends Compatible[Counting, AggregationOnData]
-      implicit object YIsCounting extends Compatible[AggregationOnData, Counting]
-      implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
-    }
 
     def apply[C0 <: Container[C0] with Aggregation](i0: C0) = new Branching(i0, BranchingNil)
     def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation](i0: C0, i1: C1)(implicit e01: C0 Compatible C1) = new Branching(i0, new Branching(i1, BranchingNil))

@@ -148,7 +148,7 @@ package histogrammar {
     value: => V,
     val values: mutable.Map[Long, V],
     val nanflow: N,
-    val origin: Double) extends Container[SparselyBinning[DATUM, V, N]] with Aggregation with SparselyBin.Methods {
+    val origin: Double) extends Container[SparselyBinning[DATUM, V, N]] with AggregationOnData with SparselyBin.Methods {
 
     type Type = SparselyBinning[DATUM, V, N]
     type Datum = DATUM

@@ -58,7 +58,7 @@ package histogrammar {
     override def hashCode() = (totalWeight, mae).hashCode
   }
 
-  class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with Aggregation {
+  class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]
     type Datum = DATUM
     def factory = AbsoluteErr

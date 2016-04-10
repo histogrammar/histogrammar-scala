@@ -93,6 +93,8 @@ package histogrammar {
     }
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double)
   }
+
+  trait AggregationOnData extends Aggregation
 }
 
 package object histogrammar {

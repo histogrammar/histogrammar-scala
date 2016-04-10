@@ -38,7 +38,7 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Container[Summing[DATUM]] with Aggregation {
+  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Container[Summing[DATUM]] with AggregationOnData {
     type Type = Summing[DATUM]
     type Datum = DATUM
     def factory = Sum

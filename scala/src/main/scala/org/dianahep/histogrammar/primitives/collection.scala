@@ -75,7 +75,7 @@ package histogrammar {
     override def hashCode() = pairsMap.hashCode
   }
 
-  class Labeling[V <: Container[V] with Aggregation](val pairs: (String, V)*) extends Container[Labeling[V]] with Aggregation {
+  class Labeling[V <: Container[V] with Aggregation](val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
     type Type = Labeling[V]
     type Datum = V#Datum
     def factory = Label
@@ -195,7 +195,7 @@ package histogrammar {
     override def hashCode() = values.hashCode
   }
 
-  class Indexing[V <: Container[V] with Aggregation](val values: V*) extends Container[Indexing[V]] with Aggregation {
+  class Indexing[V <: Container[V] with Aggregation](val values: V*) extends Container[Indexing[V]] with AggregationOnData {
     type Type = Indexing[V]
     type Datum = V#Datum
     def factory = Index
@@ -247,7 +247,7 @@ package histogrammar {
   object MultiTypeIndex extends Factory {
     def name = "MultiTypeIndex"
     def help = "Accumulate up to 10 containers of DIFFERENT types anonymously in a list. Every one is filled with every input datum."
-    def detailedHelp = ""
+    def detailedHelp = "MultiTypeIndex(container0, container1, ...)"
 
     def fixed[C0 <: Container[C0]](i0: C0) = new MultiTypeIndexed(i0, MultiTypeIndexedNil)
     def fixed[C0 <: Container[C0], C1 <: Container[C1]](i0: C0, i1: C1) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, MultiTypeIndexedNil))
@@ -259,6 +259,16 @@ package histogrammar {
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, MultiTypeIndexedNil))))))))
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, MultiTypeIndexedNil)))))))))
     def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, new MultiTypeIndexed(i9, MultiTypeIndexedNil))))))))))
+
+    trait Compatible[-X, -Y]
+    object Compatible {
+      implicit object BothAreCounting extends Compatible[Counting, Counting]
+      implicit object XIsCounting extends Compatible[Counting, AggregationOnData]
+      implicit object YIsCounting extends Compatible[AggregationOnData, Counting]
+      implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
+    }
+
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation](i0: C0, i1: C1)(implicit e01: C0 Compatible C1) = new MultiTypeIndexing(i0, new MultiTypeIndexing(i1, MultiTypeIndexingNil))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonArray(values @ _*) if (values.size >= 1) =>
@@ -312,6 +322,48 @@ package histogrammar {
 
     override def equals(that: Any) = that match {
       case other: MultiTypeIndexed[_, _] => this.head == other.head  &&  this.tail == other.tail
+      case _ => false
+    }
+    override def hashCode() = values.hashCode
+  }
+
+  sealed trait MultiTypeIndexingList {
+    def values: List[Container[_]]
+    def isEmpty: Boolean
+    def size: Int
+  }
+
+  object MultiTypeIndexingNil extends MultiTypeIndexingList {
+    def values: List[Container[_]] = Nil
+    def isEmpty: Boolean = true
+    def size: Int = 0
+  }
+
+  class MultiTypeIndexing[HEAD <: Container[HEAD] with Aggregation, TAIL <: MultiTypeIndexingList](val head: HEAD, val tail: TAIL) extends Container[MultiTypeIndexing[HEAD, TAIL]] with AggregationOnData with MultiTypeIndexingList {
+    type Type = MultiTypeIndexing[HEAD, TAIL]
+    type Datum = head.Datum
+    def factory = MultiTypeIndex
+
+    def values: List[Container[_]] = head :: tail.values
+    def isEmpty: Boolean = false
+    def size: Int = 1 + tail.size
+
+    def +(that: MultiTypeIndexing[HEAD, TAIL]) = new MultiTypeIndexing[HEAD, TAIL](this.head + that.head, this.tail)
+
+    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+      head.fillWeighted(datum, weight)
+      tail match {
+        case x: Aggregation => x.fillWeighted(datum.asInstanceOf[x.Datum], weight)
+        case _ =>
+      }
+    }
+
+    def toJsonFragment = JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*)
+
+    override def toString() = "MultiTypeIndexing[" + values.mkString(", ") + "]"
+
+    override def equals(that: Any) = that match {
+      case other: MultiTypeIndexing[_, _] => this.head == other.head  &&  this.tail == other.tail
       case _ => false
     }
     override def hashCode() = values.hashCode

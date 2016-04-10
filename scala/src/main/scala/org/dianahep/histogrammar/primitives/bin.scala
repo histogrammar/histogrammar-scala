@@ -169,7 +169,7 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with Aggregation with Bin.Methods {
+    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with Bin.Methods {
 
     type Type = Binning[DATUM, V, U, O, N]
     type Datum = DATUM

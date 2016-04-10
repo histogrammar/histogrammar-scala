@@ -67,7 +67,7 @@ package histogrammar {
     override def hashCode() = (totalWeight, mean, variance).hashCode
   }
 
-  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with Aggregation {
+  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
     type Type = Deviating[DATUM]
     type Datum = DATUM
     def factory = Deviate

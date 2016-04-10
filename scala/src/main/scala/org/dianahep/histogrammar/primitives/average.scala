@@ -58,7 +58,7 @@ package histogrammar {
     override def hashCode() = (totalWeight, mean).hashCode
   }
 
-  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, var mean: Double) extends Container[Averaging[DATUM]] with Aggregation {
+  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
     type Type = Averaging[DATUM]
     type Datum = DATUM
     def factory = Average

@@ -53,7 +53,7 @@ package histogrammar {
     }
   }
 
-  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val numeratorSelection: Selection[DATUM], val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with Aggregation {
+  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val numeratorSelection: Selection[DATUM], val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
     type Type = Fractioning[DATUM, V]
     type Datum = DATUM
     def factory = Fraction

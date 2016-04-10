@@ -48,7 +48,7 @@ package histogrammar {
     override def hashCode() = min.hashCode
   }
 
-  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Container[Minimizing[DATUM]] with Aggregation {
+  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
     type Type = Minimizing[DATUM]
     type Datum = DATUM
     def factory = Minimize
@@ -119,7 +119,7 @@ package histogrammar {
     override def hashCode() = max.hashCode
   }
 
-  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Container[Maximizing[DATUM]] with Aggregation {
+  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
     type Type = Maximizing[DATUM]
     type Datum = DATUM
     def factory = Maximize

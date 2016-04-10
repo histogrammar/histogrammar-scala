@@ -77,7 +77,7 @@ package histogrammar {
     }
   }
 
-  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with Aggregation {
+  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData {
     type Type = Partitioning[DATUM, V]
     type Datum = DATUM
     def factory = Partition

@@ -11,7 +11,7 @@ package histogrammar {
     val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM],
            value: => V = Count(), underflow: U = Count(), overflow: O = Count(), nanflow: N = Count())"""
 
-    def container[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+    def fixed[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (low: Double,
        high: Double,
        values: Seq[V],

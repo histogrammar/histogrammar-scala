@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate the sum of a given quantity."
     val detailedHelp = """Sum(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def container(value: Double) = new Summed(value)
+    def fixed(value: Double) = new Summed(value)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing[DATUM](quantity, selection, 0.0)
 
     def unapply(x: Summed) = Some(x.value)
@@ -30,7 +30,7 @@ package histogrammar {
 
     def toJsonFragment = JsonFloat(value)
 
-    override def toString() = s"Summed"
+    override def toString() = s"Summed($value)"
     override def equals(that: Any) = that match {
       case that: Summed => this.value === that.value
       case _ => false
@@ -55,7 +55,7 @@ package histogrammar {
 
     def toJsonFragment = JsonFloat(value)
 
-    override def toString() = s"Summing"
+    override def toString() = s"Summing($value)"
     override def equals(that: Any) = that match {
       case that: Summing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.value === that.value
       case _ => false

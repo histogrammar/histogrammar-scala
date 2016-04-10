@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Find the minimum value of a given quantity. If no data are observed, the result is NaN."
     val detailedHelp = """Minimize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def container(min: Double) = new Minimized(min)
+    def fixed(min: Double) = new Minimized(min)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, java.lang.Double.NaN)
 
     def unapply(x: Minimized) = Some(x.min)

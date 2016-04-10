@@ -10,19 +10,19 @@ package histogrammar {
     val help = "Accumulate a weighted mean and total weight of a given quantity."
     val detailedHelp = """Average(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def container(count: Double, mean: Double) = new Averaged(count, mean)
+    def fixed(totalWeight: Double, mean: Double) = new Averaged(totalWeight, mean)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
 
-    def unapply(x: Averaged) = Some((x.count, x.mean))
-    def unapply[DATUM](x: Averaging[DATUM]) = Some((x.count, x.mean))
+    def unapply(x: Averaged) = Some((x.totalWeight, x.mean))
+    def unapply[DATUM](x: Averaging[DATUM]) = Some((x.totalWeight, x.mean))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("count", "mean")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("totalWeight", "mean")) =>
         val get = pairs.toMap
 
-        val count = get("count") match {
+        val totalWeight = get("totalWeight") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".count")
+          case x => throw new JsonFormatException(x, name + ".totalWeight")
         }
 
         val mean = get("mean") match {
@@ -30,7 +30,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".mean")
         }
 
-        new Averaged(count, mean)
+        new Averaged(totalWeight, mean)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -39,33 +39,33 @@ package histogrammar {
       (ca + cb, (ca*mua + cb*mub)/(ca + cb))
   }
 
-  class Averaged(val count: Double, val mean: Double) extends Container[Averaged] {
+  class Averaged(val totalWeight: Double, val mean: Double) extends Container[Averaged] {
     type Type = Averaged
     def factory = Average
 
     def +(that: Averaged) = {
-      val (newcount, newmean) = Average.plus(this.count, this.mean, that.count, that.mean)
-      new Averaged(newcount, newmean)
+      val (newtotalWeight, newmean) = Average.plus(this.totalWeight, this.mean, that.totalWeight, that.mean)
+      new Averaged(newtotalWeight, newmean)
     }
 
-    def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
+    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean))
 
-    override def toString() = s"Averaged"
+    override def toString() = s"Averaged($totalWeight, $mean)"
     override def equals(that: Any) = that match {
-      case that: Averaged => this.count === that.count  &&  this.mean === that.mean
+      case that: Averaged => this.totalWeight === that.totalWeight  &&  this.mean === that.mean
       case _ => false
     }
-    override def hashCode() = (count, mean).hashCode
+    override def hashCode() = (totalWeight, mean).hashCode
   }
 
-  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var count: Double, var mean: Double) extends Container[Averaging[DATUM]] with Aggregation {
+  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, var mean: Double) extends Container[Averaging[DATUM]] with Aggregation {
     type Type = Averaging[DATUM]
     type Datum = DATUM
     def factory = Average
 
     def +(that: Averaging[DATUM]) = {
-      val (newcount, newmean) = Average.plus(this.count, this.mean, that.count, that.mean)
-      new Averaging(this.quantity, this.selection, newcount, newmean)
+      val (newtotalWeight, newmean) = Average.plus(this.totalWeight, this.mean, that.totalWeight, that.mean)
+      new Averaging(this.quantity, this.selection, newtotalWeight, newmean)
     }
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
@@ -73,22 +73,22 @@ package histogrammar {
       if (w > 0.0) {
         val q = quantity(datum)
 
-        count += w
+        totalWeight += w
 
         val delta = q - mean
-        val shift = delta * w / count
+        val shift = delta * w / totalWeight
 
         mean += shift
       }
     }
 
-    def toJsonFragment = JsonObject("count" -> JsonFloat(count), "mean" -> JsonFloat(mean))
+    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean))
 
-    override def toString() = s"Averaging"
+    override def toString() = s"Averaging($totalWeight, $mean)"
     override def equals(that: Any) = that match {
-      case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.count === that.count  &&  this.mean === that.mean
+      case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.totalWeight === that.totalWeight  &&  this.mean === that.mean
       case _ => false
     }
-    override def hashCode() = (quantity, selection, count, mean).hashCode
+    override def hashCode() = (quantity, selection, totalWeight, mean).hashCode
   }
 }

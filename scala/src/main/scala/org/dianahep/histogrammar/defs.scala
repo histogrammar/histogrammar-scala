@@ -127,4 +127,37 @@ package object histogrammar {
   implicit class nanEquality(val x: Double) extends AnyVal {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
+
+  // provide i0 through i9 as though they were members of MultiTypeIndexed
+  implicit class MultiTypeIndexed0[C0 <: Container[C0], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, TAIL]) {
+    def i0 = x.head
+  }
+  implicit class MultiTypeIndexed1[C0 <: Container[C0], C1 <: Container[C1], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, TAIL]]) {
+    def i1 = x.tail.head
+  }
+  implicit class MultiTypeIndexed2[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, TAIL]]]) {
+    def i2 = x.tail.tail.head
+  }
+  implicit class MultiTypeIndexed3[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, TAIL]]]]) {
+    def i3 = x.tail.tail.tail.head
+  }
+  implicit class MultiTypeIndexed4[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, TAIL]]]]]) {
+    def i4 = x.tail.tail.tail.tail.head
+  }
+  implicit class MultiTypeIndexed5[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, TAIL]]]]]]) {
+    def i5 = x.tail.tail.tail.tail.tail.head
+  }
+  implicit class MultiTypeIndexed6[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, TAIL]]]]]]]) {
+    def i6 = x.tail.tail.tail.tail.tail.tail.head
+  }
+  implicit class MultiTypeIndexed7[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, MultiTypeIndexed[C7, TAIL]]]]]]]]) {
+    def i7 = x.tail.tail.tail.tail.tail.tail.tail.head
+  }
+  implicit class MultiTypeIndexed8[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, MultiTypeIndexed[C7, MultiTypeIndexed[C8, TAIL]]]]]]]]]) {
+    def i8 = x.tail.tail.tail.tail.tail.tail.tail.tail.head
+  }
+  implicit class MultiTypeIndexed9[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, MultiTypeIndexed[C7, MultiTypeIndexed[C8, MultiTypeIndexed[C9, TAIL]]]]]]]]]]) {
+    def i9 = x.tail.tail.tail.tail.tail.tail.tail.tail.tail.head
+  }
+
 }

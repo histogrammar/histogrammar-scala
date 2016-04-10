@@ -1,5 +1,7 @@
 package org.dianahep
 
+import scala.language.existentials
+
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
@@ -9,7 +11,7 @@ package histogrammar {
     val help = "Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum."
     val detailedHelp = """Label(pairs: (String, V)*)"""
 
-    def container[V <: Container[V]](pairs: (String, V)*) = new Labeled[V](pairs: _*)
+    def fixed[V <: Container[V]](pairs: (String, V)*) = new Labeled[V](pairs: _*)
     def apply[V <: Container[V] with Aggregation](pairs: (String, V)*) = new Labeling[V](pairs: _*)
 
     def unapplySeq[V <: Container[V]](x: Labeled[V]) = Some(x.pairs)
@@ -120,7 +122,7 @@ package histogrammar {
     override def hashCode() = pairsMap.hashCode
   }
 
-  //////////////////////////////////////////////////////////////// MixedTypeLabel/MixedTypeLabeled/MixedTypeLabeling
+  //////////////////////////////////////////////////////////////// MultiTypeLabel/MultiTypeLabeled/MultiTypeLabeling
 
   //////////////////////////////////////////////////////////////// Index/Indexed/Indexing
 
@@ -129,7 +131,7 @@ package histogrammar {
     val help = "Accumulate any number of containers of the SAME type anonymously in a list. Every one is filled with every input datum."
     val detailedHelp = """"""
 
-    def container[V <: Container[V]](values: V*) = new Indexed[V](values: _*)
+    def fixed[V <: Container[V]](values: V*) = new Indexed[V](values: _*)
     def apply[V <: Container[V] with Aggregation](values: V*) = new Indexing[V](values: _*)
 
     def unapplySeq[V <: Container[V]](x: Indexed[V]) = Some(x.values)
@@ -240,6 +242,55 @@ package histogrammar {
     override def hashCode() = values.hashCode
   }
 
-  //////////////////////////////////////////////////////////////// MixedTypeIndex/MixedTypeIndexed/MixedTypeIndexing
+  //////////////////////////////////////////////////////////////// MultiTypeIndex/MultiTypeIndexed/MultiTypeIndexing
+
+  object MultiTypeIndex extends Factory {
+    def name = "MultiTypeIndex"
+    def help = "Accumulate up to 10 containers of DIFFERENT types anonymously in a list. Every one is filled with every input datum."
+    def detailedHelp = ""
+
+    def fixed[C0 <: Container[C0]](i0: C0) = new MultiTypeIndexed(i0, MultiTypeIndexedNil)
+    def fixed[C0 <: Container[C0], C1 <: Container[C1]](i0: C0, i1: C1) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, MultiTypeIndexedNil))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2]](i0: C0, i1: C1, i2: C2) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, MultiTypeIndexedNil)))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](i0: C0, i1: C1, i2: C2, i3: C3) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, MultiTypeIndexedNil))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, MultiTypeIndexedNil)))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, MultiTypeIndexedNil))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, MultiTypeIndexedNil)))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, MultiTypeIndexedNil))))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, MultiTypeIndexedNil)))))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, new MultiTypeIndexed(i9, MultiTypeIndexedNil))))))))))
+
+    def fromJsonFragment(json: Json): Container[_] = null
+  }
+
+  sealed trait MultiTypeIndexedList {
+    def values: List[Container[_]]
+    def size: Int
+  }
+
+  object MultiTypeIndexedNil extends MultiTypeIndexedList {
+    def values: List[Container[_]] = Nil
+    def size: Int = 0
+  }
+
+  class MultiTypeIndexed[HEAD <: Container[HEAD], TAIL <: MultiTypeIndexedList](val head: HEAD, val tail: TAIL) extends Container[MultiTypeIndexed[HEAD, TAIL]] with MultiTypeIndexedList {
+    type Type = MultiTypeIndexed[HEAD, TAIL]
+    def factory = MultiTypeIndex
+
+    def values: List[Container[_]] = head :: tail.values
+    def size: Int = 1 + tail.size
+
+    def +(that: MultiTypeIndexed[HEAD, TAIL]) = new MultiTypeIndexed[HEAD, TAIL](this.head + that.head, this.tail)
+
+    def toJsonFragment = JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*)
+
+    override def toString() = "MultiTypeIndexed[" + values.mkString(", ") + "]"
+
+    override def equals(that: Any) = that match {
+      case other: MultiTypeIndexed[_, _] => this.head == other.head  &&  this.tail == other.tail
+      case _ => false
+    }
+    override def hashCode() = values.hashCode
+  }
 
 }

@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate a weighted mean absolute error (MAE) and total weight of a given quantity whose nominal value is zero."
     val detailedHelp = """AbsoluteErr(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def container(totalWeight: Double, mae: Double) = new AbsoluteErred(totalWeight, mae)
+    def fixed(totalWeight: Double, mae: Double) = new AbsoluteErred(totalWeight, mae)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
 
     def unapply(x: AbsoluteErred) = Some((x.totalWeight, x.mae))
@@ -50,7 +50,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mae" -> JsonFloat(mae))
 
-    override def toString() = s"AbsoluteErred"
+    override def toString() = s"AbsoluteErred($totalWeight, $mae)"
     override def equals(that: Any) = that match {
       case that: AbsoluteErred => this.totalWeight === that.totalWeight  &&  this.mae === that.mae
       case _ => false
@@ -91,7 +91,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mae" -> JsonFloat(mae))
 
-    override def toString() = s"AbsoluteErring"
+    override def toString() = s"AbsoluteErring($totalWeight, $mae)"
     override def equals(that: Any) = that match {
       case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.totalWeight === that.totalWeight  &&  this.mae === that.mae
       case _ => false

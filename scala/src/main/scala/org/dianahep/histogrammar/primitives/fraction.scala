@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Fill two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
     val detailedHelp = """Fraction(numeratorSelection: Selection[DATUM], value: => V = Count())"""
 
-    def container[V <: Container[V]](numerator: V, denominator: V) = new Fractioned(numerator, denominator)
+    def fixed[V <: Container[V]](numerator: V, denominator: V) = new Fractioned(numerator, denominator)
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](numeratorSelection: Selection[DATUM], value: => V = Count()) =
       new Fractioning(numeratorSelection, value, value)
 

@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers)."
     val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def container(totalWeight: Double, mean: Double, variance: Double) = new Deviated(totalWeight, mean, variance)
+    def fixed(totalWeight: Double, mean: Double, variance: Double) = new Deviated(totalWeight, mean, variance)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
 
     def unapply(x: Deviated) = Some((x.totalWeight, x.mean, x.variance))
@@ -59,7 +59,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
-    override def toString() = s"Deviated"
+    override def toString() = s"Deviated($totalWeight, $mean, $variance)"
     override def equals(that: Any) = that match {
       case that: Deviated => this.totalWeight === that.totalWeight  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
@@ -107,7 +107,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
-    override def toString() = s"Deviating"
+    override def toString() = s"Deviating($totalWeight, $mean, $variance)"
     override def equals(that: Any) = that match {
       case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.totalWeight === that.totalWeight  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false

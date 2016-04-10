@@ -45,7 +45,7 @@ package histogrammar {
 
     register(Label)
     register(Index)
-    register(MultiTypeIndex)
+    register(Branch)
 
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
@@ -135,35 +135,67 @@ package object histogrammar {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
 
-  // provide i0 through i9 as though they were members of MultiTypeIndexed
-  implicit class MultiTypeIndexed0[C0 <: Container[C0], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, TAIL]) {
+  // provide i0 through i9 as though they were members of Branched
+  implicit class Branched0[C0 <: Container[C0], TAIL <: BranchedList](x: Branched[C0, TAIL]) {
     def i0 = x.head
   }
-  implicit class MultiTypeIndexed1[C0 <: Container[C0], C1 <: Container[C1], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, TAIL]]) {
+  implicit class Branched1[C0 <: Container[C0], C1 <: Container[C1], TAIL <: BranchedList](x: Branched[C0, Branched[C1, TAIL]]) {
     def i1 = x.tail.head
   }
-  implicit class MultiTypeIndexed2[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, TAIL]]]) {
+  implicit class Branched2[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, TAIL]]]) {
     def i2 = x.tail.tail.head
   }
-  implicit class MultiTypeIndexed3[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, TAIL]]]]) {
+  implicit class Branched3[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, TAIL]]]]) {
     def i3 = x.tail.tail.tail.head
   }
-  implicit class MultiTypeIndexed4[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, TAIL]]]]]) {
+  implicit class Branched4[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, TAIL]]]]]) {
     def i4 = x.tail.tail.tail.tail.head
   }
-  implicit class MultiTypeIndexed5[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, TAIL]]]]]]) {
+  implicit class Branched5[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, TAIL]]]]]]) {
     def i5 = x.tail.tail.tail.tail.tail.head
   }
-  implicit class MultiTypeIndexed6[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, TAIL]]]]]]]) {
+  implicit class Branched6[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, TAIL]]]]]]]) {
     def i6 = x.tail.tail.tail.tail.tail.tail.head
   }
-  implicit class MultiTypeIndexed7[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, MultiTypeIndexed[C7, TAIL]]]]]]]]) {
+  implicit class Branched7[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, TAIL]]]]]]]]) {
     def i7 = x.tail.tail.tail.tail.tail.tail.tail.head
   }
-  implicit class MultiTypeIndexed8[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, MultiTypeIndexed[C7, MultiTypeIndexed[C8, TAIL]]]]]]]]]) {
+  implicit class Branched8[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, Branched[C8, TAIL]]]]]]]]]) {
     def i8 = x.tail.tail.tail.tail.tail.tail.tail.tail.head
   }
-  implicit class MultiTypeIndexed9[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], TAIL <: MultiTypeIndexedList](x: MultiTypeIndexed[C0, MultiTypeIndexed[C1, MultiTypeIndexed[C2, MultiTypeIndexed[C3, MultiTypeIndexed[C4, MultiTypeIndexed[C5, MultiTypeIndexed[C6, MultiTypeIndexed[C7, MultiTypeIndexed[C8, MultiTypeIndexed[C9, TAIL]]]]]]]]]]) {
+  implicit class Branched9[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, Branched[C8, Branched[C9, TAIL]]]]]]]]]]) {
+    def i9 = x.tail.tail.tail.tail.tail.tail.tail.tail.tail.head
+  }
+
+  // provide i0 through i9 as though they were members of Branching
+  implicit class Branching0[C0 <: Container[C0] with Aggregation, TAIL <: BranchingList](x: Branching[C0, TAIL]) {
+    def i0 = x.head
+  }
+  implicit class Branching1[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, TAIL]]) {
+    def i1 = x.tail.head
+  }
+  implicit class Branching2[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, TAIL]]]) {
+    def i2 = x.tail.tail.head
+  }
+  implicit class Branching3[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, Branching[C3, TAIL]]]]) {
+    def i3 = x.tail.tail.tail.head
+  }
+  implicit class Branching4[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, Branching[C3, Branching[C4, TAIL]]]]]) {
+    def i4 = x.tail.tail.tail.tail.head
+  }
+  implicit class Branching5[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, Branching[C3, Branching[C4, Branching[C5, TAIL]]]]]]) {
+    def i5 = x.tail.tail.tail.tail.tail.head
+  }
+  implicit class Branching6[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, Branching[C3, Branching[C4, Branching[C5, Branching[C6, TAIL]]]]]]]) {
+    def i6 = x.tail.tail.tail.tail.tail.tail.head
+  }
+  implicit class Branching7[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, Branching[C3, Branching[C4, Branching[C5, Branching[C6, Branching[C7, TAIL]]]]]]]]) {
+    def i7 = x.tail.tail.tail.tail.tail.tail.tail.head
+  }
+  implicit class Branching8[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, Branching[C3, Branching[C4, Branching[C5, Branching[C6, Branching[C7, Branching[C8, TAIL]]]]]]]]]) {
+    def i8 = x.tail.tail.tail.tail.tail.tail.tail.tail.head
+  }
+  implicit class Branching9[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, C9 <: Container[C9] with Aggregation, TAIL <: BranchingList](x: Branching[C0, Branching[C1, Branching[C2, Branching[C3, Branching[C4, Branching[C5, Branching[C6, Branching[C7, Branching[C8, Branching[C9, TAIL]]]]]]]]]]) {
     def i9 = x.tail.tail.tail.tail.tail.tail.tail.tail.tail.head
   }
 

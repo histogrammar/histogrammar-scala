@@ -553,6 +553,59 @@ class DefaultSuite extends FlatSpec with Matchers {
     labeling("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
   }
 
+  //////////////////////////////////////////////////////////////// Index/Indexed/Indexing
+
+  "Index/Indexed/Indexing" must "work with a single type" in {
+    val one = Histogram(5, -3.0, 7.0, {x: Double => x})
+    val two = Histogram(10, 0.0, 10.0, {x: Double => x})
+    val three = Histogram(5, -3.0, 7.0, {x: Double => 2*x})
+
+    val indexing = Index(one, two, three)
+
+    simple.foreach(indexing.fill(_))
+
+    indexing(0).numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+    indexing(1).numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
+    indexing(2).numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
+  }
+
+  it must "permit histograms to have different cuts" in {
+    val one = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 0})
+    val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
+    val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
+
+    val indexing = Index(one, two, three)
+
+    simple.foreach(indexing.fill(_))
+
+    indexing(0).numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
+    indexing(1).numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
+    indexing(2).numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+  }
+
+  //////////////////////////////////////////////////////////////// Branch/Branched/Branching
+
+  "Branch/Branched/Branching" must "permit multiple types without losing type information" in {
+    val one = Histogram(5, -3.0, 7.0, {x: Double => x})
+    val two = Count()
+    val three = Deviate({x: Double => x + 100.0})
+
+    val branching = Branch(one, two, three)
+
+    simple.foreach(branching.fill(_))
+
+    branching.i0.values.map(_.value).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
+    branching.i0.underflow.value should be (1.0)
+    branching.i0.overflow.value should be (1.0)
+    branching.i0.nanflow.value should be (0.0)
+
+    branching.i1.value should be (10L)
+
+    branching.i2.totalWeight should be (10.0 +- 1e-12)
+    branching.i2.mean should be (100.33 +- 1e-12)
+    branching.i2.variance should be (10.8381 +- 1e-12)
+  }
+
   //////////////////////////////////////////////////////////////// Usability in fold/aggregate
 
   "Aggregators/Combiners" must "be usable in Spark's aggregate (which has the same signature as Scala's foldLeft + reduce)" in {

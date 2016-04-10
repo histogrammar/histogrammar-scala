@@ -242,23 +242,23 @@ package histogrammar {
     override def hashCode() = values.hashCode
   }
 
-  //////////////////////////////////////////////////////////////// MultiTypeIndex/MultiTypeIndexed/MultiTypeIndexing
+  //////////////////////////////////////////////////////////////// Branch/Branched/Branching
 
-  object MultiTypeIndex extends Factory {
-    def name = "MultiTypeIndex"
-    def help = "Accumulate up to 10 containers of DIFFERENT types anonymously in a list. Every one is filled with every input datum."
-    def detailedHelp = "MultiTypeIndex(container0, container1, ...)"
+  object Branch extends Factory {
+    def name = "Branch"
+    def help = "Accumulate containers of DIFFERENT types, indexed by i0 through i9. Every one is filled with every input datum."
+    def detailedHelp = "Branch(container0, container1, ...)"
 
-    def fixed[C0 <: Container[C0]](i0: C0) = new MultiTypeIndexed(i0, MultiTypeIndexedNil)
-    def fixed[C0 <: Container[C0], C1 <: Container[C1]](i0: C0, i1: C1) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, MultiTypeIndexedNil))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2]](i0: C0, i1: C1, i2: C2) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, MultiTypeIndexedNil)))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](i0: C0, i1: C1, i2: C2, i3: C3) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, MultiTypeIndexedNil))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, MultiTypeIndexedNil)))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, MultiTypeIndexedNil))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, MultiTypeIndexedNil)))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, MultiTypeIndexedNil))))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, MultiTypeIndexedNil)))))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new MultiTypeIndexed(i0, new MultiTypeIndexed(i1, new MultiTypeIndexed(i2, new MultiTypeIndexed(i3, new MultiTypeIndexed(i4, new MultiTypeIndexed(i5, new MultiTypeIndexed(i6, new MultiTypeIndexed(i7, new MultiTypeIndexed(i8, new MultiTypeIndexed(i9, MultiTypeIndexedNil))))))))))
+    def fixed[C0 <: Container[C0]](i0: C0) = new Branched(i0, BranchedNil)
+    def fixed[C0 <: Container[C0], C1 <: Container[C1]](i0: C0, i1: C1) = new Branched(i0, new Branched(i1, BranchedNil))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2]](i0: C0, i1: C1, i2: C2) = new Branched(i0, new Branched(i1, new Branched(i2, BranchedNil)))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](i0: C0, i1: C1, i2: C2, i3: C3) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, BranchedNil))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, BranchedNil)))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, BranchedNil))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, new Branched(i6, BranchedNil)))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, new Branched(i6, new Branched(i7, BranchedNil))))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, new Branched(i6, new Branched(i7, new Branched(i8, BranchedNil)))))))))
+    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new Branched(i0, new Branched(i1, new Branched(i2, new Branched(i3, new Branched(i4, new Branched(i5, new Branched(i6, new Branched(i7, new Branched(i8, new Branched(i9, BranchedNil))))))))))
 
     trait Compatible[-X, -Y]
     object Compatible {
@@ -268,87 +268,96 @@ package histogrammar {
       implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
     }
 
-    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation](i0: C0, i1: C1)(implicit e01: C0 Compatible C1) = new MultiTypeIndexing(i0, new MultiTypeIndexing(i1, MultiTypeIndexingNil))
+    def apply[C0 <: Container[C0] with Aggregation](i0: C0) = new Branching(i0, BranchingNil)
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation](i0: C0, i1: C1)(implicit e01: C0 Compatible C1) = new Branching(i0, new Branching(i1, BranchingNil))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation](i0: C0, i1: C1, i2: C2)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2) = new Branching(i0, new Branching(i1, new Branching(i2, BranchingNil)))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3) = new Branching(i0, new Branching(i1, new Branching(i2, new Branching(i3, BranchingNil))))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4) = new Branching(i0, new Branching(i1, new Branching(i2, new Branching(i3, new Branching(i4, BranchingNil)))))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5) = new Branching(i0, new Branching(i1, new Branching(i2, new Branching(i3, new Branching(i4, new Branching(i5, BranchingNil))))))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6) = new Branching(i0, new Branching(i1, new Branching(i2, new Branching(i3, new Branching(i4, new Branching(i5, new Branching(i6, BranchingNil)))))))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7) = new Branching(i0, new Branching(i1, new Branching(i2, new Branching(i3, new Branching(i4, new Branching(i5, new Branching(i6, new Branching(i7, BranchingNil))))))))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8) = new Branching(i0, new Branching(i1, new Branching(i2, new Branching(i3, new Branching(i4, new Branching(i5, new Branching(i6, new Branching(i7, new Branching(i8, BranchingNil)))))))))
+    def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, C9 <: Container[C9] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8, e09: C0 Compatible C9) = new Branching(i0, new Branching(i1, new Branching(i2, new Branching(i3, new Branching(i4, new Branching(i5, new Branching(i6, new Branching(i7, new Branching(i8, new Branching(i9, BranchingNil))))))))))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonArray(values @ _*) if (values.size >= 1) =>
-        var backwards: MultiTypeIndexedList = MultiTypeIndexedNil
+        var backwards: BranchedList = BranchedNil
 
         values.zipWithIndex.toList foreach {
           case (JsonObject((JsonString(factory), sub)), _) =>
             val item = Factory(factory).fromJsonFragment(sub).asInstanceOf[C forSome {type C <: Container[C]}]
-            backwards = new MultiTypeIndexed(item, backwards)
+            backwards = new Branched(item, backwards)
 
-          case (_, i) => throw new ContainerException(s"MultiTypeIndexed $i")
+          case (_, i) => throw new ContainerException(s"Branched $i")
         }
 
-        var out: MultiTypeIndexedList = MultiTypeIndexedNil
+        var out: BranchedList = BranchedNil
         while (!backwards.isEmpty) {
-          val list = backwards.asInstanceOf[MultiTypeIndexed[C forSome {type C <: Container[C]}, MultiTypeIndexedList]]
-          out = new MultiTypeIndexed(list.head, out)
+          val list = backwards.asInstanceOf[Branched[C forSome {type C <: Container[C]}, BranchedList]]
+          out = new Branched(list.head, out)
           backwards = list.tail
         }
         out.asInstanceOf[Container[_]]
 
-      case _ => throw new ContainerException("MultiTypeIndexed")
+      case _ => throw new ContainerException("Branched")
     }
   }
 
-  sealed trait MultiTypeIndexedList {
+  sealed trait BranchedList {
     def values: List[Container[_]]
     def isEmpty: Boolean
     def size: Int
   }
 
-  object MultiTypeIndexedNil extends MultiTypeIndexedList {
+  object BranchedNil extends BranchedList {
     def values: List[Container[_]] = Nil
     def isEmpty: Boolean = true
     def size: Int = 0
   }
 
-  class MultiTypeIndexed[HEAD <: Container[HEAD], TAIL <: MultiTypeIndexedList](val head: HEAD, val tail: TAIL) extends Container[MultiTypeIndexed[HEAD, TAIL]] with MultiTypeIndexedList {
-    type Type = MultiTypeIndexed[HEAD, TAIL]
-    def factory = MultiTypeIndex
+  class Branched[HEAD <: Container[HEAD], TAIL <: BranchedList](val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with BranchedList {
+    type Type = Branched[HEAD, TAIL]
+    def factory = Branch
 
     def values: List[Container[_]] = head :: tail.values
     def isEmpty: Boolean = false
     def size: Int = 1 + tail.size
 
-    def +(that: MultiTypeIndexed[HEAD, TAIL]) = new MultiTypeIndexed[HEAD, TAIL](this.head + that.head, this.tail)
+    def +(that: Branched[HEAD, TAIL]) = new Branched[HEAD, TAIL](this.head + that.head, this.tail)
 
     def toJsonFragment = JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*)
 
-    override def toString() = "MultiTypeIndexed[" + values.mkString(", ") + "]"
+    override def toString() = "Branched[" + values.mkString(", ") + "]"
 
     override def equals(that: Any) = that match {
-      case other: MultiTypeIndexed[_, _] => this.head == other.head  &&  this.tail == other.tail
+      case other: Branched[_, _] => this.head == other.head  &&  this.tail == other.tail
       case _ => false
     }
     override def hashCode() = values.hashCode
   }
 
-  sealed trait MultiTypeIndexingList {
+  sealed trait BranchingList {
     def values: List[Container[_]]
     def isEmpty: Boolean
     def size: Int
   }
 
-  object MultiTypeIndexingNil extends MultiTypeIndexingList {
+  object BranchingNil extends BranchingList {
     def values: List[Container[_]] = Nil
     def isEmpty: Boolean = true
     def size: Int = 0
   }
 
-  class MultiTypeIndexing[HEAD <: Container[HEAD] with Aggregation, TAIL <: MultiTypeIndexingList](val head: HEAD, val tail: TAIL) extends Container[MultiTypeIndexing[HEAD, TAIL]] with AggregationOnData with MultiTypeIndexingList {
-    type Type = MultiTypeIndexing[HEAD, TAIL]
+  class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList](val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
+    type Type = Branching[HEAD, TAIL]
     type Datum = head.Datum
-    def factory = MultiTypeIndex
+    def factory = Branch
 
     def values: List[Container[_]] = head :: tail.values
     def isEmpty: Boolean = false
     def size: Int = 1 + tail.size
 
-    def +(that: MultiTypeIndexing[HEAD, TAIL]) = new MultiTypeIndexing[HEAD, TAIL](this.head + that.head, this.tail)
+    def +(that: Branching[HEAD, TAIL]) = new Branching[HEAD, TAIL](this.head + that.head, this.tail)
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
       head.fillWeighted(datum, weight)
@@ -360,10 +369,10 @@ package histogrammar {
 
     def toJsonFragment = JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*)
 
-    override def toString() = "MultiTypeIndexing[" + values.mkString(", ") + "]"
+    override def toString() = "Branching[" + values.mkString(", ") + "]"
 
     override def equals(that: Any) = that match {
-      case other: MultiTypeIndexing[_, _] => this.head == other.head  &&  this.tail == other.tail
+      case other: Branching[_, _] => this.head == other.head  &&  this.tail == other.tail
       case _ => false
     }
     override def hashCode() = values.hashCode

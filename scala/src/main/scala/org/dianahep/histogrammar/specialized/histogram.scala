@@ -49,8 +49,8 @@ package histogram {
 
     def ascii: String = ascii(80)
     def ascii(width: Int): String = {
-      val minCount = hist.values.map(_.value).min
-      val maxCount = hist.values.map(_.value).max
+      val minCount = Math.min(Math.min(Math.min(hist.values.map(_.value).min, hist.overflow.value), hist.underflow.value), hist.nanflow.value)
+      val maxCount = Math.max(Math.max(Math.max(hist.values.map(_.value).max, hist.overflow.value), hist.underflow.value), hist.nanflow.value)
       val range = maxCount - minCount
       val minEdge = if (minCount < 0.0) minCount - 0.1*range else 0.0
       val maxEdge = maxCount + 0.1*range

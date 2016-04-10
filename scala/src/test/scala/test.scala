@@ -523,60 +523,35 @@ class DefaultSuite extends FlatSpec with Matchers {
     categorizing.pairsMap map {case (k, v) => (k, v.value)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
   }
 
-  // //////////////////////////////////////////////////////////////// NameMap/NameMapped/NameMapping
+  //////////////////////////////////////////////////////////////// Label/Labeled/Labeling
 
-  // "NameMap/NameMapped/NameMapping" must "work with multiple types" in {
-  //   val one = Histogram(5, -3.0, 7.0, {x: Double => x})
-  //   val two = Count()
-  //   val three = Deviate({x: Double => x + 100.0})
+  "Label/Labeled/Labeling" must "work with a single type" in {
+    val one = Histogram(5, -3.0, 7.0, {x: Double => x})
+    val two = Histogram(10, 0.0, 10.0, {x: Double => x})
+    val three = Histogram(5, -3.0, 7.0, {x: Double => 2*x})
 
-  //   val mapping = NameMap[Double]("one" -> one, "two" -> two, "three" -> three)
+    val labeling = Label("one" -> one, "two" -> two, "three" -> three)
 
-  //   simple.foreach(mapping.fill(_))
+    simple.foreach(labeling.fill(_))
 
-  //   one.values.map(_.value).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
-  //   mapping[Counting[_]]("two").value should be (10.0)
-  //   mapping[Deviating[_]]("three").count should be (10.0 +- 1e-12)
-  //   mapping[Deviating[_]]("three").mean should be (100.33 +- 1e-12)
-  //   mapping[Deviating[_]]("three").variance should be (10.8381 +- 1e-12)
-  // }
+    labeling("one").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+    labeling("two").numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
+    labeling("three").numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
+  }
 
-  // it must "permit histograms to have different cuts" in {
-  //   val one = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 0})
-  //   val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
-  //   val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
+  it must "permit histograms to have different cuts" in {
+    val one = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 0})
+    val two = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x > 5})
+    val three = Histogram(10, -10, 10, {x: Double => x}, {x: Double => x < 5})
 
-  //   val mapping = NameMap[Double]("one" -> one, "two" -> two, "three" -> three)
+    val labeling = Label("one" -> one, "two" -> two, "three" -> three)
 
-  //   simple.foreach(mapping.fill(_))
+    simple.foreach(labeling.fill(_))
 
-  //   mapping[Histogramming[_]]("one").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
-  //   mapping[Histogramming[_]]("two").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
-  //   mapping[Histogramming[_]]("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
-  // }
-
-  // //////////////////////////////////////////////////////////////// Tuple/Tupled/Tupling
-
-  // "Tuple/Tupled/Tupling" must "work with multiple types" in {
-  //   val one = Histogram(5, -3.0, 7.0, {x: Double => x})
-  //   val two = Count()
-  //   // val three = Deviate({x: Double => x + 100.0})
-
-  //   val tupling = tupleToTupling2((one, two))
-
-  //   simple.foreach(tupling.fill(_))
-
-  //   one.values.map(_.value).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
-  //   one.underflow.value should be (1.0)
-  //   one.overflow.value should be (1.0)
-  //   one.nanflow.value should be (0.0)
-
-  //   tupling._2.value should be (10.0)
-
-  //   // three.count should be (10.0 +- 1e-12)
-  //   // three.mean should be (100.33 +- 1e-12)
-  //   // three.variance should be (10.8381 +- 1e-12)
-  // }
+    labeling("one").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
+    labeling("two").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
+    labeling("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+  }
 
   //////////////////////////////////////////////////////////////// Usability in fold/aggregate
 
@@ -614,24 +589,22 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalHist.numericalNanflow should be (0.0)
     }
 
-    // for (i <- 0 to 10) {
-    //   val (left, right) = simple.splitAt(i)
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-    //   val hist1 = NameMap[Double]("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}), "counter" -> Count())
-    //   val hist2 = NameMap[Double]("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}), "counter" -> Count())
+      val collection1 = Label("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}))
+      val collection2 = Label("hist" -> Bin(5, -3.0, 7.0, {x: Double => x}))
 
-    //   val partialHists = Seq(
-    //     left.foldLeft(hist1)(increment(hist1)),
-    //     right.foldLeft(hist2)(increment(hist2)))
+      val partialHists = Seq(
+        left.foldLeft(collection1)(increment[collection1.Type]),
+        right.foldLeft(collection2)(increment[collection1.Type]))
 
-    //   val finalHist = partialHists.reduce(combine(hist1))
+      val finalHist = partialHists.reduce(combine[collection1.Type])
 
-    //   finalHist[Histogramming[_]]("hist").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
-    //   finalHist[Histogramming[_]]("hist").numericalUnderflow should be (1.0)
-    //   finalHist[Histogramming[_]]("hist").numericalOverflow should be (1.0)
-    //   finalHist[Histogramming[_]]("hist").numericalNanflow should be (0.0)
-
-    //   finalHist[Counting[_]]("counter").value should be (10.0)
-    // }
+      finalHist("hist").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist("hist").numericalUnderflow should be (1.0)
+      finalHist("hist").numericalOverflow should be (1.0)
+      finalHist("hist").numericalNanflow should be (0.0)
+    }
   }
 }

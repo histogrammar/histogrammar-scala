@@ -7,7 +7,7 @@ package histogrammar {
 
   object Average extends Factory {
     val name = "Average"
-    val help = "Accumulate a count and a weighted mean of a given quantity."
+    val help = "Accumulate a weighted mean and total weight of a given quantity."
     val detailedHelp = """Average(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(count: Double, mean: Double) = new Averaged(count, mean)

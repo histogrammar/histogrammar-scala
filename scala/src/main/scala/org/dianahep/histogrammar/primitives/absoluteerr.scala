@@ -41,6 +41,7 @@ package histogrammar {
 
   class AbsoluteErred(val totalWeight: Double, val mae: Double) extends Container[AbsoluteErred] {
     type Type = AbsoluteErred
+    type FixedType = AbsoluteErred
     def factory = AbsoluteErr
 
     def +(that: AbsoluteErred) = {
@@ -48,6 +49,7 @@ package histogrammar {
       new AbsoluteErred(newtotalWeight, newmae)
     }
 
+    def fix = this
     def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mae" -> JsonFloat(mae))
 
     override def toString() = s"AbsoluteErred($totalWeight, $mae)"
@@ -60,6 +62,7 @@ package histogrammar {
 
   class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]
+    type FixedType = AbsoluteErred
     type Datum = DATUM
     def factory = AbsoluteErr
 
@@ -89,7 +92,8 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mae" -> JsonFloat(mae))
+    def fix = new AbsoluteErred(totalWeight, mae)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"AbsoluteErring($totalWeight, $mae)"
     override def equals(that: Any) = that match {

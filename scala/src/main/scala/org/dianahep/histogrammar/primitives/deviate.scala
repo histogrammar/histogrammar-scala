@@ -49,6 +49,7 @@ package histogrammar {
 
   class Deviated(val totalWeight: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
     type Type = Deviated
+    type FixedType = Deviated
     def factory = Deviate
 
     def +(that: Deviated) = {
@@ -57,6 +58,7 @@ package histogrammar {
       new Deviated(newtotalWeight, newmean, newvariance)
     }
 
+    def fix = this
     def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
     override def toString() = s"Deviated($totalWeight, $mean, $variance)"
@@ -69,6 +71,7 @@ package histogrammar {
 
   class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
     type Type = Deviating[DATUM]
+    type FixedType = Deviated
     type Datum = DATUM
     def factory = Deviate
 
@@ -105,7 +108,8 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
+    def fix = new Deviated(totalWeight, mean, variance)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"Deviating($totalWeight, $mean, $variance)"
     override def equals(that: Any) = that match {

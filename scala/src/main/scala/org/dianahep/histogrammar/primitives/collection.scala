@@ -48,6 +48,7 @@ package histogrammar {
 
   class Labeled[V <: Container[V]](val pairs: (String, V)*) extends Container[Labeled[V]] {
     type Type = Labeled[V]
+    type FixedType = Labeled[V]
     def factory = Label
 
     if (pairs.isEmpty)
@@ -71,9 +72,9 @@ package histogrammar {
           label -> (mysub + yoursub)
         }: _*)
 
-    def toJsonFragment =
-      JsonObject("type" -> JsonString(factory.name), "data" -> JsonObject(
-        pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
+    def fix = this
+    def toJsonFragment = JsonObject("type" -> JsonString(factory.name), "data" -> JsonObject(
+      pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
 
     override def toString() = s"Labeled[${pairs.head.toString}, size=${pairs.size}]"
     override def equals(that: Any) = that match {
@@ -85,6 +86,7 @@ package histogrammar {
 
   class Labeling[V <: Container[V] with Aggregation](val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
     type Type = Labeling[V]
+    type FixedType = Labeled[V#FixedType]
     type Datum = V#Datum
     def factory = Label
 
@@ -118,9 +120,8 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment =
-      JsonObject("type" -> JsonString(factory.name), "data" -> JsonObject(
-        pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
+    def fix = new Labeled(pairs map {case (k, v) => (k, v.fix)}: _*)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"Labeling[${pairs.head.toString}, size=${pairs.size}]"
     override def equals(that: Any) = that match {
@@ -162,6 +163,8 @@ package histogrammar {
   }
 
   class UntypedLabeled(val pairs: (String, Container[_])*) extends Container[UntypedLabeled] {
+    type Type = UntypedLabeled
+    type FixedType = UntypedLabeled
     def factory = UntypedLabel
 
     val pairsMap = pairs.toMap
@@ -184,6 +187,7 @@ package histogrammar {
           (key, UntypedLabel.combine(mysub, yoursub))
         }): _*)
 
+    def fix = this
     def toJsonFragment = JsonObject(pairs map {case (key, sub) =>
       key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
     }: _*)
@@ -197,6 +201,8 @@ package histogrammar {
   }
 
   class UntypedLabeling[DATUM](val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData {
+    type Type = UntypedLabeled
+    type FixedType = UntypedLabeled
     type Datum = DATUM
     def factory = UntypedLabel
 
@@ -229,9 +235,8 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject(pairs map {case (key, sub) =>
-      key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
-    }: _*)
+    def fix = new UntypedLabeled(pairs map {case (k, v) => (k, v.fix)}: _*)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"UntypedLabeling[size=${pairs.size}]"
     override def equals(that: Any) = that match {
@@ -277,6 +282,7 @@ package histogrammar {
 
   class Indexed[V <: Container[V]](val values: V*) extends Container[Indexed[V]] {
     type Type = Indexed[V]
+    type FixedType = Indexed[V]
     def factory = Index
 
     if (values.isEmpty)
@@ -301,8 +307,8 @@ package histogrammar {
       else
         new Indexed[V](this.values zip that.values map {case(me, you) => me + you}: _*)
 
-    def toJsonFragment =
-      JsonObject("type" -> JsonString(factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
+    def fix = this
+    def toJsonFragment = JsonObject("type" -> JsonString(factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
 
     override def toString() = s"Indexed[${values.head.toString}, size=${size}]"
     override def equals(that: Any) = that match {
@@ -314,6 +320,7 @@ package histogrammar {
 
   class Indexing[V <: Container[V] with Aggregation](val values: V*) extends Container[Indexing[V]] with AggregationOnData {
     type Type = Indexing[V]
+    type FixedType = Indexed[V#FixedType]
     type Datum = V#Datum
     def factory = Index
 
@@ -348,8 +355,8 @@ package histogrammar {
       }                                                       // "foreach" version of this loop--- that's weird!
     }
 
-    def toJsonFragment =
-      JsonObject("type" -> JsonString(factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
+    def fix = new Indexed(values.map(_.fix): _*)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"Indexing[${values.head.toString}, size=${size}]"
     override def equals(that: Any) = that match {
@@ -426,6 +433,7 @@ package histogrammar {
 
   class Branched[HEAD <: Container[HEAD], TAIL <: BranchedList](val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with BranchedList {
     type Type = Branched[HEAD, TAIL]
+    type FixedType = Branched[HEAD, TAIL]
     def factory = Branch
 
     def values: List[Container[_]] = head :: tail.values
@@ -434,6 +442,7 @@ package histogrammar {
 
     def +(that: Branched[HEAD, TAIL]) = new Branched[HEAD, TAIL](this.head + that.head, this.tail)
 
+    def fix = this
     def toJsonFragment = JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*)
 
     override def toString() = "Branched[" + values.mkString(", ") + "]"
@@ -446,12 +455,14 @@ package histogrammar {
   }
 
   sealed trait BranchingList {
+    type FixedType
     def values: List[Container[_]]
     def isEmpty: Boolean
     def size: Int
   }
 
   object BranchingNil extends BranchingList {
+    type FixedType = BranchedNil.type
     def values: List[Container[_]] = Nil
     def isEmpty: Boolean = true
     def size: Int = 0
@@ -459,6 +470,7 @@ package histogrammar {
 
   class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList](val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
     type Type = Branching[HEAD, TAIL]
+    type FixedType = Branched[HEAD#FixedType, TAIL#FixedType]
     type Datum = head.Datum
     def factory = Branch
 
@@ -476,7 +488,11 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*)
+    def fix = new Branched(head.fix, tail match {
+      case _: BranchingNil.type => BranchedNil
+      case x: Branching[_, _] => x.fix
+    })
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = "Branching[" + values.mkString(", ") + "]"
 

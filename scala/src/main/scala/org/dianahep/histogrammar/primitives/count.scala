@@ -24,10 +24,12 @@ package histogrammar {
 
   class Counted(val value: Long) extends Container[Counted] {
     type Type = Counted
+    type FixedType = Counted
     def factory = Count
 
     def +(that: Counted): Counted = new Counted(this.value + that.value)
 
+    def fix = this
     def toJsonFragment = JsonInt(value)
 
     override def toString() = s"Counted($value)"
@@ -40,6 +42,7 @@ package histogrammar {
 
   class Counting(var value: Long) extends Container[Counting] with Aggregation {
     type Type = Counting
+    type FixedType = Counting
     type Datum = Any
     def factory = Count
 
@@ -49,7 +52,8 @@ package histogrammar {
       value += 1L
     }
 
-    def toJsonFragment = JsonInt(value)
+    def fix = new Counted(value)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"Counting($value)"
     override def equals(that: Any) = that match {

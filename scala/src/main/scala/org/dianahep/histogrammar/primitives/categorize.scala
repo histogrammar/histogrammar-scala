@@ -12,7 +12,7 @@ package histogrammar {
     val help = "Split a given quantity by its categorical (string-based) value and fill only one category per datum."
     val detailedHelp = """Categorize(quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count())"""
 
-    def fixed[V <: Container[V]](pairs: (String, V)*) = new Categorized(pairs: _*)
+    def fixed[V <: Container[V]](contentType: String, pairs: (String, V)*) = new Categorized(contentType, pairs: _*)
 
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
       new Categorizing(quantity, selection, value, mutable.HashMap[String, V]())
@@ -24,16 +24,16 @@ package histogrammar {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
         val get = pairs.toMap
 
-        val factoryName = get("type") match {
-          case JsonString(name) => name
+        val (contentType, factory) = get("type") match {
+          case JsonString(name) => (name, Factory(name))
           case x => throw new JsonFormatException(x, name + ".type")
         }
 
         get("data") match {
           case JsonObject(categoryPairs @ _*) =>
-            new Categorized[Container[_]](categoryPairs map {
+            new Categorized[Container[_]](contentType, categoryPairs map {
               case (JsonString(category), value) =>
-                category -> Factory(factoryName).fromJsonFragment(value)
+                category -> factory.fromJsonFragment(value)
             }: _*)
 
           case x => throw new JsonFormatException(x, name + ".data")
@@ -43,8 +43,9 @@ package histogrammar {
     }
   }
 
-  class Categorized[V <: Container[V]](val pairs: (String, V)*) extends Container[Categorized[V]] {
+  class Categorized[V <: Container[V]](contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
     type Type = Categorized[V]
+    type FixedType = Categorized[V]
     def factory = Categorize
 
     val pairsMap = pairs.toMap
@@ -56,7 +57,7 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
-    def +(that: Categorized[V]) = new Categorized((this.keySet union that.keySet).toSeq map {key =>
+    def +(that: Categorized[V]) = new Categorized(contentType, (this.keySet union that.keySet).toSeq map {key =>
       if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
         (key, this.pairsMap(key) + that.pairsMap(key))
       else if (this.pairsMap contains key)
@@ -65,8 +66,9 @@ package histogrammar {
         (key, that.pairsMap(key))
     }: _*)
 
+    def fix = this
     def toJsonFragment = JsonObject(
-      "type" -> JsonString(if (pairs.isEmpty) "?" else pairs.head._2.factory.name),
+      "type" -> JsonString(contentType),
       "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
     override def toString() = s"""Categorized[${if (pairs.isEmpty) "" else pairs.head._2.toString + ", "}size=${pairs.size}]"""
@@ -78,6 +80,7 @@ package histogrammar {
 
   class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
+    type FixedType = Categorized[V#FixedType]
     type Datum = DATUM
     def factory = Categorize
 
@@ -114,9 +117,8 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject(
-      "type" -> JsonString(if (pairs.isEmpty) "?" else pairs.head._2.factory.name),
-      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
+    def fix = new Categorized(value.factory.name, pairs.toSeq map {case (k, v) => (k, v.fix)}: _*)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"Categorizing[$value, size=${pairs.size}]"
     override def equals(that: Any) = that match {

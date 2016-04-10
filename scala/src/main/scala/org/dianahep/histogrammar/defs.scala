@@ -76,10 +76,12 @@ package histogrammar {
   // container of data that is, by itself, immutable
   trait Container[CONTAINER <: Container[CONTAINER]] extends Serializable {
     type Type
+    type FixedType <: Container[CONTAINER]
     def factory: Factory
 
     def +(that: CONTAINER): CONTAINER
 
+    def fix: FixedType
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
     def as[OTHER <: Container[OTHER]] = this.asInstanceOf[OTHER]

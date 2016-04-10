@@ -51,6 +51,7 @@ package histogrammar {
 
   class Stacked[V <: Container[V]](val cuts: (Double, V)*) extends Container[Stacked[V]] {
     type Type = Stacked[V]
+    type FixedType = Stacked[V]
     def factory = Stack
 
     if (cuts.size < 1)
@@ -66,6 +67,7 @@ package histogrammar {
           (mycut, me + you)
         }: _*)
 
+    def fix = this
     def toJsonFragment = JsonObject(
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
@@ -79,6 +81,7 @@ package histogrammar {
 
   class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
     type Type = Stacking[DATUM, V]
+    type FixedType = Stacked[V#FixedType]
     type Datum = DATUM
     def factory = Stack
 
@@ -106,9 +109,8 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject(
-      "type" -> JsonString(cuts.head._2.factory.name),
-      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
+    def fix = new Stacked(cuts map {case (x, v) => (x, v.fix)}: _*)
+    def toJsonFragment = fix.toJsonFragment
 
     override def toString() = s"""Stacking[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {

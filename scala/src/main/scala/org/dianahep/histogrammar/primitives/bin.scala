@@ -19,7 +19,7 @@ package histogrammar {
        overflow: O,
        nanflow: N) = new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
 
-    def apply[DATUM, V <: Aggregator[DATUM, V], U <: Aggregator[DATUM, U], O <: Aggregator[DATUM, O], N <: Aggregator[DATUM, N]]
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (num: Int,
        low: Double,
        high: Double,
@@ -32,7 +32,7 @@ package histogrammar {
       new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(num)(value), underflow, overflow, nanflow)
 
     def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
-    def unapply[DATUM, V <: Aggregator[DATUM, V], U <: Aggregator[DATUM, U], O <: Aggregator[DATUM, O], N <: Aggregator[DATUM, N]](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
 
     trait Methods {
       def num: Int
@@ -108,28 +108,28 @@ package histogrammar {
     def factory = Bin
 
     if (low >= high)
-      throw new AggregatorException(s"low ($low) must be less than high ($high)")
+      throw new ContainerException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
-      throw new AggregatorException(s"values ($values) must have at least one element")
+      throw new ContainerException(s"values ($values) must have at least one element")
     def num = values.size
 
     def +(that: Binned[V, U, O, N]): Binned[V, U, O, N] = {
       if (this.low != that.low)
-        throw new AggregatorException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
+        throw new ContainerException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
       if (this.high != that.high)
-        throw new AggregatorException(s"cannot add Binned because high differs (${this.high} vs ${that.high})")
+        throw new ContainerException(s"cannot add Binned because high differs (${this.high} vs ${that.high})")
       if (this.values.size != that.values.size)
-        throw new AggregatorException(s"cannot add Binned because number of values differs (${this.values.size} vs ${that.values.size})")
+        throw new ContainerException(s"cannot add Binned because number of values differs (${this.values.size} vs ${that.values.size})")
       if (this.values.isEmpty)
-        throw new AggregatorException(s"cannot add Binned because number of values is zero")
+        throw new ContainerException(s"cannot add Binned because number of values is zero")
       if (this.values.head.factory != that.values.head.factory)
-        throw new AggregatorException(s"cannot add Binned because values type differs (${this.values.head.factory.name} vs ${that.values.head.factory.name})")
+        throw new ContainerException(s"cannot add Binned because values type differs (${this.values.head.factory.name} vs ${that.values.head.factory.name})")
       if (this.underflow.factory != that.underflow.factory)
-        throw new AggregatorException(s"cannot add Binned because underflow type differs (${this.underflow.factory.name} vs ${that.underflow.factory.name})")
+        throw new ContainerException(s"cannot add Binned because underflow type differs (${this.underflow.factory.name} vs ${that.underflow.factory.name})")
       if (this.overflow.factory != that.overflow.factory)
-        throw new AggregatorException(s"cannot add Binned because overflow type differs (${this.overflow.factory.name} vs ${that.overflow.factory.name})")
+        throw new ContainerException(s"cannot add Binned because overflow type differs (${this.overflow.factory.name} vs ${that.overflow.factory.name})")
       if (this.nanflow.factory != that.nanflow.factory)
-        throw new AggregatorException(s"cannot add Binned because nanflow type differs (${this.nanflow.factory.name} vs ${that.nanflow.factory.name})")
+        throw new ContainerException(s"cannot add Binned because nanflow type differs (${this.nanflow.factory.name} vs ${that.nanflow.factory.name})")
 
       new Binned(
         low,
@@ -160,7 +160,7 @@ package histogrammar {
     override def hashCode() = (low, high, values, underflow, overflow, nanflow).hashCode
   }
 
-  class Binning[DATUM, V <: Aggregator[DATUM, V], U <: Aggregator[DATUM, U], O <: Aggregator[DATUM, O], N <: Aggregator[DATUM, N]](
+  class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](
     val low: Double,
     val high: Double,
     val quantity: NumericalFcn[DATUM],
@@ -168,33 +168,34 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Aggregator[DATUM, Binning[DATUM, V, U, O, N]] with Bin.Methods {
+    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with Aggregation with Bin.Methods {
 
+    type Datum = DATUM
     def factory = Bin
 
     if (low >= high)
-      throw new AggregatorException(s"low ($low) must be less than high ($high)")
+      throw new ContainerException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
-      throw new AggregatorException(s"values ($values) must have at least one element")
+      throw new ContainerException(s"values ($values) must have at least one element")
     def num = values.size
 
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
       if (this.low != that.low)
-        throw new AggregatorException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")
+        throw new ContainerException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")
       if (this.high != that.high)
-        throw new AggregatorException(s"cannot add Binning because high differs (${this.high} vs ${that.high})")
+        throw new ContainerException(s"cannot add Binning because high differs (${this.high} vs ${that.high})")
       if (this.values.size != that.values.size)
-        throw new AggregatorException(s"cannot add Binning because number of values differs (${this.values.size} vs ${that.values.size})")
+        throw new ContainerException(s"cannot add Binning because number of values differs (${this.values.size} vs ${that.values.size})")
       if (this.values.isEmpty)
-        throw new AggregatorException(s"cannot add Binning because number of values is zero")
+        throw new ContainerException(s"cannot add Binning because number of values is zero")
       if (this.values.head.factory != that.values.head.factory)
-        throw new AggregatorException(s"cannot add Binning because values type differs (${this.values.head.factory.name} vs ${that.values.head.factory.name})")
+        throw new ContainerException(s"cannot add Binning because values type differs (${this.values.head.factory.name} vs ${that.values.head.factory.name})")
       if (this.underflow.factory != that.underflow.factory)
-        throw new AggregatorException(s"cannot add Binning because underflow type differs (${this.underflow.factory.name} vs ${that.underflow.factory.name})")
+        throw new ContainerException(s"cannot add Binning because underflow type differs (${this.underflow.factory.name} vs ${that.underflow.factory.name})")
       if (this.overflow.factory != that.overflow.factory)
-        throw new AggregatorException(s"cannot add Binning because overflow type differs (${this.overflow.factory.name} vs ${that.overflow.factory.name})")
+        throw new ContainerException(s"cannot add Binning because overflow type differs (${this.overflow.factory.name} vs ${that.overflow.factory.name})")
       if (this.nanflow.factory != that.nanflow.factory)
-        throw new AggregatorException(s"cannot add Binning because nanflow type differs (${this.nanflow.factory.name} vs ${that.nanflow.factory.name})")
+        throw new ContainerException(s"cannot add Binning because nanflow type differs (${this.nanflow.factory.name} vs ${that.nanflow.factory.name})")
 
       new Binning[DATUM, V, U, O, N](
         low,
@@ -207,7 +208,7 @@ package histogrammar {
         this.nanflow + that.nanflow)
     }
 
-    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
+    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)

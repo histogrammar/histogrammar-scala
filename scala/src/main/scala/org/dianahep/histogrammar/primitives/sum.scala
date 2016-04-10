@@ -11,7 +11,7 @@ package histogrammar {
     val detailedHelp = """Sum(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     def container(value: Double) = new Summed(value)
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing(quantity, selection, 0.0)
+    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing[DATUM](quantity, selection, 0.0)
 
     def unapply(x: Summed) = Some(x.value)
     def unapply(x: Summing[_]) = Some(x.value)
@@ -37,12 +37,13 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Aggregator[DATUM, Summing[DATUM]] {
+  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Container[Summing[DATUM]] with Aggregation {
+    type Datum = DATUM
     def factory = Sum
 
     def +(that: Summing[DATUM]) = new Summing(this.quantity, this.selection, this.value + that.value)
 
-    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
+    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)

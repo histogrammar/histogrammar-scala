@@ -6,11 +6,11 @@ import scala.language.implicitConversions
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
-  class AggregatorException(message: String, cause: Exception = null) extends Exception(message, cause)
+  class ContainerException(message: String, cause: Exception = null) extends Exception(message, cause)
 
-  //////////////////////////////////////////////////////////////// general definition of an container/aggregator
+  //////////////////////////////////////////////////////////////// general definition of an container, its factory, and mix-in
 
-  // creates containers (from arguments or JSON) and aggregators (from arguments)
+  // creates containers (from arguments or JSON)
   trait Factory {
     def name: String
     def help: String
@@ -26,23 +26,23 @@ package histogrammar {
       known = known.updated(factory.name, factory)
     }
 
-    register(Count)
+    // register(Count)
     register(Sum)
-    register(Average)
-    register(Deviate)
-    register(AbsoluteErr)
-    register(Minimize)
-    register(Maximize)
+    // register(Average)
+    // register(Deviate)
+    // register(AbsoluteErr)
+    // register(Minimize)
+    // register(Maximize)
     register(Bin)
-    register(SparselyBin)
-    register(Fraction)
-    register(Stack)
-    register(Partition)
-    register(Categorize)
+    // register(SparselyBin)
+    // register(Fraction)
+    // register(Stack)
+    // register(Partition)
+    // register(Categorize)
 
     def apply(name: String) = known.get(name) match {
       case Some(x) => x
-      case None => throw new AggregatorException(s"unrecognized aggregator (is it a custom aggregator that hasn't been registered?): $name")
+      case None => throw new ContainerException(s"unrecognized container (is it a custom container that hasn't been registered?): $name")
     }
 
     def fromJson[CONTAINER <: Container[_]](str: String): CONTAINER = Json.parse(str) match {
@@ -65,7 +65,7 @@ package histogrammar {
     }
   }
 
-  // immutable container of data
+  // container of data that is, by itself, immutable
   trait Container[CONTAINER <: Container[CONTAINER]] extends Serializable {
     def factory: Factory
 
@@ -76,36 +76,31 @@ package histogrammar {
     def withTypeOf[OTHER <: CONTAINER](other: OTHER) = this.asInstanceOf[OTHER]
   }
 
-  // mutable aggregator of data
-  trait Aggregator[-DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]] extends Serializable {
-    def factory: Factory
+  // mix-in to provide aggregation (and hence mutability)
+  trait Aggregation {
+    type Datum
 
-    def +(that: AGGREGATOR): AGGREGATOR
-    def fill[SUB <: DATUM](datum: SUB) {
+    def fill(datum: Datum) {
       fillWeighted(datum, 1.0)
     }
-    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double)
-
-    def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
-    def toJsonFragment: Json
-    def withTypeOf[OTHER <: AGGREGATOR](other: OTHER) = this.asInstanceOf[OTHER]
+    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double)
   }
 }
 
 package object histogrammar {
   def help = Factory.registered map {case (name, factory) => f"${name}%-15s ${factory.help}"} mkString("\n")
 
-  def increment[DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]] =
-    {(h: AGGREGATOR, x: DATUM) => h.fill(x); h}
+  // def increment[DATUM, CONTAINER <: Container[DATUM, CONTAINER]] =
+  //   {(h: CONTAINER, x: DATUM) => h.fill(x); h}
 
-  def increment[DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]](zero: AGGREGATOR) =
-    {(h: AGGREGATOR, x: DATUM) => h.fill(x); h}
+  // def increment[DATUM, CONTAINER <: Container[DATUM, CONTAINER]](zero: CONTAINER) =
+  //   {(h: CONTAINER, x: DATUM) => h.fill(x); h}
 
-  def combine[DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]] =
-    {(h1: AGGREGATOR, h2: AGGREGATOR) => h1 + h2}
+  // def combine[DATUM, CONTAINER <: Container[DATUM, CONTAINER]] =
+  //   {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
 
-  def combine[DATUM, AGGREGATOR <: Aggregator[DATUM, AGGREGATOR]](zero: AGGREGATOR) =
-    {(h1: AGGREGATOR, h2: AGGREGATOR) => h1 + h2}
+  // def combine[DATUM, CONTAINER <: Container[DATUM, CONTAINER]](zero: CONTAINER) =
+  //   {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
 
   //////////////////////////////////////////////////////////////// define implicits
 

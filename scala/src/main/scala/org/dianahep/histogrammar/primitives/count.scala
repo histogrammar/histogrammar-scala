@@ -37,7 +37,8 @@ package histogrammar {
     override def hashCode() = value.hashCode
   }
 
-  class Counting(var value: Long) extends Aggregator[Any, Counting] {
+  class Counting(var value: Long) extends Container[Counting] with Aggregation {
+    type Datum = Any
     def factory = Count
 
     def +(that: Counting): Counting = new Counting(this.value + that.value)

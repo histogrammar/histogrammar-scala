@@ -45,7 +45,7 @@ package histogrammar {
 
   class Categorized[V <: Container[V]](contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
     type Type = Categorized[V]
-    type FixedType = Categorized[V]
+    // type FixedType = Categorized[V]
     def factory = Categorize
 
     val pairsMap = pairs.toMap
@@ -66,7 +66,7 @@ package histogrammar {
         (key, that.pairsMap(key))
     }: _*)
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonObject(
       "type" -> JsonString(contentType),
       "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
@@ -80,7 +80,7 @@ package histogrammar {
 
   class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
-    type FixedType = Categorized[V#FixedType]
+    // type FixedType = Categorized[V#FixedType]
     type Datum = DATUM
     def factory = Categorize
 
@@ -117,8 +117,11 @@ package histogrammar {
       }
     }
 
-    def fix = new Categorized(value.factory.name, pairs.toSeq map {case (k, v) => (k, v.fix)}: _*)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Categorized(value.factory.name, pairs.toSeq map {case (k, v) => (k, v.fix)}: _*)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonObject(
+      "type" -> JsonString(value.factory.name),
+      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
     override def toString() = s"Categorizing[$value, size=${pairs.size}]"
     override def equals(that: Any) = that match {

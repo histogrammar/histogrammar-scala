@@ -34,12 +34,12 @@ package histogrammar {
 
   class Minimized(val min: Double) extends Container[Minimized] {
     type Type = Minimized
-    type FixedType = Minimized
+    // type FixedType = Minimized
     def factory = Minimize
 
     def +(that: Minimized) = new Minimized(Minimize.plus(this.min, that.min))
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonFloat(min)
 
     override def toString() = s"Minimized"
@@ -52,7 +52,7 @@ package histogrammar {
 
   class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
     type Type = Minimizing[DATUM]
-    type FixedType = Minimized
+    // type FixedType = Minimized
     type Datum = DATUM
     def factory = Minimize
 
@@ -67,8 +67,9 @@ package histogrammar {
       }
     }
 
-    def fix = new Minimized(min)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Minimized(min)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonFloat(min)
 
     override def toString() = s"Minimizing"
     override def equals(that: Any) = that match {
@@ -109,12 +110,12 @@ package histogrammar {
 
   class Maximized(val max: Double) extends Container[Maximized] {
     type Type = Maximized
-    type FixedType = Maximized
+    // type FixedType = Maximized
     def factory = Maximize
 
     def +(that: Maximized) = new Maximized(Maximize.plus(this.max, that.max))
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonFloat(max)
 
     override def toString() = s"Maximized"
@@ -127,7 +128,7 @@ package histogrammar {
 
   class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
     type Type = Maximizing[DATUM]
-    type FixedType = Maximized
+    // type FixedType = Maximized
     type Datum = DATUM
     def factory = Maximize
 
@@ -142,8 +143,9 @@ package histogrammar {
       }
     }
 
-    def fix = new Maximized(max)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Maximized(max)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonFloat(max)
 
     override def toString() = s"Maximizing"
     override def equals(that: Any) = that match {

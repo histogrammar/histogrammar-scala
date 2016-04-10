@@ -93,7 +93,7 @@ package histogrammar {
 
   class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val values: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
-    type FixedType = SparselyBinned[V, N]
+    // type FixedType = SparselyBinned[V, N]
     def factory = SparselyBin
 
     if (binWidth <= 0.0)
@@ -126,7 +126,7 @@ package histogrammar {
     def high = if (values.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
     def at(i: Long) = values.find(_._1 == i).map(_._2)
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
       "values:type" -> JsonString(if (values.isEmpty) "?" else values.head._2.factory.name),
@@ -153,7 +153,7 @@ package histogrammar {
     val origin: Double) extends Container[SparselyBinning[DATUM, V, N]] with AggregationOnData with SparselyBin.Methods {
 
     type Type = SparselyBinning[DATUM, V, N]
-    type FixedType = SparselyBinned[V#FixedType, N#FixedType]
+    // type FixedType = SparselyBinned[V#FixedType, N#FixedType]
     type Datum = DATUM
     def factory = SparselyBin
 
@@ -203,8 +203,15 @@ package histogrammar {
     def high = if (values.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
     def at(i: Long) = values.get(i)
 
-    def fix = new SparselyBinned(binWidth, SortedMap(values.toSeq map {case (b, v) => (b, v.fix)}: _*), nanflow.fix, origin)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new SparselyBinned(binWidth, SortedMap(values.toSeq map {case (b, v) => (b, v.fix)}: _*), nanflow.fix, origin)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonObject(
+      "binWidth" -> JsonFloat(binWidth),
+      "values:type" -> JsonString(if (values.isEmpty) "?" else values.head._2.factory.name),
+      "values" -> JsonObject(values.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment)}: _*),
+      "nanflow:type" -> JsonString(nanflow.factory.name),
+      "nanflow" -> nanflow.toJsonFragment,
+      "origin" -> JsonFloat(origin))
 
     override def toString() = s"""SparselyBinning[binWidth=$binWidth, values=[${value.toString}, size=${values.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {

@@ -37,12 +37,12 @@ package histogrammar {
 
   class Fractioned[V <: Container[V]](val numerator: V, val denominator: V) extends Container[Fractioned[V]] {
     type Type = Fractioned[V]
-    type FixedType = Fractioned[V]
+    // type FixedType = Fractioned[V]
     def factory = Fraction
 
     def +(that: Fractioned[V]) = new Fractioned(this.numerator + that.numerator, this.denominator + that.denominator)
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonObject(
       "type" -> JsonString(numerator.factory.name),
       "numerator" -> numerator.toJsonFragment,
@@ -57,7 +57,7 @@ package histogrammar {
 
   class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val numeratorSelection: Selection[DATUM], val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
     type Type = Fractioning[DATUM, V]
-    type FixedType = Fractioned[V#FixedType]
+    // type FixedType = Fractioned[V#FixedType]
     type Datum = DATUM
     def factory = Fraction
 
@@ -72,8 +72,12 @@ package histogrammar {
         numerator.fillWeighted(datum, w)
     }
 
-    def fix = new Fractioned(numerator.fix, denominator.fix)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Fractioned(numerator.fix, denominator.fix)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonObject(
+      "type" -> JsonString(numerator.factory.name),
+      "numerator" -> numerator.toJsonFragment,
+      "denominator" -> denominator.toJsonFragment)
 
     override def toString() = s"Fractioning[numerator=$numerator, denominator=$denominator]"
     override def equals(that: Any) = that match {

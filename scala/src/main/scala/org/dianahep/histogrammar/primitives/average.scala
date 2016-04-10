@@ -41,7 +41,7 @@ package histogrammar {
 
   class Averaged(val totalWeight: Double, val mean: Double) extends Container[Averaged] {
     type Type = Averaged
-    type FixedType = Averaged
+    // type FixedType = Averaged
     def factory = Average
 
     def +(that: Averaged) = {
@@ -49,7 +49,7 @@ package histogrammar {
       new Averaged(newtotalWeight, newmean)
     }
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean))
 
     override def toString() = s"Averaged($totalWeight, $mean)"
@@ -85,8 +85,9 @@ package histogrammar {
       }
     }
 
-    def fix = new Averaged(totalWeight, mean)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Averaged(totalWeight, mean)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean))
 
     override def toString() = s"Averaging($totalWeight, $mean)"
     override def equals(that: Any) = that match {

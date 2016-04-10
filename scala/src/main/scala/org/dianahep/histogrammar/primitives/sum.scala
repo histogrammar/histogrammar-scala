@@ -24,12 +24,12 @@ package histogrammar {
 
   class Summed(val value: Double) extends Container[Summed] {
     type Type = Summed
-    type FixedType = Summed
+    // type FixedType = Summed
     def factory = Sum
 
     def +(that: Summed) = new Summed(this.value + that.value)
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonFloat(value)
 
     override def toString() = s"Summed($value)"
@@ -42,7 +42,7 @@ package histogrammar {
 
   class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var value: Double) extends Container[Summing[DATUM]] with AggregationOnData {
     type Type = Summing[DATUM]
-    type FixedType = Summed
+    // type FixedType = Summed
     type Datum = DATUM
     def factory = Sum
 
@@ -56,8 +56,9 @@ package histogrammar {
       }
     }
 
-    def fix = new Summed(value)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Summed(value)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonFloat(value)
 
     override def toString() = s"Summing($value)"
     override def equals(that: Any) = that match {

@@ -106,7 +106,7 @@ package histogrammar {
     val nanflow: N) extends Container[Binned[V, U, O, N]] with Bin.Methods {
 
     type Type = Binned[V, U, O, N]
-    type FixedType = Binned[V, U, O, N]
+    // type FixedType = Binned[V, U, O, N]
     def factory = Bin
 
     if (low >= high)
@@ -142,7 +142,7 @@ package histogrammar {
         this.nanflow + that.nanflow)
     }
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonObject(
       "low" -> JsonFloat(low),
       "high" -> JsonFloat(high),
@@ -174,7 +174,7 @@ package histogrammar {
     val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with Bin.Methods {
 
     type Type = Binning[DATUM, V, U, O, N]
-    type FixedType = Binned[V#FixedType, U#FixedType, O#FixedType, N#FixedType]
+    // type FixedType = Binned[V#FixedType, U#FixedType, O#FixedType, N#FixedType]
     type Datum = DATUM
     def factory = Bin
 
@@ -229,8 +229,19 @@ package histogrammar {
       }
     }
 
-    def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonObject(
+      "low" -> JsonFloat(low),
+      "high" -> JsonFloat(high),
+      "values:type" -> JsonString(values.head.factory.name),
+      "values" -> JsonArray(values.map(_.toJsonFragment): _*),
+      "underflow:type" -> JsonString(underflow.factory.name),
+      "underflow" -> underflow.toJsonFragment,
+      "overflow:type" -> JsonString(overflow.factory.name),
+      "overflow" -> overflow.toJsonFragment,
+      "nanflow:type" -> JsonString(nanflow.factory.name),
+      "nanflow" -> nanflow.toJsonFragment)
 
     override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {

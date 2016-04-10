@@ -51,7 +51,7 @@ package histogrammar {
 
   class Partitioned[V <: Container[V]](val cuts: (Double, V)*) extends Container[Partitioned[V]] {
     type Type = Partitioned[V]
-    type FixedType = Partitioned[V]
+    // type FixedType = Partitioned[V]
     def factory = Partition
 
     if (cuts.size < 1)
@@ -67,7 +67,7 @@ package histogrammar {
           (mycut, me + you)
         }: _*)
 
-    def fix = this
+    // def fix = this
     def toJsonFragment = JsonObject(
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
@@ -81,7 +81,7 @@ package histogrammar {
 
   class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData {
     type Type = Partitioning[DATUM, V]
-    type FixedType = Partitioned[V#FixedType]
+    // type FixedType = Partitioned[V#FixedType]
     type Datum = DATUM
     def factory = Partition
 
@@ -111,8 +111,11 @@ package histogrammar {
       }
     }
 
-    def fix = new Partitioned(cuts map {case (x, v) => (x, v.fix)}: _*)
-    def toJsonFragment = fix.toJsonFragment
+    // def fix = new Partitioned(cuts map {case (x, v) => (x, v.fix)}: _*)
+    // def toJsonFragment = fix.toJsonFragment
+    def toJsonFragment = JsonObject(
+      "type" -> JsonString(cuts.head._2.factory.name),
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
     override def toString() = s"""Partitioning[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {

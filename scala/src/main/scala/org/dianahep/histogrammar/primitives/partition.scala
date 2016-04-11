@@ -57,6 +57,7 @@ package histogrammar {
     if (cuts.size < 1)
       throw new ContainerException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Partition.ing factory method adds)")
 
+    def zero = new Partitioned[V](cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioned[V]) =
       if (this.cuts.size != that.cuts.size)
         throw new ContainerException(s"cannot add Partitioned because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
@@ -90,6 +91,7 @@ package histogrammar {
 
     private val range = cuts zip (cuts.tail :+ (java.lang.Double.NaN, null))
 
+    def zero = new Partitioning[DATUM, V](expression, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioning[DATUM, V]) =
       if (this.cuts.size != that.cuts.size)
         throw new ContainerException(s"cannot add Partitioning because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")

@@ -40,6 +40,7 @@ package histogrammar {
     // type FixedType = Fractioned[V]
     def factory = Fraction
 
+    def zero = new Fractioned[V](numerator.zero, denominator.zero)
     def +(that: Fractioned[V]) = new Fractioned(this.numerator + that.numerator, this.denominator + that.denominator)
 
     // def fix = this
@@ -61,6 +62,7 @@ package histogrammar {
     type Datum = DATUM
     def factory = Fraction
 
+    def zero = new Fractioning[DATUM, V](numeratorSelection, numerator.zero, denominator.zero)
     def +(that: Fractioning[DATUM, V]) = new Fractioning(this.numeratorSelection, this.numerator + that.numerator, this.denominator + that.denominator)
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {

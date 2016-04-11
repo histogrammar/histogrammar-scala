@@ -57,6 +57,7 @@ package histogrammar {
     if (cuts.size < 1)
       throw new ContainerException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
 
+    def zero = new Stacked[V](cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Stacked[V]) =
       if (this.cuts.size != that.cuts.size)
         throw new ContainerException(s"cannot add Stacked because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
@@ -88,6 +89,7 @@ package histogrammar {
     if (cuts.size < 1)
       throw new ContainerException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
 
+    def zero = new Stacking[DATUM, V](expression, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Stacking[DATUM, V]) =
       if (this.cuts.size != that.cuts.size)
         throw new ContainerException(s"cannot add Stacking because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")

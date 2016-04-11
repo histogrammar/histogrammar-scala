@@ -27,6 +27,7 @@ package histogrammar {
     // type FixedType = Counted
     def factory = Count
 
+    def zero = new Counted(0L)
     def +(that: Counted): Counted = new Counted(this.value + that.value)
 
     // def fix = this
@@ -46,6 +47,7 @@ package histogrammar {
     type Datum = Any
     def factory = Count
 
+    def zero = new Counting(0L)
     def +(that: Counting): Counting = new Counting(this.value + that.value)
 
     def fillWeighted[SUB <: Any](datum: SUB, weight: Double) {

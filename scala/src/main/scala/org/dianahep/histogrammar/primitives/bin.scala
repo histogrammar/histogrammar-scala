@@ -115,6 +115,7 @@ package histogrammar {
       throw new ContainerException(s"values ($values) must have at least one element")
     def num = values.size
 
+    def zero = new Binned[V, U, O, N](low, high, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binned[V, U, O, N]): Binned[V, U, O, N] = {
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
@@ -141,6 +142,9 @@ package histogrammar {
         this.overflow + that.overflow,
         this.nanflow + that.nanflow)
     }
+
+    // def cumulative = new Binned[V, U, O, N](low, high, values.scanLeft(values.head)(_ + _), underflow, overflow, nanflow)
+    // def cumulativeComplement = new Binned[V, U, O, N](low, high, values.scanRight(values.last)(_ + _), underflow, overflow, nanflow)
 
     // def fix = this
     def toJsonFragment = JsonObject(
@@ -184,6 +188,7 @@ package histogrammar {
       throw new ContainerException(s"values ($values) must have at least one element")
     def num = values.size
 
+    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")

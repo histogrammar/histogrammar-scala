@@ -44,6 +44,7 @@ package histogrammar {
     // type FixedType = AbsoluteErred
     def factory = AbsoluteErr
 
+    def zero = new AbsoluteErred(0.0, 0.0)
     def +(that: AbsoluteErred) = {
       val (newtotalWeight, newmae) = AbsoluteErr.plus(this.totalWeight, this.mae, that.totalWeight, that.mae)
       new AbsoluteErred(newtotalWeight, newmae)
@@ -78,6 +79,7 @@ package histogrammar {
       absoluteSum = totalWeight * _mae
     }
 
+    def zero = new AbsoluteErring[DATUM](quantity, selection, 0.0, 0.0)
     def +(that: AbsoluteErring[DATUM]) = {
       val (newtotalWeight, newmae) = AbsoluteErr.plus(this.totalWeight, this.mae, that.totalWeight, that.mae)
       new AbsoluteErring[DATUM](this.quantity, this.selection, newtotalWeight, newmae)

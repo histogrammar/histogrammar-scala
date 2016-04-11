@@ -63,6 +63,7 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
+    def zero = new Labeled[V](pairs map {case (k, v) => (k, v.zero)}: _*)
     def +(that: Labeled[V]) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add Labeled because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
@@ -102,6 +103,7 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
+    def zero = new Labeling[V](pairs map {case (k, v) => (k, v.zero)}: _*)
     def +(that: Labeling[V]) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add Labeling because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
@@ -178,6 +180,7 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
 
+    def zero = new UntypedLabeled(pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_]])}: _*)
     def +(that: UntypedLabeled) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add UntypedLabeled because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
@@ -217,6 +220,7 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
 
+    def zero = new UntypedLabeling[DATUM](pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_] with AggregationOnData {type Datum = DATUM}])}: _*)
     def +(that: UntypedLabeling[DATUM]) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add UntypedLabeling because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
@@ -306,6 +310,7 @@ package histogrammar {
       else
         apply(i)
 
+    def zero = new Indexed[V](values.map(_.zero): _*)
     def +(that: Indexed[V]) =
       if (this.size != that.size)
         throw new ContainerException(s"""cannot add Indexed because they have different sizes: (${this.size} vs ${that.size})""")
@@ -345,6 +350,7 @@ package histogrammar {
       else
         apply(i)
 
+    def zero = new Indexing[V](values.map(_.zero): _*)
     def +(that: Indexing[V]) =
       if (this.size != that.size)
         throw new ContainerException(s"""cannot add Indexing because they have different sizes: (${this.size} vs ${that.size})""")
@@ -429,12 +435,14 @@ package histogrammar {
     def values: List[Container[_]]
     def isEmpty: Boolean
     def size: Int
+    def zero: BranchedList
   }
 
   object BranchedNil extends BranchedList {
     def values: List[Container[_]] = Nil
     def isEmpty: Boolean = true
     def size: Int = 0
+    def zero = this
   }
 
   class Branched[HEAD <: Container[HEAD], TAIL <: BranchedList](val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with BranchedList {
@@ -446,6 +454,7 @@ package histogrammar {
     def isEmpty: Boolean = false
     def size: Int = 1 + tail.size
 
+    def zero = new Branched[HEAD, TAIL](head.zero, tail.zero.asInstanceOf[TAIL])
     def +(that: Branched[HEAD, TAIL]) = new Branched[HEAD, TAIL](this.head + that.head, this.tail)
 
     // def fix = this
@@ -465,6 +474,7 @@ package histogrammar {
     def values: List[Container[_]]
     def isEmpty: Boolean
     def size: Int
+    def zero: BranchingList
   }
 
   object BranchingNil extends BranchingList {
@@ -472,6 +482,7 @@ package histogrammar {
     def values: List[Container[_]] = Nil
     def isEmpty: Boolean = true
     def size: Int = 0
+    def zero = this
   }
 
   class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList](val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
@@ -484,6 +495,7 @@ package histogrammar {
     def isEmpty: Boolean = false
     def size: Int = 1 + tail.size
 
+    def zero = new Branching[HEAD, TAIL](head.zero, tail.zero.asInstanceOf[TAIL])
     def +(that: Branching[HEAD, TAIL]) = new Branching[HEAD, TAIL](this.head + that.head, this.tail)
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {

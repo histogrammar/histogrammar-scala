@@ -99,6 +99,7 @@ package histogrammar {
     if (binWidth <= 0.0)
       throw new ContainerException(s"binWidth ($binWidth) must be greater than zero")
 
+    def zero = new SparselyBinned[V, N](binWidth, SortedMap(values.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
     def +(that: SparselyBinned[V, N]) = {
       if (this.binWidth != that.binWidth)
         throw new ContainerException(s"cannot add SparselyBinned because binWidth differs (${this.binWidth} vs ${that.binWidth})")
@@ -160,6 +161,7 @@ package histogrammar {
     if (binWidth <= 0.0)
       throw new ContainerException(s"binWidth ($binWidth) must be greater than zero")
 
+    def zero = new SparselyBinning[DATUM, V, N](binWidth, quantity, selection, value, mutable.Map(values.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
     def +(that: SparselyBinning[DATUM, V, N]) = {
       if (this.binWidth != that.binWidth)
         throw new ContainerException(s"cannot add SparselyBinning because binWidth differs (${this.binWidth} vs ${that.binWidth})")

@@ -79,6 +79,7 @@ package histogrammar {
     // type FixedType <: Container[CONTAINER]
     def factory: Factory
 
+    def zero: CONTAINER
     def +(that: CONTAINER): CONTAINER
 
     // def fix: FixedType

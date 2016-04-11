@@ -27,6 +27,7 @@ package histogrammar {
     // type FixedType = Summed
     def factory = Sum
 
+    def zero = new Summed(0.0)
     def +(that: Summed) = new Summed(this.value + that.value)
 
     // def fix = this
@@ -46,6 +47,7 @@ package histogrammar {
     type Datum = DATUM
     def factory = Sum
 
+    def zero = new Summing[DATUM](quantity, selection, 0.0)
     def +(that: Summing[DATUM]) = new Summing(this.quantity, this.selection, this.value + that.value)
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {

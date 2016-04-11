@@ -57,6 +57,7 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
+    def zero = new Categorized[V](contentType)
     def +(that: Categorized[V]) = new Categorized(contentType, (this.keySet union that.keySet).toSeq map {key =>
       if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
         (key, this.pairsMap(key) + that.pairsMap(key))
@@ -93,6 +94,7 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
+    def zero = new Categorizing[DATUM, V](quantity, selection, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
     def +(that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
       this.quantity,
       this.selection,

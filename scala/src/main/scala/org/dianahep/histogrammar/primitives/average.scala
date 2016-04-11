@@ -44,6 +44,7 @@ package histogrammar {
     // type FixedType = Averaged
     def factory = Average
 
+    def zero = new Averaged(0.0, 0.0)
     def +(that: Averaged) = {
       val (newtotalWeight, newmean) = Average.plus(this.totalWeight, this.mean, that.totalWeight, that.mean)
       new Averaged(newtotalWeight, newmean)
@@ -66,6 +67,7 @@ package histogrammar {
     type Datum = DATUM
     def factory = Average
 
+    def zero = new Averaging[DATUM](quantity, selection, 0.0, 0.0)
     def +(that: Averaging[DATUM]) = {
       val (newtotalWeight, newmean) = Average.plus(this.totalWeight, this.mean, that.totalWeight, that.mean)
       new Averaging(this.quantity, this.selection, newtotalWeight, newmean)

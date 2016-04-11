@@ -52,6 +52,7 @@ package histogrammar {
     // type FixedType = Deviated
     def factory = Deviate
 
+    def zero = new Deviated(0.0, 0.0, 0.0)
     def +(that: Deviated) = {
       val (newtotalWeight, newmean, newvariance) = Deviate.plus(this.totalWeight, this.mean, this.variance * this.totalWeight,
                                                           that.totalWeight, that.mean, that.variance * that.totalWeight)
@@ -87,6 +88,7 @@ package histogrammar {
       varianceTimesTotalWeight = totalWeight * _variance
     }
 
+    def zero = new Deviating[DATUM](quantity, selection, 0.0, 0.0, 0.0)
     def +(that: Deviating[DATUM]) = {
       val (newtotalWeight, newmean, newvariance) = Deviate.plus(this.totalWeight, this.mean, this.variance * this.totalWeight,
                                                           that.totalWeight, that.mean, that.variance * that.totalWeight)

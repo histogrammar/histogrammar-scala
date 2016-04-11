@@ -37,6 +37,7 @@ package histogrammar {
     // type FixedType = Minimized
     def factory = Minimize
 
+    def zero = new Minimized(java.lang.Double.NaN)
     def +(that: Minimized) = new Minimized(Minimize.plus(this.min, that.min))
 
     // def fix = this
@@ -56,6 +57,7 @@ package histogrammar {
     type Datum = DATUM
     def factory = Minimize
 
+    def zero = new Minimizing[DATUM](quantity, selection, java.lang.Double.NaN)
     def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.selection, Minimize.plus(this.min, that.min))
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
@@ -113,6 +115,7 @@ package histogrammar {
     // type FixedType = Maximized
     def factory = Maximize
 
+    def zero = new Maximized(java.lang.Double.NaN)
     def +(that: Maximized) = new Maximized(Maximize.plus(this.max, that.max))
 
     // def fix = this
@@ -132,6 +135,7 @@ package histogrammar {
     type Datum = DATUM
     def factory = Maximize
 
+    def zero = new Maximizing[DATUM](quantity, selection, java.lang.Double.NaN)
     def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.selection, Maximize.plus(this.max, that.max))
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {

@@ -143,8 +143,33 @@ package histogrammar {
         this.nanflow + that.nanflow)
     }
 
-    // def cumulative = new Binned[V, U, O, N](low, high, values.scanLeft(values.head)(_ + _), underflow, overflow, nanflow)
-    // def cumulativeComplement = new Binned[V, U, O, N](low, high, values.scanRight(values.last)(_ + _), underflow, overflow, nanflow)
+    // the leftmost bin is unchanged and the rightmost becomes the sum of all bins
+    def cumulativeHigh = {
+      // // implementation that doesn't depend on the existence of a zero
+      // var runningSum = values.head
+      // val newvalues = values.tail.map({v => val out = runningSum; runningSum += v; out}) :+ runningSum
+      // new Binned[V, U, O, N](low, high, newvalues, underflow, overflow, nanflow)
+
+      // symmetry with cumulativeLow
+      new Binned[V, U, O, N](low, high, values.scanLeft(values.head.zero)(_ + _).tail, underflow, overflow, nanflow)
+    }
+
+    // the leftmost bin becomes zero and the rightmost becomes the sum of all bins except itself
+    def cumulativeLow = new Binned[V, U, O, N](low, high, values.scanLeft(values.head.zero)(_ + _).init, underflow, overflow, nanflow)
+
+    // the rightmost bin is unchanged and the leftmost becomes the sum of all bins
+    def cumulativeComplementHigh = {
+      // // implementation that doesn't depend on the existence of a zero
+      // var runningSum = values.last
+      // val newvalues = values.reverse.tail.map({v => val out = runningSum; runningSum += v; out}) :+ runningSum
+      // new Binned[V, U, O, N](low, high, newvalues.reverse, underflow, overflow, nanflow)
+
+      // symmetry with cumulativeComplementLow
+      new Binned[V, U, O, N](low, high, values.reverse.scanLeft(values.last.zero)(_ + _).reverse.init, underflow, overflow, nanflow)
+    }
+
+    // the rightmost bin becomes zero and the leftmost becomes the sum of all bins except itself
+    def cumulativeComplementLow = new Binned[V, U, O, N](low, high, values.reverse.scanLeft(values.last.zero)(_ + _).reverse.tail, underflow, overflow, nanflow)
 
     // def fix = this
     def toJsonFragment = JsonObject(

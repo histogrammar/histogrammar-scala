@@ -10,16 +10,21 @@ package histogrammar {
     val help = "Accumulate a suite containers, filling all that are above a given cut on a given expression."
     val detailedHelp = """Stack(value: => V, expression: NumericalFcn[DATUM], cuts: Double*)"""
 
-    def fixed[V <: Container[V]](cuts: (Double, V)*) = new Stacked(cuts: _*)
+    def fixed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, cuts: _*)
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
-      new Stacking(expression, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
+      new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
 
-    def unapplySeq[V <: Container[V]](x: Stacked[V]) = Some(x.cuts)
-    def unapplySeq[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Stacking[DATUM, V]) = Some(x.cuts)
+    def unapply[V <: Container[V]](x: Stacked[V]) = Some((x.entries, x.cuts))
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Stacking[DATUM, V]) = Some((x.entries, x.cuts))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
         val get = pairs.toMap
+
+        val entries = get("entries") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".entries")
+        }
 
         val factory = get("type") match {
           case JsonString(name) => Factory(name)
@@ -28,7 +33,7 @@ package histogrammar {
 
         get("data") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
-            new Stacked[Container[_]](elements.zipWithIndex map {case (element, i) =>
+            new Stacked[Container[_]](entries, elements.zipWithIndex map {case (element, i) =>
               element match {
                 case JsonObject(elementPairs @ _*) if (elementPairs.keySet == Set("atleast", "data")) =>
                   val elementGet = elementPairs.toMap
@@ -49,52 +54,58 @@ package histogrammar {
     }
   }
 
-  class Stacked[V <: Container[V]](val cuts: (Double, V)*) extends Container[Stacked[V]] {
+  class Stacked[V <: Container[V]](val entries: Double, val cuts: (Double, V)*) extends Container[Stacked[V]] {
     type Type = Stacked[V]
-    // type FixedType = Stacked[V]
     def factory = Stack
 
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
     if (cuts.size < 1)
       throw new ContainerException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
 
-    def zero = new Stacked[V](cuts map {case (c, v) => (c, v.zero)}: _*)
+    def zero = new Stacked[V](0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Stacked[V]) =
       if (this.cuts.size != that.cuts.size)
         throw new ContainerException(s"cannot add Stacked because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
       else
-        new Stacked(this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
-          if (mycut != yourcut)
-            throw new ContainerException(s"cannot add Stacked because cut differs ($mycut vs $yourcut)")
-          (mycut, me + you)
-        }: _*)
+        new Stacked(
+          this.entries + that.entries,
+          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
+            if (mycut != yourcut)
+              throw new ContainerException(s"cannot add Stacked because cut differs ($mycut vs $yourcut)")
+            (mycut, me + you)
+          }: _*)
 
-    // def fix = this
     def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
-    override def toString() = s"""Stacked[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""Stacked[entries=$entries, ${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
-      case that: Stacked[V] => this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2}
+      case that: Stacked[V] => this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
   }
 
-  class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
+  class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
     type Type = Stacking[DATUM, V]
-    // type FixedType = Stacked[V#FixedType]
     type Datum = DATUM
     def factory = Stack
 
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
     if (cuts.size < 1)
       throw new ContainerException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
 
-    def zero = new Stacking[DATUM, V](expression, cuts map {case (c, v) => (c, v.zero)}: _*)
+    def zero = new Stacking[DATUM, V](expression, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Stacking[DATUM, V]) =
       if (this.cuts.size != that.cuts.size)
         throw new ContainerException(s"cannot add Stacking because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
       else
-        new Stacking(this.expression,
+        new Stacking(
+          this.expression,
+          this.entries + that.entries,
           this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
             if (mycut != yourcut)
               throw new ContainerException(s"cannot add Stacking because cut differs ($mycut vs $yourcut)")
@@ -104,6 +115,7 @@ package histogrammar {
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
       if (weight > 0.0) {
         val value = expression(datum)
+        entries += weight
         cuts foreach {case (threshold, sub) =>
           if (value >= threshold)
             sub.fillWeighted(datum, weight)
@@ -111,15 +123,14 @@ package histogrammar {
       }
     }
 
-    // def fix = new Stacked(cuts map {case (x, v) => (x, v.fix)}: _*)
-    // def toJsonFragment = fix.toJsonFragment
     def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
-    override def toString() = s"""Stacking[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""Stacking[entries=$entries, ${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
-      case that: Stacking[DATUM, V] => this.expression == that.expression  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
+      case that: Stacking[DATUM, V] => this.expression == that.expression  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
   }

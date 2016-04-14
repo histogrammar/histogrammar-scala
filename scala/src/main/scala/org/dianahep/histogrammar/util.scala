@@ -7,7 +7,7 @@ import org.dianahep.histogrammar._
 
 // package object util {
 //   implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
-//     def distance(x: Double, y: Double) = x - y
+//     def difference(x: Double, y: Double) = x - y
 //   }
 // }
 
@@ -30,9 +30,10 @@ package util {
   //////////////////////////////////////////////////////////////// the metric equivalent of a SortedMap, used in a few containers
 
   trait MetricOrdering[T] extends Ordering[T] {
-    def distance(x: T, y: T): Double
+    def difference(x: T, y: T): Double
+    def distance(x: T, y: T) = Math.abs(difference(x, y))
     def compare(x: T, y: T) = {
-      val d = distance(x, y)
+      val d = difference(x, y)
       if (d > 0.0) 1
       else if (d < 0.0) -1
       else 0
@@ -41,21 +42,35 @@ package util {
 
   abstract class MetricSortedMap[A, B](elems: (A, B)*)(ordering: MetricOrdering[A]) extends SortedMap[A, B] {
     // when the TreeSet searches for an element, keep track of the best distance it finds
-    private val best = new java.lang.ThreadLocal[(Double, A, B)]
-    best.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
+    private val best1 = new java.lang.ThreadLocal[(Double, A, B)]
+    private val best2 = new java.lang.ThreadLocal[(Double, A, B)]
+    best1.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
+    best2.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
 
     protected val ord = new MetricOrdering[(A, B)] {
-      def distance(x: (A, B), y: (A, B)) = {
-        val diff = ordering.distance(x._1, y._1)
+      def difference(x: (A, B), y: (A, B)) = {
+        val diff = ordering.difference(x._1, y._1)
         val absdiff = Math.abs(diff)
 
-        if (absdiff < best.get._1)
+        if (absdiff < best1.get._1)
           (x, y) match {
             case ((to, null), (pos, obj)) =>
-              best.set((absdiff, pos, obj))
+              best2.set(best1.get)
+              best1.set((absdiff, pos, obj))
 
             case ((pos, obj), (to, null)) =>
-              best.set((absdiff, pos, obj))
+              best2.set(best1.get)
+              best1.set((absdiff, pos, obj))
+
+            case _ =>
+          }
+        else if (absdiff < best2.get._1)
+          (x, y) match {
+            case ((to, null), (pos, obj)) =>
+              best2.set((absdiff, pos, obj))
+
+            case ((pos, obj), (to, null)) =>
+              best2.set((absdiff, pos, obj))
 
             case _ =>
           }
@@ -67,17 +82,44 @@ package util {
     // use a TreeSet as a backing (not TreeMap because we need to get the whole pair back when we query it)
     def treeSet: SortedSet[(A, B)]
 
-    // find the closest key and return: (distance to key, the key, its associated value)
+    // find the closest key and return: (difference from key, the key, its associated value)
     def closest(to: A): (Double, A, B) = {
       treeSet.headOption match {
-        case Some((pos, obj)) => best.set((ordering.distance(to, pos), pos, obj))
+        case Some((pos, obj)) =>
+          best1.set((ordering.difference(to, pos), pos, obj))
+          best2.set((ordering.difference(to, pos), pos, obj))
         case None =>
           throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
       }
 
-      treeSet((to, null.asInstanceOf[B]))  // called for its side effect on "best"
+      treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best1"
 
-      best.get
+      best1.get
+    }
+
+    // find the closest two keys and return: ((difference from key1, key1, value1), (difference from key2, key2, value2))
+    def closest2(to: A): ((Double, A, B), (Double, A, B)) = {
+      val iter = treeSet.iterator
+      if (!iter.hasNext)
+        throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
+      val first = iter.next()
+      if (!iter.hasNext)
+        throw new java.util.NoSuchElementException("SortedMap has fewer than two elements, and hence no two closest elements")
+      val second = iter.next()
+
+      (first, second) match {
+        case ((pos1, obj1), (pos2, obj2)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
+          best1.set((ordering.difference(to, pos1), pos1, obj1))
+          best2.set((ordering.difference(to, pos2), pos2, obj2))
+
+        case ((pos2, obj2), (pos1, obj1)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
+          best1.set((ordering.difference(to, pos1), pos1, obj1))
+          best2.set((ordering.difference(to, pos2), pos2, obj2))
+      }
+
+      treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best1" and "best2"
+
+      (best1.get, best2.get)
     }
   }
 
@@ -119,8 +161,9 @@ package util {
   // J. Machine Learning Research 11 (2010)
   // http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
 
-  class Clustering1D[DATUM, CONTAINER <: Container[CONTAINER] with Aggregation{type Datum = DATUM}](val num: Int, value: => CONTAINER)
-      extends mutable.MetricSortedMap[Double, CONTAINER]()(new MetricOrdering[Double] {def distance(x: Double, y: Double) = x - y}) {
+  class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, value: => CONTAINER, elems: (Double, CONTAINER)*)
+      extends mutable.MetricSortedMap[Double, CONTAINER](elems: _*)(new MetricOrdering[Double] {def difference(x: Double, y: Double) = x - y}) {
+
     def cluster(n: Int) {
       while (size > n) {
         val bins = iterator.toList
@@ -130,25 +173,48 @@ package util {
         val ((x1, v1), (x2, v2)) = nearestNeighbors
         val replacement = ((x1 * v1.entries + x2 * v2.entries) / (v1.entries + v2.entries), v1 + v2)
 
+        println(s"combining $x1 $x2 to get $replacement")
+
         this -= x1
         this -= x2
         this += replacement
       }
     }
 
-    def update(x: Double, datum: DATUM, weight: Double) {  // "Algorithm 1"
+    // Ben-Haim and Tom-Tov's "Algorithm 1"
+    def update[DATUM](x: Double, datum: DATUM, weight: Double) {
       get(x) match {
-        case Some(v) => v.fillWeighted(datum, weight)
+        case Some(v) =>
+          v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+
         case None =>
           val v = value   // create a new one
-          v.fillWeighted(datum, weight)
+          v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
 
           this += (x, v)
           cluster(num)
       }
     }
 
+    // Ben-Haim and Tom-Tov's "Algorithm 2"
+    def merge(that: Clustering1D[CONTAINER]): Clustering1D[CONTAINER] = {
+      val bins = scala.collection.mutable.Map(this.iterator.toSeq: _*)
+      that.iterator foreach {case (x, v) =>
+        if (bins contains x)
+          bins(x) = bins(x) + v
+        else
+          bins(x) = v
+      }
 
+      val out = new Clustering1D[CONTAINER](num, value, bins.toSeq: _*)
+      out.cluster(num)
+      out
+    }
+
+    // Ben-Haim and Tom-Tov's "Algorithm 3", modified to integrate between low and high
+    def integrate(low: Double, high: Double): Double = {
+      3.14
+    }
   }
 
 }

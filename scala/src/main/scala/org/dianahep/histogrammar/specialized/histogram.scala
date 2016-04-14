@@ -23,7 +23,7 @@ package object histogram {
       quantity: NumericalFcn[DATUM],
       selection: Selection[DATUM] = unweighted[DATUM],
       origin: Double = 0.0) =
-    new SparselyBinning[DATUM, Counting, Counting](binWidth, quantity, selection, Count(), mutable.HashMap[Long, Counting](), Count(), origin)
+    new SparselyBinning[DATUM, Counting, Counting](binWidth, quantity, selection, 0.0, Count(), mutable.HashMap[Long, Counting](), Count(), origin)
 
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
     new HistogramMethods(hist)

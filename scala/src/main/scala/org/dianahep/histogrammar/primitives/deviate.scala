@@ -87,7 +87,7 @@ package histogrammar {
       else
         varianceTimesTotalWeight / entries
 
-    def variance_(_variance: Double) {
+    def variance_=(_variance: Double) {
       varianceTimesTotalWeight = entries * _variance
     }
 
@@ -103,10 +103,9 @@ package histogrammar {
       if (w > 0.0) {
         val q = quantity(datum)
 
+        entries += w
         val delta = q - mean
         val shift = delta * w / entries
-
-        entries += w
         mean += shift
         varianceTimesTotalWeight += w * delta * (q - mean)   // old delta times new delta
       }

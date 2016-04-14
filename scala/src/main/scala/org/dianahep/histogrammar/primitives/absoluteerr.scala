@@ -77,7 +77,7 @@ package histogrammar {
       else
         absoluteSum / entries
 
-    def mae_(_mae: Double) {
+    def mae_=(_mae: Double) {
       absoluteSum = entries * _mae
     }
 

@@ -82,10 +82,9 @@ package histogrammar {
       if (w > 0.0) {
         val q = quantity(datum)
 
+        entries += w
         val delta = q - mean
         val shift = delta * w / entries
-
-        entries += w
         mean += shift
       }
     }

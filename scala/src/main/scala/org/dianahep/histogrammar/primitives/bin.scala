@@ -17,7 +17,8 @@ package histogrammar {
        values: Seq[V],
        underflow: U,
        overflow: O,
-       nanflow: N) = new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow)
+       nanflow: N,
+       entries: Double) = new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow, entries)
 
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (num: Int,
@@ -29,10 +30,10 @@ package histogrammar {
        underflow: U = Count(),
        overflow: O = Count(),
        nanflow: N = Count()) =
-      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(num)(value), underflow, overflow, nanflow)
+      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(num)(value), underflow, overflow, nanflow, 0.0)
 
-    def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow))
+    def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow, x.entries))
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow, x.entries))
 
     trait Methods {
       def num: Int
@@ -51,7 +52,7 @@ package histogrammar {
     }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow", "entries")) =>
         val get = pairs.toMap
 
         val low = get("low") match {
@@ -91,7 +92,12 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
-        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, values, underflow, overflow, nanflow)
+        val entries = get("entries") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, values, underflow, overflow, nanflow, entries)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -103,7 +109,8 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binned[V, U, O, N]] with Bin.Methods {
+    val nanflow: N,
+    val entries: Double) extends Container[Binned[V, U, O, N]] with Bin.Methods {
 
     type Type = Binned[V, U, O, N]
     // type FixedType = Binned[V, U, O, N]
@@ -113,9 +120,11 @@ package histogrammar {
       throw new ContainerException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
       throw new ContainerException(s"values ($values) must have at least one element")
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
-    def zero = new Binned[V, U, O, N](low, high, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
+    def zero = new Binned[V, U, O, N](low, high, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero, 0.0)
     def +(that: Binned[V, U, O, N]): Binned[V, U, O, N] = {
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
@@ -140,36 +149,9 @@ package histogrammar {
         this.values zip that.values map {case (me, you) => me + you},
         this.underflow + that.underflow,
         this.overflow + that.overflow,
-        this.nanflow + that.nanflow)
+        this.nanflow + that.nanflow,
+        this.entries + that.entries)
     }
-
-    // the leftmost bin is unchanged and the rightmost becomes the sum of all bins
-    def cumulativeHigh = {
-      // // implementation that doesn't depend on the existence of a zero
-      // var runningSum = values.head
-      // val newvalues = values.tail.map({v => val out = runningSum; runningSum += v; out}) :+ runningSum
-      // new Binned[V, U, O, N](low, high, newvalues, underflow, overflow, nanflow)
-
-      // symmetry with cumulativeLow
-      new Binned[V, U, O, N](low, high, values.scanLeft(values.head.zero)(_ + _).tail, underflow, overflow, nanflow)
-    }
-
-    // the leftmost bin becomes zero and the rightmost becomes the sum of all bins except itself
-    def cumulativeLow = new Binned[V, U, O, N](low, high, values.scanLeft(values.head.zero)(_ + _).init, underflow, overflow, nanflow)
-
-    // the rightmost bin is unchanged and the leftmost becomes the sum of all bins
-    def cumulativeComplementHigh = {
-      // // implementation that doesn't depend on the existence of a zero
-      // var runningSum = values.last
-      // val newvalues = values.reverse.tail.map({v => val out = runningSum; runningSum += v; out}) :+ runningSum
-      // new Binned[V, U, O, N](low, high, newvalues.reverse, underflow, overflow, nanflow)
-
-      // symmetry with cumulativeComplementLow
-      new Binned[V, U, O, N](low, high, values.reverse.scanLeft(values.last.zero)(_ + _).reverse.init, underflow, overflow, nanflow)
-    }
-
-    // the rightmost bin becomes zero and the leftmost becomes the sum of all bins except itself
-    def cumulativeComplementLow = new Binned[V, U, O, N](low, high, values.reverse.scanLeft(values.last.zero)(_ + _).reverse.tail, underflow, overflow, nanflow)
 
     // def fix = this
     def toJsonFragment = JsonObject(
@@ -182,14 +164,15 @@ package histogrammar {
       "overflow:type" -> JsonString(overflow.factory.name),
       "overflow" -> overflow.toJsonFragment,
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment)
+      "nanflow" -> nanflow.toJsonFragment,
+      "entries" -> JsonFloat(entries))
 
-    override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow, entries=$entries]"
     override def equals(that: Any) = that match {
-      case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
+      case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow  &&  this.entries == that.entries
       case _ => false
     }
-    override def hashCode() = (low, high, values, underflow, overflow, nanflow).hashCode
+    override def hashCode() = (low, high, values, underflow, overflow, nanflow, entries).hashCode
   }
 
   class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](
@@ -200,7 +183,8 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with Bin.Methods {
+    val nanflow: N,
+    var entries: Double) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with Bin.Methods {
 
     type Type = Binning[DATUM, V, U, O, N]
     // type FixedType = Binned[V#FixedType, U#FixedType, O#FixedType, N#FixedType]
@@ -211,9 +195,11 @@ package histogrammar {
       throw new ContainerException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
       throw new ContainerException(s"values ($values) must have at least one element")
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
-    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
+    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero, 0.0)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")
@@ -240,7 +226,8 @@ package histogrammar {
         this.values zip that.values map {case (me, you) => me + you},
         this.underflow + that.underflow,
         this.overflow + that.overflow,
-        this.nanflow + that.nanflow)
+        this.nanflow + that.nanflow,
+        this.entries + that.entries)
     }
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
@@ -256,6 +243,8 @@ package histogrammar {
           nanflow.fillWeighted(datum, w)
         else
           values(bin(q)).fillWeighted(datum, w)
+
+        entries += w
       }
     }
 
@@ -271,13 +260,14 @@ package histogrammar {
       "overflow:type" -> JsonString(overflow.factory.name),
       "overflow" -> overflow.toJsonFragment,
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment)
+      "nanflow" -> nanflow.toJsonFragment,
+      "entries" -> JsonFloat(entries))
 
-    override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow, entries=$entries]"
     override def equals(that: Any) = that match {
-      case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
+      case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow  &&  this.entries == that.entries
       case _ => false
     }
-    override def hashCode() = (low, high, quantity, selection, values, underflow, overflow, nanflow).hashCode
+    override def hashCode() = (low, high, quantity, selection, values, underflow, overflow, nanflow, entries).hashCode
   }
 }

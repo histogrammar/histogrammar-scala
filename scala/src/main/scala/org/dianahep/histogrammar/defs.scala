@@ -79,6 +79,7 @@ package histogrammar {
     // type FixedType <: Container[CONTAINER]
     def factory: Factory
 
+    // def entries: Double  // Double because it's a sum of weights, not a integral count
     def zero: CONTAINER
     def +(that: CONTAINER): CONTAINER
 

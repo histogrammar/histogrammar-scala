@@ -3,6 +3,12 @@ package org.dianahep.histogrammar
 import scala.collection.SortedMap
 import scala.collection.SortedSet
 
+package object util {
+  implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
+    def distance(x: Double, y: Double) = x - y
+  }
+}
+
 package util {
   //////////////////////////////////////////////////////////////// avoid recomputing a function that appears in many histograms
 
@@ -29,10 +35,6 @@ package util {
       else if (d < 0.0) -1
       else 0
     }
-  }
-
-  implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
-    def distance(x: Double, y: Double) = x - y
   }
 
   abstract class MetricSortedMap[A, B](elems: (A, B)*)(ordering: MetricOrdering[A]) extends SortedMap[A, B] {
@@ -102,5 +104,14 @@ package util {
       def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = new MetricSortedMap[A, B](treeSet.rangeImpl(from.map((_, null.asInstanceOf[B])), until.map((_, null.asInstanceOf[B]))).toSeq: _*)
     }
   }
+
+  //////////////////////////////////////////////////////////////// one-pass adaptive histogram
+  // Yael Ben-Haim and Elad Tom-Tov, "A streaming parallel decision tree algorithm",
+  // J. Machine Learning Research 11 (2010)
+  // http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
+
+
+
+
 
 }

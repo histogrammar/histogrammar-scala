@@ -7,82 +7,87 @@ package histogrammar {
 
   object AbsoluteErr extends Factory {
     val name = "AbsoluteErr"
-    val help = "Accumulate a weighted mean absolute error (MAE) and total weight of a given quantity whose nominal value is zero."
+    val help = "Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero."
     val detailedHelp = """AbsoluteErr(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def fixed(totalWeight: Double, mae: Double) = new AbsoluteErred(totalWeight, mae)
+    def fixed(mae: Double, entries: Double) = new AbsoluteErred(mae, entries)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
 
-    def unapply(x: AbsoluteErred) = Some((x.totalWeight, x.mae))
-    def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some((x.totalWeight, x.mae))
+    def unapply(x: AbsoluteErred) = Some((x.mae, x.entries))
+    def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some((x.mae, x.entries))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("totalWeight", "mae")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("mae", "entries")) =>
         val get = pairs.toMap
-
-        val totalWeight = get("totalWeight") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".totalWeight")
-        }
 
         val mae = get("mae") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".mae")
         }
 
-        new AbsoluteErred(totalWeight, mae)
+        val entries = get("entries") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        new AbsoluteErred(mae, entries)
 
       case _ => throw new JsonFormatException(json, name)
     }
 
-    private[histogrammar] def plus(ca: Double, ma: Double, cb: Double, mb: Double) =
-      (ca + cb, (ca*ma + cb*mb)/(ca + cb))
+    private[histogrammar] def plus(ma: Double, ca: Double, mb: Double, cb: Double) =
+      ((ca*ma + cb*mb)/(ca + cb), ca + cb)
   }
 
-  class AbsoluteErred(val totalWeight: Double, val mae: Double) extends Container[AbsoluteErred] {
+  class AbsoluteErred(val mae: Double, val entries: Double) extends Container[AbsoluteErred] {
     type Type = AbsoluteErred
     // type FixedType = AbsoluteErred
     def factory = AbsoluteErr
 
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
     def zero = new AbsoluteErred(0.0, 0.0)
     def +(that: AbsoluteErred) = {
-      val (newtotalWeight, newmae) = AbsoluteErr.plus(this.totalWeight, this.mae, that.totalWeight, that.mae)
-      new AbsoluteErred(newtotalWeight, newmae)
+      val (newmae, newentries) = AbsoluteErr.plus(this.mae, this.entries, that.mae, that.entries)
+      new AbsoluteErred(newmae, newentries)
     }
 
     // def fix = this
-    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mae" -> JsonFloat(mae))
+    def toJsonFragment = JsonObject("mae" -> JsonFloat(mae), "entries" -> JsonFloat(entries))
 
-    override def toString() = s"AbsoluteErred($totalWeight, $mae)"
+    override def toString() = s"AbsoluteErred($mae)"
     override def equals(that: Any) = that match {
-      case that: AbsoluteErred => this.totalWeight === that.totalWeight  &&  this.mae === that.mae
+      case that: AbsoluteErred => this.mae === that.mae  &&  this.entries === that.entries
       case _ => false
     }
-    override def hashCode() = (totalWeight, mae).hashCode
+    override def hashCode() = (mae, entries).hashCode
   }
 
-  class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
+  class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], _mae: Double, var entries: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]
     // type FixedType = AbsoluteErred
     type Datum = DATUM
     def factory = AbsoluteErr
 
-    private var absoluteSum = totalWeight * _mae
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+    private var absoluteSum = entries * _mae
 
     def mae =
-      if (totalWeight == 0.0)
+      if (entries == 0.0)
         _mae
       else
-        absoluteSum / totalWeight
+        absoluteSum / entries
 
     def mae_(_mae: Double) {
-      absoluteSum = totalWeight * _mae
+      absoluteSum = entries * _mae
     }
 
     def zero = new AbsoluteErring[DATUM](quantity, selection, 0.0, 0.0)
     def +(that: AbsoluteErring[DATUM]) = {
-      val (newtotalWeight, newmae) = AbsoluteErr.plus(this.totalWeight, this.mae, that.totalWeight, that.mae)
-      new AbsoluteErring[DATUM](this.quantity, this.selection, newtotalWeight, newmae)
+      val (newmae, newentries) = AbsoluteErr.plus(this.mae, this.entries, that.mae, that.entries)
+      new AbsoluteErring[DATUM](this.quantity, this.selection, newmae, newentries)
     }
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
@@ -90,19 +95,19 @@ package histogrammar {
       if (w > 0.0) {
         val q = quantity(datum)
         absoluteSum += Math.abs(q)
-        totalWeight += w
+        entries += w
       }
     }
 
-    // def fix = new AbsoluteErred(totalWeight, mae)
+    // def fix = new AbsoluteErred(entries, mae)
     // def toJsonFragment = fix.toJsonFragment
-    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mae" -> JsonFloat(mae))
+    def toJsonFragment = JsonObject("mae" -> JsonFloat(mae), "entries" -> JsonFloat(entries))
 
-    override def toString() = s"AbsoluteErring($totalWeight, $mae)"
+    override def toString() = s"AbsoluteErring($mae)"
     override def equals(that: Any) = that match {
-      case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.totalWeight === that.totalWeight  &&  this.mae === that.mae
+      case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.mae === that.mae  &&  this.entries === that.entries
       case _ => false
     }
-    override def hashCode() = (quantity, selection, totalWeight, mae).hashCode
+    override def hashCode() = (quantity, selection, mae, entries).hashCode
   }
 }

@@ -97,7 +97,7 @@ package util {
       best1.get
     }
 
-    // find the closest two keys and return: ((difference from key1, key1, value1), (difference from key2, key2, value2))
+    // find the closest two keys and return: ((difference from closest key1, key1, value1), (difference from second-closest key2, key2, value2))
     def closest2(to: A): ((Double, A, B), (Double, A, B)) = {
       val iter = treeSet.iterator
       if (!iter.hasNext)
@@ -173,8 +173,6 @@ package util {
         val ((x1, v1), (x2, v2)) = nearestNeighbors
         val replacement = ((x1 * v1.entries + x2 * v2.entries) / (v1.entries + v2.entries), v1 + v2)
 
-        println(s"combining $x1 $x2 to get $replacement")
-
         this -= x1
         this -= x2
         this += replacement
@@ -183,6 +181,8 @@ package util {
 
     // Ben-Haim and Tom-Tov's "Algorithm 1"
     def update[DATUM](x: Double, datum: DATUM, weight: Double) {
+      // Here we subtly assume this CONTAINER has Aggregation so we can call fillWeighted.
+      // You wouldn't use it on a non-aggregatable container, would you?
       get(x) match {
         case Some(v) =>
           v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
@@ -201,7 +201,7 @@ package util {
       val bins = scala.collection.mutable.Map(this.iterator.toSeq: _*)
       that.iterator foreach {case (x, v) =>
         if (bins contains x)
-          bins(x) = bins(x) + v
+          bins(x) = bins(x) + v   // replace them; don't update them in-place
         else
           bins(x) = v
       }
@@ -211,10 +211,43 @@ package util {
       out
     }
 
-    // Ben-Haim and Tom-Tov's "Algorithm 3", modified to integrate between low and high
-    def integrate(low: Double, high: Double): Double = {
-      3.14
-    }
+    // Ben-Haim and Tom-Tov's "Algorithm 3" modified so that bin ps are interpreted as centers, rather than low edges (for consistency with the above)
+    def sum(bs: Double*): Seq[Double] =
+      if (isEmpty)
+        Array.fill(bs.size)(0.0)
+      else if (size == 1)
+        bs.toArray.map(b => if (treeSet.head._1 < b) 0.0 else if (treeSet.head._1 == b) treeSet.head._2.entries/2.0 else treeSet.head._2.entries).toSeq
+      else {
+        val out = Array.fill(bs.size)(0.0)
+        var total = 0.0
+
+        val bins = iterator.toList
+        val neighbors = bins.init zip bins.tail
+
+        // TODO: think about this more
+        // make sure that the ps are the CENTERS of bins, and HALF of the corresponding m.entries are counted at that line
+        // below the first point and above the last, fit an exponential with slope to match the closest two points
+
+        for (((p1, m1), (p2, m2)) <- neighbors) {
+          for ((b, i) <- bs.zipWithIndex) {
+            if (p1 <= b  &&  b < p2) {
+              val mb = m1.entries + (m2.entries - m1.entries)*(b - p1)/(p2 - p1)
+              val s = (m1.entries + mb)*(b - p1)/(p2 - p1)/2.0
+              out(i) = total + m1.entries/2.0 + s
+            }
+          }
+          total += m1.entries
+        }
+        val (pn, mn) = bins.last
+        total += mn.entries
+
+        for ((b, i) <- bs.zipWithIndex) {
+          if (pn <= b)
+            out(i) = total
+        }
+
+        out.toSeq
+      }
   }
 
 }

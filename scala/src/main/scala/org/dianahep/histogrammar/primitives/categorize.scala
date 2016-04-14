@@ -12,17 +12,22 @@ package histogrammar {
     val help = "Split a given quantity by its categorical (string-based) value and fill only one category per datum."
     val detailedHelp = """Categorize(quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count())"""
 
-    def fixed[V <: Container[V]](contentType: String, pairs: (String, V)*) = new Categorized(contentType, pairs: _*)
+    def fixed[V <: Container[V]](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, contentType, pairs: _*)
 
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
-      new Categorizing(quantity, selection, value, mutable.HashMap[String, V]())
+      new Categorizing(quantity, selection, 0.0, value, mutable.HashMap[String, V]())
 
-    def unapplySeq[V <: Container[V]](x: Categorized[V]) = Some(x.pairs)
-    def unapplySeq[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Categorizing[DATUM, V]) = Some(x.pairs)
+    def unapply[V <: Container[V]](x: Categorized[V]) = Some((x.entries, x.pairsMap))
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Categorizing[DATUM, V]) = Some((x.entries, x.pairsMap))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
         val get = pairs.toMap
+
+        val entries = get("entries") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".entries")
+        }
 
         val (contentType, factory) = get("type") match {
           case JsonString(name) => (name, Factory(name))
@@ -31,7 +36,7 @@ package histogrammar {
 
         get("data") match {
           case JsonObject(categoryPairs @ _*) =>
-            new Categorized[Container[_]](contentType, categoryPairs map {
+            new Categorized[Container[_]](entries, contentType, categoryPairs map {
               case (JsonString(category), value) =>
                 category -> factory.fromJsonFragment(value)
             }: _*)
@@ -43,10 +48,12 @@ package histogrammar {
     }
   }
 
-  class Categorized[V <: Container[V]](contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
+  class Categorized[V <: Container[V]](val entries: Double, contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
     type Type = Categorized[V]
-    // type FixedType = Categorized[V]
     def factory = Categorize
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
 
     val pairsMap = pairs.toMap
     def size = pairs.size
@@ -57,33 +64,38 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
-    def zero = new Categorized[V](contentType)
-    def +(that: Categorized[V]) = new Categorized(contentType, (this.keySet union that.keySet).toSeq map {key =>
-      if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-        (key, this.pairsMap(key) + that.pairsMap(key))
-      else if (this.pairsMap contains key)
-        (key, this.pairsMap(key))
-      else
-        (key, that.pairsMap(key))
-    }: _*)
+    def zero = new Categorized[V](0.0, contentType)
+    def +(that: Categorized[V]) = new Categorized(
+      this.entries + that.entries,
+      contentType,
+      (this.keySet union that.keySet).toSeq map {key =>
+        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+          (key, this.pairsMap(key) + that.pairsMap(key))
+        else if (this.pairsMap contains key)
+          (key, this.pairsMap(key))
+        else
+          (key, that.pairsMap(key))
+      }: _*)
 
-    // def fix = this
     def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
       "type" -> JsonString(contentType),
       "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
-    override def toString() = s"""Categorized[${if (pairs.isEmpty) "" else pairs.head._2.toString + ", "}size=${pairs.size}]"""
+    override def toString() = s"""Categorized[entries=$entries, ${if (pairs.isEmpty) contentType else pairs.head._2.toString}, size=${pairs.size}]"""
     override def equals(that: Any) = that match {
-      case that: Categorized[V] => this.pairs == that.pairs
+      case that: Categorized[V] => this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false
     }
   }
 
-  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
+  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
-    // type FixedType = Categorized[V#FixedType]
     type Datum = DATUM
     def factory = Categorize
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
 
     def pairsMap = pairs.toMap
     def size = pairs.size
@@ -94,10 +106,11 @@ package histogrammar {
     def get(x: String) = pairsMap.get(x)
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
-    def zero = new Categorizing[DATUM, V](quantity, selection, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
+    def zero = new Categorizing[DATUM, V](quantity, selection, 0.0, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
     def +(that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
       this.quantity,
       this.selection,
+      this.entries + that.entries,
       this.value,
       mutable.HashMap[String, V]((this.keySet union that.keySet).toSeq map {key =>
         if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
@@ -113,21 +126,21 @@ package histogrammar {
       if (w > 0.0) {
         val q = quantity(datum)
 
+        entries += w
         if (!(pairs contains q))
           pairs(q) = value
         pairs(q).fillWeighted(datum, w)
       }
     }
 
-    // def fix = new Categorized(value.factory.name, pairs.toSeq map {case (k, v) => (k, v.fix)}: _*)
-    // def toJsonFragment = fix.toJsonFragment
     def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
       "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
-    override def toString() = s"Categorizing[$value, size=${pairs.size}]"
+    override def toString() = s"Categorizing[entries=$entries, $value, size=${pairs.size}]"
     override def equals(that: Any) = that match {
-      case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.pairs == that.pairs
+      case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false
     }
   }

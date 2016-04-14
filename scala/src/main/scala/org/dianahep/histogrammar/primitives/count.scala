@@ -10,59 +10,54 @@ package histogrammar {
     val help = "Count data, ignoring their content."
     val detailedHelp = """Count()"""
 
-    def fixed(value: Long) = new Counted(value)
-    def apply() = new Counting(0L)
+    def fixed(entries: Double) = new Counted(entries)
+    def apply() = new Counting(0.0)
 
-    def unapply(x: Counted) = Some(x.value)
-    def unapply(x: Counting) = Some(x.value)
+    def unapply(x: Counted) = Some(x.entries)
+    def unapply(x: Counting) = Some(x.entries)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonInt(value) => new Counted(value)
+      case JsonFloat(entries) => new Counted(entries)
       case _ => throw new JsonFormatException(json, name)
     }
   }
 
-  class Counted(val value: Long) extends Container[Counted] {
+  class Counted(val entries: Double) extends Container[Counted] {
     type Type = Counted
-    // type FixedType = Counted
     def factory = Count
 
-    def zero = new Counted(0L)
-    def +(that: Counted): Counted = new Counted(this.value + that.value)
+    def zero = new Counted(0.0)
+    def +(that: Counted): Counted = new Counted(this.entries + that.entries)
 
-    // def fix = this
-    def toJsonFragment = JsonInt(value)
+    def toJsonFragment = JsonFloat(entries)
 
-    override def toString() = s"Counted($value)"
+    override def toString() = s"Counted($entries)"
     override def equals(that: Any) = that match {
-      case that: Counted => this.value == that.value
+      case that: Counted => this.entries == that.entries
       case _ => false
     }
-    override def hashCode() = value.hashCode
+    override def hashCode() = entries.hashCode
   }
 
-  class Counting(var value: Long) extends Container[Counting] with Aggregation {
+  class Counting(var entries: Double) extends Container[Counting] with Aggregation {
     type Type = Counting
-    // type FixedType = Counting
     type Datum = Any
     def factory = Count
 
-    def zero = new Counting(0L)
-    def +(that: Counting): Counting = new Counting(this.value + that.value)
+    def zero = new Counting(0.0)
+    def +(that: Counting): Counting = new Counting(this.entries + that.entries)
 
     def fillWeighted[SUB <: Any](datum: SUB, weight: Double) {
-      value += 1L
+      entries += weight
     }
 
-    // def fix = new Counted(value)
-    // def toJsonFragment = fix.toJsonFragment
-    def toJsonFragment = JsonInt(value)
+    def toJsonFragment = JsonFloat(entries)
 
-    override def toString() = s"Counting($value)"
+    override def toString() = s"Counting($entries)"
     override def equals(that: Any) = that match {
-      case that: Counting => this.value == that.value
+      case that: Counting => this.entries == that.entries
       case _ => false
     }
-    override def hashCode() = value.hashCode
+    override def hashCode() = entries.hashCode
   }
 }

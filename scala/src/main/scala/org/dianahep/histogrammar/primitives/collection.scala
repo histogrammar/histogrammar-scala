@@ -516,7 +516,7 @@ package histogrammar {
     override def toString() = "Branched[entries=$entries, " + values.mkString(", ") + "]"
 
     override def equals(that: Any) = that match {
-      case thatThar: Branched[_, _] => this.entries === thatThar.entries  &&  this.head == thatThar.head  &&  this.tail == thatThar.tail
+      case that: Branched[_, _] => this.entries === that.entries  &&  this.head == that.head  &&  this.tail == that.tail
       case _ => false
     }
     override def hashCode() = (entries, values).hashCode
@@ -564,7 +564,7 @@ package histogrammar {
     override def toString() = "Branching[entries=$entries, " + values.mkString(", ") + "]"
 
     override def equals(that: Any) = that match {
-      case thatThar: Branching[_, _] => this.entries === thatThar.entries  &&  this.head == thatThar.head  &&  this.tail == thatThar.tail
+      case that: Branching[_, _] => this.entries === that.entries  &&  this.head == that.head  &&  this.tail == that.tail
       case _ => false
     }
     override def hashCode() = (entries, values).hashCode

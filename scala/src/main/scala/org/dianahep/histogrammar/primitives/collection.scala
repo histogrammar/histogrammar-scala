@@ -502,6 +502,9 @@ package histogrammar {
     type Type = Branched[HEAD, TAIL]
     def factory = Branch
 
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
     def values: List[Container[_]] = head :: tail.values
     def isEmpty: Boolean = false
     def size: Int = 1 + tail.size
@@ -540,6 +543,9 @@ package histogrammar {
     type Type = Branching[HEAD, TAIL]
     type Datum = head.Datum
     def factory = Branch
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
 
     def values: List[Container[_]] = head :: tail.values
     def isEmpty: Boolean = false

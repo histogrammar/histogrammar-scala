@@ -26,6 +26,9 @@ package histogrammar {
     type Type = Counted
     def factory = Count
 
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
     def zero = new Counted(0.0)
     def +(that: Counted): Counted = new Counted(this.entries + that.entries)
 
@@ -43,6 +46,9 @@ package histogrammar {
     type Type = Counting
     type Datum = Any
     def factory = Count
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
 
     def zero = new Counting(0.0)
     def +(that: Counting): Counting = new Counting(this.entries + that.entries)

@@ -10,19 +10,19 @@ package histogrammar {
     val help = "Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers)."
     val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def fixed(totalWeight: Double, mean: Double, variance: Double) = new Deviated(totalWeight, mean, variance)
+    def fixed(entries: Double, mean: Double, variance: Double) = new Deviated(entries, mean, variance)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
 
-    def unapply(x: Deviated) = Some((x.totalWeight, x.mean, x.variance))
-    def unapply[DATUM](x: Deviating[DATUM]) = Some((x.totalWeight, x.mean, x.variance))
+    def unapply(x: Deviated) = Some((x.entries, x.mean, x.variance))
+    def unapply[DATUM](x: Deviating[DATUM]) = Some((x.entries, x.mean, x.variance))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("totalWeight", "mean", "variance")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "mean", "variance")) =>
         val get = pairs.toMap
 
-        val totalWeight = get("totalWeight") match {
+        val entries = get("entries") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".totalWeight")
+          case x => throw new JsonFormatException(x, name + ".entries")
         }
 
         val mean = get("mean") match {
@@ -35,7 +35,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".variance")
         }
 
-        new Deviated(totalWeight, mean, variance)
+        new Deviated(entries, mean, variance)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -47,52 +47,55 @@ package histogrammar {
     }
   }
 
-  class Deviated(val totalWeight: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
+  class Deviated(val entries: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
     type Type = Deviated
-    // type FixedType = Deviated
     def factory = Deviate
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
 
     def zero = new Deviated(0.0, 0.0, 0.0)
     def +(that: Deviated) = {
-      val (newtotalWeight, newmean, newvariance) = Deviate.plus(this.totalWeight, this.mean, this.variance * this.totalWeight,
-                                                          that.totalWeight, that.mean, that.variance * that.totalWeight)
-      new Deviated(newtotalWeight, newmean, newvariance)
+      val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
+                                                          that.entries, that.mean, that.variance * that.entries)
+      new Deviated(newentries, newmean, newvariance)
     }
 
-    // def fix = this
-    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
+    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
-    override def toString() = s"Deviated($totalWeight, $mean, $variance)"
+    override def toString() = s"Deviated($entries, $mean, $variance)"
     override def equals(that: Any) = that match {
-      case that: Deviated => this.totalWeight === that.totalWeight  &&  this.mean === that.mean  &&  this.variance === that.variance
+      case that: Deviated => this.entries === that.entries  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
     }
-    override def hashCode() = (totalWeight, mean, variance).hashCode
+    override def hashCode() = (entries, mean, variance).hashCode
   }
 
-  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var totalWeight: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
+  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
     type Type = Deviating[DATUM]
-    // type FixedType = Deviated
     type Datum = DATUM
     def factory = Deviate
 
-    private var varianceTimesTotalWeight = totalWeight * _variance
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    private var varianceTimesTotalWeight = entries * _variance
 
     def variance =
-      if (totalWeight == 0.0)
+      if (entries == 0.0)
         _variance
       else
-        varianceTimesTotalWeight / totalWeight
+        varianceTimesTotalWeight / entries
 
     def variance_(_variance: Double) {
-      varianceTimesTotalWeight = totalWeight * _variance
+      varianceTimesTotalWeight = entries * _variance
     }
 
     def zero = new Deviating[DATUM](quantity, selection, 0.0, 0.0, 0.0)
     def +(that: Deviating[DATUM]) = {
-      val (newtotalWeight, newmean, newvariance) = Deviate.plus(this.totalWeight, this.mean, this.variance * this.totalWeight,
-                                                          that.totalWeight, that.mean, that.variance * that.totalWeight)
-      new Deviating[DATUM](this.quantity, this.selection, newtotalWeight, newmean, newvariance)
+      val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
+                                                          that.entries, that.mean, that.variance * that.entries)
+      new Deviating[DATUM](this.quantity, this.selection, newentries, newmean, newvariance)
     }
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
@@ -100,25 +103,22 @@ package histogrammar {
       if (w > 0.0) {
         val q = quantity(datum)
 
-        totalWeight += w
-
         val delta = q - mean
-        val shift = delta * w / totalWeight
+        val shift = delta * w / entries
 
+        entries += w
         mean += shift
         varianceTimesTotalWeight += w * delta * (q - mean)   // old delta times new delta
       }
     }
 
-    // def fix = new Deviated(totalWeight, mean, variance)
-    // def toJsonFragment = fix.toJsonFragment
-    def toJsonFragment = JsonObject("totalWeight" -> JsonFloat(totalWeight), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
+    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
-    override def toString() = s"Deviating($totalWeight, $mean, $variance)"
+    override def toString() = s"Deviating($entries, $mean, $variance)"
     override def equals(that: Any) = that match {
-      case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.totalWeight === that.totalWeight  &&  this.mean === that.mean  &&  this.variance === that.variance
+      case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
     }
-    override def hashCode() = (quantity, selection, totalWeight, mean, variance).hashCode
+    override def hashCode() = (quantity, selection, entries, mean, variance).hashCode
   }
 }

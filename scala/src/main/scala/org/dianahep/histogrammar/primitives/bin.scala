@@ -14,11 +14,11 @@ package histogrammar {
     def fixed[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (low: Double,
        high: Double,
+       entries: Double,
        values: Seq[V],
        underflow: U,
        overflow: O,
-       nanflow: N,
-       entries: Double) = new Binned[V, U, O, N](low, high, values, underflow, overflow, nanflow, entries)
+       nanflow: N) = new Binned[V, U, O, N](low, high, entries, values, underflow, overflow, nanflow)
 
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (num: Int,
@@ -30,10 +30,10 @@ package histogrammar {
        underflow: U = Count(),
        overflow: O = Count(),
        nanflow: N = Count()) =
-      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(num)(value), underflow, overflow, nanflow, 0.0)
+      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(num)(value), underflow, overflow, nanflow)
 
-    def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow, x.entries))
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.values, x.underflow, x.overflow, x.nanflow, x.entries))
+    def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.entries, x.values, x.underflow, x.overflow, x.nanflow))
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.entries, x.values, x.underflow, x.overflow, x.nanflow))
 
     trait Methods {
       def num: Int
@@ -52,7 +52,7 @@ package histogrammar {
     }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow", "entries")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
         val get = pairs.toMap
 
         val low = get("low") match {
@@ -63,6 +63,11 @@ package histogrammar {
         val high = get("high") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".high")
+        }
+
+        val entries = get("entries") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".entries")
         }
 
         val valuesFactory = get("values:type") match {
@@ -92,12 +97,7 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
-        val entries = get("entries") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".entries")
-        }
-
-        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, values, underflow, overflow, nanflow, entries)
+        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, entries, values, underflow, overflow, nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -106,14 +106,13 @@ package histogrammar {
   class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
+    val entries: Double,
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N,
-    val entries: Double) extends Container[Binned[V, U, O, N]] with Bin.Methods {
+    val nanflow: N) extends Container[Binned[V, U, O, N]] with Bin.Methods {
 
     type Type = Binned[V, U, O, N]
-    // type FixedType = Binned[V, U, O, N]
     def factory = Bin
 
     if (low >= high)
@@ -124,7 +123,7 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
-    def zero = new Binned[V, U, O, N](low, high, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero, 0.0)
+    def zero = new Binned[V, U, O, N](low, high, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binned[V, U, O, N]): Binned[V, U, O, N] = {
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
@@ -146,17 +145,17 @@ package histogrammar {
       new Binned(
         low,
         high,
+        this.entries + that.entries,
         this.values zip that.values map {case (me, you) => me + you},
         this.underflow + that.underflow,
         this.overflow + that.overflow,
-        this.nanflow + that.nanflow,
-        this.entries + that.entries)
+        this.nanflow + that.nanflow)
     }
 
-    // def fix = this
     def toJsonFragment = JsonObject(
       "low" -> JsonFloat(low),
       "high" -> JsonFloat(high),
+      "entries" -> JsonFloat(entries),
       "values:type" -> JsonString(values.head.factory.name),
       "values" -> JsonArray(values.map(_.toJsonFragment): _*),
       "underflow:type" -> JsonString(underflow.factory.name),
@@ -164,15 +163,14 @@ package histogrammar {
       "overflow:type" -> JsonString(overflow.factory.name),
       "overflow" -> overflow.toJsonFragment,
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment,
-      "entries" -> JsonFloat(entries))
+      "nanflow" -> nanflow.toJsonFragment)
 
-    override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow, entries=$entries]"
+    override def toString() = s"Binned[low=$low, high=$high, entries=$entries, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
-      case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow  &&  this.entries == that.entries
+      case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.entries == that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (low, high, values, underflow, overflow, nanflow, entries).hashCode
+    override def hashCode() = (low, high, entries, values, underflow, overflow, nanflow).hashCode
   }
 
   class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](
@@ -180,14 +178,13 @@ package histogrammar {
     val high: Double,
     val quantity: NumericalFcn[DATUM],
     val selection: Selection[DATUM],
+    var entries: Double,
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N,
-    var entries: Double) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with Bin.Methods {
+    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with Bin.Methods {
 
     type Type = Binning[DATUM, V, U, O, N]
-    // type FixedType = Binned[V#FixedType, U#FixedType, O#FixedType, N#FixedType]
     type Datum = DATUM
     def factory = Bin
 
@@ -199,7 +196,7 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
-    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero, 0.0)
+    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")
@@ -223,11 +220,11 @@ package histogrammar {
         high,
         this.quantity,
         this.selection,
+        this.entries + that.entries,
         this.values zip that.values map {case (me, you) => me + you},
         this.underflow + that.underflow,
         this.overflow + that.overflow,
-        this.nanflow + that.nanflow,
-        this.entries + that.entries)
+        this.nanflow + that.nanflow)
     }
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
@@ -235,6 +232,7 @@ package histogrammar {
       if (w > 0.0) {
         val q = quantity(datum)
 
+        entries += w
         if (under(q))
           underflow.fillWeighted(datum, w)
         else if (over(q))
@@ -243,16 +241,13 @@ package histogrammar {
           nanflow.fillWeighted(datum, w)
         else
           values(bin(q)).fillWeighted(datum, w)
-
-        entries += w
       }
     }
 
-    // def fix = new Binned(low, high, values.map(_.fix), underflow.fix, overflow.fix, nanflow.fix)
-    // def toJsonFragment = fix.toJsonFragment
     def toJsonFragment = JsonObject(
       "low" -> JsonFloat(low),
       "high" -> JsonFloat(high),
+      "entries" -> JsonFloat(entries),
       "values:type" -> JsonString(values.head.factory.name),
       "values" -> JsonArray(values.map(_.toJsonFragment): _*),
       "underflow:type" -> JsonString(underflow.factory.name),
@@ -260,14 +255,13 @@ package histogrammar {
       "overflow:type" -> JsonString(overflow.factory.name),
       "overflow" -> overflow.toJsonFragment,
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment,
-      "entries" -> JsonFloat(entries))
+      "nanflow" -> nanflow.toJsonFragment)
 
-    override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow, entries=$entries]"
+    override def toString() = s"Binning[low=$low, high=$high, entries=$entries, values=[${values.head.toString}, size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
-      case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow  &&  this.entries == that.entries
+      case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries == that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (low, high, quantity, selection, values, underflow, overflow, nanflow, entries).hashCode
+    override def hashCode() = (low, high, quantity, selection, entries, values, underflow, overflow, nanflow).hashCode
   }
 }

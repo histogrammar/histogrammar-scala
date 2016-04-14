@@ -14,7 +14,7 @@ package object histogram {
       high: Double,
       quantity: NumericalFcn[DATUM],
       selection: Selection[DATUM] = unweighted[DATUM]) =
-    new Binning[DATUM, Counting, Counting, Counting, Counting](low, high, quantity, selection, Array.fill(num)(Count()).toSeq, Count(), Count(), Count(), 0.0)
+    new Binning[DATUM, Counting, Counting, Counting, Counting](low, high, quantity, selection, 0.0, Array.fill(num)(Count()).toSeq, Count(), Count(), Count())
 
   type SparselyHistogrammed = SparselyBinned[Counted, Counted]
   type SparselyHistogramming[DATUM] = SparselyBinning[DATUM, Counting, Counting]
@@ -33,7 +33,7 @@ package object histogram {
 
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
     new HistogramMethods(
-      new Binned(hist.low, hist.high, hist.minBin to hist.maxBin map {i => Count.fixed(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0L))}, Count.fixed(0L), Count.fixed(0L), hist.nanflow, 0.0)
+      new Binned(hist.low, hist.high, 0.0, hist.minBin to hist.maxBin map {i => Count.fixed(hist.at(i).flatMap(x => Some(x.value)).getOrElse(0L))}, Count.fixed(0L), Count.fixed(0L), hist.nanflow)
     )
 
   implicit def sparselyBinningToHistogramMethods(hist: SparselyBinning[_, _, _]): HistogramMethods =

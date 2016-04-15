@@ -5,11 +5,11 @@ import scala.collection.SortedSet
 
 import org.dianahep.histogrammar._
 
-// package object util {
-//   implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
-//     def difference(x: Double, y: Double) = x - y
-//   }
-// }
+package object util {
+  implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
+    def difference(x: Double, y: Double) = x - y
+  }
+}
 
 package util {
   //////////////////////////////////////////////////////////////// avoid recomputing a function that appears in many histograms
@@ -163,11 +163,11 @@ package util {
     def min: Double
     def max: Double
 
-    def pdf(x: Double): Double = pdf(x, List[Double](): _*).head
-    def cdf(x: Double): Double = cdf(x, List[Double](): _*).head
+    def pdf(x: Double): Double = pdf(List(x): _*).head
+    def cdf(x: Double): Double = cdf(List(x): _*).head
 
-    def pdf(first: Double, rest: Double*): Seq[Double] =
-      (first :: rest.toList) map {x =>
+    def pdf(xs: Double*): Seq[Double] =
+      xs map {x =>
         if (bins.isEmpty)
           0.0
         if (bins.size == 1  &&  x == bins.head._1)
@@ -180,11 +180,11 @@ package util {
         }
       }
 
-    def cdf(first: Double, rest: Double*): Seq[Double] =
+    def cdf(xs: Double*): Seq[Double] =
       if (bins.isEmpty)
-        Seq.fill(rest.size + 1)(0.0)
+        Seq.fill(xs.size)(0.0)
       else if (bins.size == 1)
-        (first :: rest.toList) map {case x =>
+        xs map {case x =>
           if (x < bins.head._1)
             0.0
           else if (x == bins.head._1)
@@ -194,7 +194,7 @@ package util {
         }
       else {
         var binsArray = bins.toArray
-        val in = (first :: rest.toList).zipWithIndex.toArray
+        val in = xs.zipWithIndex.toArray
         val out = Array.fill(in.size)(0.0)
 
         var i = 0
@@ -210,7 +210,7 @@ package util {
 
           in foreach {case (x, j) =>
             if (left <= x  &&  x < right)
-              out(j) = entries * (2.0 * x - left - right) / (right - left)
+              out(j) = cumulative + entries * (x - left)/(right - left)
           }
 
           left = right
@@ -246,7 +246,7 @@ package util {
       while (size > n) {
         val bins = iterator.toSeq
         val neighbors = bins.init zip bins.tail
-        val nearestNeighbors = neighbors minBy {case ((x1, v1), (x2, v2)) => x2 - x1}
+        val nearestNeighbors = neighbors.minBy({case ((x1, v1), (x2, v2)) => x2 - x1})(doubleOrdering)
 
         val ((x1, v1), (x2, v2)) = nearestNeighbors
         val replacement = ((x1 * v1.entries + x2 * v2.entries) / (v1.entries + v2.entries), v1 + v2)

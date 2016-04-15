@@ -165,6 +165,7 @@ package util {
 
     def pdf(x: Double): Double = pdf(List(x): _*).head
     def cdf(x: Double): Double = cdf(List(x): _*).head
+    def qf(x: Double): Double = qf(List(x): _*).head
 
     def pdf(xs: Double*): Seq[Double] =
       xs map {x =>
@@ -193,7 +194,7 @@ package util {
             bins.head._2.entries
         }
       else {
-        var binsArray = bins.toArray
+        val binsArray = bins.toArray
         val in = xs.zipWithIndex.toArray
         val out = Array.fill(in.size)(0.0)
 
@@ -219,6 +220,45 @@ package util {
         }
 
         in foreach {case (x, j) => if (x >= max) out(j) = cumulative}
+
+        out.toSeq
+      }
+
+    def qf(ys: Double*): Seq[Double] =
+      if (bins.isEmpty)
+        Seq.fill(ys.size)(java.lang.Double.NaN)
+      else if (bins.size == 1)
+        Seq.fill(ys.size)(bins.head._1)
+      else {
+        val binsArray = bins.toArray
+        val in = ys.zipWithIndex.toArray
+        val out = Array.fill(in.size)(min)
+
+        var i = 0
+        var left = min
+        var cumulative = 0.0
+        while (i < binsArray.size) {
+          val right =
+            if (i < binsArray.size - 1)
+              (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
+            else
+              max
+          val entries = binsArray(i)._2.entries
+
+          val low = cumulative
+          val high = cumulative + entries
+
+          in foreach {case (y, j) =>
+            if (low <= y  &&  y < high)
+              out(j) = left + (right - left)*(y - low)/(high - low)
+          }
+
+          left = right
+          cumulative += entries
+          i += 1
+        }
+
+        in foreach {case (y, j) => if (y >= cumulative) out(j) = max}
 
         out.toSeq
       }

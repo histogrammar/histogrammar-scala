@@ -136,6 +136,10 @@ package util {
 
       def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = throw new UnsupportedOperationException
     }
+
+    object MetricSortedMap {
+      def apply[A, B](elems: (A, B)*)(implicit val ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
+    }
   }
 
   package mutable {
@@ -153,6 +157,10 @@ package util {
       def -=(elem: A): MetricSortedMap[A, B] = {treeSet -= Tuple2(elem, null.asInstanceOf[B]); this}
 
       def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = throw new UnsupportedOperationException
+    }
+
+    object MetricSortedMap {
+      def apply[A, B](elems: (A, B)*)(implicit val ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
     }
   }
 

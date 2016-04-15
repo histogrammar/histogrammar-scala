@@ -12,7 +12,7 @@ package histogrammar {
   object SparselyBin extends Factory {
     val name = "SparselyBin"
     val help = "Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary."
-    val detailedHelp ="""SparselyBin(binWidth: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM],
+    val detailedHelp = """SparselyBin(binWidth: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM],
             value: => V = Count(), nanflow: N = Count(), origin: Double = 0.0)"""
 
     private val integerPattern = "-?[0-9]+".r
@@ -133,7 +133,6 @@ package histogrammar {
     def high = if (values.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
     def at(i: Long) = values.find(_._1 == i).map(_._2)
 
-    // def fix = this
     def toJsonFragment = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
       "entries" -> JsonFloat(entries),

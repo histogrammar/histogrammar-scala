@@ -43,9 +43,9 @@ package util {
   abstract class MetricSortedMap[A, B](elems: (A, B)*)(ordering: MetricOrdering[A]) extends SortedMap[A, B] {
     // when the TreeSet searches for an element, keep track of the best distance it finds
     private val best1 = new java.lang.ThreadLocal[(Double, A, B)]
-    private val best2 = new java.lang.ThreadLocal[(Double, A, B)]
+    // private val best2 = new java.lang.ThreadLocal[(Double, A, B)]
     best1.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
-    best2.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
+    // best2.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
 
     protected val ord = new MetricOrdering[(A, B)] {
       def difference(x: (A, B), y: (A, B)) = {
@@ -55,25 +55,25 @@ package util {
         if (absdiff < best1.get._1)
           (x, y) match {
             case ((to, null), (pos, obj)) =>
-              best2.set(best1.get)
+              // best2.set(best1.get)
               best1.set((absdiff, pos, obj))
 
             case ((pos, obj), (to, null)) =>
-              best2.set(best1.get)
+              // best2.set(best1.get)
               best1.set((absdiff, pos, obj))
 
             case _ =>
           }
-        else if (absdiff < best2.get._1)
-          (x, y) match {
-            case ((to, null), (pos, obj)) =>
-              best2.set((absdiff, pos, obj))
+        // else if (absdiff < best2.get._1)
+        //   (x, y) match {
+        //     case ((to, null), (pos, obj)) =>
+        //       best2.set((absdiff, pos, obj))
 
-            case ((pos, obj), (to, null)) =>
-              best2.set((absdiff, pos, obj))
+        //     case ((pos, obj), (to, null)) =>
+        //       best2.set((absdiff, pos, obj))
 
-            case _ =>
-          }
+        //     case _ =>
+        //   }
 
         diff
       }
@@ -87,7 +87,7 @@ package util {
       treeSet.headOption match {
         case Some((pos, obj)) =>
           best1.set((ordering.difference(to, pos), pos, obj))
-          best2.set((ordering.difference(to, pos), pos, obj))
+          // best2.set((ordering.difference(to, pos), pos, obj))
         case None =>
           throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
       }
@@ -97,30 +97,30 @@ package util {
       best1.get
     }
 
-    // find the closest two keys and return: ((difference from closest key1, key1, value1), (difference from second-closest key2, key2, value2))
-    def closest2(to: A): ((Double, A, B), (Double, A, B)) = {
-      val iter = treeSet.iterator
-      if (!iter.hasNext)
-        throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
-      val first = iter.next()
-      if (!iter.hasNext)
-        throw new java.util.NoSuchElementException("SortedMap has fewer than two elements, and hence no two closest elements")
-      val second = iter.next()
+    // // find the closest two keys and return: ((difference from closest key1, key1, value1), (difference from second-closest key2, key2, value2))
+    // def closest2(to: A): ((Double, A, B), (Double, A, B)) = {
+    //   val iter = treeSet.iterator
+    //   if (!iter.hasNext)
+    //     throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
+    //   val first = iter.next()
+    //   if (!iter.hasNext)
+    //     throw new java.util.NoSuchElementException("SortedMap has fewer than two elements, and hence no two closest elements")
+    //   val second = iter.next()
 
-      (first, second) match {
-        case ((pos1, obj1), (pos2, obj2)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
-          best1.set((ordering.difference(to, pos1), pos1, obj1))
-          best2.set((ordering.difference(to, pos2), pos2, obj2))
+    //   (first, second) match {
+    //     case ((pos1, obj1), (pos2, obj2)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
+    //       best1.set((ordering.difference(to, pos1), pos1, obj1))
+    //       best2.set((ordering.difference(to, pos2), pos2, obj2))
 
-        case ((pos2, obj2), (pos1, obj1)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
-          best1.set((ordering.difference(to, pos1), pos1, obj1))
-          best2.set((ordering.difference(to, pos2), pos2, obj2))
-      }
+    //     case ((pos2, obj2), (pos1, obj1)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
+    //       best1.set((ordering.difference(to, pos1), pos1, obj1))
+    //       best2.set((ordering.difference(to, pos2), pos2, obj2))
+    //   }
 
-      treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best1" and "best2"
+    //   treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best1" and "best2"
 
-      (best1.get, best2.get)
-    }
+    //   (best1.get, best2.get)
+    // }
   }
 
   package immutable {
@@ -156,17 +156,95 @@ package util {
     }
   }
 
+  //////////////////////////////////////////////////////////////// interpretation of central bins as a distribution
+
+  trait CentralBinsDistribution[CONTAINER <: Container[CONTAINER]] {
+    def bins: MetricSortedMap[Double, CONTAINER]
+    def min: Double
+    def max: Double
+
+    def pdf(x: Double): Double = pdf(x, List[Double](): _*).head
+    def cdf(x: Double): Double = cdf(x, List[Double](): _*).head
+
+    def pdf(first: Double, rest: Double*): Seq[Double] =
+      (first :: rest.toList) map {x =>
+        if (bins.isEmpty)
+          0.0
+        if (bins.size == 1  &&  x == bins.head._1)
+          java.lang.Double.POSITIVE_INFINITY
+        else if (x < min  ||  x >= max)
+          0.0
+        else {
+          val (diff, key, value) = bins.closest(x)
+          value.entries
+        }
+      }
+
+    def cdf(first: Double, rest: Double*): Seq[Double] =
+      if (bins.isEmpty)
+        Seq.fill(rest.size + 1)(0.0)
+      else if (bins.size == 1)
+        (first :: rest.toList) map {case x =>
+          if (x < bins.head._1)
+            0.0
+          else if (x == bins.head._1)
+            bins.head._2.entries / 2.0
+          else
+            bins.head._2.entries
+        }
+      else {
+        var binsArray = bins.toArray
+        val in = (first :: rest.toList).zipWithIndex.toArray
+        val out = Array.fill(in.size)(0.0)
+
+        var i = 0
+        var left = min
+        var cumulative = 0.0
+        while (i < binsArray.size) {
+          val right =
+            if (i < binsArray.size - 1)
+              (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
+            else
+              max
+          val entries = binsArray(i)._2.entries
+
+          in foreach {case (x, j) =>
+            if (left <= x  &&  x < right)
+              out(j) = entries * (2.0 * x - left - right) / (right - left)
+          }
+
+          left = right
+          cumulative += entries
+          i += 1
+        }
+
+        in foreach {case (x, j) => if (x >= max) out(j) = cumulative}
+
+        out.toSeq
+      }
+  }
+
   //////////////////////////////////////////////////////////////// 1D clustering algorithm (used by AdaptivelyBin, Median, Percentile)
   // Yael Ben-Haim and Elad Tom-Tov, "A streaming parallel decision tree algorithm",
   // J. Machine Learning Research 11 (2010)
   // http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
 
-  class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, value: => CONTAINER, elems: (Double, CONTAINER)*)
-      extends mutable.MetricSortedMap[Double, CONTAINER](elems: _*)(new MetricOrdering[Double] {def difference(x: Double, y: Double) = x - y}) {
+  class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, value: => CONTAINER, centers: (Double, CONTAINER)*)
+      extends mutable.MetricSortedMap[Double, CONTAINER](centers: _*)(new MetricOrdering[Double] {def difference(x: Double, y: Double) = x - y}) {
+
+    var min = java.lang.Double.NaN
+    var max = java.lang.Double.NaN
+
+    centers foreach {case (x, _) =>
+      if (min.isNaN  ||  x < min)
+        min = x
+      if (max.isNaN  ||  x > max)
+        max = x
+    }
 
     def cluster(n: Int) {
       while (size > n) {
-        val bins = iterator.toList
+        val bins = iterator.toSeq
         val neighbors = bins.init zip bins.tail
         val nearestNeighbors = neighbors minBy {case ((x1, v1), (x2, v2)) => x2 - x1}
 
@@ -179,75 +257,65 @@ package util {
       }
     }
 
-    // Ben-Haim and Tom-Tov's "Algorithm 1"
+    // Ben-Haim and Tom-Tov's "Algorithm 1" with additional min/max tracking
     def update[DATUM](x: Double, datum: DATUM, weight: Double) {
-      // Here we subtly assume this CONTAINER has Aggregation so we can call fillWeighted.
-      // You wouldn't use it on a non-aggregatable container, would you?
-      get(x) match {
-        case Some(v) =>
-          v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+      if (weight > 0.0) {
+        if (min.isNaN  ||  x < min)
+          min = x
+        if (max.isNaN  ||  x > max)
+          max = x
 
-        case None =>
-          val v = value   // create a new one
-          v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+        // assumes that CONTAINER has Aggregation (can call fillWeighted)
+        get(x) match {
+          case Some(v) =>
+            v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
 
-          this += (x, v)
-          cluster(num)
+          case None =>
+            val v = value   // create a new one
+            v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+
+            this += (x, v)
+            cluster(num)
+        }
       }
     }
 
-    // Ben-Haim and Tom-Tov's "Algorithm 2"
+    // Ben-Haim and Tom-Tov's "Algorithm 2" with additional min/max tracking
     def merge(that: Clustering1D[CONTAINER]): Clustering1D[CONTAINER] = {
-      val bins = scala.collection.mutable.Map(this.iterator.toSeq: _*)
+      val bins = scala.collection.mutable.Map[Double, CONTAINER]()
+
+      this.iterator foreach {case (x, v) =>
+        bins(x) = v.copy        // replace them; don't update them in-place
+      }
+
       that.iterator foreach {case (x, v) =>
         if (bins contains x)
           bins(x) = bins(x) + v   // replace them; don't update them in-place
         else
-          bins(x) = v
+          bins(x) = v.copy        // replace them; don't update them in-place
       }
 
       val out = new Clustering1D[CONTAINER](num, value, bins.toSeq: _*)
       out.cluster(num)
+
+      out.min =
+        if (this.min.isNaN  &&  that.min.isNaN)
+          java.lang.Double.NaN
+        else if (this.min.isNaN  ||  that.min < this.min)
+          that.min
+        else
+          this.min
+
+      out.max =
+        if (this.max.isNaN  &&  that.max.isNaN)
+          java.lang.Double.NaN
+        else if (this.max.isNaN  ||  that.max > this.max)
+          that.max
+        else
+          this.max
+
       out
     }
-
-    // Ben-Haim and Tom-Tov's "Algorithm 3" modified so that bin ps are interpreted as centers, rather than low edges (for consistency with the above)
-    def sum(bs: Double*): Seq[Double] =
-      if (isEmpty)
-        Array.fill(bs.size)(0.0)
-      else if (size == 1)
-        bs.toArray.map(b => if (treeSet.head._1 < b) 0.0 else if (treeSet.head._1 == b) treeSet.head._2.entries/2.0 else treeSet.head._2.entries).toSeq
-      else {
-        val out = Array.fill(bs.size)(0.0)
-        var total = 0.0
-
-        val bins = iterator.toList
-        val neighbors = bins.init zip bins.tail
-
-        // TODO: think about this more
-        // make sure that the ps are the CENTERS of bins, and HALF of the corresponding m.entries are counted at that line
-        // below the first point and above the last, fit an exponential with slope to match the closest two points
-
-        for (((p1, m1), (p2, m2)) <- neighbors) {
-          for ((b, i) <- bs.zipWithIndex) {
-            if (p1 <= b  &&  b < p2) {
-              val mb = m1.entries + (m2.entries - m1.entries)*(b - p1)/(p2 - p1)
-              val s = (m1.entries + mb)*(b - p1)/(p2 - p1)/2.0
-              out(i) = total + m1.entries/2.0 + s
-            }
-          }
-          total += m1.entries
-        }
-        val (pn, mn) = bins.last
-        total += mn.entries
-
-        for ((b, i) <- bs.zipWithIndex) {
-          if (pn <= b)
-            out(i) = total
-        }
-
-        out.toSeq
-      }
   }
 
 }

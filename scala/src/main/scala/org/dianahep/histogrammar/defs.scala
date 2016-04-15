@@ -78,9 +78,10 @@ package histogrammar {
     type Type
     def factory: Factory
 
-    def entries: Double  // Double because it's a sum of weights, not a integral count
-    def zero: CONTAINER
-    def +(that: CONTAINER): CONTAINER
+    def entries: Double                  // Double because it's a sum of weights, not a integral count
+    def zero: CONTAINER                  // empty container with the same parameters
+    def +(that: CONTAINER): CONTAINER    // an immutable operation
+    def copy = this + zero               // easy way to guarantee a new copy; can overload with more efficient methods
 
     def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
     def toJsonFragment: Json
@@ -89,16 +90,16 @@ package histogrammar {
 
   // mix-in to provide aggregation (and hence mutability)
   trait Aggregation {
-    type Datum
+    type Datum                           // more flexible as an abstract type than a type parameter (implemented as contravariant)
 
-    def entries_=(x: Double)
-    def fill(datum: Datum) {
+    def entries_=(x: Double)             // "entries" is a var, not val, for Containers with Aggregation
+    def fill(datum: Datum) {             // fill and fillWeighted change the container in-place
       fillWeighted(datum, 1.0)
     }
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double)
+    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double)   // see? fillWeighed accepts a subtype of Datum: CONTRAvariant
   }
 
-  trait AggregationOnData extends Aggregation
+  trait AggregationOnData extends Aggregation   // everything except Count, which ignores the data (its Datum is Any)
 }
 
 package object histogrammar {

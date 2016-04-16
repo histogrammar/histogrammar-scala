@@ -82,11 +82,12 @@ package histogrammar {
       "type" -> JsonString(contentType),
       "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
-    override def toString() = s"""Categorized[entries=$entries, ${if (pairs.isEmpty) contentType else pairs.head._2.toString}, size=${pairs.size}]"""
+    override def toString() = s"""Categorized[entries=$entries, [${if (pairs.isEmpty) contentType else pairs.head._2.toString}..., size=${pairs.size}]]"""
     override def equals(that: Any) = that match {
       case that: Categorized[V] => this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false
     }
+    override def hashCode() = (entries, pairs).hashCode()
   }
 
   class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
@@ -138,10 +139,11 @@ package histogrammar {
       "type" -> JsonString(value.factory.name),
       "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
-    override def toString() = s"Categorizing[entries=$entries, $value, size=${pairs.size}]"
+    override def toString() = s"Categorizing[entries=$entries, [${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {
       case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false
     }
+    override def hashCode() = (quantity, selection, entries, pairs).hashCode()
   }
 }

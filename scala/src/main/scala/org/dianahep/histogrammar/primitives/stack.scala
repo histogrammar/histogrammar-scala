@@ -86,6 +86,7 @@ package histogrammar {
       case that: Stacked[V] => this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
+    override def hashCode() = (entries, cuts).hashCode()
   }
 
   class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
@@ -133,5 +134,6 @@ package histogrammar {
       case that: Stacking[DATUM, V] => this.expression == that.expression  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
+    override def hashCode() = (expression, entries, cuts).hashCode()
   }
 }

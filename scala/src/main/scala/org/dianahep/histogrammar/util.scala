@@ -42,38 +42,24 @@ package util {
 
   abstract class MetricSortedMap[A, B](elems: (A, B)*)(ordering: MetricOrdering[A]) extends SortedMap[A, B] {
     // when the TreeSet searches for an element, keep track of the best distance it finds
-    private val best1 = new java.lang.ThreadLocal[(Double, A, B)]
-    // private val best2 = new java.lang.ThreadLocal[(Double, A, B)]
-    best1.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
-    // best2.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
+    private val best = new java.lang.ThreadLocal[(Double, A, B)]
+    best.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
 
     protected val ord = new MetricOrdering[(A, B)] {
       def difference(x: (A, B), y: (A, B)) = {
         val diff = ordering.difference(x._1, y._1)
         val absdiff = Math.abs(diff)
 
-        if (absdiff < best1.get._1)
+        if (absdiff < best.get._1)
           (x, y) match {
             case ((to, null), (pos, obj)) =>
-              // best2.set(best1.get)
-              best1.set((absdiff, pos, obj))
+              best.set((absdiff, pos, obj))
 
             case ((pos, obj), (to, null)) =>
-              // best2.set(best1.get)
-              best1.set((absdiff, pos, obj))
+              best.set((absdiff, pos, obj))
 
             case _ =>
           }
-        // else if (absdiff < best2.get._1)
-        //   (x, y) match {
-        //     case ((to, null), (pos, obj)) =>
-        //       best2.set((absdiff, pos, obj))
-
-        //     case ((pos, obj), (to, null)) =>
-        //       best2.set((absdiff, pos, obj))
-
-        //     case _ =>
-        //   }
 
         diff
       }
@@ -86,41 +72,15 @@ package util {
     def closest(to: A): (Double, A, B) = {
       treeSet.headOption match {
         case Some((pos, obj)) =>
-          best1.set((ordering.difference(to, pos), pos, obj))
-          // best2.set((ordering.difference(to, pos), pos, obj))
+          best.set((ordering.difference(to, pos), pos, obj))
         case None =>
           throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
       }
 
-      treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best1"
+      treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best"
 
-      best1.get
+      best.get
     }
-
-    // // find the closest two keys and return: ((difference from closest key1, key1, value1), (difference from second-closest key2, key2, value2))
-    // def closest2(to: A): ((Double, A, B), (Double, A, B)) = {
-    //   val iter = treeSet.iterator
-    //   if (!iter.hasNext)
-    //     throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
-    //   val first = iter.next()
-    //   if (!iter.hasNext)
-    //     throw new java.util.NoSuchElementException("SortedMap has fewer than two elements, and hence no two closest elements")
-    //   val second = iter.next()
-
-    //   (first, second) match {
-    //     case ((pos1, obj1), (pos2, obj2)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
-    //       best1.set((ordering.difference(to, pos1), pos1, obj1))
-    //       best2.set((ordering.difference(to, pos2), pos2, obj2))
-
-    //     case ((pos2, obj2), (pos1, obj1)) if (ordering.distance(to, pos1) < ordering.distance(to, pos2)) =>
-    //       best1.set((ordering.difference(to, pos1), pos1, obj1))
-    //       best2.set((ordering.difference(to, pos2), pos2, obj2))
-    //   }
-
-    //   treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best1" and "best2"
-
-    //   (best1.get, best2.get)
-    // }
   }
 
   package immutable {
@@ -138,7 +98,7 @@ package util {
     }
 
     object MetricSortedMap {
-      def apply[A, B](elems: (A, B)*)(implicit val ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
+      def apply[A, B](elems: (A, B)*)(implicit ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
     }
   }
 
@@ -160,7 +120,7 @@ package util {
     }
 
     object MetricSortedMap {
-      def apply[A, B](elems: (A, B)*)(implicit val ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
+      def apply[A, B](elems: (A, B)*)(implicit ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
     }
   }
 

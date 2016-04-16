@@ -1,5 +1,7 @@
 package org.dianahep
 
+import scala.language.existentials
+
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
@@ -12,14 +14,27 @@ package histogrammar {
     val detailedHelp = """HERE"""
 
     def fixed[V <: Container[V], N <: Container[N]](entries: Double, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
-      new CentrallyBinned[V, N](entries, immutable.MetricSortedMap(bins: _*), min, max, nanflow)
+      new CentrallyBinned[V, N](entries, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
 
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count())
-      new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap(bins.map((_, value)): _*), bins.min, bins.max, nanflow)
+      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
+      new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value)): _*), bins.min, bins.max, nanflow)
 
-    def unapply[V <: Container[V], N <: Container[N]](x: CentrallyBinned[V, N]) = Some((x.entries, x.bins, x.min, x.max, x.nanflow))
-    def unapply[V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: CentrallyBinning[V, N]) = Some((x.entries, x.bins, x.min, x.max, x.nanflow))
+    def unapply[V <: Container[V], N <: Container[N]](x: CentrallyBinned[V, N]) =
+      Some((x.entries, x.bins, x.min, x.max, x.nanflow))
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: CentrallyBinning[DATUM, V, N]) =
+      Some((x.entries, x.bins, x.min, x.max, x.nanflow))
+
+    trait Methods[V <: Container[V]] extends CentralBinsDistribution[V] {
+      def bins: MetricSortedMap[Double, V]
+
+      def centersSet = bins.iterator.map(_._1).toSet
+      def centers = bins.iterator.map(_._1).toSeq
+      def values = bins.iterator.map(_._2).toSeq
+
+      def closest(k: Double) = bins.closest(k)
+      def nan(k: Double): Boolean = k.isNaN
+    }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow")) =>
@@ -46,10 +61,9 @@ package histogrammar {
                 }
 
                 val value = binsFactory.fromJsonFragment(binget("value"))
-
                 (center, value)
 
-              case x => throw new JsonFormatException(x, name + s".bins $i")
+              case (x, i) => throw new JsonFormatException(x, name + s".bins $i")
             }: _*)
 
           case x => throw new JsonFormatException(x, name + ".bins")
@@ -71,39 +85,103 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
-        new CentrallyBinned[V, N](entries, bins, min, max, nanflow)
+        new CentrallyBinned[Container[_], Container[_]](entries, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], min, max, nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
   }
 
-  class CentrallyBinned[V <: Container[V], N <: Container[N]](val entries: Double, val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N) with CentralBinsDistribution[V] {
+  class CentrallyBinned[V <: Container[V], N <: Container[N]](val entries: Double, val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
+    extends Container[CentrallyBinned[V, N]] with CentrallyBin.Methods[V] {
+
     type Type = CentrallyBinned[V, N]
-    def factory = CentrallyBinned
+    def factory = CentrallyBin
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+    if (bins.size < 2)
+      throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def centersSet = bins.iterator.map(_._1).toSet
-    def centers = bins.iterator.map(_._1).toSeq
-    def values = bins.iterator.map(_._2).toSeq
-
-    def zero = new CentrallyBinned[V, N](0.0, immutable.MetricSortedMap[Double, V](bins.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
+    def zero = new CentrallyBinned[V, N](0.0, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
     def +(that: CentrallyBinned[V, N]) = {
       if (this.centers != that.centers)
         throw new ContainerException(s"cannot add CentrallyBinned because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
-      val newbins = immutable.MetricSortedMap(this.bins zip that.bins map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
+      val newbins = immutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
 
       new CentrallyBinned[V, N](this.entries + that.entries, newbins, Math.min(this.min, that.min), Math.max(this.max, that.max), this.nanflow + that.nanflow)
     }
 
     def toJsonFragment = JsonObject(
-      // HERE !!!
+      "entries" -> JsonFloat(entries),
+      "bins:type" -> JsonString(bins.head._2.factory.name),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
+      "min" -> JsonFloat(min),
+      "max" -> JsonFloat(max),
+      "nanflow:type" -> JsonString(nanflow.factory.name),
+      "nanflow" -> nanflow.toJsonFragment)
 
+    override def toString() = s"""CentrallyBinned[entries=$entries, bins=[${bins.head._2.toString}, ..., size=${bins.size}], nanflow=$nanflow]"""
+    override def equals(that: Any) = that match {
+      case that: CentrallyBinned[V, N] => this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
+      case _ => false
+    }
+    override def hashCode() = (entries, bins, min, max, nanflow).hashCode
+  }
 
-    )
+  class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+    (val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
+    extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
 
+    type Type = CentrallyBinning[DATUM, V, N]
+    type Datum = DATUM
+    def factory = CentrallyBin
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+    if (bins.size < 2)
+      throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
+
+    def zero = new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
+    def +(that: CentrallyBinning[DATUM, V, N]) = {
+      if (this.centers != that.centers)
+        throw new ContainerException(s"cannot add CentrallyBinning because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
+
+      val newbins = mutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
+
+      new CentrallyBinning[DATUM, V, N](quantity, selection, this.entries + that.entries, value, newbins, Math.min(this.min, that.min), Math.max(this.max, that.max), this.nanflow + that.nanflow)
+    }
+
+    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+      val w = weight * selection(datum)
+      if (w >= 0.0) {
+        val q = quantity(datum)
+
+        entries += w
+        if (nan(q))
+          nanflow.fillWeighted(datum, w)
+        else {
+          val (diff, key, value) = closest(q)
+          value.fillWeighted(datum, w)
+        }
+      }
+    }
+
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "bins:type" -> JsonString(value.factory.name),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
+      "min" -> JsonFloat(min),
+      "max" -> JsonFloat(max),
+      "nanflow:type" -> JsonString(nanflow.factory.name),
+      "nanflow" -> nanflow.toJsonFragment)
+
+    override def toString() = s"""CentrallyBinning[entries=$entries, bins=[${bins.head._2.toString}, ..., size=${bins.size}], nanflow=$nanflow]"""
+    override def equals(that: Any) = that match {
+      case that: CentrallyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
+      case _ => false
+    }
+    override def hashCode() = (quantity, selection, entries, bins, min, max, nanflow).hashCode
   }
 
 }

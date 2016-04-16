@@ -49,6 +49,9 @@ package histogrammar {
       def under(k: Double): Boolean = !k.isNaN  &&  k < low
       def over(k: Double): Boolean = !k.isNaN  &&  k >= high
       def nan(k: Double): Boolean = k.isNaN
+
+      def indexes: Seq[Int] = 0 until num
+      def range(index: Int): (Double, Double) = ((high - low) * index / num + low, (high - low) * (index + 1) / num + low)
     }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -123,6 +126,8 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
+    def at(index: Int) = values(index)
+
     def zero = new Binned[V, U, O, N](low, high, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binned[V, U, O, N]): Binned[V, U, O, N] = {
       if (this.low != that.low)
@@ -195,6 +200,8 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
+
+    def at(index: Int) = values(index)
 
     def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {

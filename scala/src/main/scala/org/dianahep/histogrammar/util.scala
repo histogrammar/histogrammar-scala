@@ -40,26 +40,33 @@ package util {
     }
   }
 
+  case class Closest[A, B](difference: Double, key: A, value: B)
+
   abstract class MetricSortedMap[A, B](elems: (A, B)*)(ordering: MetricOrdering[A]) extends SortedMap[A, B] {
     // when the TreeSet searches for an element, keep track of the best distance it finds
-    private val best = new java.lang.ThreadLocal[(Double, A, B)]
-    best.set((-1.0, null.asInstanceOf[A], null.asInstanceOf[B]))
+    private val best = new java.lang.ThreadLocal[Tuple2[Option[Closest[A, B]], Option[Function2[A, B, Boolean]]]]
 
     protected val ord = new MetricOrdering[(A, B)] {
       def difference(x: (A, B), y: (A, B)) = {
         val diff = ordering.difference(x._1, y._1)
-        val absdiff = Math.abs(diff)
 
-        if (absdiff < best.get._1)
-          (x, y) match {
-            case ((to, null), (pos, obj)) =>
-              best.set((absdiff, pos, obj))
-
-            case ((pos, obj), (to, null)) =>
-              best.set((absdiff, pos, obj))
-
-            case _ =>
+        if (best.get != null) {
+          val (pos, obj) = (x, y) match {
+            case ((to, null), (pos, obj)) => (pos, obj)
+            case ((pos, obj), (to, null)) => (pos, obj)
           }
+
+          val (current, constraint) = best.get
+
+          if (current.isEmpty  ||  Math.abs(diff) < Math.abs(current.get.difference)) {
+            val check = constraint match {
+              case Some(f) => f(pos, obj)
+              case None => true
+            }
+            if (check)
+              best.set((Some(Closest(diff, pos, obj)), constraint))
+          }
+        }
 
         diff
       }
@@ -69,17 +76,14 @@ package util {
     def treeSet: SortedSet[(A, B)]
 
     // find the closest key and return: (difference from key, the key, its associated value)
-    def closest(to: A): (Double, A, B) = {
-      treeSet.headOption match {
-        case Some((pos, obj)) =>
-          best.set((ordering.difference(to, pos), pos, obj))
-        case None =>
-          throw new java.util.NoSuchElementException("SortedMap has no elements, and hence no closest element")
-      }
+    def closest(to: A, constraint: Option[Function2[A, B, Boolean]] = None): Option[Closest[A, B]] = {
+      best.set((None, constraint))
 
       treeSet((to, null.asInstanceOf[B]))  // called for its side effects on "best"
 
-      best.get
+      val out = best.get._1
+      best.set(null.asInstanceOf[Tuple2[Option[Closest[A, B]], Option[Function2[A, B, Boolean]]]])
+      out
     }
   }
 
@@ -136,17 +140,39 @@ package util {
     def qf(x: Double): Double = qf(List(x): _*).head
 
     def pdf(xs: Double*): Seq[Double] =
-      xs map {x =>
-        if (bins.isEmpty)
-          0.0
-        if (bins.size == 1  &&  x == bins.head._1)
-          java.lang.Double.POSITIVE_INFINITY
-        else if (x < min  ||  x >= max)
-          0.0
-        else {
-          val (diff, key, value) = bins.closest(x)
-          value.entries
+      if (bins.isEmpty)
+        Seq.fill(xs.size)(0.0)
+      else if (bins.size == 1)
+        xs map {case x =>
+          if (x == bins.head._1)
+            java.lang.Double.POSITIVE_INFINITY
+          else
+            0.0
         }
+      else {
+        val binsArray = bins.toArray
+        val in = xs.zipWithIndex.toArray
+        val out = Array.fill(in.size)(0.0)
+
+        var i = 0
+        var left = min
+        while (i < binsArray.size) {
+          val right =
+            if (i < binsArray.size - 1)
+              (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
+            else
+              max
+          val entries = binsArray(i)._2.entries
+
+          in foreach {case (x, j) =>
+            if (left <= x  &&  x < right)
+              out(j) = entries / (right - left)
+          }
+
+          left = right
+          i += 1
+        }
+        out.toSeq
       }
 
     def cdf(xs: Double*): Seq[Double] =

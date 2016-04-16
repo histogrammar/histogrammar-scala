@@ -440,12 +440,24 @@ class DefaultSuite extends FlatSpec with Matchers {
   "SparselyBin/SparselyBinned/SparselyBinning" must "work with Count/Counting/Counted" in {
     val one = SparselyBin(1.0, {x: Double => x})
     simple.foreach(one.fill(_))
-    Factory.fromJson(one.toJson).as[SparselyBinned[Counted, Counted]].values.map({case (k, v) => (k, v.entries)}).toList should be (List(-5 -> 1.0, -3 -> 1.0, -2 -> 2.0, 0 -> 2.0, 1 -> 1.0, 2 -> 1.0, 3 -> 1.0, 7 -> 1.0))
+    Factory.fromJson(one.toJson).as[SparselyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List(-5 -> 1.0, -3 -> 1.0, -2 -> 2.0, 0 -> 2.0, 1 -> 1.0, 2 -> 1.0, 3 -> 1.0, 7 -> 1.0))
 
     one.numFilled should be (8)
     one.num should be (12)
     one.low should be (-5.0)
     one.high should be (8.0)
+  }
+
+  //////////////////////////////////////////////////////////////// CentrallyBin/CentrallyBinned/CentrallyBinning
+
+  "CentrallyBin/CentrallyBinned/CentrallyBinning" must "work with Count/Counting/Counted" in {
+    val one = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x})
+    simple.foreach(one.fill(_))
+    Factory.fromJson(one.toJson).as[CentrallyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List((-3.0,2.0), (-1.0,2.0), (0.0,2.0), (1.0,1.0), (3.0,2.0), (10.0,1.0)))
+
+    println(one.pdf(-3.0 to 10.0 by 1.0: _*))
+    println(one.cdf(-3.0 to 10.0 by 1.0: _*))
+    println(one.qf(-1.0 to 11.0 by 1.0: _*))
   }
 
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning

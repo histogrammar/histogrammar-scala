@@ -359,7 +359,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
 
-    override def toString() = s"Indexed[entries=$entries, [${values.head.toString}, ...], size=${size}]"
+    override def toString() = s"Indexed[entries=$entries, [${values.head.toString}..., size=${size}]]"
     override def equals(that: Any) = that match {
       case that: Indexed[V] => this.entries === that.entries  &&  this.values == that.values
       case _ => false

@@ -211,6 +211,7 @@ package util {
   //////////////////////////////////////////////////////////////// interpretation of central bins as a distribution
 
   trait CentralBinsDistribution[CONTAINER <: Container[CONTAINER]] {
+    def entries: Double
     def bins: MetricSortedMap[Double, CONTAINER]
     def min: Double
     def max: Double
@@ -219,7 +220,15 @@ package util {
     def cdf(x: Double): Double = cdf(List(x): _*).head
     def qf(x: Double): Double = qf(List(x): _*).head
 
-    def pdf(xs: Double*): Seq[Double] =
+    def pdf(xs: Double*): Seq[Double] = pdfTimesEntries(xs: _*).map(_ / entries)
+    def cdf(xs: Double*): Seq[Double] = cdfTimesEntries(xs: _*).map(_ / entries)
+    def qf(xs: Double*): Seq[Double] = qfTimesEntries(xs.map(_ * entries): _*)
+
+    def pdfTimesEntries(x: Double): Double = pdfTimesEntries(List(x): _*).head
+    def cdfTimesEntries(x: Double): Double = cdfTimesEntries(List(x): _*).head
+    def qfTimesEntries(x: Double): Double = qfTimesEntries(List(x): _*).head
+
+    def pdfTimesEntries(xs: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
       else if (bins.size == 1)
@@ -255,7 +264,7 @@ package util {
         out.toSeq
       }
 
-    def cdf(xs: Double*): Seq[Double] =
+    def cdfTimesEntries(xs: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
       else if (bins.size == 1)
@@ -298,7 +307,7 @@ package util {
         out.toSeq
       }
 
-    def qf(ys: Double*): Seq[Double] =
+    def qfTimesEntries(ys: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(ys.size)(java.lang.Double.NaN)
       else if (bins.size == 1)

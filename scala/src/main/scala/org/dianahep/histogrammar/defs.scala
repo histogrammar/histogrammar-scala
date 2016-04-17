@@ -35,6 +35,7 @@ package histogrammar {
     register(AbsoluteErr)
     register(Minimize)
     register(Maximize)
+    register(Quantile)
 
     register(Bin)
     register(SparselyBin)

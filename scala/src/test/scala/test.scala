@@ -435,6 +435,19 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
+  //////////////////////////////////////////////////////////////// Quantile/Quantiling/Quantiled
+
+  "Quantile/Quantiling/Quantiled" must "work" in {
+    val one = Quantile({x: Double => x})
+    simple.foreach(one.fill(_))
+    one.qf(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0).toList should be (List(-4.7, -3.85, -2.4, -1.75, -0.85, -0.025000000000000022, 0.8, 1.9000000000000001, 2.8, 5.35, 7.3))
+    one.min should be (-4.7)
+    one.max should be (7.3)
+    one.median should be (-0.025000000000000022)
+
+    checkJson(one)
+  }
+
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
   "Bin/Binning/Binned" must "work with Count/Counting/Counted" in {
@@ -505,9 +518,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     simple.foreach(one.fill(_))
     Factory.fromJson(one.toJson).as[CentrallyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List((-3.0,2.0), (-1.0,2.0), (0.0,2.0), (1.0,1.0), (3.0,2.0), (10.0,1.0)))
 
-    one.pdf(-3.0 to 10.0 by 1.0: _*).toList should be (List(0.7407407407407407, 1.3333333333333333, 1.3333333333333333, 2.0, 0.6666666666666666, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 1.2500000000000002, 0.0, 0.0, 0.0))
-    one.cdf(-3.0 to 10.0 by 1.0: _*).toList should be (List(1.2592592592592593, 2.0, 3.333333333333333, 5.0, 6.333333333333333, 7.0, 7.444444444444445, 7.888888888888889, 8.333333333333334, 8.777777777777779, 9.625, 10.0, 10.0, 10.0))
-    one.qf(-1.0 to 11.0 by 1.0: _*).toList should be (List(-4.7, -4.7, -3.35, -2.0, -1.25, -0.5, 0.0, 0.5, 2.0, 4.25, 6.5, 7.3, 7.3))
+    one.pdfTimesEntries(-3.0 to 10.0 by 1.0: _*).toList should be (List(0.7407407407407407, 1.3333333333333333, 1.3333333333333333, 2.0, 0.6666666666666666, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 1.2500000000000002, 0.0, 0.0, 0.0))
+    one.cdfTimesEntries(-3.0 to 10.0 by 1.0: _*).toList should be (List(1.2592592592592593, 2.0, 3.333333333333333, 5.0, 6.333333333333333, 7.0, 7.444444444444445, 7.888888888888889, 8.333333333333334, 8.777777777777779, 9.625, 10.0, 10.0, 10.0))
+    one.qfTimesEntries(-1.0 to 11.0 by 1.0: _*).toList should be (List(-4.7, -4.7, -3.35, -2.0, -1.25, -0.5, 0.0, 0.5, 2.0, 4.25, 6.5, 7.3, 7.3))
 
     checkJson(one)
   }

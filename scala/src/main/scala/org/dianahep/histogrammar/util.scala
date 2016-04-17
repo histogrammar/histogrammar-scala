@@ -100,7 +100,6 @@ package util {
 
       def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = throw new UnsupportedOperationException
     }
-
     object MetricSortedMap {
       def apply[A, B](elems: (A, B)*)(implicit ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
     }
@@ -122,9 +121,90 @@ package util {
 
       def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = throw new UnsupportedOperationException
     }
-
     object MetricSortedMap {
       def apply[A, B](elems: (A, B)*)(implicit ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
+    }
+
+    //////////////////////////////////////////////////////////////// 1D clustering algorithm (used by AdaptivelyBin, Median, Percentile)
+    // Yael Ben-Haim and Elad Tom-Tov, "A streaming parallel decision tree algorithm",
+    // J. Machine Learning Research 11 (2010)
+    // http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
+    //
+    // Modified to give more detail to the bulk than tails (tailDetail = 1.0 corresponds to pure Ben-Haim/Tom-Tov).
+
+    class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, val tailDetail: Double, value: => CONTAINER, val values: MetricSortedMap[Double, CONTAINER], var min: Double, var max: Double, var entries: Double) {
+      private def mergeClusters() {
+        while (values.size > num) {
+          val bins = values.iterator.toSeq
+          val neighbors = bins.init zip bins.tail
+          val nearestNeighbors = neighbors.minBy({case ((x1, v1), (x2, v2)) => tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1.entries + v2.entries)/entries})(doubleOrdering)
+
+          val ((x1, v1), (x2, v2)) = nearestNeighbors
+          val replacement = ((x1 * v1.entries + x2 * v2.entries) / (v1.entries + v2.entries), v1 + v2)
+
+          values -= x1
+          values -= x2
+          values += replacement
+        }
+      }
+
+      mergeClusters()
+
+      // Ben-Haim and Tom-Tov's "Algorithm 1" with additional min/max/entries tracking
+      def update[DATUM](x: Double, datum: DATUM, weight: Double) {
+        if (weight > 0.0) {
+          // assumes that CONTAINER has Aggregation (can call fillWeighted)
+          values.get(x) match {
+            case Some(v) =>
+              v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+
+            case None =>
+              val v = value   // create a new one
+              v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+
+              values += (x, v)
+              mergeClusters()
+          }
+
+          if (min.isNaN  ||  x < min)
+            min = x
+
+          if (max.isNaN  ||  x > max)
+            max = x
+
+          entries += weight
+        }
+      }
+
+      // Ben-Haim and Tom-Tov's "Algorithm 2" with additional min/max/entries tracking
+      def merge(that: Clustering1D[CONTAINER]): Clustering1D[CONTAINER] = {
+        val bins = scala.collection.mutable.Map[Double, CONTAINER]()
+
+        this.values.iterator foreach {case (x, v) =>
+          bins(x) = v.copy        // replace them; don't update them in-place
+        }
+
+        that.values.iterator foreach {case (x, v) =>
+          if (bins contains x)
+            bins(x) = bins(x) + v   // replace them; don't update them in-place
+          else
+            bins(x) = v.copy        // replace them; don't update them in-place
+        }
+
+        Clustering1D[CONTAINER](num, tailDetail, value, Clustering1D.values(bins.toSeq: _*), Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.entries + that.entries)
+      }
+
+      override def equals(that: Any) = that match {
+        case that: Clustering1D[CONTAINER] => this.num == that.num  &&  this.tailDetail === that.tailDetail  &&  this.values == that.values  &&  this.min === that.min  &&  this.max === that.max  &&  this.entries === that.entries
+        case _ => false
+      }
+      override def hashCode() = (num, tailDetail, values, min, max, entries).hashCode()
+    }
+    object Clustering1D {
+      def values[CONTAINER <: Container[CONTAINER]](elems: (Double, CONTAINER)*) = MetricSortedMap[Double, CONTAINER](elems: _*)(new MetricOrdering[Double] {def difference(x: Double, y: Double) = x - y})
+
+      def apply[CONTAINER <: Container[CONTAINER]](num: Int, tailDetail: Double, value: => CONTAINER, values: MetricSortedMap[Double, CONTAINER], min: Double, max: Double, entries: Double) =
+        new Clustering1D[CONTAINER](num, tailDetail, value, values, min, max, entries)
     }
   }
 
@@ -256,110 +336,5 @@ package util {
 
         out.toSeq
       }
-  }
-
-  //////////////////////////////////////////////////////////////// 1D clustering algorithm (used by AdaptivelyBin, Median, Percentile)
-  // Yael Ben-Haim and Elad Tom-Tov, "A streaming parallel decision tree algorithm",
-  // J. Machine Learning Research 11 (2010)
-  // http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
-  //
-  // Modified to give more detail to the bulk than tails (tailDetail = 1.0 corresponds to pure Ben-Haim/Tom-Tov).
-
-  class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, val tailDetail: Double, value: => CONTAINER, centers: (Double, CONTAINER)*)
-      extends mutable.MetricSortedMap[Double, CONTAINER](centers: _*)(new MetricOrdering[Double] {def difference(x: Double, y: Double) = x - y}) {
-
-    if (tailDetail < 0.0  ||  tailDetail > 1.0)
-      throw new IllegalArgumentException(s"tailDetail parameter ($tailDetail) must be between 0 and 1 (inclusive)")
-
-    var min = java.lang.Double.NaN
-    var max = java.lang.Double.NaN
-    var entries = 0.0
-
-    centers foreach {case (x, _) =>
-      if (min.isNaN  ||  x < min)
-        min = x
-      if (max.isNaN  ||  x > max)
-        max = x
-    }
-
-    def mergeClusters(n: Int) {
-      while (size > n) {
-        val bins = iterator.toSeq
-        val neighbors = bins.init zip bins.tail
-        val nearestNeighbors = neighbors.minBy({case ((x1, v1), (x2, v2)) => tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1.entries + v2.entries)/entries})(doubleOrdering)
-
-        val ((x1, v1), (x2, v2)) = nearestNeighbors
-        val replacement = ((x1 * v1.entries + x2 * v2.entries) / (v1.entries + v2.entries), v1 + v2)
-
-        this -= x1
-        this -= x2
-        this += replacement
-      }
-    }
-
-    // Ben-Haim and Tom-Tov's "Algorithm 1" with additional min/max/entries tracking
-    def update[DATUM](x: Double, datum: DATUM, weight: Double) {
-      if (weight > 0.0) {
-        // assumes that CONTAINER has Aggregation (can call fillWeighted)
-        get(x) match {
-          case Some(v) =>
-            v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
-
-          case None =>
-            val v = value   // create a new one
-            v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
-
-            this += (x, v)
-            mergeClusters(num)
-        }
-
-        if (min.isNaN  ||  x < min)
-          min = x
-
-        if (max.isNaN  ||  x > max)
-          max = x
-
-        entries += weight
-      }
-    }
-
-    // Ben-Haim and Tom-Tov's "Algorithm 2" with additional min/max/entries tracking
-    def merge(that: Clustering1D[CONTAINER]): Clustering1D[CONTAINER] = {
-      val bins = scala.collection.mutable.Map[Double, CONTAINER]()
-
-      this.iterator foreach {case (x, v) =>
-        bins(x) = v.copy        // replace them; don't update them in-place
-      }
-
-      that.iterator foreach {case (x, v) =>
-        if (bins contains x)
-          bins(x) = bins(x) + v   // replace them; don't update them in-place
-        else
-          bins(x) = v.copy        // replace them; don't update them in-place
-      }
-
-      val out = new Clustering1D[CONTAINER](num, tailDetail, value, bins.toSeq: _*)
-      out.mergeClusters(num)
-
-      out.min =
-        if (this.min.isNaN  &&  that.min.isNaN)
-          java.lang.Double.NaN
-        else if (this.min.isNaN  ||  that.min < this.min)
-          that.min
-        else
-          this.min
-
-      out.max =
-        if (this.max.isNaN  &&  that.max.isNaN)
-          java.lang.Double.NaN
-        else if (this.max.isNaN  ||  that.max > this.max)
-          that.max
-        else
-          this.max
-
-      out.entries = this.entries + that.entries
-
-      out
-    }
   }
 }

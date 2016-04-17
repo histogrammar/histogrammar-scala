@@ -448,6 +448,21 @@ class DefaultSuite extends FlatSpec with Matchers {
     checkJson(one)
   }
 
+  //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
+
+  "Bag/Bagged/Bagging" must "work" in  {
+    val one = Bag({x: Double => x})
+    simple.foreach(one.fill(_))
+    one.values.get should be (Map(Vector(7.3) -> 1.0, Vector(2.2) -> 1.0, Vector(-1.7) -> 1.0, Vector(-4.7) -> 1.0, Vector(0.0) -> 2.0, Vector(-1.8) -> 1.0, Vector(-3.0) -> 1.0, Vector(1.6) -> 1.0, Vector(3.4) -> 1.0))
+
+    val two = Bag({x: Double => x}, limit = Some(5))
+    simple.foreach(two.fill(_))
+    two.values should be (None)
+
+    checkJson(one)
+    checkJson(two)
+  }
+
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
   "Bin/Binning/Binned" must "work with Count/Counting/Counted" in {

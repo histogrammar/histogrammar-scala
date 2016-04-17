@@ -37,6 +37,8 @@ package histogrammar {
     register(Maximize)
     register(Quantile)
 
+    register(Bag)
+
     register(Bin)
     register(SparselyBin)
     register(CentrallyBin)
@@ -140,6 +142,11 @@ package object histogrammar {
   implicit class CategoricalFcn[-DATUM](f: DATUM => String) extends Serializable {
     def apply[SUB <: DATUM](x: SUB): String = f(x)
   }
+
+  implicit class MultivariateFcn[-DATUM](f: DATUM => Iterable[Double]) extends Serializable {
+    def apply[SUB <: DATUM](x: SUB): Vector[Double] = f(x).toVector
+  }
+  implicit def scalarToMultivariateFcn[DATUM](f: DATUM => Double) = MultivariateFcn({x: DATUM => Vector(f(x))})
 
   // used to check floating-point equality with a new rule: NaN == NaN
   implicit class nanEquality(val x: Double) extends AnyVal {

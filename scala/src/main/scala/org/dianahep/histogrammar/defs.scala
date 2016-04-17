@@ -39,6 +39,7 @@ package histogrammar {
     register(Bin)
     register(SparselyBin)
     register(CentrallyBin)
+    register(AdaptivelyBin)
     register(Fraction)
     register(Stack)
     register(Partition)

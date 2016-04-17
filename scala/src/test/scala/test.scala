@@ -66,6 +66,10 @@ class DefaultSuite extends FlatSpec with Matchers {
     else
       (x zip w map {case (xi, wi) => Math.abs(xi) * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum
 
+  def checkJson(x: Container[_]) {
+    x.toJson should be (Factory.fromJson(x.toJson).toJson)
+  }
+
   //////////////////////////////////////////////////////////////// Count/Counted/Counting
 
   "Count/Counting/Counted" must "work unfiltered" in {
@@ -86,6 +90,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Count(finalResult) = leftCounting + rightCounting
 
       finalResult should be (simple.size)
+
+      checkJson(leftCounting)
     }
   }
 
@@ -109,6 +115,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Sum(_, finalResult) = leftSumming + rightSumming
 
       finalResult should be (simple.sum +- 1e-12)
+
+      checkJson(leftSumming)
     }
   }
 
@@ -130,6 +138,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Sum(_, finalResult) = leftSumming + rightSumming
 
       finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
+
+      checkJson(leftSumming)
     }
   }
 
@@ -151,6 +161,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Sum(_, finalResult) = leftSumming + rightSumming
 
       finalResult should be (struct.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
+
+      checkJson(leftSumming)
     }
   }
 
@@ -174,6 +186,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Average(_, finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(simple) +- 1e-12)
+
+      checkJson(leftAveraging)
     }
   }
 
@@ -195,6 +209,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Average(_, finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
+
+      checkJson(leftAveraging)
     }
   }
 
@@ -216,6 +232,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Average(_, finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
+
+      checkJson(leftAveraging)
     }
   }
 
@@ -237,6 +255,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Average(_, finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
+
+      checkJson(leftAveraging)
     }
   }
 
@@ -260,6 +280,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(simple) +- 1e-12)
+
+      checkJson(leftDeviating)
     }
   }
 
@@ -281,6 +303,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
+
+      checkJson(leftDeviating)
     }
   }
 
@@ -302,6 +326,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
+
+      checkJson(leftDeviating)
     }
   }
 
@@ -323,6 +349,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
+
+      checkJson(leftDeviating)
     }
   }
 
@@ -346,6 +374,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val AbsoluteErr(_, finalResult) = leftAbsoluteErring + rightAbsoluteErring
 
       finalResult should be (mae(simple) +- 1e-12)
+
+      checkJson(leftAbsoluteErring)
     }
   }
 
@@ -372,6 +402,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       if (simple.isEmpty) finalResult.isNaN should be (true)
       else finalResult should be (simple.min +- 1e-12)
+
+      checkJson(leftMinimizing)
     }
   }
 
@@ -398,6 +430,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       if (simple.isEmpty) finalResult.isNaN should be (true)
       else finalResult should be (simple.max +- 1e-12)
+
+      checkJson(leftMaximizing)
     }
   }
 
@@ -417,6 +451,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     two.underflow.entries should be (0.0)
     two.overflow.entries should be (0.0)
     two.nanflow.entries should be (0.0)
+
+    checkJson(one)
+    checkJson(two)
   }
 
   "Binning/Binned" must "work with Sum/Summing/Summed" in {
@@ -433,6 +470,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     two.underflow.sum should be (0.0)
     two.overflow.sum should be (0.0)
     two.nanflow.sum should be (0.0)
+
+    checkJson(one)
+    checkJson(two)
   }
 
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
@@ -446,6 +486,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.num should be (12)
     one.low should be (-5.0)
     one.high should be (8.0)
+
+    checkJson(one)
   }
 
   //////////////////////////////////////////////////////////////// CentrallyBin/CentrallyBinned/CentrallyBinning
@@ -466,6 +508,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.pdf(-3.0 to 10.0 by 1.0: _*).toList should be (List(0.7407407407407407, 1.3333333333333333, 1.3333333333333333, 2.0, 0.6666666666666666, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 1.2500000000000002, 0.0, 0.0, 0.0))
     one.cdf(-3.0 to 10.0 by 1.0: _*).toList should be (List(1.2592592592592593, 2.0, 3.333333333333333, 5.0, 6.333333333333333, 7.0, 7.444444444444445, 7.888888888888889, 8.333333333333334, 8.777777777777779, 9.625, 10.0, 10.0, 10.0))
     one.qf(-1.0 to 11.0 by 1.0: _*).toList should be (List(-4.7, -4.7, -3.35, -2.0, -1.25, -0.5, 0.0, 0.5, 2.0, 4.25, 6.5, 7.3, 7.3))
+
+    checkJson(one)
   }
 
   //////////////////////////////////////////////////////////////// AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning
@@ -476,6 +520,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     simple.foreach(one.fill(_))
 
     one.bins.toList map {case (k, v) => (k, v.entries)} should be (List(-3.85 -> 2.0, -1.1666666666666667 -> 3.0, 0.8 -> 2.0, 2.8 -> 2.0, 7.3 -> 1.0))
+
+    checkJson(one)
   }
 
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
@@ -486,6 +532,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     fracking.numerator.entries should be (4.0)
     fracking.denominator.entries should be (10.0)
+
+    checkJson(fracking)
   }
 
   it must "work with Sum/Summing/Summed" in {
@@ -494,6 +542,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     fracking.numerator.sum should be (14.5 +- 1e-12)
     fracking.denominator.sum should be (3.3 +- 1e-12)
+
+    checkJson(fracking)
   }
 
   it must "work with Histogram/Histogramming/Histogrammed" in {
@@ -510,6 +560,8 @@ class DefaultSuite extends FlatSpec with Matchers {
         Bin(_, Seq(Count(3.0), Count(2.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _)) => 1 should be (1)
       case _ => 0 should be (1)
     }
+
+    checkJson(fracking)
   }
 
   //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
@@ -519,6 +571,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     simple.foreach(stacking.fill(_))
 
     stacking.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 10.0, 0.0 -> 6.0, 2.0 -> 3.0, 4.0 -> 1.0, 6.0 -> 1.0, 8.0 -> 0.0))
+
+    checkJson(stacking)
   }
 
   it must "work with Sum/Summing/Summed" in {
@@ -526,6 +580,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     simple.foreach(stacking.fill(_))
 
     stacking.cuts(1)._2.sum should be (14.5 +- 1e-12)
+
+    checkJson(stacking)
   }
 
   //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
@@ -535,6 +591,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     simple.foreach(partitioning.fill(_))
     
     partitioning.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 4.0, 0.0 -> 3.0, 2.0 -> 2.0, 4.0 -> 0.0, 6.0 -> 1.0, 8.0 -> 0.0))
+
+    checkJson(partitioning)
   }
 
   it must "work with Sum/Summing/Summed" in {
@@ -543,6 +601,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     partitioning.cuts(0)._2.sum should be (-11.2 +- 1e-12)
     partitioning.cuts(1)._2.sum should be (1.6 +- 1e-12)
+
+    checkJson(partitioning)
   }
 
   //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
@@ -552,6 +612,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     struct.foreach(categorizing.fill(_))
 
     categorizing.pairsMap map {case (k, v) => (k, v.entries)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
+
+    checkJson(categorizing)
   }
 
   //////////////////////////////////////////////////////////////// Label/Labeled/Labeling
@@ -568,6 +630,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     labeling("one").numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
     labeling("two").numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     labeling("three").numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
+
+    checkJson(labeling)
   }
 
   it must "permit histograms to have different cuts" in {
@@ -582,6 +646,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     labeling("one").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
     labeling("two").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
     labeling("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+
+    checkJson(labeling)
   }
 
   //////////////////////////////////////////////////////////////// UntypedLabel/UntypedLabeled/UntypedLabeling
@@ -598,6 +664,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     labeling("one").as[one.Type].numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
     labeling("two").as[two.Type].numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     labeling("three").as[three.Type].numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
+
+    checkJson(labeling)
   }
 
   it must "permit histograms to have different cuts" in {
@@ -612,6 +680,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     labeling("one").as[one.Type].numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
     labeling("two").as[two.Type].numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
     labeling("three").as[three.Type].numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+
+    checkJson(labeling)
   }
 
   it must "work with multiple types" in {
@@ -628,6 +698,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     mapping("three").as[three.Type].entries should be (10.0 +- 1e-12)
     mapping("three").as[three.Type].mean should be (100.33 +- 1e-12)
     mapping("three").as[three.Type].variance should be (10.8381 +- 1e-12)   // just to be different
+
+    checkJson(mapping)
   }
 
   //////////////////////////////////////////////////////////////// Index/Indexed/Indexing
@@ -644,6 +716,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     indexing(0).numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
     indexing(1).numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     indexing(2).numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
+
+    checkJson(indexing)
   }
 
   it must "permit histograms to have different cuts" in {
@@ -658,6 +732,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     indexing(0).numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 1.0, 0.0))
     indexing(1).numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
     indexing(2).numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
+
+    checkJson(indexing)
   }
 
   //////////////////////////////////////////////////////////////// Branch/Branched/Branching
@@ -681,6 +757,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     branching.i2.entries should be (10.0 +- 1e-12)
     branching.i2.mean should be (100.33 +- 1e-12)
     branching.i2.variance should be (10.8381 +- 1e-12)
+
+    checkJson(branching)
   }
 
   //////////////////////////////////////////////////////////////// Usability in fold/aggregate
@@ -699,6 +777,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalHist.numericalUnderflow should be (1.0)
       finalHist.numericalOverflow should be (1.0)
       finalHist.numericalNanflow should be (0.0)
+
+      checkJson(finalHist)
     }
 
     for (i <- 0 to 10) {
@@ -717,6 +797,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalHist.numericalUnderflow should be (1.0)
       finalHist.numericalOverflow should be (1.0)
       finalHist.numericalNanflow should be (0.0)
+
+      checkJson(finalHist)
     }
 
     for (i <- 0 to 10) {
@@ -738,6 +820,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalHist("hist").numericalUnderflow should be (1.0)
       finalHist("hist").numericalOverflow should be (1.0)
       finalHist("hist").numericalNanflow should be (0.0)
+
+      checkJson(finalHist)
     }
 
     for (i <- 0 to 10) {
@@ -762,6 +846,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       finalHist("hist").as[hist1.Type].numericalOverflow should be (1.0)
       finalHist("hist").as[hist1.Type].numericalNanflow should be (0.0)
       finalHist("sum").as[sum1.Type].sum should be (10.0)
+
+      checkJson(finalHist)
     }
   }
 }

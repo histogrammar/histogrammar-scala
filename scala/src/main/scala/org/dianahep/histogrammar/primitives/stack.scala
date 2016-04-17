@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate a suite containers, filling all that are above a given cut on a given expression."
     val detailedHelp = """Stack(value: => V, expression: NumericalFcn[DATUM], cuts: Double*)"""
 
-    def fixed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, cuts: _*)
+    def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, cuts: _*)
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
 

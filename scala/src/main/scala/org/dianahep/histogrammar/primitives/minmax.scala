@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Find the minimum value of a given quantity. If no data are observed, the result is NaN."
     val detailedHelp = """Minimize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def fixed(entries: Double, min: Double) = new Minimized(entries, min)
+    def ed(entries: Double, min: Double) = new Minimized(entries, min)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, 0.0, java.lang.Double.NaN)
 
     def unapply(x: Minimized) = Some((x.entries, x.min))
@@ -99,7 +99,7 @@ package histogrammar {
     val help = "Find the maximum value of a given quantity. If no data are observed, the result is NaN."
     val detailedHelp = """Maximize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def container(entries: Double, max: Double) = new Maximized(entries, max)
+    def ed(entries: Double, max: Double) = new Maximized(entries, max)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, 0.0, java.lang.Double.NaN)
 
     def unapply(x: Maximized) = Some((x.entries, x.max))

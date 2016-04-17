@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero."
     val detailedHelp = """AbsoluteErr(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def fixed(entries: Double, mae: Double) = new AbsoluteErred(entries, mae)
+    def ed(entries: Double, mae: Double) = new AbsoluteErred(entries, mae)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
 
     def unapply(x: AbsoluteErred) = Some((x.entries, x.mae))

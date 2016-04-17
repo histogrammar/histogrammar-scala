@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate the weighted mean of a given quantity."
     val detailedHelp = """Average(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def fixed(entries: Double, mean: Double) = new Averaged(entries, mean)
+    def ed(entries: Double, mean: Double) = new Averaged(entries, mean)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
 
     def unapply(x: Averaged) = Some((x.entries, x.mean))

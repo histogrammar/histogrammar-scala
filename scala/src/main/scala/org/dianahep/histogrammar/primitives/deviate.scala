@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers)."
     val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def fixed(entries: Double, mean: Double, variance: Double) = new Deviated(entries, mean, variance)
+    def ed(entries: Double, mean: Double, variance: Double) = new Deviated(entries, mean, variance)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
 
     def unapply(x: Deviated) = Some((x.entries, x.mean, x.variance))

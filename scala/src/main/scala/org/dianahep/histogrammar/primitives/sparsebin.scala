@@ -17,7 +17,7 @@ package histogrammar {
 
     private val integerPattern = "-?[0-9]+".r
 
-    def fixed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
+    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
       new SparselyBinned[V, N](binWidth, entries, contentType, bins, nanflow, origin)
 
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]

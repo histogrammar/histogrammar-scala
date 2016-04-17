@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Accumulate the sum of a given quantity."
     val detailedHelp = """Sum(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
-    def fixed(entries: Double, sum: Double) = new Summed(entries, sum)
+    def ed(entries: Double, sum: Double) = new Summed(entries, sum)
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing[DATUM](quantity, selection, 0.0, 0.0)
 
     def unapply(x: Summed) = Some((x.entries, x.sum))

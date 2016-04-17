@@ -227,6 +227,11 @@ package json {
     def toLong = value.toLong
     def toFloat = value.toFloat
     def toDouble = value.toDouble
+
+    override def equals(that: Any) = that match {
+      case that: JsonFloat => this.value === that.value
+      case _ => false
+    }
   }
   object JsonFloat {
     def parse(str: String): Option[JsonFloat] = parseFully(str, parse(_))
@@ -381,6 +386,12 @@ package json {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
     def stringify = "{" + pairs.map({case (k, v) => k.stringify + ": " + v.stringify}).mkString(", ") + "}"
     def to[T <: Json] = pairs.map({case (k, v) => (k.value, v.asInstanceOf[T])})
+
+    override def equals(that: Any) = that match {
+      case that: JsonObject => this.pairs.toSet == that.pairs.toSet
+      case _ => false
+    }
+    override def hashCode() = pairs.toSet.hashCode()
   }
   object JsonObject {
     def apply[K, V](elements: (K, V)*)(implicit fk: K => JsonString, fv: V => Json) = new JsonObject(elements.map({case (k, v) => (fk(k), fv(v))}): _*)

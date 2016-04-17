@@ -33,7 +33,7 @@ package object histogram {
 
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
     new HistogramMethods(
-      new Binned(hist.low, hist.high, 0.0, hist.minBin to hist.maxBin map {i => Count.fixed(hist.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, Count.fixed(0L), Count.fixed(0L), hist.nanflow)
+      new Binned(hist.low, hist.high, 0.0, hist.minBin to hist.maxBin map {i => Count.ed(hist.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, Count.ed(0L), Count.ed(0L), hist.nanflow)
     )
 
   implicit def sparselyBinningToHistogramMethods(hist: SparselyBinning[_, _, _]): HistogramMethods =

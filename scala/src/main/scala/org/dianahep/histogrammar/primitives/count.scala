@@ -10,7 +10,7 @@ package histogrammar {
     val help = "Count data, ignoring their content."
     val detailedHelp = """Count()"""
 
-    def fixed(entries: Double) = new Counted(entries)
+    def ed(entries: Double) = new Counted(entries)
     def apply() = new Counting(0.0)
 
     def unapply(x: Counted) = Some(x.entries)

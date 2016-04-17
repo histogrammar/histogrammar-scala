@@ -19,7 +19,7 @@ package histogrammar {
     val help = "Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum."
     val detailedHelp = """Label(pairs: (String, V)*)"""
 
-    def fixed[V <: Container[V]](entries: Double, pairs: (String, V)*) = new Labeled[V](entries, pairs: _*)
+    def ed[V <: Container[V]](entries: Double, pairs: (String, V)*) = new Labeled[V](entries, pairs: _*)
     def apply[V <: Container[V] with Aggregation](pairs: (String, V)*) = new Labeling[V](0.0, pairs: _*)
 
     def unapply[V <: Container[V]](x: Labeled[V]) = Some((x.entries, x.pairs))
@@ -82,7 +82,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(factory.name),
+      "type" -> JsonString(pairs.head._2.factory.name),
       "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
 
     override def toString() = s"Labeled[entries=$entries, [${pairs.head.toString}..., size=${pairs.size}]]"
@@ -136,7 +136,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(factory.name),
+      "type" -> JsonString(pairs.head._2.factory.name),
       "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
 
     override def toString() = s"Labeling[entries=$entries, [${pairs.head.toString}..., size=${pairs.size}]]"
@@ -153,7 +153,7 @@ package histogrammar {
     val help = "Accumulate containers of any type except Count and label them with strings. Every one is filled with every input datum."
     val detailedHelp = """UntypedLabel(pairs: (String -> Container)*)"""
 
-    def fixed(entries: Double, pairs: (String, Container[_])*) = new UntypedLabeled(entries, pairs: _*)
+    def ed(entries: Double, pairs: (String, Container[_])*) = new UntypedLabeled(entries, pairs: _*)
     def apply[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = new UntypedLabeling(0.0, pairs: _*)
 
     def unapply(x: UntypedLabeled) = Some((x.entries, x.pairs))
@@ -296,7 +296,7 @@ package histogrammar {
     val help = "Accumulate any number of containers of the SAME type anonymously in a list. Every one is filled with every input datum."
     val detailedHelp = """"""
 
-    def fixed[V <: Container[V]](entries: Double, values: V*) = new Indexed[V](entries, values: _*)
+    def ed[V <: Container[V]](entries: Double, values: V*) = new Indexed[V](entries, values: _*)
     def apply[V <: Container[V] with Aggregation](values: V*) = new Indexing[V](0.0, values: _*)
 
     def unapply[V <: Container[V]](x: Indexed[V]) = Some((x.entries, x.values))
@@ -357,7 +357,7 @@ package histogrammar {
       else
         new Indexed[V](this.entries + that.entries, this.values zip that.values map {case(me, you) => me + you}: _*)
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
+    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
 
     override def toString() = s"Indexed[entries=$entries, [${values.head.toString}..., size=${size}]]"
     override def equals(that: Any) = that match {
@@ -407,7 +407,7 @@ package histogrammar {
       }                                                       // "foreach" version of this loop--- that's weird!
     }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
+    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
 
     override def toString() = s"Indexing[entries=$entries, [${values.head.toString}..., size=${size}]]"
     override def equals(that: Any) = that match {
@@ -424,16 +424,16 @@ package histogrammar {
     def help = "Accumulate containers of DIFFERENT types, indexed by i0 through i9. Every one is filled with every input datum."
     def detailedHelp = "Branch(container0, container1, ...)"
 
-    def fixed[C0 <: Container[C0]](entries: Double, i0: C0) = new Branched(entries, i0, BranchedNil)
-    def fixed[C0 <: Container[C0], C1 <: Container[C1]](entries: Double, i0: C0, i1: C1) = new Branched(entries, i0, new Branched(entries, i1, BranchedNil))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2]](entries: Double, i0: C0, i1: C1, i2: C2) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, BranchedNil)))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, BranchedNil))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, BranchedNil)))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, BranchedNil))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, BranchedNil)))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, BranchedNil))))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, BranchedNil)))))))))
-    def fixed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, new Branched(entries, i9, BranchedNil))))))))))
+    def ed[C0 <: Container[C0]](entries: Double, i0: C0) = new Branched(entries, i0, BranchedNil)
+    def ed[C0 <: Container[C0], C1 <: Container[C1]](entries: Double, i0: C0, i1: C1) = new Branched(entries, i0, new Branched(entries, i1, BranchedNil))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2]](entries: Double, i0: C0, i1: C1, i2: C2) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, BranchedNil)))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, BranchedNil))))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, BranchedNil)))))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, BranchedNil))))))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, BranchedNil)))))))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, BranchedNil))))))))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, BranchedNil)))))))))
+    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, new Branched(entries, i9, BranchedNil))))))))))
 
     def apply[C0 <: Container[C0] with Aggregation](i0: C0) = new Branching(0.0, i0, BranchingNil)
     def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation](i0: C0, i1: C1)(implicit e01: C0 Compatible C1) = new Branching(0.0, i0, new Branching(0.0, i1, BranchingNil))

@@ -19,12 +19,26 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErred/AbsoluteErring
 
+  /** Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.AbsoluteErring]] and immutable [[org.dianahep.histogrammar.AbsoluteErred]] objects.
+    */
   object AbsoluteErr extends Factory {
     val name = "AbsoluteErr"
     val help = "Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero."
     val detailedHelp = """AbsoluteErr(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.AbsoluteErred]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
+      */
     def ed(entries: Double, mae: Double) = new AbsoluteErred(entries, mae)
+    /** Create an empty, mutable [[org.dianahep.histogrammar.AbsoluteErring]].
+      * 
+      * @param quantity numerical function whose mean absolute differences from zero we wish to track
+      * @param selection boolean or non-negative function that cuts or weights entries
+      */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
 
     def unapply(x: AbsoluteErred) = Some((x.entries, x.mae))
@@ -53,6 +67,11 @@ package histogrammar {
       (ca + cb, (ca*ma + cb*mb)/(ca + cb))
   }
 
+  /** An accumulated weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
+    * 
+    * @param entries weighted number of entries (sum of all weights)
+    * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
+    */
   class AbsoluteErred(val entries: Double, val mae: Double) extends Container[AbsoluteErred] {
     type Type = AbsoluteErred
     def factory = AbsoluteErr
@@ -76,6 +95,13 @@ package histogrammar {
     override def hashCode() = (entries, mae).hashCode
   }
 
+  /** Accumulating a weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
+    * 
+    * @param quantity numerical function whose mean absolute differences from zero we wish to track
+    * @param selection boolean or non-negative function that cuts or weights entries.
+    * @param entries weighted number of entries (sum of all weights)
+    * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
+    */
   class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]
     type Datum = DATUM

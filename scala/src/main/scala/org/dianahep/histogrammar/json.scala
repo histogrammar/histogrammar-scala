@@ -16,6 +16,15 @@ package org.dianahep.histogrammar
 
 import scala.language.implicitConversions
 
+/** Provides support for parsing and stringifying JSON.
+  * 
+  * This module is a new implementation; it does not depend on packages such as Jackson. This choice was to provide the following features:
+  * 
+  *    - fewer dependencies, to make it easier to embed Histogrammar
+  *    - concise pattern-matching in [[org.dianahep.histogrammar.Container]] `fromJsonFragment` methods
+  *    - special handling of `"-inf"`, `"inf"`, `"nan"` as numbers, rather than strings
+  *    - partial parsing failures return `None`, rather than raising exceptions.
+  */
 package object json {
   implicit def booleanToJson(x: Boolean) = if (x) JsonTrue else JsonFalse
   implicit def byteToJson(x: Byte) = JsonInt(x)
@@ -49,9 +58,12 @@ package object json {
 }
 
 package json {
+  /** Exception type for strings that cannot be parsed because they are not proper JSON. */
   class InvalidJsonException(str: String) extends Exception(s"invalid JSON: $str")
+  /** Exception type for unexpected JSON structure, thrown by `fromJson` methods. */
   class JsonFormatException(json: Json, context: String) extends Exception(s"wrong JSON format for $context: $json")
 
+  /** Status of JSON-parsing an in-memory string. Holds the position (`pos`), allows peeking (`remaining`), and manages a stack of unwind-protection. */
   case class ParseState(str: String, var pos: Int = 0) {
     private var stack = List[Int]()
     def save() {
@@ -72,11 +84,19 @@ package json {
     def debug = str.substring(pos, str.size)
   }
 
+  /** Interface for all parsed, in-memory JSON objects. */
   sealed trait Json {
+    /** Convert this object into a serialized JSON string. The `toString` method is _not_ a synonym: `toString` shows structure and `stringify` serializes. */
     def stringify: String
   }
+  /** Entry point for parsing JSON. */
   object Json {
+    /** Parses a JSON string into [[org.dianahep.histogrammar.json.Json]] objects.
+      *
+      * @return `None` if the string is not valid JSON (_does not throw an exception!_) or `Some(json)` if successful.
+      */
     def parse(str: String): Option[Json] = parseFully(str, parse(_))
+    /** Internally called by the `parse` method that accepts a raw string. */
     def parse(p: ParseState): Option[Json] =
       (JsonNull.parse(p) orElse
         JsonTrue.parse(p) orElse
@@ -87,8 +107,10 @@ package json {
         JsonObject.parse(p))
   }
 
+  /** Interface for all JSON primitives: `null`, `true`, `false`, numbers, and strings. */
   trait JsonPrimitive extends Json
   object JsonPrimitive {
+    /** Parses a JSON string into primitive objects if possible, returns `None` if not. */
     def parse(str: String): Option[Json] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[Json] =
       (JsonNull.parse(p) orElse
@@ -98,8 +120,10 @@ package json {
         JsonString.parse(p))
   }
 
+  /** Concrete singleton for JSON `null`. */
   case object JsonNull extends JsonPrimitive {
     def stringify = "null"
+    /** Parses a JSON string into `JsonNull` if possible, returns `None` if not. */
     def parse(str: String): Option[JsonNull.type] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonNull.type] =
       if (p.remaining >= 4  &&  p.get(4) == "null") {
@@ -110,6 +134,7 @@ package json {
         None
   }
 
+  /** Interface for JSON booleans (`true` and `false`). */
   trait JsonBoolean extends JsonPrimitive
   object JsonBoolean {
     def unapply(x: Json): Option[Boolean] = x match {
@@ -117,12 +142,15 @@ package json {
       case JsonFalse => Some(false)
       case _ => None
     }
+    /** Parses a JSON string into a JSON boolean if possible, returns `None` if not. */
     def parse(str: String): Option[JsonBoolean] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonBoolean] = JsonTrue.parse(p) orElse JsonFalse.parse(p)
   }
 
+  /** Concrete singleton for JSON `true`. */
   case object JsonTrue extends JsonBoolean {
     def stringify = "true"
+    /** Parses a JSON string into `JsonTrue` if possible, returns `None` if not. */
     def parse(str: String): Option[JsonTrue.type] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonTrue.type] =
       if (p.remaining >= 4  &&  p.get(4) == "true") {
@@ -133,8 +161,10 @@ package json {
         None
   }
 
+  /** Concrete singleton for JSON `false`. */
   case object JsonFalse extends JsonBoolean {
     def stringify = "false"
+    /** Parses a JSON string into `JsonFalse` if possible, returns `None` if not. */
     def parse(str: String): Option[JsonFalse.type] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonFalse.type] =
       if (p.remaining >= 5  &&  p.get(5) == "false") {
@@ -145,6 +175,7 @@ package json {
         None
   }
 
+  /** Interface for JSON numbers, both integral and floating point. */
   trait JsonNumber extends JsonPrimitive {
     def toChar: Char
     def toByte: Byte
@@ -161,6 +192,7 @@ package json {
       case _ => None
     }
 
+    /** Parses a JSON string into a `JsonNumber` if possible, returns `None` if not.  **Note:** the JSON strings `"-inf"`, `"inf"`, and `"nan"` are interpreted as the corresponding floating point numbers. */
     def parse(str: String): Option[JsonNumber] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonNumber] =
       if (p.remaining >= 6  &&  p.get(6) == "\"-inf\"") {
@@ -206,6 +238,10 @@ package json {
         None
   }
 
+  /** Concrete class for JSON integers.
+    * 
+    * (`Long` type for more generality than `Int`, though the JSON spec allows arbitrary precision).
+    */
   case class JsonInt(value: Long) extends JsonNumber {
     def stringify = value.toString
     def toChar = value.toChar
@@ -217,6 +253,7 @@ package json {
     def toDouble = value.toDouble
   }
   object JsonInt {
+    /** Parses a JSON string into `JsonInt` if possible, returns `None` if not. */
     def parse(str: String): Option[JsonInt] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonInt] = JsonNumber.parse(p) match {
       case Some(JsonInt(x)) => Some(JsonInt(x))
@@ -224,6 +261,10 @@ package json {
     }
   }
 
+  /** Concrete class for JSON floating point numbers.
+    * 
+    * (`Double` type for more generality than `Float`, though the JSON spec allows arbitrary precision).
+    */
   case class JsonFloat(value: Double) extends JsonNumber {
     def stringify =
       if (value.isInfinity  &&  value < 0.0)
@@ -248,6 +289,7 @@ package json {
     }
   }
   object JsonFloat {
+    /** Parses a JSON string into `JsonFloat` if possible, returns `None` if not. */
     def parse(str: String): Option[JsonFloat] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonFloat] = JsonNumber.parse(p) match {
       case Some(JsonInt(x)) => Some(JsonFloat(x))
@@ -256,6 +298,10 @@ package json {
     }
   }
 
+  /** Concrete class for JSON strings.
+    * 
+    * **Note:** the strings `"-inf"`, `"inf"`, and `"nan"` can be interpreted as numbers by [[org.dianahep.histogrammar.json.JsonNumber]]. If `JsonNumber` parsing is attempted _before_ `JsonString` in an `orElse` chain, these three values would become numbers; otherwise they would become strings. Standard parsing (provided by the [[org.dianahep.histogrammar.json.JsonPrimitive]] and [[org.dianahep.histogrammar.json.Json]] objects) attempts to interpret them as numbers first.
+    */
   case class JsonString(value: String) extends JsonPrimitive {
     override def toString() = "JsonString(" + stringify + ")"
     def stringify = {
@@ -285,6 +331,7 @@ package json {
   }
   object JsonString {
     def parse(str: String): Option[JsonString] = parseFully(str, parse(_))
+    /** Parses a JSON string into `JsonString` if possible, returns `None` if not. */
     def parse(p: ParseState): Option[JsonString] =
       if (!p.done  &&  p.get == '"') {
         p.save()
@@ -335,6 +382,7 @@ package json {
         None
   }
 
+  /** Interface for all JSON containers: arrays and objects (mappings). */
   trait JsonContainer extends Json
   object JsonContainer {
     def unapplySeq(x: Json): Option[Seq[_]] = x match {
@@ -342,10 +390,15 @@ package json {
       case JsonObject(pairs @ _*) => Some(pairs)
       case _ => None
     }
+    /** Parses a JSON string into container objects if possible, returns `None` if not. */
     def parse(str: String): Option[JsonContainer] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonContainer] = JsonArray.parse(p) orElse JsonObject.parse(p)
   }
 
+  /** Concrete class for JSON arrays.
+    * 
+    * @param elements is a varargs sequence; to fill from a Scala `Seq`, use the `myseq: _*` syntax.
+    */
   case class JsonArray(elements: Json*) extends JsonContainer {
     override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
     def stringify = "[" + elements.map(_.stringify).mkString(", ") + "]"
@@ -353,6 +406,7 @@ package json {
   }
   object JsonArray {
     def apply[V](elements: V*)(implicit fv: V => Json) = new JsonArray(elements.map(fv): _*)
+    /** Parses a JSON string into a `JsonArray` if possible, returns `None` if not. */
     def parse(str: String): Option[JsonArray] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonArray] =
       if (!p.done  &&  p.get == '[') {
@@ -396,6 +450,10 @@ package json {
         None
   }
 
+  /** Concrete class for JSON objects (mappings).
+    * 
+    * @param pairs is a varargs sequence; to fill from a Scala `Seq`, use the `myseq: _*` syntax.
+    */
   case class JsonObject(pairs: (JsonString, Json)*) extends JsonContainer {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
     def stringify = "{" + pairs.map({case (k, v) => k.stringify + ": " + v.stringify}).mkString(", ") + "}"
@@ -409,6 +467,7 @@ package json {
   }
   object JsonObject {
     def apply[K, V](elements: (K, V)*)(implicit fk: K => JsonString, fv: V => Json) = new JsonObject(elements.map({case (k, v) => (fk(k), fv(v))}): _*)
+    /** Parses a JSON string into a `JsonObject` if possible, returns `None` if not. */
     def parse(str: String): Option[JsonObject] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonObject] =
       if (!p.done  &&  p.get == '{') {

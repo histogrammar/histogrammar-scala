@@ -254,6 +254,10 @@ package object histogrammar {
   /** Wraps a user's function for weighting data.
     * 
     * If a boolean-valued function is supplied, it will automatically be converted into a function that returns 0.0 and 1.0.
+    * 
+    * A value of 1.0 corresponds to normal weight, and a value of 0.0 _or less_ causes the datum to be skipped.
+    * 
+    * If `Selections` are specified for nested structures, they will be multiplied to provide the final weight. A value of 0.0 at any level skips descent of the subtree.
     */
   implicit class Selection[-DATUM](f: DATUM => Double) extends Serializable {
     def apply[SUB <: DATUM](x: SUB): Double = f(x)

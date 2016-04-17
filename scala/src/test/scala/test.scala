@@ -468,6 +468,16 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.qf(-1.0 to 11.0 by 1.0: _*).toList should be (List(-4.7, -4.7, -3.35, -2.0, -1.25, -0.5, 0.0, 0.5, 2.0, 4.25, 6.5, 7.3, 7.3))
   }
 
+  //////////////////////////////////////////////////////////////// AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning
+
+  "AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning" must "work with Count/Counting/Counted" in {
+    val one = AdaptivelyBin({x: Double => x}, num = 5)
+
+    simple.foreach(one.fill(_))
+
+    one.bins.toList map {case (k, v) => (k, v.entries)} should be (List(-3.85 -> 2.0, -1.1666666666666667 -> 3.0, 0.8 -> 2.0, 2.8 -> 2.0, 7.3 -> 1.0))
+  }
+
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
 
   "Fraction/Fractioned/Fractioning" must "work with Count/Counting/Counted" in {

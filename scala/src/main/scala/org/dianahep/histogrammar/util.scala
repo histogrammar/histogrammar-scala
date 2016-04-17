@@ -19,7 +19,9 @@ import scala.collection.SortedSet
 
 import org.dianahep.histogrammar._
 
+/** Supporting functions, mostly called by those in [[org.dianahep.histogrammar]]. */
 package object util {
+  /** The natural [[org.dianahep.histogrammar.util.MetricOrdering]] for `Double` precision numbers. */
   implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
     def difference(x: Double, y: Double) = x - y
   }
@@ -28,7 +30,8 @@ package object util {
 package util {
   //////////////////////////////////////////////////////////////// avoid recomputing a function that appears in many histograms
 
-  case class Cache[DOMAIN, RANGE](f: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
+  /** Wraps a user's function to provide caching. If the function is called two times in a row with the same arguments, a cached result is used instead. */
+  case class cache[DOMAIN, RANGE](f: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
     private var last: Option[(DOMAIN, RANGE)] = None
     def apply(x: DOMAIN): RANGE = (x, last) match {
       case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
@@ -43,9 +46,13 @@ package util {
 
   //////////////////////////////////////////////////////////////// the metric equivalent of a SortedMap, used in a few containers
 
+  /** Extension of Scala's `Ordering` trait to include distance. Used by [[org.dianahep.histogrammar.util.MetricSortedMap]]. */
   trait MetricOrdering[T] extends Ordering[T] {
+    /** Extension of `compare` with distance. */
     def difference(x: T, y: T): Double
+    /** Absolute value of `difference`. */
     def distance(x: T, y: T) = Math.abs(difference(x, y))
+    /** Comparison function defined by `Ordering`. */
     def compare(x: T, y: T) = {
       val d = difference(x, y)
       if (d > 0.0) 1
@@ -54,8 +61,10 @@ package util {
     }
   }
 
+  /** Result of [[org.dianahep.histogrammar.util.MetricSortedMap]]'s `closest` method. */
   case class Closest[A, B](difference: Double, key: A, value: B)
 
+  /** Extension of Scala's `SortedMap` with a [[org.dianahep.histogrammar.util.MetricOrdering]]. */
   abstract class MetricSortedMap[A, B](elems: (A, B)*)(ordering: MetricOrdering[A]) extends SortedMap[A, B] {
     // when the TreeSet searches for an element, keep track of the best distance it finds
     private val best = new java.lang.ThreadLocal[Tuple2[Option[Closest[A, B]], Option[Function2[A, B, Boolean]]]]
@@ -86,10 +95,10 @@ package util {
       }
     }
 
-    // use a TreeSet as a backing (not TreeMap because we need to get the whole pair back when we query it)
+    /** Used to provide a logarithmic-complexity lookup of key-value pairs. */
     def treeSet: SortedSet[(A, B)]
 
-    // find the closest key and return: (difference from key, the key, its associated value)
+    /** Find the closest key to a given value, optionally with a constraint. */
     def closest(to: A, constraint: Option[Function2[A, B, Boolean]] = None): Option[Closest[A, B]] = {
       best.set((None, constraint))
 
@@ -102,6 +111,7 @@ package util {
   }
 
   package immutable {
+    /** Concrete immutable `MetricSortedMap`. */
     class MetricSortedMap[A, B](elems: (A, B)*)(implicit val ordering: MetricOrdering[A]) extends org.dianahep.histogrammar.util.MetricSortedMap[A, B](elems: _*)(ordering) {
       val treeSet = scala.collection.immutable.TreeSet[(A, B)](elems: _*)(ord)
 
@@ -112,6 +122,7 @@ package util {
       override def size: Int = treeSet.size
       override def contains(x: A) = treeSet contains (x, null.asInstanceOf[B])
 
+      /** Not implemented: raises `UnsupportedOperationException`. */
       def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = throw new UnsupportedOperationException
     }
     object MetricSortedMap {
@@ -120,6 +131,7 @@ package util {
   }
 
   package mutable {
+    /** Concrete mutable `MetricSortedMap`. */
     class MetricSortedMap[A, B](elems: (A, B)*)(implicit val ordering: MetricOrdering[A]) extends org.dianahep.histogrammar.util.MetricSortedMap[A, B](elems: _*)(ordering) {
       val treeSet = scala.collection.mutable.TreeSet[(A, B)](elems: _*)(ord)
 
@@ -133,19 +145,27 @@ package util {
       def +=(kv: (A, B)): MetricSortedMap[A, B] = {treeSet += kv; this}
       def -=(elem: A): MetricSortedMap[A, B] = {treeSet -= Tuple2(elem, null.asInstanceOf[B]); this}
 
+      /** Not implemented: raises `UnsupportedOperationException`. */
       def rangeImpl(from: Option[A], until: Option[A]): SortedMap[A, B] = throw new UnsupportedOperationException
     }
     object MetricSortedMap {
       def apply[A, B](elems: (A, B)*)(implicit ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
     }
 
-    //////////////////////////////////////////////////////////////// 1D clustering algorithm (used by AdaptivelyBin, Median, Percentile)
-    // Yael Ben-Haim and Elad Tom-Tov, "A streaming parallel decision tree algorithm",
-    // J. Machine Learning Research 11 (2010)
-    // http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
-    //
-    // Modified to give more detail to the bulk than tails (tailDetail = 1.0 corresponds to pure Ben-Haim/Tom-Tov).
+    //////////////////////////////////////////////////////////////// 1D clustering algorithm (used by AdaptivelyBin and Quantile)
 
+    /** Clusters data in one dimension for adaptive histogramming and approximating quantiles (such as the median) in one pass over the data.
+      * 
+      * Adapted from Yael Ben-Haim and Elad Tom-Tov, [[http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf "A streaming parallel decision tree algorithm"]] _J. Machine Learning Research 11 (2010)_.
+      * 
+      * In the original paper, when the cluster-set needs to merge clusters (bins), it does so in increasing distance between neighboring bins. This algorithm also considers the content of the bins: the least-filled bins are merged first.
+      * 
+      * The `tailDetail` parameter scales between extremes: `tailDetail = 0` _only_ considers the content of the bins and `tailDetail = 1` _only_ considers the distance between bins (pure Ben-Haim/Tom-Tov). Specifically, the first bins to be merged are the ones that minimize
+      * 
+      * `tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1 + v2)/entries`
+      * 
+      * where `x1` and `x2` are the positions of the neighboring bins, `min` and `max` are the most extreme data positions observed so far, `v1` and `v2` are the (weighted) number of entries in the neighboring bins, and `entries` is the total (weighted) number of entries. The corresponding objective function for pure Ben-Haim/Tom-Tov is just `x2 - x1`.
+      */
     class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, val tailDetail: Double, value: => CONTAINER, val values: MetricSortedMap[Double, CONTAINER], var min: Double, var max: Double, var entries: Double) {
       private def mergeClusters() {
         while (values.size > num) {
@@ -164,7 +184,10 @@ package util {
 
       mergeClusters()
 
-      // Ben-Haim and Tom-Tov's "Algorithm 1" with additional min/max/entries tracking
+      /** Ben-Haim and Tom-Tov's "Algorithm 1" with min/max/entries tracking.
+        * 
+        * This method assumes that `CONTAINER` (mutable or immutable) is actually a `CONTAINER with Aggregation{type Datum >: DATUM}` (mutable only). If it is used on an immutable container, it will raise a runtime exception.
+        */
       def update[DATUM](x: Double, datum: DATUM, weight: Double) {
         if (weight > 0.0) {
           // assumes that CONTAINER has Aggregation (can call fillWeighted)
@@ -190,7 +213,7 @@ package util {
         }
       }
 
-      // Ben-Haim and Tom-Tov's "Algorithm 2" with additional min/max/entries tracking
+      /** Ben-Haim and Tom-Tov's "Algorithm 2" with min/max/entries tracking. */
       def merge(that: Clustering1D[CONTAINER]): Clustering1D[CONTAINER] = {
         val bins = scala.collection.mutable.Map[Double, CONTAINER]()
 
@@ -224,24 +247,56 @@ package util {
 
   //////////////////////////////////////////////////////////////// interpretation of central bins as a distribution
 
+  /** Mix-in for containers with non-uniform bins defined by centers (such as [[org.dianahep.histogrammar.CentrallyBinned]]/[[org.dianahep.histogrammar.CentrallyBinning]] and [[org.dianahep.histogrammar.AdaptivelyBinned]]/[[org.dianahep.histogrammar.AdaptivelyBinning]]). */
   trait CentralBinsDistribution[CONTAINER <: Container[CONTAINER]] {
     def entries: Double
+    /** Bin centers and their contents. */
     def bins: MetricSortedMap[Double, CONTAINER]
+    /** Minimium data value observed so far or `NaN` if no data have been observed so far. */
     def min: Double
+    /** Maximum data value observed so far or `NaN` if no data have been observed so far. */
     def max: Double
 
+    /** Probability distribution function (PDF) of one sample point.
+      * 
+      * Computed as the `entries` of the corresponding bin divided by total number of entries divided by bin width.
+      */
     def pdf(x: Double): Double = pdf(List(x): _*).head
+    /** Cumulative distribution function (CDF, or "accumulation function") of one sample point.
+      * 
+      * Computed by adding bin contents from minus infinity to the point in question. This is a continuous, piecewise linear function.
+      */
     def cdf(x: Double): Double = cdf(List(x): _*).head
+    /** Quantile function (QF, or "inverse of the accumulation function") of one sample point.
+      * 
+      * Computed like the CDF, but solving for the point in question, rather than integrating up to it. This is a continuous, piecewise linear function.
+      */
     def qf(x: Double): Double = qf(List(x): _*).head
 
+    /** Probability distribution function (PDF) of many sample points.
+      * 
+      * Computed as the `entries` of the corresponding bins divided by total number of entries divided by bin width.
+      */
     def pdf(xs: Double*): Seq[Double] = pdfTimesEntries(xs: _*).map(_ / entries)
+    /** Cumulative distribution function (CDF, or "accumulation function") of many sample points.
+      * 
+      * Computed by adding bin contents from minus infinity to the points in question. This is a continuous, piecewise linear function.
+      */
     def cdf(xs: Double*): Seq[Double] = cdfTimesEntries(xs: _*).map(_ / entries)
+    /** Quantile function (QF, or "inverse of the accumulation function") of many sample points.
+      * 
+      * Computed like the CDF, but solving for the points in question, rather than integrating up to them. This is a continuous, piecewise linear function.
+      */
     def qf(xs: Double*): Seq[Double] = qfTimesEntries(xs.map(_ * entries): _*)
 
+    /** PDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
     def pdfTimesEntries(x: Double): Double = pdfTimesEntries(List(x): _*).head
+    /** CDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
     def cdfTimesEntries(x: Double): Double = cdfTimesEntries(List(x): _*).head
+    /** QF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
     def qfTimesEntries(x: Double): Double = qfTimesEntries(List(x): _*).head
 
+    /** PDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
     def pdfTimesEntries(xs: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
@@ -278,6 +333,7 @@ package util {
         out.toSeq
       }
 
+    /** CDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
     def cdfTimesEntries(xs: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
@@ -321,6 +377,7 @@ package util {
         out.toSeq
       }
 
+    /** QF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
     def qfTimesEntries(ys: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(ys.size)(java.lang.Double.NaN)

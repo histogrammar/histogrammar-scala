@@ -452,12 +452,20 @@ class DefaultSuite extends FlatSpec with Matchers {
 
   "CentrallyBin/CentrallyBinned/CentrallyBinning" must "work with Count/Counting/Counted" in {
     val one = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x})
+    one.center(1.5) should be (1.0)
+    one.neighbors(1.0) should be ((Some(0.0), Some(3.0)))
+    one.neighbors(10.0) should be ((Some(3.0), None))
+    one.range(-3.0) should be ((java.lang.Double.NEGATIVE_INFINITY, -2.0))
+    one.range(-1.0) should be ((-2.0, -0.5))
+    one.range(0.0) should be ((-0.5, 0.5))
+    one.range(10.0) should be ((6.5, java.lang.Double.POSITIVE_INFINITY))
+
     simple.foreach(one.fill(_))
     Factory.fromJson(one.toJson).as[CentrallyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List((-3.0,2.0), (-1.0,2.0), (0.0,2.0), (1.0,1.0), (3.0,2.0), (10.0,1.0)))
 
-    println(one.pdf(-3.0 to 10.0 by 1.0: _*))
-    println(one.cdf(-3.0 to 10.0 by 1.0: _*))
-    println(one.qf(-1.0 to 11.0 by 1.0: _*))
+    one.pdf(-3.0 to 10.0 by 1.0: _*).toList should be (List(0.7407407407407407, 1.3333333333333333, 1.3333333333333333, 2.0, 0.6666666666666666, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 0.4444444444444444, 1.2500000000000002, 0.0, 0.0, 0.0))
+    one.cdf(-3.0 to 10.0 by 1.0: _*).toList should be (List(1.2592592592592593, 2.0, 3.333333333333333, 5.0, 6.333333333333333, 7.0, 7.444444444444445, 7.888888888888889, 8.333333333333334, 8.777777777777779, 9.625, 10.0, 10.0, 10.0))
+    one.qf(-1.0 to 11.0 by 1.0: _*).toList should be (List(-4.7, -4.7, -3.35, -2.0, -1.25, -0.5, 0.0, 0.5, 2.0, 4.25, 6.5, 7.3, 7.3))
   }
 
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning

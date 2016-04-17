@@ -140,7 +140,7 @@ package util {
     def qf(x: Double): Double = qf(List(x): _*).head
 
     def pdf(xs: Double*): Seq[Double] =
-      if (bins.isEmpty)
+      if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
       else if (bins.size == 1)
         xs map {case x =>
@@ -176,7 +176,7 @@ package util {
       }
 
     def cdf(xs: Double*): Seq[Double] =
-      if (bins.isEmpty)
+      if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
       else if (bins.size == 1)
         xs map {case x =>
@@ -219,7 +219,7 @@ package util {
       }
 
     def qf(ys: Double*): Seq[Double] =
-      if (bins.isEmpty)
+      if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(ys.size)(java.lang.Double.NaN)
       else if (bins.size == 1)
         Seq.fill(ys.size)(bins.head._1)
@@ -262,12 +262,18 @@ package util {
   // Yael Ben-Haim and Elad Tom-Tov, "A streaming parallel decision tree algorithm",
   // J. Machine Learning Research 11 (2010)
   // http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf
+  //
+  // Modified to give more detail to the bulk than tails (tailDetail = 1.0 corresponds to pure Ben-Haim/Tom-Tov).
 
-  class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, value: => CONTAINER, centers: (Double, CONTAINER)*)
+  class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, val tailDetail: Double, value: => CONTAINER, centers: (Double, CONTAINER)*)
       extends mutable.MetricSortedMap[Double, CONTAINER](centers: _*)(new MetricOrdering[Double] {def difference(x: Double, y: Double) = x - y}) {
+
+    if (tailDetail < 0.0  ||  tailDetail > 1.0)
+      throw new IllegalArgumentException(s"tailDetail parameter ($tailDetail) must be between 0 and 1 (inclusive)")
 
     var min = java.lang.Double.NaN
     var max = java.lang.Double.NaN
+    var entries = 0.0
 
     centers foreach {case (x, _) =>
       if (min.isNaN  ||  x < min)
@@ -276,11 +282,11 @@ package util {
         max = x
     }
 
-    def cluster(n: Int) {
+    def mergeClusters(n: Int) {
       while (size > n) {
         val bins = iterator.toSeq
         val neighbors = bins.init zip bins.tail
-        val nearestNeighbors = neighbors.minBy({case ((x1, v1), (x2, v2)) => x2 - x1})(doubleOrdering)
+        val nearestNeighbors = neighbors.minBy({case ((x1, v1), (x2, v2)) => tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1.entries + v2.entries)/entries})(doubleOrdering)
 
         val ((x1, v1), (x2, v2)) = nearestNeighbors
         val replacement = ((x1 * v1.entries + x2 * v2.entries) / (v1.entries + v2.entries), v1 + v2)
@@ -291,14 +297,9 @@ package util {
       }
     }
 
-    // Ben-Haim and Tom-Tov's "Algorithm 1" with additional min/max tracking
+    // Ben-Haim and Tom-Tov's "Algorithm 1" with additional min/max/entries tracking
     def update[DATUM](x: Double, datum: DATUM, weight: Double) {
       if (weight > 0.0) {
-        if (min.isNaN  ||  x < min)
-          min = x
-        if (max.isNaN  ||  x > max)
-          max = x
-
         // assumes that CONTAINER has Aggregation (can call fillWeighted)
         get(x) match {
           case Some(v) =>
@@ -309,12 +310,20 @@ package util {
             v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
 
             this += (x, v)
-            cluster(num)
+            mergeClusters(num)
         }
+
+        if (min.isNaN  ||  x < min)
+          min = x
+
+        if (max.isNaN  ||  x > max)
+          max = x
+
+        entries += weight
       }
     }
 
-    // Ben-Haim and Tom-Tov's "Algorithm 2" with additional min/max tracking
+    // Ben-Haim and Tom-Tov's "Algorithm 2" with additional min/max/entries tracking
     def merge(that: Clustering1D[CONTAINER]): Clustering1D[CONTAINER] = {
       val bins = scala.collection.mutable.Map[Double, CONTAINER]()
 
@@ -329,8 +338,8 @@ package util {
           bins(x) = v.copy        // replace them; don't update them in-place
       }
 
-      val out = new Clustering1D[CONTAINER](num, value, bins.toSeq: _*)
-      out.cluster(num)
+      val out = new Clustering1D[CONTAINER](num, tailDetail, value, bins.toSeq: _*)
+      out.mergeClusters(num)
 
       out.min =
         if (this.min.isNaN  &&  that.min.isNaN)
@@ -348,8 +357,9 @@ package util {
         else
           this.max
 
+      out.entries = this.entries + that.entries
+
       out
     }
   }
-
 }

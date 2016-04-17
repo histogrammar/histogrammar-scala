@@ -57,7 +57,7 @@ package histogrammar {
     def zero = new Deviated(0.0, 0.0, 0.0)
     def +(that: Deviated) = {
       val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
-                                                          that.entries, that.mean, that.variance * that.entries)
+                                                            that.entries, that.mean, that.variance * that.entries)
       new Deviated(newentries, newmean, newvariance)
     }
 
@@ -94,7 +94,7 @@ package histogrammar {
     def zero = new Deviating[DATUM](quantity, selection, 0.0, 0.0, 0.0)
     def +(that: Deviating[DATUM]) = {
       val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
-                                                          that.entries, that.mean, that.variance * that.entries)
+                                                            that.entries, that.mean, that.variance * that.entries)
       new Deviating[DATUM](this.quantity, this.selection, newentries, newmean, newvariance)
     }
 

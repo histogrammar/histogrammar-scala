@@ -18,7 +18,7 @@ package histogrammar {
 
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
-      new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value)): _*), bins.min, bins.max, nanflow)
+      new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value)): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow)
 
     def unapply[V <: Container[V], N <: Container[N]](x: CentrallyBinned[V, N]) =
       Some((x.entries, x.bins, x.min, x.max, x.nanflow))
@@ -114,14 +114,14 @@ package histogrammar {
     if (bins.size < 2)
       throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def zero = new CentrallyBinned[V, N](0.0, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
+    def zero = new CentrallyBinned[V, N](0.0, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow.zero)
     def +(that: CentrallyBinned[V, N]) = {
       if (this.centers != that.centers)
         throw new ContainerException(s"cannot add CentrallyBinned because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
       val newbins = immutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
-
-      new CentrallyBinned[V, N](this.entries + that.entries, newbins, Math.min(this.min, that.min), Math.max(this.max, that.max), this.nanflow + that.nanflow)
+      
+      new CentrallyBinned[V, N](this.entries + that.entries, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
     }
 
     def toJsonFragment = JsonObject(
@@ -161,7 +161,7 @@ package histogrammar {
 
       val newbins = mutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
 
-      new CentrallyBinning[DATUM, V, N](quantity, selection, this.entries + that.entries, value, newbins, Math.min(this.min, that.min), Math.max(this.max, that.max), this.nanflow + that.nanflow)
+      new CentrallyBinning[DATUM, V, N](quantity, selection, this.entries + that.entries, value, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
     }
 
     def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {

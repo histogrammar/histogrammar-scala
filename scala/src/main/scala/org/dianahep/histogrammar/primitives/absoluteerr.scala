@@ -36,7 +36,7 @@ package histogrammar {
     def ed(entries: Double, mae: Double) = new AbsoluteErred(entries, mae)
     /** Create an empty, mutable [[org.dianahep.histogrammar.AbsoluteErring]].
       * 
-      * @param quantity numerical function whose mean absolute differences from zero we wish to track
+      * @param quantity numerical function to track
       * @param selection boolean or non-negative function that cuts or weights entries
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
@@ -97,8 +97,8 @@ package histogrammar {
 
   /** Accumulating a weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
     * 
-    * @param quantity numerical function whose mean absolute differences from zero we wish to track
-    * @param selection boolean or non-negative function that cuts or weights entries.
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
     * @param entries weighted number of entries (sum of all weights)
     * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
     */

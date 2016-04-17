@@ -19,14 +19,30 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
 
+  /**Accumulate raw data up to an optional limit, at which point only the total number are preserved.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Bagging]] and immutable [[org.dianahep.histogrammar.Bagged]] objects.
+    */
   object Bag extends Factory {
     val name = "Bag"
-    val help = "Accumulate raw data up to a limit."
+    val help = "Accumulate raw data up to an optional limit, at which point only the total number are preserved."
     val detailedHelp = """Bag(quantity: MultivariateFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], limit: Option[Double] = None)"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param limit if not `None` and `entries > limit`, the `values` are dropped, leaving only `entries` to count data
+      * @param values distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped
+      */
     def ed(entries: Double, limit: Option[Double], values: Option[Map[Vector[Double], Double]]) =
       new Bagged(entries, limit, values)
 
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Bagging]].
+      * 
+      * @param quantity multivariate function to track
+      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param limit if not `None` and `entries > limit`, the `values` are dropped, leaving only `entries` to count data
+      */
     def apply[DATUM](quantity: MultivariateFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], limit: Option[Double] = None) =
       new Bagging[DATUM](quantity, selection, limit, 0.0, Some(scala.collection.mutable.Map[Vector[Double], Double]()))
 
@@ -80,6 +96,11 @@ package histogrammar {
     }
   }
 
+  /** An accumulated set of raw data or just the number of entries if it exceeded its limit.
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param limit if not `None` and `entries > limit`, the `values` are dropped, leaving only `entries` to count data
+    * @param values distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped
+    */
   class Bagged(val entries: Double, val limit: Option[Double], val values: Option[Map[Vector[Double], Double]]) extends Container[Bagged] {
     type Type = Bagged
     def factory = Bag
@@ -130,6 +151,14 @@ package histogrammar {
     override def hashCode() = (entries, limit, values).hashCode()
   }
 
+  /** Accumulating a quantity as raw data up to an optional limit, at which point only the total number are preserved.
+    * 
+    * @param quantity multivariate function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param limit if not `None` and `entries > limit`, the `values` are dropped, leaving only `entries` to count data
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param values distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped
+    */
   class Bagging[DATUM](val quantity: MultivariateFcn[DATUM], val selection: Selection[DATUM], val limit: Option[Double], var entries: Double, var values: Option[scala.collection.mutable.Map[Vector[Double], Double]]) extends Container[Bagging[DATUM]] with AggregationOnData {
     type Type = Bagging[DATUM]
     type Datum = DATUM

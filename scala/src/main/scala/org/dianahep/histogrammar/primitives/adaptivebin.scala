@@ -47,7 +47,7 @@ package histogrammar {
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.AdaptivelyBinning]].
       * 
-      * @param quantity numerical function whose mean absolute differences from zero we wish to track
+      * @param quantity numerical function to split into bins
       * @param selection boolean or non-negative function that cuts or weights entries
       * @param num maximum number of bins (used as a constraint when growing or merging)
       * @param tailDetail between 0.0 and 1.0 inclusive: use 0.0 to focus on the bulk of the distribution and 1.0 to focus on the tails; see [[org.dianahep.histogrammar.util.mutable.Clustering1D]] for details
@@ -184,8 +184,8 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it dynamically into bins with a clustering algorithm, filling only one datum per bin with no overflows or underflows.
     * 
-    * @param quantity numerical function whose mean absolute differences from zero we wish to track
-    * @param selection boolean or non-negative function that cuts or weights entries.
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
     * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
     * @param clustering performs the adative binning
     * @param nanflow container for values that result in `NaN`

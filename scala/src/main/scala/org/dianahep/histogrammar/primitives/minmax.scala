@@ -19,12 +19,27 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Minimize/Minimized/Minimizing
 
+  /** Find the minimum value of a given quantity. If no data are observed, the result is `NaN`.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Minimizing]] and immutable [[org.dianahep.histogrammar.Minimized]] objects.
+    */
   object Minimize extends Factory {
     val name = "Minimize"
     val help = "Find the minimum value of a given quantity. If no data are observed, the result is NaN."
     val detailedHelp = """Minimize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Minimized]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param min lowest observed value
+      */
     def ed(entries: Double, min: Double) = new Minimized(entries, min)
+
+    /** Create an immutable [[org.dianahep.histogrammar.Minimizing]].
+      * 
+      * @param quantity numerical function to track
+      * @param selection boolean or non-negative function that cuts or weights entries
+      */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, 0.0, java.lang.Double.NaN)
 
     def unapply(x: Minimized) = Some((x.entries, x.min))
@@ -58,6 +73,11 @@ package histogrammar {
         two
   }
 
+  /** An accumulated minimum of a given quantity. If no data are observed, the result is `NaN`.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param min lowest observed value
+    */
   class Minimized(val entries: Double, val min: Double) extends Container[Minimized] {
     type Type = Minimized
     def factory = Minimize
@@ -78,6 +98,13 @@ package histogrammar {
     override def hashCode() = (entries, min).hashCode
   }
 
+  /** Accumulating the minimum of a given quantity. If no data are observed, the result is `NaN`.
+    * 
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param min lowest observed value
+    */
   class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
     type Type = Minimizing[DATUM]
     type Datum = DATUM
@@ -108,12 +135,27 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Maximize/Maximized/Maximizing
 
+  /** Find the maximum value of a given quantity. If no data are observed, the result is `NaN`.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Maximizing]] and immutable [[org.dianahep.histogrammar.Maximized]] objects.
+    */
   object Maximize extends Factory {
     val name = "Maximize"
     val help = "Find the maximum value of a given quantity. If no data are observed, the result is NaN."
     val detailedHelp = """Maximize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Maximized]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param max highest observed value
+      */
     def ed(entries: Double, max: Double) = new Maximized(entries, max)
+
+    /** Create an immutable [[org.dianahep.histogrammar.Maximizing]].
+      * 
+      * @param quantity numerical function to track
+      * @param selection boolean or non-negative function that cuts or weights entries
+      */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, 0.0, java.lang.Double.NaN)
 
     def unapply(x: Maximized) = Some((x.entries, x.max))
@@ -147,6 +189,11 @@ package histogrammar {
         two
   }
 
+  /** An accumulated maximum of a given quantity. If no data are observed, the result is `NaN`.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param max highest observed value
+    */
   class Maximized(val entries: Double, val max: Double) extends Container[Maximized] {
     type Type = Maximized
     def factory = Maximize
@@ -164,6 +211,13 @@ package histogrammar {
     override def hashCode() = (entries, max).hashCode
   }
 
+  /** Accumulating the maximum of a given quantity. If no data are observed, the result is `NaN`.
+    * 
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param max highest observed value
+    */
   class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
     type Type = Maximizing[DATUM]
     type Datum = DATUM

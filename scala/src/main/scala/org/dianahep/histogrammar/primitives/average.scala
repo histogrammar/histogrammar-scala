@@ -34,6 +34,7 @@ package histogrammar {
       * @param mean weighted mean of the quantity
       */
     def ed(entries: Double, mean: Double) = new Averaged(entries, mean)
+
     /** Create an empty, mutable [[org.dianahep.histogrammar.Averaging]].
       * 
       * @param quantity numerical function to track

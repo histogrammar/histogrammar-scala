@@ -86,7 +86,7 @@ package histogrammar {
     }
   }
 
-  /** An accumulated suite of containers, each between a pair of given cuts on a given expression.
+  /** An accumulated suite of containers, each collecting data between a pair of given cuts on a given expression.
     * 
     * @param entries weighted number of entries (sum of all weights)
     * @param cuts lower thresholds and their associated containers, starting with negative infinity
@@ -126,7 +126,7 @@ package histogrammar {
     override def hashCode() = (entries, cuts).hashCode()
   }
 
-  /** Accumulating a suite of containers, each filled if a given expression lies between a given set of cuts.
+  /** Accumulating a suite of containers, each collecting data between a pair of given cuts on a given expression.
     * 
     * @param expression numerical expression whose value is compared with the given thresholds
     * @param entries weighted number of entries (sum of all observed weights)

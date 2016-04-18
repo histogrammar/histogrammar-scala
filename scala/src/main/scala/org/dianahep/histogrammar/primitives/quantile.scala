@@ -22,14 +22,30 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Quantile/Quantiled/Quantiling
 
+  /** Accumulate an adaptively binned histogram to compute approximate quantiles, such as the median.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Quantiling]] and immutable [[org.dianahep.histogrammar.Quantiled]] objects.
+    */
   object Quantile extends Factory {
     val name = "Quantile"
     val help = "Accumulate an adaptively binned histogram to compute approximate quantiles, such as the median."
     val detailedHelp = """Quantile"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param bins centers and values of bins used to approximate and summarize the distribution
+      * @param min lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity)
+      * @param max highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity)
+      */
     def ed(entries: Double, bins: Iterable[(Double, Counted)], min: Double, max: Double) =
       new Quantiled(new mutable.Clustering1D[Counted](100, 1.0, null.asInstanceOf[Counted], mutable.MetricSortedMap[Double, Counted](bins.toSeq: _*), min, max, entries))
 
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Quantiling]].
+      * 
+      * @param quantity numerical function to track
+      * @param selection boolean or non-negative function that cuts or weights entries
+      */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
       new Quantiling[DATUM](quantity, selection, mutable.Clustering1D[Counting](100, 1.0, Count(), mutable.Clustering1D.values[Counting](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))
 
@@ -80,6 +96,10 @@ package histogrammar {
     }
   }
 
+  /** An accumulated adaptive histogram, used to compute approximate quantiles, such as the median.
+    * 
+    * @param clustering performs the adative binning
+    */
   class Quantiled(clustering: mutable.Clustering1D[Counted]) extends Container[Quantiled] with CentralBinsDistribution[Counted] {
 
     type Type = Quantiled
@@ -116,6 +136,12 @@ package histogrammar {
     override def hashCode() = clustering.hashCode()
   }
 
+  /** Accumulating an adaptive histogram, used to compute approximate quantiles, such as the median.
+    * 
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param clustering performs the adative binning
+    */
   class Quantiling[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], clustering: mutable.Clustering1D[Counting])
       extends Container[Quantiling[DATUM]] with AggregationOnData with CentralBinsDistribution[Counting] {
 

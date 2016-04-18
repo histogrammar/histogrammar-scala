@@ -23,6 +23,10 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
 
+  /** Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.SparselyBinning]] and immutable [[org.dianahep.histogrammar.SparselyBinned]] objects.
+    */
   object SparselyBin extends Factory {
     val name = "SparselyBin"
     val help = "Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary."
@@ -31,9 +35,27 @@ package histogrammar {
 
     private val integerPattern = "-?[0-9]+".r
 
+    /** Create an immutable [[org.dianahep.histogrammar.SparselyBinned]] from arguments (instead of JSON).
+      * 
+      * @param binWidth width of the equally sized bins
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
+      * @param bins centers and values of each bin
+      * @param nanflow container for data that resulted in `NaN`
+      * @param origin left edge of the bin whose index is zero
+      */
     def ed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
       new SparselyBinned[V, N](binWidth, entries, contentType, bins, nanflow, origin)
 
+    /** Create an empty, mutable [[org.dianahep.histogrammar.SparselyBinning]].
+      * 
+      * @param binWidth width of the equally sized bins
+      * @param quantity numerical function to split into bins
+      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+      * @param nanflow container for data that resulted in `NaN`
+      * @param origin left edge of the bin whose index is zero
+      */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (binWidth: Double,
        quantity: NumericalFcn[DATUM],
@@ -112,6 +134,15 @@ package histogrammar {
     }
   }
 
+  /** An accumulated quantity that was split into equally spaced bins, filling only one bin per datum and creating new bins as necessary.
+    * 
+    * @param binWidth width of the equally sized bins
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
+    * @param bins centers and values of each bin
+    * @param nanflow container for data that resulted in `NaN`
+    * @param origin left edge of the bin whose index is zero
+    */
   class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val entries: Double, contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
     def factory = SparselyBin
@@ -169,6 +200,17 @@ package histogrammar {
     override def hashCode() = (binWidth, entries, bins, nanflow, origin).hashCode
   }
 
+  /** Accumulating a quantity by splitting it into equally spaced bins, filling only one bin per datum and creating new bins as necessary.
+    * 
+    * @param binWidth width of the equally sized bins
+    * @param quantity numerical function to split into bins
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+    * @param bins centers and values of each bin
+    * @param nanflow container for data that resulted in `NaN`
+    * @param origin left edge of the bin whose index is zero
+    */
   class SparselyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
     (val binWidth: Double,
      val quantity: NumericalFcn[DATUM],

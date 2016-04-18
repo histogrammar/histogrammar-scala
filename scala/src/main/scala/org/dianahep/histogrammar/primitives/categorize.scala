@@ -21,13 +21,29 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
 
+  /** Split a given quantity by its categorical (string-based) value and fill only one category per datum.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Categorizing]] and immutable [[org.dianahep.histogrammar.Categorized]] objects.
+    */
   object Categorize extends Factory {
     val name = "Categorize"
     val help = "Split a given quantity by its categorical (string-based) value and fill only one category per datum."
     val detailedHelp = """Categorize(quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count())"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Categorized]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
+      * @param pairs string category and the associated container of values associated with it
+      */
     def ed[V <: Container[V]](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, contentType, pairs: _*)
 
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
+      * 
+      * @param quantity numerical function to split into bins
+      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+      */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
       new Categorizing(quantity, selection, 0.0, value, mutable.HashMap[String, V]())
 
@@ -62,6 +78,12 @@ package histogrammar {
     }
   }
 
+  /** An accumulated quantity that was split by its categorical (string-based) values, filling only one category per datum.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
+    * @param pairs string category and the associated container of values associated with it
+    */
   class Categorized[V <: Container[V]](val entries: Double, contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
     type Type = Categorized[V]
     def factory = Categorize
@@ -104,6 +126,14 @@ package histogrammar {
     override def hashCode() = (entries, pairs).hashCode()
   }
 
+  /** Accumulating a quantity by splitting it by its categorical (string-based) value and filling only one category per datum.
+    * 
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+    * @param pairs map of string category and the associated container of values associated with it
+    */
   class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
     type Datum = DATUM

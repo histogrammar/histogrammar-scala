@@ -40,7 +40,7 @@ package histogrammar {
       * @param bins centers and values of each bin
       * @param min lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity)
       * @param max highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity)
-      * @param nanflow container for values that resulted in `NaN`
+      * @param nanflow container for data that resulted in `NaN`
       */
     def ed[V <: Container[V], N <: Container[N]](entries: Double, num: Int, tailDetail: Double, contentType: String, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
       new AdaptivelyBinned[V, N](contentType, new mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.MetricSortedMap[Double, V](bins.toSeq: _*), min, max, entries), nanflow)
@@ -52,7 +52,7 @@ package histogrammar {
       * @param num maximum number of bins (used as a constraint when growing or merging)
       * @param tailDetail between 0.0 and 1.0 inclusive: use 0.0 to focus on the bulk of the distribution and 1.0 to focus on the tails; see [[org.dianahep.histogrammar.util.mutable.Clustering1D]] for details
       * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
-      * @param nanflow container for values that result in `NaN`
+      * @param nanflow container for data that result in `NaN`
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
@@ -130,7 +130,7 @@ package histogrammar {
     * 
     * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
     * @param clustering performs the adative binning
-    * @param nanflow container for values that resulted in `NaN`
+    * @param nanflow container for data that resulted in `NaN`
     */
   class AdaptivelyBinned[V <: Container[V], N <: Container[N]](contentType: String, clustering: mutable.Clustering1D[V], val nanflow: N)
     extends Container[AdaptivelyBinned[V, N]] with CentrallyBin.Methods[V] {
@@ -188,7 +188,7 @@ package histogrammar {
     * @param selection boolean or non-negative function that cuts or weights entries
     * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
     * @param clustering performs the adative binning
-    * @param nanflow container for values that result in `NaN`
+    * @param nanflow container for data that result in `NaN`
     */
   class AdaptivelyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
     (val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)

@@ -18,13 +18,27 @@ import org.dianahep.histogrammar.json._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
- 
+
+  /** Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Binning]] and immutable [[org.dianahep.histogrammar.Binned]] objects.
+    */
   object Bin extends Factory {
     val name = "Bin"
     val help = "Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum."
     val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM],
            value: => V = Count(), underflow: U = Count(), overflow: O = Count(), nanflow: N = Count())"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Binned]] from arguments (instead of JSON).
+      * 
+      * @param low minimum-value edge of the first bin
+      * @param high maximum-value edge of the last bin
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param values containers for data sent to each bin
+      * @param underflow container for data below the first bin
+      * @param overflow container for data above the last bin
+      * @param nanflow container for data that resulted in `NaN`
+      */
     def ed[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (low: Double,
        high: Double,
@@ -34,6 +48,16 @@ package histogrammar {
        overflow: O,
        nanflow: N) = new Binned[V, U, O, N](low, high, entries, values, underflow, overflow, nanflow)
 
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Binning]].
+      * 
+      * @param number of bins
+      * @param low minimum-value edge of the first bin
+      * @param high maximum-value edge of the last bin
+      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+      * @param underflow container for data below the first bin
+      * @param overflow container for data above the last bin
+      * @param nanflow container for data that resulted in `NaN`
+      */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (num: Int,
        low: Double,
@@ -120,6 +144,16 @@ package histogrammar {
     }
   }
 
+  /** An accumulated quantity that was split into equally spaced bins between specified limits and filling only one bin per datum.
+    * 
+    * @param low minimum-value edge of the first bin
+    * @param high maximum-value edge of the last bin
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param values containers for data sent to each bin
+    * @param underflow container for data below the first bin
+    * @param overflow container for data above the last bin
+    * @param nanflow container for data that resulted in `NaN`
+    */
   class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
     val high: Double,
@@ -192,6 +226,18 @@ package histogrammar {
     override def hashCode() = (low, high, entries, values, underflow, overflow, nanflow).hashCode
   }
 
+  /** Accumulating a quantity by splitting it into equally spaced bins between specified limits and filling only one bin per datum.
+    * 
+    * @param low minimum-value edge of the first bin
+    * @param high maximum-value edge of the last bin
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param values containers for data sent to each bin
+    * @param underflow container for data below the first bin
+    * @param overflow container for data above the last bin
+    * @param nanflow container for data that resulted in `NaN`
+    */
   class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](
     val low: Double,
     val high: Double,

@@ -86,14 +86,14 @@ package json {
 
   /** Interface for all parsed, in-memory JSON objects. */
   sealed trait Json {
-    /** Convert this object into a serialized JSON string. The `toString` method is _not_ a synonym: `toString` shows structure and `stringify` serializes. */
+    /** Convert this object into a serialized JSON string. The `toString` method is ''not'' a synonym: `toString` shows structure and `stringify` serializes. */
     def stringify: String
   }
   /** Entry point for parsing JSON. */
   object Json {
     /** Parses a JSON string into [[org.dianahep.histogrammar.json.Json]] objects.
       *
-      * @return `None` if the string is not valid JSON (_does not throw an exception!_) or `Some(json)` if successful.
+      * @return `None` if the string is not valid JSON (''does not throw an exception!'') or `Some(json)` if successful.
       */
     def parse(str: String): Option[Json] = parseFully(str, parse(_))
     /** Internally called by the `parse` method that accepts a raw string. */
@@ -192,7 +192,7 @@ package json {
       case _ => None
     }
 
-    /** Parses a JSON string into a `JsonNumber` if possible, returns `None` if not.  **Note:** the JSON strings `"-inf"`, `"inf"`, and `"nan"` are interpreted as the corresponding floating point numbers. */
+    /** Parses a JSON string into a `JsonNumber` if possible, returns `None` if not.  '''Note:''' the JSON strings `"-inf"`, `"inf"`, and `"nan"` are interpreted as the corresponding floating point numbers. */
     def parse(str: String): Option[JsonNumber] = parseFully(str, parse(_))
     def parse(p: ParseState): Option[JsonNumber] =
       if (p.remaining >= 6  &&  p.get(6) == "\"-inf\"") {
@@ -300,7 +300,7 @@ package json {
 
   /** Concrete class for JSON strings.
     * 
-    * **Note:** the strings `"-inf"`, `"inf"`, and `"nan"` can be interpreted as numbers by [[org.dianahep.histogrammar.json.JsonNumber]]. If `JsonNumber` parsing is attempted _before_ `JsonString` in an `orElse` chain, these three values would become numbers; otherwise they would become strings. Standard parsing (provided by the [[org.dianahep.histogrammar.json.JsonPrimitive]] and [[org.dianahep.histogrammar.json.Json]] objects) attempts to interpret them as numbers first.
+    * '''Note:''' the strings `"-inf"`, `"inf"`, and `"nan"` can be interpreted as numbers by [[org.dianahep.histogrammar.json.JsonNumber]]. If `JsonNumber` parsing is attempted ''before'' `JsonString` in an `orElse` chain, these three values would become numbers; otherwise they would become strings. Standard parsing (provided by the [[org.dianahep.histogrammar.json.JsonPrimitive]] and [[org.dianahep.histogrammar.json.Json]] objects) attempts to interpret them as numbers first.
     */
   case class JsonString(value: String) extends JsonPrimitive {
     override def toString() = "JsonString(" + stringify + ")"

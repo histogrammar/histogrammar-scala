@@ -192,7 +192,7 @@ package histogrammar {
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.UntypedLabeling]] and immutable [[org.dianahep.histogrammar.UntypedLabeled]] objects.
     * 
-    * **Note:** the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
+    * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
   object UntypedLabel extends Factory {
     val name = "UntypedLabel"
@@ -251,7 +251,7 @@ package histogrammar {
     * @param entries weighted number of entries (sum of all observed weights)
     * @param pairs names (strings) associated with containers
     * 
-    * **Note:** the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
+    * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
   class UntypedLabeled(val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] {
     type Type = UntypedLabeled
@@ -301,7 +301,7 @@ package histogrammar {
     * 
     * @param pairs names (strings) associated with containers
     * 
-    * **Note:** the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
+    * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
   class UntypedLabeling[DATUM](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData {
     type Type = UntypedLabeled
@@ -516,7 +516,7 @@ package histogrammar {
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Branching]] and immutable [[org.dianahep.histogrammar.Branched]] objects.
     * 
-    * **Note:** there is nothing intrinsic about the limit of 10 items. The data themselves are stored in a linked list (in value space and type space) and index fields `i0` through `i9` are added implicitly to lists of type-length 2 through 10, respectively. Longer lists can be created by adding more implicit methods.
+    * '''Note:''' there is nothing intrinsic about the limit of 10 items. The data themselves are stored in a linked list (in value space and type space) and index fields `i0` through `i9` are added implicitly to lists of type-length 2 through 10, respectively. Longer lists can be created by adding more implicit methods.
     */
   object Branch extends Factory {
     def name = "Branch"

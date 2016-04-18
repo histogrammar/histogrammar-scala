@@ -42,7 +42,7 @@ package histogrammar {
     def name: String
     /** Help text that can be queried interactively: a one-liner that can be included in a menu. */
     def help: String
-    /** Help text that can be queried interactively: more detail than `help`. (**FIXME:** currently only contains the `apply` signature.) */
+    /** Help text that can be queried interactively: more detail than `help`. ('''FIXME:''' currently only contains the `apply` signature.) */
     def detailedHelp: String
     /** Reconstructs a container of known type from JSON. General users should call the `Factory` object's `fromJson`, which uses header data to identify the container type. (This is called by `fromJson`.) */
     def fromJsonFragment(json: Json): Container[_]
@@ -137,7 +137,7 @@ package histogrammar {
 
     /** Every `Container` accumulates a sum of weights of observed data.
       * 
-      * The [[org.dianahep.histogrammar.Counting]]/[[org.dianahep.histogrammar.Counted]] container _only_ accumulates a sum of weights.
+      * The [[org.dianahep.histogrammar.Counting]]/[[org.dianahep.histogrammar.Counted]] container ''only'' accumulates a sum of weights.
       * 
       * Its data type is `Double` because in principal, it can be any non-negative real number.
       */
@@ -223,14 +223,14 @@ package object histogrammar {
     * 
     * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
     * 
-    * **Note:** cannot be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `incrementUntypedLabel` otherwise.
+    * '''Note:''' cannot be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `incrementUntypedLabel` otherwise.
     */
   def increment[CONTAINER <: Container[CONTAINER] with Aggregation] = {(h: CONTAINER, x: h.Datum) => h.fill(x); h}
   /** Combine function for Apache Spark's `aggregate` method (all containers except [[org.dianahep.histogrammar.UntypedLabel]]).
     * 
     * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
     * 
-    * **Note:** cannot be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `combineUntypedLabel` otherwise.
+    * '''Note:''' cannot be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `combineUntypedLabel` otherwise.
     */
   def combine[CONTAINER <: Container[CONTAINER]] = {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
 
@@ -238,14 +238,14 @@ package object histogrammar {
     * 
     * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(incrementUntypedLabel[DATUM], combineUntypedLabel[DATUM])` where `datasetRDD` is a collection of type `DATUM`.
     * 
-    * **Note:** can only be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `increment` otherwise.
+    * '''Note:''' can only be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `increment` otherwise.
     */
   def incrementUntypedLabel[DATUM] = {(h: UntypedLabeling[DATUM], x: DATUM) => h.fill(x); h}
   /** Combine function for Apache Spark's `aggregate` method ([[org.dianahep.histogrammar.UntypedLabel]] only).
     * 
     * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(incrementUntypedLabel[DATUM], combineUntypedLabel[DATUM])` where `datasetRDD` is a collection of type `DATUM`.
     * 
-    * **Note:** can only be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `combine` otherwise.
+    * '''Note:''' can only be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `combine` otherwise.
     */
   def combineUntypedLabel[DATUM] = {(h1: UntypedLabeling[DATUM], h2: UntypedLabeling[DATUM]) => h1 + h2}
 
@@ -255,7 +255,7 @@ package object histogrammar {
     * 
     * If a boolean-valued function is supplied, it will automatically be converted into a function that returns 0.0 and 1.0.
     * 
-    * A value of 1.0 corresponds to normal weight, and a value of 0.0 _or less_ causes the datum to be skipped.
+    * A value of 1.0 corresponds to normal weight, and a value of 0.0 ''or less'' causes the datum to be skipped.
     * 
     * If `Selections` are specified for nested structures, they will be multiplied to provide the final weight. A value of 0.0 at any level skips descent of the subtree.
     */

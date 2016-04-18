@@ -156,11 +156,11 @@ package util {
 
     /** Clusters data in one dimension for adaptive histogramming and approximating quantiles (such as the median) in one pass over the data.
       * 
-      * Adapted from Yael Ben-Haim and Elad Tom-Tov, [[http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf "A streaming parallel decision tree algorithm"]] _J. Machine Learning Research 11 (2010)_.
+      * Adapted from Yael Ben-Haim and Elad Tom-Tov, [[http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf "A streaming parallel decision tree algorithm"]] ''J. Machine Learning Research 11 (2010)''.
       * 
       * In the original paper, when the cluster-set needs to merge clusters (bins), it does so in increasing distance between neighboring bins. This algorithm also considers the content of the bins: the least-filled bins are merged first.
       * 
-      * The `tailDetail` parameter scales between extremes: `tailDetail = 0` _only_ considers the content of the bins and `tailDetail = 1` _only_ considers the distance between bins (pure Ben-Haim/Tom-Tov). Specifically, the first bins to be merged are the ones that minimize
+      * The `tailDetail` parameter scales between extremes: `tailDetail = 0` ''only'' considers the content of the bins and `tailDetail = 1` ''only'' considers the distance between bins (pure Ben-Haim/Tom-Tov). Specifically, the first bins to be merged are the ones that minimize
       * 
       * `tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1 + v2)/entries`
       * 

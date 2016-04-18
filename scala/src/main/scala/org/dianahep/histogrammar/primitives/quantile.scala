@@ -49,7 +49,13 @@ package histogrammar {
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
       new Quantiling[DATUM](quantity, selection, mutable.Clustering1D[Counting](100, 1.0, Count(), mutable.Clustering1D.values[Counting](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))
 
+    /** Synonym for `apply`. */
+    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
+      apply(quantity, selection)
+
+    /** Use [[org.dianahep.histogrammar.Quantiled]] in Scala pattern-matching. */
     def unapply(x: Quantiled) = Some((x.entries, x.bins, x.min, x.max))
+    /** Use [[org.dianahep.histogrammar.Quantiling]] in Scala pattern-matching. */
     def unapply[DATUM](x: Quantiling[DATUM]) = Some((x.entries, x.bins, x.min, x.max))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -108,14 +114,36 @@ package histogrammar {
     if (clustering.entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** Weighted number of entries (sum of all observed weights). */
     def entries = clustering.entries
+    /** Centers and values of bins used to approximate and summarize the distribution. */
     def bins = clustering.values
+    /** Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity). */
     def min = clustering.min
+    /** Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity). */
     def max = clustering.max
+
+    /** Location of the top of the first quartile (25% of the data have smaller values). */
     def quartile1 = qf(0.25)
+    /** Location of median (50% of the data have smaller values; 50% of the data have larger values). */
     def median = qf(0.5)
+    /** Location of the top of the third quartile (25% of the data have larger values). */
     def quartile3 = qf(0.75)
+
+    /** Location of the top of the first quintile (20% of the data have smaller values). */
+    def quintile1 = qf(0.20)
+    /** Location of the top of the second quintile (40% of the data have smaller values). */
+    def quintile2 = qf(0.40)
+    /** Location of the top of the third quintile (60% of the data have smaller values). */
+    def quintile3 = qf(0.60)
+    /** Location of the top of the fourth quintile (80% of the data have smaller values). */
+    def quintile4 = qf(0.80)
+
+    /** Location of a given percentile (`qf` scaled by 100.0). */
     def percentile(x: Double) = qf(x / 100.0)
+    /** Location of the given percentiles (`qf` scaled by 100.0). */
+    def percentile(xs: Double*) = qf(xs.map(_ / 100.0): _*)
+
     private[histogrammar] def getClustering = clustering
 
     def zero = new Quantiled(mutable.Clustering1D[Counted](100, 1.0, null.asInstanceOf[Counted], mutable.Clustering1D.values[Counted](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))
@@ -152,17 +180,40 @@ package histogrammar {
     if (clustering.entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** Weighted number of entries (sum of all observed weights). */
     def entries = clustering.entries
+    /** Centers and values of bins used to approximate and summarize the distribution. */
     def bins = clustering.values
+    /** Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity). */
     def min = clustering.min
+    /** Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity). */
     def max = clustering.max
+
     def entries_=(x: Double) {clustering.entries = x}
     def min_=(x: Double) {clustering.min = x}
     def max_=(x: Double) {clustering.max = x}
+
+    /** Location of the top of the first quartile (25% of the data have smaller values). */
     def quartile1 = qf(0.25)
+    /** Location of median (50% of the data have smaller values; 50% of the data have larger values). */
     def median = qf(0.5)
+    /** Location of the top of the third quartile (25% of the data have larger values). */
     def quartile3 = qf(0.75)
+
+    /** Location of the top of the first quintile (20% of the data have smaller values). */
+    def quintile1 = qf(0.20)
+    /** Location of the top of the second quintile (40% of the data have smaller values). */
+    def quintile2 = qf(0.40)
+    /** Location of the top of the third quintile (60% of the data have smaller values). */
+    def quintile3 = qf(0.60)
+    /** Location of the top of the fourth quintile (80% of the data have smaller values). */
+    def quintile4 = qf(0.80)
+
+    /** Location of a given percentile (`qf` scaled by 100.0). */
     def percentile(x: Double) = qf(x / 100.0)
+    /** Location of the given percentiles (`qf` scaled by 100.0). */
+    def percentile(xs: Double*) = qf(xs.map(_ / 100.0): _*)
+
     private[histogrammar] def getClustering = clustering
 
     def zero = new Quantiling[DATUM](quantity, selection, mutable.Clustering1D[Counting](100, 1.0, Count(), mutable.Clustering1D.values[Counting](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))

@@ -40,7 +40,12 @@ package histogrammar {
       */
     def apply() = new Counting(0.0)
 
+    /** Synonym for `apply`. */
+    def ing = apply()
+
+    /** Use [[org.dianahep.histogrammar.Counted]] in Scala pattern-matching. */
     def unapply(x: Counted) = Some(x.entries)
+    /** Use [[org.dianahep.histogrammar.Counting]] in Scala pattern-matching. */
     def unapply(x: Counting) = Some(x.entries)
 
     def fromJsonFragment(json: Json): Container[_] = json match {

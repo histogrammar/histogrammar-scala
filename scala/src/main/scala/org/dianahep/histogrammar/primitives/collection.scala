@@ -93,13 +93,21 @@ package histogrammar {
     if (pairs.isEmpty)
       throw new ContainerException("at least one pair required")
 
+    /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
+    /** Number of `pairs`. */
     def size = pairs.size
+    /** Iterable over the keys of the `pairs`. */
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
+    /** Iterable over the values of the `pairs`. */
     def values: Iterable[Container[V]] = pairs.toIterable.map(_._2)
+    /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
+    /** Attempt to get key `x`, throwing an exception if it does not exist. */
     def apply(x: String) = pairsMap(x)
+    /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
+    /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
     def zero = new Labeled[V](0.0, pairs map {case (k, v) => (k, v.zero)}: _*)
@@ -142,13 +150,21 @@ package histogrammar {
     if (pairs.isEmpty)
       throw new ContainerException("at least one pair required")
 
+    /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
+    /** Number of `pairs`. */
     def size = pairs.size
+    /** Iterable over the keys of the `pairs`. */
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
+    /** Iterable over the values of the `pairs`. */
     def values: Iterable[V] = pairs.toIterable.map(_._2)
+    /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
+    /** Attempt to get key `x`, throwing an exception if it does not exist. */
     def apply(x: String) = pairsMap(x)
+    /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
+    /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
     def zero = new Labeling[V](0.0, pairs map {case (k, v) => (k, v.zero)}: _*)
@@ -260,13 +276,21 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
+    /** Number of `pairs`. */
     def size = pairs.size
+    /** Iterable over the keys of the `pairs`. */
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
+    /** Iterable over the values of the `pairs`. */
     def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
+    /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
+    /** Attempt to get key `x`, throwing an exception if it does not exist. */
     def apply(x: String) = pairsMap(x)
+    /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
+    /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
 
     def zero = new UntypedLabeled(0.0, pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_]])}: _*)
@@ -311,13 +335,21 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
+    /** Number of `pairs`. */
     def size = pairs.size
+    /** Iterable over the keys of the `pairs`. */
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
+    /** Iterable over the values of the `pairs`. */
     def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
+    /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
+    /** Attempt to get key `x`, throwing an exception if it does not exist. */
     def apply(x: String) = pairsMap(x)
+    /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
+    /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
 
     def zero = new UntypedLabeling[DATUM](0.0, pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_] with AggregationOnData {type Datum = DATUM}])}: _*)
@@ -425,13 +457,17 @@ package histogrammar {
     if (values.isEmpty)
       throw new ContainerException("at least one element required")
 
+    /** Number of `values`. */
     def size = values.size
+    /** Attempt to get index `i`, throwing an exception if it does not exist. */
     def apply(i: Int) = values(i)
+    /** Attempt to get index `i`, returning `None` if it does not exist. */
     def get(i: Int) =
       if (i < 0  ||  i >= size)
         None
       else
         Some(apply(i))
+    /** Attempt to get index `i`, returning an alternative if it does not exist. */
     def getOrElse(i: Int, default: => V) =
       if (i < 0  ||  i >= size)
         default
@@ -470,13 +506,17 @@ package histogrammar {
     if (values.isEmpty)
       throw new ContainerException("at least one element required")
 
+    /** Number of `values`. */
     def size = values.size
+    /** Attempt to get index `i`, throwing an exception if it does not exist. */
     def apply(i: Int) = values(i)
+    /** Attempt to get index `i`, returning `None` if it does not exist. */
     def get(i: Int) =
       if (i < 0  ||  i >= size)
         None
       else
         Some(apply(i))
+    /** Attempt to get index `i`, returning an alternative if it does not exist. */
     def getOrElse(i: Int, default: => V) =
       if (i < 0  ||  i >= size)
         default
@@ -611,8 +651,11 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** List the containers (dropping type information). */
     def values: List[Container[_]] = head :: tail.values
+    /** Return `true` iff empty. */
     def isEmpty: Boolean = false
+    /** Return the number of containers. */
     def size: Int = 1 + tail.size
 
     def zero = new Branched[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
@@ -661,8 +704,11 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** List the containers (dropping type information). */
     def values: List[Container[_]] = head :: tail.values
+    /** Return `true` iff empty. */
     def isEmpty: Boolean = false
+    /** Return the number of containers. */
     def size: Int = 1 + tail.size
 
     def zero = new Branching[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])

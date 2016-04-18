@@ -46,7 +46,13 @@ package histogrammar {
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       new Partitioning(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value)): _*)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
+      apply(value, expression, cuts: _*)
+
+    /** Use [[org.dianahep.histogrammar.Partitioned]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Partitioned[V]) = Some((x.entries, x.cuts))
+    /** Use [[org.dianahep.histogrammar.Partitioning]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Partitioning[DATUM, V]) = Some((x.entries, x.cuts))
 
     def fromJsonFragment(json: Json): Container[_] = json match {

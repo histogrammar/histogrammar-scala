@@ -42,7 +42,12 @@ package histogrammar {
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+
+    /** Use [[org.dianahep.histogrammar.Averaged]] in Scala pattern-matching. */
     def unapply(x: Averaged) = Some((x.entries, x.mean))
+    /** Use [[org.dianahep.histogrammar.Averaging]] in Scala pattern-matching. */
     def unapply[DATUM](x: Averaging[DATUM]) = Some((x.entries, x.mean))
 
     def fromJsonFragment(json: Json): Container[_] = json match {

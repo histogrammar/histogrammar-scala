@@ -47,7 +47,13 @@ package histogrammar {
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
       new Categorizing(quantity, selection, 0.0, value, mutable.HashMap[String, V]())
 
+    /** Synonym for `apply`. */
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
+      apply(quantity, selection, value)
+
+    /** Use [[org.dianahep.histogrammar.Categorized]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Categorized[V]) = Some((x.entries, x.pairsMap))
+    /** Use [[org.dianahep.histogrammar.Categorizing]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Categorizing[DATUM, V]) = Some((x.entries, x.pairsMap))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -91,13 +97,21 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
+    /** Number of `pairs`. */
     def size = pairs.size
+    /** Iterable over the keys of the `pairs`. */
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
+    /** Iterable over the values of the `pairs`. */
     def values: Iterable[Container[V]] = pairs.toIterable.map(_._2)
+    /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
+    /** Attempt to get key `x`, throwing an exception if it does not exist. */
     def apply(x: String) = pairsMap(x)
+    /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
+    /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
     def zero = new Categorized[V](0.0, contentType)

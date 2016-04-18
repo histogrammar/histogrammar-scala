@@ -65,28 +65,50 @@ package histogrammar {
        origin: Double = 0.0) =
       new SparselyBinning[DATUM, V, N](binWidth, quantity, selection, 0.0, value, mutable.HashMap[Long, V](), nanflow, origin)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+      (binWidth: Double,
+       quantity: NumericalFcn[DATUM],
+       selection: Selection[DATUM] = unweighted[DATUM],
+       value: => V = Count(),
+       nanflow: N = Count(),
+       origin: Double = 0.0) = apply(binWidth, quantity, selection, value, nanflow, origin)
+
+    /** Use [[org.dianahep.histogrammar.SparselyBinned]] in Scala pattern-matching. */
     def unapply[V <: Container[V], N <: Container[N]](x: SparselyBinned[V, N]) = Some((x.binWidth, x.entries, x.bins, x.nanflow, x.origin))
+    /** Use [[org.dianahep.histogrammar.SparselyBinning]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: SparselyBinning[DATUM, V, N]) = Some((x.binWidth, x.entries, x.bins, x.nanflow, x.origin))
 
     trait Methods {
       def binWidth: Double
       def origin: Double
 
+      /** The number of non-empty bins. */
       def numFilled: Int
+      /** The number of bins between the first non-empty one (inclusive) and the last non-empty one (exclusive). */
       def num: Long
+      /** The first non-empty bin. */
       def minBin: Long
+      /** The last non-empty bin. */
       def maxBin: Long
       def low: Double
       def high: Double
-      def range(index: Long): (Double, Double)
+      /** Get a sequence of filled indexes. */
       def indexes: Seq[Long]
+      /** Get the low and high edge of a bin (given by index number). */
+      def range(index: Long): (Double, Double)
 
+      /** Find the bin index associated with numerical value `x`.
+        * 
+        * @return `Long.MIN_VALUE` if `x` is `NaN`; the bin index otherwise.
+        */
       def bin(k: Double): Long =
         if (nan(k))
           java.lang.Long.MIN_VALUE
         else
           Math.floor((k - origin) / binWidth).toLong
 
+      /** Return `true` iff `x` is in the nanflow region (equal to `NaN`). */
       def nan(k: Double): Boolean = k.isNaN
     }
 
@@ -178,6 +200,7 @@ package histogrammar {
     def maxBin = if (bins.isEmpty) java.lang.Long.MIN_VALUE else bins.last._1
     def low = if (bins.isEmpty) java.lang.Double.NaN else minBin * binWidth + origin
     def high = if (bins.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
+    /** Extract the container at a given index, if it exists. */
     def at(index: Long) = bins.find(_._1 == index).map(_._2)
     def indexes = bins.map(_._1).toSeq
     def range(index: Long) = (index * binWidth + origin, (index + 1) * binWidth + origin)
@@ -273,6 +296,7 @@ package histogrammar {
     def maxBin = if (bins.isEmpty) java.lang.Long.MIN_VALUE else bins.map(_._1).max
     def low = if (bins.isEmpty) java.lang.Double.NaN else minBin * binWidth + origin
     def high = if (bins.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
+    /** Extract the container at a given index, if it exists. */
     def at(index: Long) = bins.get(index)
     def indexes = bins.map(_._1).toSeq
     def range(index: Long) = (index * binWidth + origin, (index + 1) * binWidth + origin)

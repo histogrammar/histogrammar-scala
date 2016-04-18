@@ -42,7 +42,12 @@ package histogrammar {
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, 0.0, java.lang.Double.NaN)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+
+    /** Use [[org.dianahep.histogrammar.Minimized]] in Scala pattern-matching. */
     def unapply(x: Minimized) = Some((x.entries, x.min))
+    /** Use [[org.dianahep.histogrammar.Minimizing]] in Scala pattern-matching. */
     def unapply[DATUM](x: Minimizing[DATUM]) = Some((x.entries, x.min))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -158,7 +163,12 @@ package histogrammar {
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, 0.0, java.lang.Double.NaN)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+
+    /** Use [[org.dianahep.histogrammar.Maximized]] in Scala pattern-matching. */
     def unapply(x: Maximized) = Some((x.entries, x.max))
+    /** Use [[org.dianahep.histogrammar.Maximizing]] in Scala pattern-matching. */
     def unapply[DATUM](x: Maximizing[DATUM]) = Some((x.entries, x.max))
 
     def fromJsonFragment(json: Json): Container[_] = json match {

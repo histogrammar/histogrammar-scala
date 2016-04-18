@@ -46,7 +46,13 @@ package histogrammar {
     def apply[DATUM](quantity: MultivariateFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], limit: Option[Double] = None) =
       new Bagging[DATUM](quantity, selection, limit, 0.0, Some(scala.collection.mutable.Map[Vector[Double], Double]()))
 
+    /** Synonym for `apply`. */
+    def ing[DATUM](quantity: MultivariateFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], limit: Option[Double] = None) =
+      apply(quantity, selection, limit)
+
+    /** Use [[org.dianahep.histogrammar.Bagged]] in Scala pattern-matching. */
     def unapply(x: Bagged) = Some((x.entries, x.limit, x.values))
+    /** Use [[org.dianahep.histogrammar.Bagging]] in Scala pattern-matching. */
     def unapply[DATUM](x: Bagging[DATUM])  = Some((x.entries, x.limit, x.values))
 
     def fromJsonFragment(json: Json): Container[_] = json match {

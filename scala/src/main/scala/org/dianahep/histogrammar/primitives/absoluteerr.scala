@@ -34,6 +34,7 @@ package histogrammar {
       * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
       */
     def ed(entries: Double, mae: Double) = new AbsoluteErred(entries, mae)
+
     /** Create an empty, mutable [[org.dianahep.histogrammar.AbsoluteErring]].
       * 
       * @param quantity numerical function to track
@@ -41,7 +42,12 @@ package histogrammar {
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+
+    /** Use [[org.dianahep.histogrammar.AbsoluteErred]] in Scala pattern-matching. */
     def unapply(x: AbsoluteErred) = Some((x.entries, x.mae))
+    /** Use [[org.dianahep.histogrammar.AbsoluteErring]] in Scala pattern-matching. */
     def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some((x.entries, x.mae))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -111,6 +117,7 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
     private var absoluteSum = entries * _mae
 
+    /** sum of absolute differences of the quantity from zero (Mean Absolute Error) */
     def mae =
       if (entries == 0.0)
         _mae

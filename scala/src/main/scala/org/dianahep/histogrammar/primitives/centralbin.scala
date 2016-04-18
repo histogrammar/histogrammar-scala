@@ -54,26 +54,41 @@ package histogrammar {
       (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
       new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value)): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
+      apply(bins, quantity, selection, value, nanflow)
+
+    /** Use [[org.dianahep.histogrammar.CentrallyBinned]] in Scala pattern-matching. */
     def unapply[V <: Container[V], N <: Container[N]](x: CentrallyBinned[V, N]) =
       Some((x.entries, x.bins, x.min, x.max, x.nanflow))
+    /** Use [[org.dianahep.histogrammar.CentrallyBinning]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: CentrallyBinning[DATUM, V, N]) =
       Some((x.entries, x.bins, x.min, x.max, x.nanflow))
 
     trait Methods[V <: Container[V]] extends CentralBinsDistribution[V] {
       def bins: MetricSortedMap[Double, V]
 
+      /** Set of centers of each bin. */
       def centersSet = bins.iterator.map(_._1).toSet
-      def centers = bins.iterator.map(_._1).toSeq
-      def values = bins.iterator.map(_._2).toSeq
+      /** Iterable over the centers of each bin. */
+      def centers = bins.iterator.map(_._1)
+      /** Iterable over the containers associated with each bin. */
+      def values = bins.iterator.map(_._2)
 
-      def center(k: Double): Double = bins.closest(k).get.key
-      def nan(k: Double): Boolean = k.isNaN
+      /** Return the exact center of the bin that `x` belongs to. */
+      def center(x: Double): Double = bins.closest(x).get.key
+      /** Return `true` iff `x` is in the nanflow region (equal to `NaN`). */
+      def nan(x: Double): Boolean = x.isNaN
 
+      /** Find the lower and upper neighbors of a bin (given by exact bin center). */
       def neighbors(center: Double): (Option[Double], Option[Double]) = {
         if (!bins.contains(center))
           throw new IllegalArgumentException(s"position $center is not the exact center of a bin")
         (bins.closest(Math.nextDown(center), Some((x: Double, v: V) => x < center)).map(_.key), bins.closest(Math.nextUp(center), Some((x: Double, v: V) => x > center)).map(_.key))
       }
+
+      /** Get the low and high edge of a bin (given by exact bin center). */
       def range(center: Double): (Double, Double) = neighbors(center) match {
         case (Some(below), Some(above)) => ((below + center)/2.0, (center + above)/2.0)
         case (None, Some(above)) => (java.lang.Double.NEGATIVE_INFINITY, (center + above)/2.0)

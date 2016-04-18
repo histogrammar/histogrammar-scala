@@ -58,8 +58,15 @@ package histogrammar {
       (quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
       new AdaptivelyBinning[DATUM, V, N](quantity, selection, value, mutable.Clustering1D[V](num, tailDetail, value, mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+      (quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
+      apply(quantity, selection, num, tailDetail, value, nanflow)
+
+    /** Use [[org.dianahep.histogrammar.AdaptivelyBinned]] in Scala pattern-matching. */
     def unapply[V <: Container[V], N <: Container[N]](x: AdaptivelyBinned[V, N]) =
       Some((x.entries, x.num, x.tailDetail, x.bins, x.min, x.max, x.nanflow))
+    /** Use [[org.dianahep.histogrammar.AdaptivelyBinning]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: AdaptivelyBinning[DATUM, V, N]) =
       Some((x.entries, x.num, x.tailDetail, x.bins, x.min, x.max, x.nanflow))
 

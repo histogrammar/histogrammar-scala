@@ -70,7 +70,21 @@ package histogrammar {
        nanflow: N = Count()) =
       new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(num)(value), underflow, overflow, nanflow)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+      (num: Int,
+       low: Double,
+       high: Double,
+       quantity: NumericalFcn[DATUM],
+       selection: Selection[DATUM] = unweighted[DATUM],
+       value: => V = Count(),
+       underflow: U = Count(),
+       overflow: O = Count(),
+       nanflow: N = Count()) = apply(num, low, high, quantity, selection, value, underflow, overflow, nanflow)
+
+    /** Use [[org.dianahep.histogrammar.Binned]] in Scala pattern-matching. */
     def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.entries, x.values, x.underflow, x.overflow, x.nanflow))
+    /** Use [[org.dianahep.histogrammar.Binning]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.entries, x.values, x.underflow, x.overflow, x.nanflow))
 
     trait Methods {
@@ -78,17 +92,26 @@ package histogrammar {
       def low: Double
       def high: Double
 
-      def bin(k: Double): Int =
-        if (under(k)  ||  over(k)  ||  nan(k))
+      /** Find the bin index associated with numerical value `x`.
+        * 
+        * @return -1 if `x` is out of range; the bin index otherwise.
+        */
+      def bin(x: Double): Int =
+        if (under(x)  ||  over(x)  ||  nan(x))
           -1
         else
-          Math.floor(num * (k - low) / (high - low)).toInt
+          Math.floor(num * (x - low) / (high - low)).toInt
 
-      def under(k: Double): Boolean = !k.isNaN  &&  k < low
-      def over(k: Double): Boolean = !k.isNaN  &&  k >= high
-      def nan(k: Double): Boolean = k.isNaN
+      /** Return `true` iff `x` is in the underflow region (less than `low`). */
+      def under(x: Double): Boolean = !x.isNaN  &&  x < low
+      /** Return `true` iff `x` is in the overflow region (greater than `high`). */
+      def over(x: Double): Boolean = !x.isNaN  &&  x >= high
+      /** Return `true` iff `x` is in the nanflow region (equal to `NaN`). */
+      def nan(x: Double): Boolean = x.isNaN
 
+      /** Get a sequence of valid indexes. */
       def indexes: Seq[Int] = 0 until num
+      /** Get the low and high edge of a bin (given by index number). */
       def range(index: Int): (Double, Double) = ((high - low) * index / num + low, (high - low) * (index + 1) / num + low)
     }
 

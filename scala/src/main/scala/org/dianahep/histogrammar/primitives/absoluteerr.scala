@@ -100,7 +100,7 @@ package histogrammar {
     * @param quantity numerical function to track
     * @param selection boolean or non-negative function that cuts or weights entries
     * @param entries weighted number of entries (sum of all weights)
-    * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
+    * @param _mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
     */
   class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]

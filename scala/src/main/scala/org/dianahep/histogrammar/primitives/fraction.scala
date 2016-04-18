@@ -19,12 +19,28 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
 
+  /** Fill two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Fractioning]] and immutable [[org.dianahep.histogrammar.Fractioned]] objects.
+    */
   object Fraction extends Factory {
     val name = "Fraction"
     val help = "Fill two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
     val detailedHelp = """Fraction(numeratorSelection: Selection[DATUM], value: => V = Count())"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Fractioned]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param numerator container for data that passed the given selection
+      * @param denominator container for all data, regardless of whether it passed the given selection
+      */
     def ed[V <: Container[V]](entries: Double, numerator: V, denominator: V) = new Fractioned(entries, numerator, denominator)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Fractioning]].
+      * 
+      * @param numeratorSelection boolean or non-negative function that cuts or weights entries
+      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+      */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](numeratorSelection: Selection[DATUM], value: => V = Count()) =
       new Fractioning(numeratorSelection, 0.0, value, value)
 
@@ -54,6 +70,12 @@ package histogrammar {
     }
   }
 
+  /** An accumulated pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param numerator container for data that passed the given selection
+    * @param denominator container for all data, regardless of whether it passed the given selection
+    */
   class Fractioned[V <: Container[V]](val entries: Double, val numerator: V, val denominator: V) extends Container[Fractioned[V]] {
     type Type = Fractioned[V]
     def factory = Fraction
@@ -77,6 +99,13 @@ package histogrammar {
     }
   }
 
+  /** Accumulating a pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).
+    * 
+    * @param numeratorSelection boolean or non-negative function that cuts or weights entries
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param numerator container for data that passed the given selection
+    * @param denominator container for all data, regardless of whether it passed the given selection
+    */
   class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val numeratorSelection: Selection[DATUM], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
     type Type = Fractioning[DATUM, V]
     type Datum = DATUM

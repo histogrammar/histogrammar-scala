@@ -19,12 +19,30 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Deviate/Deviated/Deviating
 
+  /** Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers).
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Deviating]] and immutable [[org.dianahep.histogrammar.Deviated]] objects.
+    * 
+    * The implementation of these containers use numerically stable variances as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
+    */
   object Deviate extends Factory {
     val name = "Deviate"
     val help = "Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers)."
     val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Deviated]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param mean weighted mean of the quantity
+      * @param variance weighted variance of the quantity
+      */
     def ed(entries: Double, mean: Double, variance: Double) = new Deviated(entries, mean, variance)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Deviating]].
+      * 
+      * @param quantity numerical function to track
+      * @param selection boolean or non-negative function that cuts or weights entries
+      */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
 
     def unapply(x: Deviated) = Some((x.entries, x.mean, x.variance))
@@ -61,6 +79,14 @@ package histogrammar {
     }
   }
 
+  /** An accumulated weighted variance (and mean) of a given quantity.
+    * 
+    * @param entries weighted number of entries (sum of all weights)
+    * @param mean weighted mean of the quantity
+    * @param variance weighted variance of the quantity
+    * 
+    * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
+    */
   class Deviated(val entries: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
     type Type = Deviated
     def factory = Deviate
@@ -85,6 +111,16 @@ package histogrammar {
     override def hashCode() = (entries, mean, variance).hashCode
   }
 
+  /** Accumulating a weighted variance (and mean) of a given quantity.
+    * 
+    * @param quantity numerical function to track
+    * @param selection boolean or non-negative function that cuts or weights entries
+    * @param entries weighted number of entries (sum of all weights)
+    * @param mean weighted mean of the quantity
+    * @param _variance weighted variance of the quantity
+    * 
+    * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
+    */
   class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
     type Type = Deviating[DATUM]
     type Datum = DATUM

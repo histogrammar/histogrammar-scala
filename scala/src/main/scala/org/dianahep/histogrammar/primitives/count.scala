@@ -19,12 +19,25 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Count/Counted/Counting
 
+  /** Count data, ignoring their content. (Actually a sum of weights.)
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Counting]] and immutable [[org.dianahep.histogrammar.Counted]] objects.
+    */
   object Count extends Factory {
     val name = "Count"
-    val help = "Count data, ignoring their content."
+    val help = "Count data, ignoring their content. (Actually a sum of weights.)"
     val detailedHelp = """Count()"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Counted]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      */
     def ed(entries: Double) = new Counted(entries)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Counting]].
+      * 
+      * @param quantity numerical function to track
+      */
     def apply() = new Counting(0.0)
 
     def unapply(x: Counted) = Some(x.entries)
@@ -36,6 +49,10 @@ package histogrammar {
     }
   }
 
+  /** An accumulated count (sum of weights) of data, ignoring its content.
+    * 
+    * @param entries weighted number of entries (sum of all weights)
+    */
   class Counted(val entries: Double) extends Container[Counted] {
     type Type = Counted
     def factory = Count
@@ -56,6 +73,12 @@ package histogrammar {
     override def hashCode() = entries.hashCode
   }
 
+  /** Accumulating a count (sum of weights) of data, ignoring its content.
+    * 
+    * This is the only container with [[org.dianahep.histogrammar.Aggregation]] that doesn't have a configurable data type: its `Datum` is `Any`. It is primarily for the sake of this container that `Aggregation` is contravariant.
+    * 
+    * @param entries weighted number of entries (sum of all weights)
+    */
   class Counting(var entries: Double) extends Container[Counting] with Aggregation {
     type Type = Counting
     type Datum = Any

@@ -32,16 +32,16 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Deviated]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param mean weighted mean of the quantity
-      * @param variance weighted variance of the quantity
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param mean Weighted mean of the quantity.
+      * @param variance Weighted variance of the quantity.
       */
     def ed(entries: Double, mean: Double, variance: Double) = new Deviated(entries, mean, variance)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Deviating]].
       * 
-      * @param quantity numerical function to track
-      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param quantity Numerical function to track.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
 
@@ -86,9 +86,9 @@ package histogrammar {
 
   /** An accumulated weighted variance (and mean) of a given quantity.
     * 
-    * @param entries weighted number of entries (sum of all weights)
-    * @param mean weighted mean of the quantity
-    * @param variance weighted variance of the quantity
+    * @param entries Weighted number of entries (sum of all weights).
+    * @param mean Weighted mean of the quantity.
+    * @param variance Weighted variance of the quantity.
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
@@ -118,11 +118,11 @@ package histogrammar {
 
   /** Accumulating a weighted variance (and mean) of a given quantity.
     * 
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param entries weighted number of entries (sum of all weights)
-    * @param mean weighted mean of the quantity
-    * @param _variance weighted variance of the quantity
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all weights).
+    * @param mean Weighted mean of the quantity.
+    * @param _variance Weighted variance of the quantity.
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */

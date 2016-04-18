@@ -32,17 +32,17 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Categorized]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
-      * @param pairs string category and the associated container of values associated with it
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
+      * @param pairs String category and the associated container of values associated with it.
       */
     def ed[V <: Container[V]](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, contentType, pairs: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
       * 
-      * @param quantity numerical function to split into bins
-      * @param selection boolean or non-negative function that cuts or weights entries
-      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+      * @param quantity Numerical function to split into bins.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
+      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
       new Categorizing(quantity, selection, 0.0, value, mutable.HashMap[String, V]())
@@ -86,9 +86,9 @@ package histogrammar {
 
   /** An accumulated quantity that was split by its categorical (string-based) values, filling only one category per datum.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
-    * @param pairs string category and the associated container of values associated with it
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
+    * @param pairs String category and the associated container of values associated with it.
     */
   class Categorized[V <: Container[V]](val entries: Double, contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
     type Type = Categorized[V]
@@ -142,11 +142,11 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it by its categorical (string-based) value and filling only one category per datum.
     * 
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
-    * @param pairs map of string category and the associated container of values associated with it
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+    * @param pairs Map of string category and the associated container of values associated with it.
     */
   class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
@@ -156,13 +156,21 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** Input `pairs` as a key-value map. */
     def pairsMap = pairs.toMap
+    /** Number of `pairs`. */
     def size = pairs.size
+    /** Iterable over the keys of the `pairs`. */
     def keys: Iterable[String] = pairs.toIterable.map(_._1)
+    /** Iterable over the values of the `pairs`. */
     def values: Iterable[V] = pairs.toIterable.map(_._2)
+    /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
+    /** Attempt to get key `x`, throwing an exception if it does not exist. */
     def apply(x: String) = pairsMap(x)
+    /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
+    /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
     def zero = new Categorizing[DATUM, V](quantity, selection, 0.0, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))

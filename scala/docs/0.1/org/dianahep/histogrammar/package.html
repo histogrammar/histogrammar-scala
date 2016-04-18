@@ -1,0 +1,1700 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>histogrammar - histogrammar 0.1 API - org.dianahep.histogrammar</title>
+          <meta name="description" content="histogrammar - histogrammar 0.1 API - org.dianahep.histogrammar" />
+          <meta name="keywords" content="histogrammar histogrammar 0.1 API org.dianahep.histogrammar" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'org.dianahep.histogrammar.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="org">org</a>.<a href="../package.html" class="extype" name="org.dianahep">dianahep</a></p>
+        <h1>histogrammar</h1>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">histogrammar</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Main library for Histogrammar.</p><p>Defines all types for the general user, including implicits to construct Histogrammar-specific types from Scala basic types.</p><p>A general user is expected to <code>import org.dianahep.histogrammar._</code> to bring all of these implicits into scope.
+</p></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="org.dianahep.histogrammar"><span>histogrammar</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="org.dianahep.histogrammar.AbsoluteErred" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AbsoluteErredextendsContainer[org.dianahep.histogrammar.AbsoluteErred]"></a>
+      <a id="AbsoluteErred:AbsoluteErred"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="AbsoluteErred.html"><span class="name">AbsoluteErred</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="AbsoluteErred.html" class="extype" name="org.dianahep.histogrammar.AbsoluteErred">AbsoluteErred</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.</p>
+    </li><li name="org.dianahep.histogrammar.AbsoluteErring" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AbsoluteErring[DATUM]extendsContainer[org.dianahep.histogrammar.AbsoluteErring[DATUM]]withAggregationOnData"></a>
+      <a id="AbsoluteErring[DATUM]:AbsoluteErring[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="AbsoluteErring.html"><span class="name">AbsoluteErring</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="AbsoluteErring.html" class="extype" name="org.dianahep.histogrammar.AbsoluteErring">AbsoluteErring</a>[<span class="extype" name="org.dianahep.histogrammar.AbsoluteErring.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.</p>
+    </li><li name="org.dianahep.histogrammar.AdaptivelyBinned" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AdaptivelyBinned[V&lt;:org.dianahep.histogrammar.Container[V],N&lt;:org.dianahep.histogrammar.Container[N]]extendsContainer[org.dianahep.histogrammar.AdaptivelyBinned[V,N]]withCentrallyBin.Methods[V]"></a>
+      <a id="AdaptivelyBinned[V&lt;:Container[V],N&lt;:Container[N]]:AdaptivelyBinned[V,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="AdaptivelyBinned.html"><span class="name">AdaptivelyBinned</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinned.V">V</span>]</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinned.N">N</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="AdaptivelyBinned.html" class="extype" name="org.dianahep.histogrammar.AdaptivelyBinned">AdaptivelyBinned</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinned.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinned.N">N</span>]] with <a href="CentrallyBin$$Methods.html" class="extype" name="org.dianahep.histogrammar.CentrallyBin.Methods">Methods</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinned.V">V</span>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated quantity that was split dynamically into bins with a clustering algorithm, with only one datum filled per bin and no overflows or underflows.</p>
+    </li><li name="org.dianahep.histogrammar.AdaptivelyBinning" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AdaptivelyBinning[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM},N&lt;:org.dianahep.histogrammar.Container[N]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.AdaptivelyBinning[DATUM,V,N]]withAggregationOnDatawithCentrallyBin.Methods[V]"></a>
+      <a id="AdaptivelyBinning[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM},N&lt;:Container[N]withAggregation{typeDatum&gt;:DATUM}]:AdaptivelyBinning[DATUM,V,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="AdaptivelyBinning.html"><span class="name">AdaptivelyBinning</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinning.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinning.N">N</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="AdaptivelyBinning.html" class="extype" name="org.dianahep.histogrammar.AdaptivelyBinning">AdaptivelyBinning</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinning.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinning.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinning.N">N</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a> with <a href="CentrallyBin$$Methods.html" class="extype" name="org.dianahep.histogrammar.CentrallyBin.Methods">Methods</a>[<span class="extype" name="org.dianahep.histogrammar.AdaptivelyBinning.V">V</span>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a quantity by splitting it dynamically into bins with a clustering algorithm, filling only one datum per bin with no overflows or underflows.</p>
+    </li><li name="org.dianahep.histogrammar.Aggregation" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="AggregationextendsAnyRef"></a>
+      <a id="Aggregation:Aggregation"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Aggregation.html"><span class="name">Aggregation</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Mix-in to add mutability to a <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">org.dianahep.histogrammar.Container</a>.</p>
+    </li><li name="org.dianahep.histogrammar.AggregationOnData" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="AggregationOnDataextendsAggregation"></a>
+      <a id="AggregationOnData:AggregationOnData"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="AggregationOnData.html"><span class="name">AggregationOnData</span></a><span class="result"> extends <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Sub-trait of <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">org.dianahep.histogrammar.Aggregation</a> for all containers except <a href="Counting.html" class="extype" name="org.dianahep.histogrammar.Counting">org.dianahep.histogrammar.Counting</a>.</p>
+    </li><li name="org.dianahep.histogrammar.Averaged" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AveragedextendsContainer[org.dianahep.histogrammar.Averaged]"></a>
+      <a id="Averaged:Averaged"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Averaged.html"><span class="name">Averaged</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Averaged.html" class="extype" name="org.dianahep.histogrammar.Averaged">Averaged</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated weighted mean of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Averaging" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Averaging[DATUM]extendsContainer[org.dianahep.histogrammar.Averaging[DATUM]]withAggregationOnData"></a>
+      <a id="Averaging[DATUM]:Averaging[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Averaging.html"><span class="name">Averaging</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Averaging.html" class="extype" name="org.dianahep.histogrammar.Averaging">Averaging</a>[<span class="extype" name="org.dianahep.histogrammar.Averaging.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a weighted mean of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Bagged" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BaggedextendsContainer[org.dianahep.histogrammar.Bagged]"></a>
+      <a id="Bagged:Bagged"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Bagged.html"><span class="name">Bagged</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Bagged.html" class="extype" name="org.dianahep.histogrammar.Bagged">Bagged</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated set of raw data or just the number of entries if it exceeded its limit.</p>
+    </li><li name="org.dianahep.histogrammar.Bagging" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Bagging[DATUM]extendsContainer[org.dianahep.histogrammar.Bagging[DATUM]]withAggregationOnData"></a>
+      <a id="Bagging[DATUM]:Bagging[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Bagging.html"><span class="name">Bagging</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Bagging.html" class="extype" name="org.dianahep.histogrammar.Bagging">Bagging</a>[<span class="extype" name="org.dianahep.histogrammar.Bagging.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a quantity as raw data up to an optional limit, at which point only the total number are preserved.</p>
+    </li><li name="org.dianahep.histogrammar.Binned" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Binned[V&lt;:org.dianahep.histogrammar.Container[V],U&lt;:org.dianahep.histogrammar.Container[U],O&lt;:org.dianahep.histogrammar.Container[O],N&lt;:org.dianahep.histogrammar.Container[N]]extendsContainer[org.dianahep.histogrammar.Binned[V,U,O,N]]withBin.Methods"></a>
+      <a id="Binned[V&lt;:Container[V],U&lt;:Container[U],O&lt;:Container[O],N&lt;:Container[N]]:Binned[V,U,O,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Binned.html"><span class="name">Binned</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binned.V">V</span>]</span>, <span name="U">U &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binned.U">U</span>]</span>, <span name="O">O &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binned.O">O</span>]</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binned.N">N</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Binned.html" class="extype" name="org.dianahep.histogrammar.Binned">Binned</a>[<span class="extype" name="org.dianahep.histogrammar.Binned.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.Binned.U">U</span>, <span class="extype" name="org.dianahep.histogrammar.Binned.O">O</span>, <span class="extype" name="org.dianahep.histogrammar.Binned.N">N</span>]] with <a href="Bin$$Methods.html" class="extype" name="org.dianahep.histogrammar.Bin.Methods">Methods</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated quantity that was split into equally spaced bins between specified limits and filling only one bin per datum.</p>
+    </li><li name="org.dianahep.histogrammar.Binning" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Binning[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM},U&lt;:org.dianahep.histogrammar.Container[U]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM},O&lt;:org.dianahep.histogrammar.Container[O]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM},N&lt;:org.dianahep.histogrammar.Container[N]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.Binning[DATUM,V,U,O,N]]withAggregationOnDatawithBin.Methods"></a>
+      <a id="Binning[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM},U&lt;:Container[U]withAggregation{typeDatum&gt;:DATUM},O&lt;:Container[O]withAggregation{typeDatum&gt;:DATUM},N&lt;:Container[N]withAggregation{typeDatum&gt;:DATUM}]:Binning[DATUM,V,U,O,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Binning.html"><span class="name">Binning</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binning.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>, <span name="U">U &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binning.U">U</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>, <span name="O">O &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binning.O">O</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Binning.N">N</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Binning.html" class="extype" name="org.dianahep.histogrammar.Binning">Binning</a>[<span class="extype" name="org.dianahep.histogrammar.Binning.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.Binning.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.Binning.U">U</span>, <span class="extype" name="org.dianahep.histogrammar.Binning.O">O</span>, <span class="extype" name="org.dianahep.histogrammar.Binning.N">N</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a> with <a href="Bin$$Methods.html" class="extype" name="org.dianahep.histogrammar.Bin.Methods">Methods</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a quantity by splitting it into equally spaced bins between specified limits and filling only one bin per datum.</p>
+    </li><li name="org.dianahep.histogrammar.Branched" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched[HEAD&lt;:org.dianahep.histogrammar.Container[HEAD],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsContainer[org.dianahep.histogrammar.Branched[HEAD,TAIL]]withBranchedList"></a>
+      <a id="Branched[HEAD&lt;:Container[HEAD],TAIL&lt;:BranchedList]:Branched[HEAD,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Branched.html"><span class="name">Branched</span></a><span class="tparams">[<span name="HEAD">HEAD &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched.HEAD">HEAD</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Branched.html" class="extype" name="org.dianahep.histogrammar.Branched">Branched</a>[<span class="extype" name="org.dianahep.histogrammar.Branched.HEAD">HEAD</span>, <span class="extype" name="org.dianahep.histogrammar.Branched.TAIL">TAIL</span>]] with <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated collection of containers of the ANY type, indexed by number.</p>
+    </li><li name="org.dianahep.histogrammar.Branched0" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched0[C0&lt;:org.dianahep.histogrammar.Container[C0],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched0[C0&lt;:Container[C0],TAIL&lt;:BranchedList]:Branched0[C0,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched0.html"><span class="name">Branched0</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched0.C0">C0</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched1" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched1[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched1[C0&lt;:Container[C0],C1&lt;:Container[C1],TAIL&lt;:BranchedList]:Branched1[C0,C1,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched1.html"><span class="name">Branched1</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched1.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched1.C1">C1</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched2" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched2[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched2[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],TAIL&lt;:BranchedList]:Branched2[C0,C1,C2,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched2.html"><span class="name">Branched2</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched2.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched2.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched2.C2">C2</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched3" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched3[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],C3&lt;:org.dianahep.histogrammar.Container[C3],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched3[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],C3&lt;:Container[C3],TAIL&lt;:BranchedList]:Branched3[C0,C1,C2,C3,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched3.html"><span class="name">Branched3</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched3.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched3.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched3.C2">C2</span>]</span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched3.C3">C3</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched4" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched4[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],C3&lt;:org.dianahep.histogrammar.Container[C3],C4&lt;:org.dianahep.histogrammar.Container[C4],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched4[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],C3&lt;:Container[C3],C4&lt;:Container[C4],TAIL&lt;:BranchedList]:Branched4[C0,C1,C2,C3,C4,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched4.html"><span class="name">Branched4</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched4.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched4.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched4.C2">C2</span>]</span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched4.C3">C3</span>]</span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched4.C4">C4</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched5" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched5[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],C3&lt;:org.dianahep.histogrammar.Container[C3],C4&lt;:org.dianahep.histogrammar.Container[C4],C5&lt;:org.dianahep.histogrammar.Container[C5],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched5[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],C3&lt;:Container[C3],C4&lt;:Container[C4],C5&lt;:Container[C5],TAIL&lt;:BranchedList]:Branched5[C0,C1,C2,C3,C4,C5,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched5.html"><span class="name">Branched5</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched5.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched5.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched5.C2">C2</span>]</span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched5.C3">C3</span>]</span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched5.C4">C4</span>]</span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched5.C5">C5</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched6" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched6[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],C3&lt;:org.dianahep.histogrammar.Container[C3],C4&lt;:org.dianahep.histogrammar.Container[C4],C5&lt;:org.dianahep.histogrammar.Container[C5],C6&lt;:org.dianahep.histogrammar.Container[C6],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched6[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],C3&lt;:Container[C3],C4&lt;:Container[C4],C5&lt;:Container[C5],C6&lt;:Container[C6],TAIL&lt;:BranchedList]:Branched6[C0,C1,C2,C3,C4,C5,C6,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched6.html"><span class="name">Branched6</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched6.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched6.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched6.C2">C2</span>]</span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched6.C3">C3</span>]</span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched6.C4">C4</span>]</span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched6.C5">C5</span>]</span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched6.C6">C6</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched7" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched7[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],C3&lt;:org.dianahep.histogrammar.Container[C3],C4&lt;:org.dianahep.histogrammar.Container[C4],C5&lt;:org.dianahep.histogrammar.Container[C5],C6&lt;:org.dianahep.histogrammar.Container[C6],C7&lt;:org.dianahep.histogrammar.Container[C7],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched7[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],C3&lt;:Container[C3],C4&lt;:Container[C4],C5&lt;:Container[C5],C6&lt;:Container[C6],C7&lt;:Container[C7],TAIL&lt;:BranchedList]:Branched7[C0,C1,C2,C3,C4,C5,C6,C7,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched7.html"><span class="name">Branched7</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C2">C2</span>]</span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C3">C3</span>]</span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C4">C4</span>]</span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C5">C5</span>]</span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C6">C6</span>]</span>, <span name="C7">C7 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched7.C7">C7</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched8" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched8[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],C3&lt;:org.dianahep.histogrammar.Container[C3],C4&lt;:org.dianahep.histogrammar.Container[C4],C5&lt;:org.dianahep.histogrammar.Container[C5],C6&lt;:org.dianahep.histogrammar.Container[C6],C7&lt;:org.dianahep.histogrammar.Container[C7],C8&lt;:org.dianahep.histogrammar.Container[C8],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched8[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],C3&lt;:Container[C3],C4&lt;:Container[C4],C5&lt;:Container[C5],C6&lt;:Container[C6],C7&lt;:Container[C7],C8&lt;:Container[C8],TAIL&lt;:BranchedList]:Branched8[C0,C1,C2,C3,C4,C5,C6,C7,C8,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched8.html"><span class="name">Branched8</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C2">C2</span>]</span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C3">C3</span>]</span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C4">C4</span>]</span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C5">C5</span>]</span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C6">C6</span>]</span>, <span name="C7">C7 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C7">C7</span>]</span>, <span name="C8">C8 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched8.C8">C8</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branched9" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branched9[C0&lt;:org.dianahep.histogrammar.Container[C0],C1&lt;:org.dianahep.histogrammar.Container[C1],C2&lt;:org.dianahep.histogrammar.Container[C2],C3&lt;:org.dianahep.histogrammar.Container[C3],C4&lt;:org.dianahep.histogrammar.Container[C4],C5&lt;:org.dianahep.histogrammar.Container[C5],C6&lt;:org.dianahep.histogrammar.Container[C6],C7&lt;:org.dianahep.histogrammar.Container[C7],C8&lt;:org.dianahep.histogrammar.Container[C8],C9&lt;:org.dianahep.histogrammar.Container[C9],TAIL&lt;:org.dianahep.histogrammar.BranchedList]extendsAnyRef"></a>
+      <a id="Branched9[C0&lt;:Container[C0],C1&lt;:Container[C1],C2&lt;:Container[C2],C3&lt;:Container[C3],C4&lt;:Container[C4],C5&lt;:Container[C5],C6&lt;:Container[C6],C7&lt;:Container[C7],C8&lt;:Container[C8],C9&lt;:Container[C9],TAIL&lt;:BranchedList]:Branched9[C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branched9.html"><span class="name">Branched9</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C0">C0</span>]</span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C1">C1</span>]</span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C2">C2</span>]</span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C3">C3</span>]</span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C4">C4</span>]</span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C5">C5</span>]</span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C6">C6</span>]</span>, <span name="C7">C7 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C7">C7</span>]</span>, <span name="C8">C8 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C8">C8</span>]</span>, <span name="C9">C9 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branched9.C9">C9</span>]</span>, <span name="TAIL">TAIL &lt;: <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.BranchedList" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="BranchedListextendsAnyRef"></a>
+      <a id="BranchedList:BranchedList"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="BranchedList.html"><span class="name">BranchedList</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.Branching" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching[HEAD&lt;:org.dianahep.histogrammar.Container[HEAD]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsContainer[org.dianahep.histogrammar.Branching[HEAD,TAIL]]withAggregationOnDatawithBranchingList"></a>
+      <a id="Branching[HEAD&lt;:Container[HEAD]withAggregation,TAIL&lt;:BranchingList]:Branching[HEAD,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Branching.html"><span class="name">Branching</span></a><span class="tparams">[<span name="HEAD">HEAD &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching.HEAD">HEAD</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Branching.html" class="extype" name="org.dianahep.histogrammar.Branching">Branching</a>[<span class="extype" name="org.dianahep.histogrammar.Branching.HEAD">HEAD</span>, <span class="extype" name="org.dianahep.histogrammar.Branching.TAIL">TAIL</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a> with <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a collection of containers of the ANY type, indexed by number.</p>
+    </li><li name="org.dianahep.histogrammar.Branching0" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching0[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching0[C0&lt;:Container[C0]withAggregation,TAIL&lt;:BranchingList]:Branching0[C0,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching0.html"><span class="name">Branching0</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching0.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching1" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching1[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching1[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,TAIL&lt;:BranchingList]:Branching1[C0,C1,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching1.html"><span class="name">Branching1</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching1.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching1.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching2" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching2[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching2[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,TAIL&lt;:BranchingList]:Branching2[C0,C1,C2,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching2.html"><span class="name">Branching2</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching2.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching2.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching2.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching3" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching3[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,C3&lt;:org.dianahep.histogrammar.Container[C3]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching3[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,C3&lt;:Container[C3]withAggregation,TAIL&lt;:BranchingList]:Branching3[C0,C1,C2,C3,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching3.html"><span class="name">Branching3</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching3.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching3.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching3.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching3.C3">C3</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching4" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching4[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,C3&lt;:org.dianahep.histogrammar.Container[C3]withorg.dianahep.histogrammar.Aggregation,C4&lt;:org.dianahep.histogrammar.Container[C4]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching4[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,C3&lt;:Container[C3]withAggregation,C4&lt;:Container[C4]withAggregation,TAIL&lt;:BranchingList]:Branching4[C0,C1,C2,C3,C4,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching4.html"><span class="name">Branching4</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching4.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching4.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching4.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching4.C3">C3</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching4.C4">C4</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching5" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching5[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,C3&lt;:org.dianahep.histogrammar.Container[C3]withorg.dianahep.histogrammar.Aggregation,C4&lt;:org.dianahep.histogrammar.Container[C4]withorg.dianahep.histogrammar.Aggregation,C5&lt;:org.dianahep.histogrammar.Container[C5]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching5[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,C3&lt;:Container[C3]withAggregation,C4&lt;:Container[C4]withAggregation,C5&lt;:Container[C5]withAggregation,TAIL&lt;:BranchingList]:Branching5[C0,C1,C2,C3,C4,C5,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching5.html"><span class="name">Branching5</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching5.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching5.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching5.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching5.C3">C3</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching5.C4">C4</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching5.C5">C5</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching6" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching6[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,C3&lt;:org.dianahep.histogrammar.Container[C3]withorg.dianahep.histogrammar.Aggregation,C4&lt;:org.dianahep.histogrammar.Container[C4]withorg.dianahep.histogrammar.Aggregation,C5&lt;:org.dianahep.histogrammar.Container[C5]withorg.dianahep.histogrammar.Aggregation,C6&lt;:org.dianahep.histogrammar.Container[C6]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching6[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,C3&lt;:Container[C3]withAggregation,C4&lt;:Container[C4]withAggregation,C5&lt;:Container[C5]withAggregation,C6&lt;:Container[C6]withAggregation,TAIL&lt;:BranchingList]:Branching6[C0,C1,C2,C3,C4,C5,C6,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching6.html"><span class="name">Branching6</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching6.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching6.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching6.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching6.C3">C3</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching6.C4">C4</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching6.C5">C5</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching6.C6">C6</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching7" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching7[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,C3&lt;:org.dianahep.histogrammar.Container[C3]withorg.dianahep.histogrammar.Aggregation,C4&lt;:org.dianahep.histogrammar.Container[C4]withorg.dianahep.histogrammar.Aggregation,C5&lt;:org.dianahep.histogrammar.Container[C5]withorg.dianahep.histogrammar.Aggregation,C6&lt;:org.dianahep.histogrammar.Container[C6]withorg.dianahep.histogrammar.Aggregation,C7&lt;:org.dianahep.histogrammar.Container[C7]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching7[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,C3&lt;:Container[C3]withAggregation,C4&lt;:Container[C4]withAggregation,C5&lt;:Container[C5]withAggregation,C6&lt;:Container[C6]withAggregation,C7&lt;:Container[C7]withAggregation,TAIL&lt;:BranchingList]:Branching7[C0,C1,C2,C3,C4,C5,C6,C7,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching7.html"><span class="name">Branching7</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C3">C3</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C4">C4</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C5">C5</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C6">C6</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C7">C7 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching7.C7">C7</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching8" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching8[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,C3&lt;:org.dianahep.histogrammar.Container[C3]withorg.dianahep.histogrammar.Aggregation,C4&lt;:org.dianahep.histogrammar.Container[C4]withorg.dianahep.histogrammar.Aggregation,C5&lt;:org.dianahep.histogrammar.Container[C5]withorg.dianahep.histogrammar.Aggregation,C6&lt;:org.dianahep.histogrammar.Container[C6]withorg.dianahep.histogrammar.Aggregation,C7&lt;:org.dianahep.histogrammar.Container[C7]withorg.dianahep.histogrammar.Aggregation,C8&lt;:org.dianahep.histogrammar.Container[C8]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching8[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,C3&lt;:Container[C3]withAggregation,C4&lt;:Container[C4]withAggregation,C5&lt;:Container[C5]withAggregation,C6&lt;:Container[C6]withAggregation,C7&lt;:Container[C7]withAggregation,C8&lt;:Container[C8]withAggregation,TAIL&lt;:BranchingList]:Branching8[C0,C1,C2,C3,C4,C5,C6,C7,C8,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching8.html"><span class="name">Branching8</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C3">C3</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C4">C4</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C5">C5</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C6">C6</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C7">C7 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C7">C7</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C8">C8 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching8.C8">C8</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.Branching9" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branching9[C0&lt;:org.dianahep.histogrammar.Container[C0]withorg.dianahep.histogrammar.Aggregation,C1&lt;:org.dianahep.histogrammar.Container[C1]withorg.dianahep.histogrammar.Aggregation,C2&lt;:org.dianahep.histogrammar.Container[C2]withorg.dianahep.histogrammar.Aggregation,C3&lt;:org.dianahep.histogrammar.Container[C3]withorg.dianahep.histogrammar.Aggregation,C4&lt;:org.dianahep.histogrammar.Container[C4]withorg.dianahep.histogrammar.Aggregation,C5&lt;:org.dianahep.histogrammar.Container[C5]withorg.dianahep.histogrammar.Aggregation,C6&lt;:org.dianahep.histogrammar.Container[C6]withorg.dianahep.histogrammar.Aggregation,C7&lt;:org.dianahep.histogrammar.Container[C7]withorg.dianahep.histogrammar.Aggregation,C8&lt;:org.dianahep.histogrammar.Container[C8]withorg.dianahep.histogrammar.Aggregation,C9&lt;:org.dianahep.histogrammar.Container[C9]withorg.dianahep.histogrammar.Aggregation,TAIL&lt;:org.dianahep.histogrammar.BranchingList]extendsAnyRef"></a>
+      <a id="Branching9[C0&lt;:Container[C0]withAggregation,C1&lt;:Container[C1]withAggregation,C2&lt;:Container[C2]withAggregation,C3&lt;:Container[C3]withAggregation,C4&lt;:Container[C4]withAggregation,C5&lt;:Container[C5]withAggregation,C6&lt;:Container[C6]withAggregation,C7&lt;:Container[C7]withAggregation,C8&lt;:Container[C8]withAggregation,C9&lt;:Container[C9]withAggregation,TAIL&lt;:BranchingList]:Branching9[C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,TAIL]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Branching9.html"><span class="name">Branching9</span></a><span class="tparams">[<span name="C0">C0 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C0">C0</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C1">C1 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C1">C1</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C2">C2 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C2">C2</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C3">C3 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C3">C3</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C4">C4 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C4">C4</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C5">C5 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C5">C5</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C6">C6 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C6">C6</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C7">C7 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C7">C7</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C8">C8 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C8">C8</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="C9">C9 &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Branching9.C9">C9</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>, <span name="TAIL">TAIL &lt;: <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Add <code>i0</code>, <code>i1</code>, etc.</p>
+    </li><li name="org.dianahep.histogrammar.BranchingList" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="BranchingListextendsAnyRef"></a>
+      <a id="BranchingList:BranchingList"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="BranchingList.html"><span class="name">BranchingList</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.CategoricalFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CategoricalFcn[-DATUM]extendsSerializable"></a>
+      <a id="CategoricalFcn[-DATUM]:CategoricalFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$CategoricalFcn.html"><span class="name">CategoricalFcn</span></a><span class="tparams">[<span name="DATUM">-DATUM</span>]</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Wraps a user's function for extracting strings (categories) from the input data type.</p>
+    </li><li name="org.dianahep.histogrammar.Categorized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Categorized[V&lt;:org.dianahep.histogrammar.Container[V]]extendsContainer[org.dianahep.histogrammar.Categorized[V]]"></a>
+      <a id="Categorized[V&lt;:Container[V]]:Categorized[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Categorized.html"><span class="name">Categorized</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Categorized.V">V</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Categorized.html" class="extype" name="org.dianahep.histogrammar.Categorized">Categorized</a>[<span class="extype" name="org.dianahep.histogrammar.Categorized.V">V</span>]]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated quantity that was split by its categorical (string-based) values, filling only one category per datum.</p>
+    </li><li name="org.dianahep.histogrammar.Categorizing" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Categorizing[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.Categorizing[DATUM,V]]withAggregationOnData"></a>
+      <a id="Categorizing[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM}]:Categorizing[DATUM,V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Categorizing.html"><span class="name">Categorizing</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Categorizing.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Categorizing.html" class="extype" name="org.dianahep.histogrammar.Categorizing">Categorizing</a>[<span class="extype" name="org.dianahep.histogrammar.Categorizing.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.Categorizing.V">V</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a quantity by splitting it by its categorical (string-based) value and filling only one category per datum.</p>
+    </li><li name="org.dianahep.histogrammar.CentrallyBinned" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CentrallyBinned[V&lt;:org.dianahep.histogrammar.Container[V],N&lt;:org.dianahep.histogrammar.Container[N]]extendsContainer[org.dianahep.histogrammar.CentrallyBinned[V,N]]withCentrallyBin.Methods[V]"></a>
+      <a id="CentrallyBinned[V&lt;:Container[V],N&lt;:Container[N]]:CentrallyBinned[V,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="CentrallyBinned.html"><span class="name">CentrallyBinned</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinned.V">V</span>]</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinned.N">N</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="CentrallyBinned.html" class="extype" name="org.dianahep.histogrammar.CentrallyBinned">CentrallyBinned</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinned.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.CentrallyBinned.N">N</span>]] with <a href="CentrallyBin$$Methods.html" class="extype" name="org.dianahep.histogrammar.CentrallyBin.Methods">Methods</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinned.V">V</span>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated quantity that was split into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.</p>
+    </li><li name="org.dianahep.histogrammar.CentrallyBinning" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CentrallyBinning[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM},N&lt;:org.dianahep.histogrammar.Container[N]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.CentrallyBinning[DATUM,V,N]]withAggregationOnDatawithCentrallyBin.Methods[V]"></a>
+      <a id="CentrallyBinning[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM},N&lt;:Container[N]withAggregation{typeDatum&gt;:DATUM}]:CentrallyBinning[DATUM,V,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="CentrallyBinning.html"><span class="name">CentrallyBinning</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinning.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinning.N">N</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="CentrallyBinning.html" class="extype" name="org.dianahep.histogrammar.CentrallyBinning">CentrallyBinning</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinning.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.CentrallyBinning.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.CentrallyBinning.N">N</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a> with <a href="CentrallyBin$$Methods.html" class="extype" name="org.dianahep.histogrammar.CentrallyBin.Methods">Methods</a>[<span class="extype" name="org.dianahep.histogrammar.CentrallyBinning.V">V</span>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a quantity by splitting it into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.</p>
+    </li><li name="org.dianahep.histogrammar.Compatible" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Compatible[-X,-Y]extendsAnyRef"></a>
+      <a id="Compatible[-X,-Y]:Compatible[X,Y]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Compatible.html"><span class="name">Compatible</span></a><span class="tparams">[<span name="X">-X</span>, <span name="Y">-Y</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.Container" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Container[CONTAINER&lt;:org.dianahep.histogrammar.Container[CONTAINER]]extendsSerializable"></a>
+      <a id="Container[CONTAINER&lt;:Container[CONTAINER]]:Container[CONTAINER]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Container.html"><span class="name">Container</span></a><span class="tparams">[<span name="CONTAINER">CONTAINER &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Container.CONTAINER">CONTAINER</span>]</span>]</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Interface for classes that contain aggregated data, such as &quot;Counted&quot; or &quot;Binned&quot; (immutable) or &quot;Counting&quot; or &quot;Binning&quot; (mutable).</p>
+    </li><li name="org.dianahep.histogrammar.ContainerException" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ContainerExceptionextendsException"></a>
+      <a id="ContainerException:ContainerException"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="ContainerException.html"><span class="name">ContainerException</span></a><span class="result"> extends <span class="extype" name="scala.Exception">Exception</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Exception type for improperly configured containers.</p>
+    </li><li name="org.dianahep.histogrammar.Counted" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CountedextendsContainer[org.dianahep.histogrammar.Counted]"></a>
+      <a id="Counted:Counted"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Counted.html"><span class="name">Counted</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Counted.html" class="extype" name="org.dianahep.histogrammar.Counted">Counted</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated count (sum of weights) of data, ignoring its content.</p>
+    </li><li name="org.dianahep.histogrammar.Counting" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CountingextendsContainer[org.dianahep.histogrammar.Counting]withAggregation"></a>
+      <a id="Counting:Counting"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Counting.html"><span class="name">Counting</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Counting.html" class="extype" name="org.dianahep.histogrammar.Counting">Counting</a>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a count (sum of weights) of data, ignoring its content.</p>
+    </li><li name="org.dianahep.histogrammar.Deviated" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DeviatedextendsContainer[org.dianahep.histogrammar.Deviated]"></a>
+      <a id="Deviated:Deviated"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Deviated.html"><span class="name">Deviated</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Deviated.html" class="extype" name="org.dianahep.histogrammar.Deviated">Deviated</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated weighted variance (and mean) of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Deviating" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Deviating[DATUM]extendsContainer[org.dianahep.histogrammar.Deviating[DATUM]]withAggregationOnData"></a>
+      <a id="Deviating[DATUM]:Deviating[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Deviating.html"><span class="name">Deviating</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Deviating.html" class="extype" name="org.dianahep.histogrammar.Deviating">Deviating</a>[<span class="extype" name="org.dianahep.histogrammar.Deviating.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a weighted variance (and mean) of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Factory" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="FactoryextendsAnyRef"></a>
+      <a id="Factory:Factory"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Factory.html"><span class="name">Factory</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Interface for a container factory, always named as imperative verbs, such as &quot;Count&quot; and &quot;Bin&quot;.</p>
+    </li><li name="org.dianahep.histogrammar.Fractioned" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Fractioned[V&lt;:org.dianahep.histogrammar.Container[V]]extendsContainer[org.dianahep.histogrammar.Fractioned[V]]"></a>
+      <a id="Fractioned[V&lt;:Container[V]]:Fractioned[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Fractioned.html"><span class="name">Fractioned</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Fractioned.V">V</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Fractioned.html" class="extype" name="org.dianahep.histogrammar.Fractioned">Fractioned</a>[<span class="extype" name="org.dianahep.histogrammar.Fractioned.V">V</span>]]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).</p>
+    </li><li name="org.dianahep.histogrammar.Fractioning" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Fractioning[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.Fractioning[DATUM,V]]withAggregationOnData"></a>
+      <a id="Fractioning[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM}]:Fractioning[DATUM,V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Fractioning.html"><span class="name">Fractioning</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Fractioning.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Fractioning.html" class="extype" name="org.dianahep.histogrammar.Fractioning">Fractioning</a>[<span class="extype" name="org.dianahep.histogrammar.Fractioning.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.Fractioning.V">V</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).</p>
+    </li><li name="org.dianahep.histogrammar.Indexed" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Indexed[V&lt;:org.dianahep.histogrammar.Container[V]]extendsContainer[org.dianahep.histogrammar.Indexed[V]]"></a>
+      <a id="Indexed[V&lt;:Container[V]]:Indexed[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Indexed.html"><span class="name">Indexed</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Indexed.V">V</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Indexed.html" class="extype" name="org.dianahep.histogrammar.Indexed">Indexed</a>[<span class="extype" name="org.dianahep.histogrammar.Indexed.V">V</span>]]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated collection of containers of the SAME type, indexed by number.</p>
+    </li><li name="org.dianahep.histogrammar.Indexing" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Indexing[V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation]extendsContainer[org.dianahep.histogrammar.Indexing[V]]withAggregationOnData"></a>
+      <a id="Indexing[V&lt;:Container[V]withAggregation]:Indexing[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Indexing.html"><span class="name">Indexing</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Indexing.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Indexing.html" class="extype" name="org.dianahep.histogrammar.Indexing">Indexing</a>[<span class="extype" name="org.dianahep.histogrammar.Indexing.V">V</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a collection of containers of the SAME type, indexed by number.</p>
+    </li><li name="org.dianahep.histogrammar.Labeled" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Labeled[V&lt;:org.dianahep.histogrammar.Container[V]]extendsContainer[org.dianahep.histogrammar.Labeled[V]]"></a>
+      <a id="Labeled[V&lt;:Container[V]]:Labeled[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Labeled.html"><span class="name">Labeled</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Labeled.V">V</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Labeled.html" class="extype" name="org.dianahep.histogrammar.Labeled">Labeled</a>[<span class="extype" name="org.dianahep.histogrammar.Labeled.V">V</span>]]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated collection of containers of the SAME type, labeled by strings.</p>
+    </li><li name="org.dianahep.histogrammar.Labeling" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Labeling[V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation]extendsContainer[org.dianahep.histogrammar.Labeling[V]]withAggregationOnData"></a>
+      <a id="Labeling[V&lt;:Container[V]withAggregation]:Labeling[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Labeling.html"><span class="name">Labeling</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Labeling.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Labeling.html" class="extype" name="org.dianahep.histogrammar.Labeling">Labeling</a>[<span class="extype" name="org.dianahep.histogrammar.Labeling.V">V</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a collection of containers of the SAME type, labeled by strings.</p>
+    </li><li name="org.dianahep.histogrammar.Maximized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MaximizedextendsContainer[org.dianahep.histogrammar.Maximized]"></a>
+      <a id="Maximized:Maximized"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Maximized.html"><span class="name">Maximized</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Maximized.html" class="extype" name="org.dianahep.histogrammar.Maximized">Maximized</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated maximum of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Maximizing" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Maximizing[DATUM]extendsContainer[org.dianahep.histogrammar.Maximizing[DATUM]]withAggregationOnData"></a>
+      <a id="Maximizing[DATUM]:Maximizing[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Maximizing.html"><span class="name">Maximizing</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Maximizing.html" class="extype" name="org.dianahep.histogrammar.Maximizing">Maximizing</a>[<span class="extype" name="org.dianahep.histogrammar.Maximizing.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating the maximum of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Minimized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MinimizedextendsContainer[org.dianahep.histogrammar.Minimized]"></a>
+      <a id="Minimized:Minimized"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Minimized.html"><span class="name">Minimized</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Minimized.html" class="extype" name="org.dianahep.histogrammar.Minimized">Minimized</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated minimum of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Minimizing" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Minimizing[DATUM]extendsContainer[org.dianahep.histogrammar.Minimizing[DATUM]]withAggregationOnData"></a>
+      <a id="Minimizing[DATUM]:Minimizing[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Minimizing.html"><span class="name">Minimizing</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Minimizing.html" class="extype" name="org.dianahep.histogrammar.Minimizing">Minimizing</a>[<span class="extype" name="org.dianahep.histogrammar.Minimizing.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating the minimum of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.MultivariateFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MultivariateFcn[-DATUM]extendsSerializable"></a>
+      <a id="MultivariateFcn[-DATUM]:MultivariateFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$MultivariateFcn.html"><span class="name">MultivariateFcn</span></a><span class="tparams">[<span name="DATUM">-DATUM</span>]</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Wraps a user's function for extracting multidimensional numeric data from the input data type.</p>
+    </li><li name="org.dianahep.histogrammar.NumericalFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="NumericalFcn[-DATUM]extendsSerializable"></a>
+      <a id="NumericalFcn[-DATUM]:NumericalFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$NumericalFcn.html"><span class="name">NumericalFcn</span></a><span class="tparams">[<span name="DATUM">-DATUM</span>]</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Wraps a user's function for extracting numbers from the input data type.</p>
+    </li><li name="org.dianahep.histogrammar.Partitioned" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Partitioned[V&lt;:org.dianahep.histogrammar.Container[V]]extendsContainer[org.dianahep.histogrammar.Partitioned[V]]"></a>
+      <a id="Partitioned[V&lt;:Container[V]]:Partitioned[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Partitioned.html"><span class="name">Partitioned</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Partitioned.V">V</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Partitioned.html" class="extype" name="org.dianahep.histogrammar.Partitioned">Partitioned</a>[<span class="extype" name="org.dianahep.histogrammar.Partitioned.V">V</span>]]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated suite of containers, each collecting data between a pair of given cuts on a given expression.</p>
+    </li><li name="org.dianahep.histogrammar.Partitioning" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Partitioning[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.Partitioning[DATUM,V]]withAggregationOnData"></a>
+      <a id="Partitioning[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM}]:Partitioning[DATUM,V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Partitioning.html"><span class="name">Partitioning</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Partitioning.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Partitioning.html" class="extype" name="org.dianahep.histogrammar.Partitioning">Partitioning</a>[<span class="extype" name="org.dianahep.histogrammar.Partitioning.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.Partitioning.V">V</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a suite of containers, each collecting data between a pair of given cuts on a given expression.</p>
+    </li><li name="org.dianahep.histogrammar.Quantiled" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="QuantiledextendsContainer[org.dianahep.histogrammar.Quantiled]withCentralBinsDistribution[org.dianahep.histogrammar.Counted]"></a>
+      <a id="Quantiled:Quantiled"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Quantiled.html"><span class="name">Quantiled</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Quantiled.html" class="extype" name="org.dianahep.histogrammar.Quantiled">Quantiled</a>] with <a href="util/CentralBinsDistribution.html" class="extype" name="org.dianahep.histogrammar.util.CentralBinsDistribution">CentralBinsDistribution</a>[<a href="Counted.html" class="extype" name="org.dianahep.histogrammar.Counted">Counted</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated adaptive histogram, used to compute approximate quantiles, such as the median.</p>
+    </li><li name="org.dianahep.histogrammar.Quantiling" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Quantiling[DATUM]extendsContainer[org.dianahep.histogrammar.Quantiling[DATUM]]withAggregationOnDatawithCentralBinsDistribution[org.dianahep.histogrammar.Counting]"></a>
+      <a id="Quantiling[DATUM]:Quantiling[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Quantiling.html"><span class="name">Quantiling</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Quantiling.html" class="extype" name="org.dianahep.histogrammar.Quantiling">Quantiling</a>[<span class="extype" name="org.dianahep.histogrammar.Quantiling.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a> with <a href="util/CentralBinsDistribution.html" class="extype" name="org.dianahep.histogrammar.util.CentralBinsDistribution">CentralBinsDistribution</a>[<a href="Counting.html" class="extype" name="org.dianahep.histogrammar.Counting">Counting</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating an adaptive histogram, used to compute approximate quantiles, such as the median.</p>
+    </li><li name="org.dianahep.histogrammar.Selection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Selection[-DATUM]extendsSerializable"></a>
+      <a id="Selection[-DATUM]:Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$Selection.html"><span class="name">Selection</span></a><span class="tparams">[<span name="DATUM">-DATUM</span>]</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Wraps a user's function for weighting data.</p>
+    </li><li name="org.dianahep.histogrammar.SparselyBinned" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SparselyBinned[V&lt;:org.dianahep.histogrammar.Container[V],N&lt;:org.dianahep.histogrammar.Container[N]]extendsContainer[org.dianahep.histogrammar.SparselyBinned[V,N]]withSparselyBin.Methods"></a>
+      <a id="SparselyBinned[V&lt;:Container[V],N&lt;:Container[N]]:SparselyBinned[V,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SparselyBinned.html"><span class="name">SparselyBinned</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.SparselyBinned.V">V</span>]</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.SparselyBinned.N">N</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="SparselyBinned.html" class="extype" name="org.dianahep.histogrammar.SparselyBinned">SparselyBinned</a>[<span class="extype" name="org.dianahep.histogrammar.SparselyBinned.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.SparselyBinned.N">N</span>]] with <a href="SparselyBin$$Methods.html" class="extype" name="org.dianahep.histogrammar.SparselyBin.Methods">Methods</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated quantity that was split into equally spaced bins, filling only one bin per datum and creating new bins as necessary.</p>
+    </li><li name="org.dianahep.histogrammar.SparselyBinning" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SparselyBinning[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM},N&lt;:org.dianahep.histogrammar.Container[N]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.SparselyBinning[DATUM,V,N]]withAggregationOnDatawithSparselyBin.Methods"></a>
+      <a id="SparselyBinning[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM},N&lt;:Container[N]withAggregation{typeDatum&gt;:DATUM}]:SparselyBinning[DATUM,V,N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SparselyBinning.html"><span class="name">SparselyBinning</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.SparselyBinning.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>, <span name="N">N &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.SparselyBinning.N">N</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="SparselyBinning.html" class="extype" name="org.dianahep.histogrammar.SparselyBinning">SparselyBinning</a>[<span class="extype" name="org.dianahep.histogrammar.SparselyBinning.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.SparselyBinning.V">V</span>, <span class="extype" name="org.dianahep.histogrammar.SparselyBinning.N">N</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a> with <a href="SparselyBin$$Methods.html" class="extype" name="org.dianahep.histogrammar.SparselyBin.Methods">Methods</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a quantity by splitting it into equally spaced bins, filling only one bin per datum and creating new bins as necessary.</p>
+    </li><li name="org.dianahep.histogrammar.Stacked" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Stacked[V&lt;:org.dianahep.histogrammar.Container[V]]extendsContainer[org.dianahep.histogrammar.Stacked[V]]"></a>
+      <a id="Stacked[V&lt;:Container[V]]:Stacked[V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Stacked.html"><span class="name">Stacked</span></a><span class="tparams">[<span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Stacked.V">V</span>]</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Stacked.html" class="extype" name="org.dianahep.histogrammar.Stacked">Stacked</a>[<span class="extype" name="org.dianahep.histogrammar.Stacked.V">V</span>]]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated suite of containers, each collecting data above a given cut on a given expression.</p>
+    </li><li name="org.dianahep.histogrammar.Stacking" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Stacking[DATUM,V&lt;:org.dianahep.histogrammar.Container[V]withorg.dianahep.histogrammar.Aggregation{typeDatum&gt;:DATUM}]extendsContainer[org.dianahep.histogrammar.Stacking[DATUM,V]]withAggregationOnData"></a>
+      <a id="Stacking[DATUM,V&lt;:Container[V]withAggregation{typeDatum&gt;:DATUM}]:Stacking[DATUM,V]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Stacking.html"><span class="name">Stacking</span></a><span class="tparams">[<span name="DATUM">DATUM</span>, <span name="V">V &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.Stacking.V">V</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a> { type Datum &gt;: DATUM }</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Stacking.html" class="extype" name="org.dianahep.histogrammar.Stacking">Stacking</a>[<span class="extype" name="org.dianahep.histogrammar.Stacking.DATUM">DATUM</span>, <span class="extype" name="org.dianahep.histogrammar.Stacking.V">V</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a suite of containers, each collecting data above a given cut on a given expression.</p>
+    </li><li name="org.dianahep.histogrammar.Summed" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SummedextendsContainer[org.dianahep.histogrammar.Summed]"></a>
+      <a id="Summed:Summed"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Summed.html"><span class="name">Summed</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Summed.html" class="extype" name="org.dianahep.histogrammar.Summed">Summed</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated weighted sum of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Summing" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Summing[DATUM]extendsContainer[org.dianahep.histogrammar.Summing[DATUM]]withAggregationOnData"></a>
+      <a id="Summing[DATUM]:Summing[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Summing.html"><span class="name">Summing</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="Summing.html" class="extype" name="org.dianahep.histogrammar.Summing">Summing</a>[<span class="extype" name="org.dianahep.histogrammar.Summing.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a weighted sum of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.UntypedLabeled" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UntypedLabeledextendsContainer[org.dianahep.histogrammar.UntypedLabeled]"></a>
+      <a id="UntypedLabeled:UntypedLabeled"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="UntypedLabeled.html"><span class="name">UntypedLabeled</span></a><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="UntypedLabeled.html" class="extype" name="org.dianahep.histogrammar.UntypedLabeled">UntypedLabeled</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">An accumulated collection of containers of any type except <a href="Counted.html" class="extype" name="org.dianahep.histogrammar.Counted">org.dianahep.histogrammar.Counted</a>, labeled by strings.</p>
+    </li><li name="org.dianahep.histogrammar.UntypedLabeling" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UntypedLabeling[DATUM]extendsContainer[org.dianahep.histogrammar.UntypedLabeling[DATUM]]withAggregationOnData"></a>
+      <a id="UntypedLabeling[DATUM]:UntypedLabeling[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="UntypedLabeling.html"><span class="name">UntypedLabeling</span></a><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result"> extends <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<a href="UntypedLabeling.html" class="extype" name="org.dianahep.histogrammar.UntypedLabeling">UntypedLabeling</a>[<span class="extype" name="org.dianahep.histogrammar.UntypedLabeling.DATUM">DATUM</span>]] with <a href="AggregationOnData.html" class="extype" name="org.dianahep.histogrammar.AggregationOnData">AggregationOnData</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulating a collection of containers of any type except <a href="Counting.html" class="extype" name="org.dianahep.histogrammar.Counting">org.dianahep.histogrammar.Counting</a>, labeled by strings.</p>
+    </li><li name="org.dianahep.histogrammar.nanEquality" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="nanEqualityextendsAnyVal"></a>
+      <a id="nanEquality:nanEquality"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit final </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="package$$nanEquality.html"><span class="name">nanEquality</span></a><span class="result"> extends <span class="extype" name="scala.AnyVal">AnyVal</span></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Introduces a <code>===</code> operator for <code>Double</code> precision numbers in which <code>NaN === NaN</code>.</p>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="org.dianahep.histogrammar.AbsoluteErr" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AbsoluteErr"></a>
+      <a id="AbsoluteErr:AbsoluteErr"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="AbsoluteErr$.html"><span class="name">AbsoluteErr</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.</p>
+    </li><li name="org.dianahep.histogrammar.AdaptivelyBin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AdaptivelyBin"></a>
+      <a id="AdaptivelyBin:AdaptivelyBin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="AdaptivelyBin$.html"><span class="name">AdaptivelyBin</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Split a quanity into bins dynamically with a clustering algorithm, filling only one datum per bin with no overflows or underflows.</p>
+    </li><li name="org.dianahep.histogrammar.Average" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Average"></a>
+      <a id="Average:Average"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Average$.html"><span class="name">Average</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate the weighted mean of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Bag" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Bag"></a>
+      <a id="Bag:Bag"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Bag$.html"><span class="name">Bag</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate raw data up to an optional limit, at which point only the total number are preserved.</p>
+    </li><li name="org.dianahep.histogrammar.Bin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Bin"></a>
+      <a id="Bin:Bin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Bin$.html"><span class="name">Bin</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum.</p>
+    </li><li name="org.dianahep.histogrammar.Branch" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Branch"></a>
+      <a id="Branch:Branch"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Branch$.html"><span class="name">Branch</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate containers of DIFFERENT types, indexed by <code>i0</code> through <code>i9</code>.</p>
+    </li><li name="org.dianahep.histogrammar.BranchedNil" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BranchedNil"></a>
+      <a id="BranchedNil:BranchedNil"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="BranchedNil$.html"><span class="name">BranchedNil</span></a><span class="result"> extends <a href="BranchedList.html" class="extype" name="org.dianahep.histogrammar.BranchedList">BranchedList</a></span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.BranchingNil" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BranchingNil"></a>
+      <a id="BranchingNil:BranchingNil"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="BranchingNil$.html"><span class="name">BranchingNil</span></a><span class="result"> extends <a href="BranchingList.html" class="extype" name="org.dianahep.histogrammar.BranchingList">BranchingList</a></span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.Categorize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Categorize"></a>
+      <a id="Categorize:Categorize"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Categorize$.html"><span class="name">Categorize</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Split a given quantity by its categorical (string-based) value and fill only one category per datum.</p>
+    </li><li name="org.dianahep.histogrammar.CentrallyBin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CentrallyBin"></a>
+      <a id="CentrallyBin:CentrallyBin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="CentrallyBin$.html"><span class="name">CentrallyBin</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Split a quantity into bins defined by a set of bin centers, filling only one datum per bin with no overflows or underflows.</p>
+    </li><li name="org.dianahep.histogrammar.Compatible" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Compatible"></a>
+      <a id="Compatible:Compatible"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Compatible$.html"><span class="name">Compatible</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.Count" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Count"></a>
+      <a id="Count:Count"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Count$.html"><span class="name">Count</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Count data, ignoring their content.</p>
+    </li><li name="org.dianahep.histogrammar.Deviate" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Deviate"></a>
+      <a id="Deviate:Deviate"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Deviate$.html"><span class="name">Deviate</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers).</p>
+    </li><li name="org.dianahep.histogrammar.Factory" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Factory"></a>
+      <a id="Factory:Factory"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Factory$.html"><span class="name">Factory</span></a>
+      </span>
+      </h4>
+      <p class="comment cmt">Entry point for constructing containers from JSON and centralized registry of container types.</p>
+    </li><li name="org.dianahep.histogrammar.Fraction" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Fraction"></a>
+      <a id="Fraction:Fraction"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Fraction$.html"><span class="name">Fraction</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate two containers, one with all data (denominator), and one with data that pass a given selection (numerator).</p>
+    </li><li name="org.dianahep.histogrammar.Index" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Index"></a>
+      <a id="Index:Index"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Index$.html"><span class="name">Index</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate any number of containers of the SAME type anonymously in a list.</p>
+    </li><li name="org.dianahep.histogrammar.Label" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Label"></a>
+      <a id="Label:Label"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Label$.html"><span class="name">Label</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate any number of containers of the SAME type and label them with strings.</p>
+    </li><li name="org.dianahep.histogrammar.Maximize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Maximize"></a>
+      <a id="Maximize:Maximize"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Maximize$.html"><span class="name">Maximize</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Find the maximum value of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Minimize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Minimize"></a>
+      <a id="Minimize:Minimize"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Minimize$.html"><span class="name">Minimize</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Find the minimum value of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.Partition" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Partition"></a>
+      <a id="Partition:Partition"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Partition$.html"><span class="name">Partition</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate a suite containers, filling the one that is between a pair of given cuts on a given expression.</p>
+    </li><li name="org.dianahep.histogrammar.Quantile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Quantile"></a>
+      <a id="Quantile:Quantile"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Quantile$.html"><span class="name">Quantile</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate an adaptively binned histogram to compute approximate quantiles, such as the median.</p>
+    </li><li name="org.dianahep.histogrammar.SparselyBin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SparselyBin"></a>
+      <a id="SparselyBin:SparselyBin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="SparselyBin$.html"><span class="name">SparselyBin</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary.</p>
+    </li><li name="org.dianahep.histogrammar.Stack" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Stack"></a>
+      <a id="Stack:Stack"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Stack$.html"><span class="name">Stack</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate a suite containers, filling all that are above a given cut on a given expression.</p>
+    </li><li name="org.dianahep.histogrammar.Sum" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Sum"></a>
+      <a id="Sum:Sum"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Sum$.html"><span class="name">Sum</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate the sum of a given quantity.</p>
+    </li><li name="org.dianahep.histogrammar.UntypedLabel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UntypedLabel"></a>
+      <a id="UntypedLabel:UntypedLabel"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="UntypedLabel$.html"><span class="name">UntypedLabel</span></a><span class="result"> extends <a href="Factory.html" class="extype" name="org.dianahep.histogrammar.Factory">Factory</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Accumulate containers of any type except <a href="Count$.html" class="extype" name="org.dianahep.histogrammar.Count">org.dianahep.histogrammar.Count</a> and label them with strings.</p>
+    </li><li name="org.dianahep.histogrammar.package#booleanToSelection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="booleanToSelection[DATUM](f:DATUM=&gt;Boolean):org.dianahep.histogrammar.package.Selection[DATUM]"></a>
+      <a id="booleanToSelection[DATUM]((DATUM)⇒Boolean):Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">booleanToSelection</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.booleanToSelection.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="package$$Selection.html" class="extype" name="org.dianahep.histogrammar.Selection">Selection</a>[<span class="extype" name="org.dianahep.histogrammar.booleanToSelection.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#byteToNumericalFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="byteToNumericalFcn[DATUM](f:DATUM=&gt;Byte):org.dianahep.histogrammar.package.NumericalFcn[DATUM]"></a>
+      <a id="byteToNumericalFcn[DATUM]((DATUM)⇒Byte):NumericalFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">byteToNumericalFcn</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.byteToNumericalFcn.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Byte">Byte</span></span>)</span><span class="result">: <a href="package$$NumericalFcn.html" class="extype" name="org.dianahep.histogrammar.NumericalFcn">NumericalFcn</a>[<span class="extype" name="org.dianahep.histogrammar.byteToNumericalFcn.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#byteToSelection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="byteToSelection[DATUM](f:DATUM=&gt;Byte):org.dianahep.histogrammar.package.Selection[DATUM]"></a>
+      <a id="byteToSelection[DATUM]((DATUM)⇒Byte):Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">byteToSelection</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.byteToSelection.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Byte">Byte</span></span>)</span><span class="result">: <a href="package$$Selection.html" class="extype" name="org.dianahep.histogrammar.Selection">Selection</a>[<span class="extype" name="org.dianahep.histogrammar.byteToSelection.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#combine" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="combine[CONTAINER&lt;:org.dianahep.histogrammar.Container[CONTAINER]]:(CONTAINER,CONTAINER)=&gt;CONTAINER"></a>
+      <a id="combine[CONTAINER&lt;:Container[CONTAINER]]:(CONTAINER,CONTAINER)⇒CONTAINER"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">combine</span><span class="tparams">[<span name="CONTAINER">CONTAINER &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.combine.CONTAINER">CONTAINER</span>]</span>]</span><span class="result">: (<span class="extype" name="org.dianahep.histogrammar.combine.CONTAINER">CONTAINER</span>, <span class="extype" name="org.dianahep.histogrammar.combine.CONTAINER">CONTAINER</span>) ⇒ <span class="extype" name="org.dianahep.histogrammar.combine.CONTAINER">CONTAINER</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Combine function for Apache Spark's <code>aggregate</code> method (all containers except <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>).</p><div class="fullcomment"><div class="comment cmt"><p>Combine function for Apache Spark's <code>aggregate</code> method (all containers except <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>).</p><p>Typical use: <code>filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])</code> where <code>datasetRDD</code> is a collection on <code>initialHistogram</code>'s <code>Datum</code> type.</p><p><b>Note:</b> cannot be used if <code>initialHistogram</code> is an <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>. See <code>combineUntypedLabel</code> otherwise.
+</p></div></div>
+    </li><li name="org.dianahep.histogrammar.package#combineUntypedLabel" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="combineUntypedLabel[DATUM]:(org.dianahep.histogrammar.UntypedLabeling[DATUM],org.dianahep.histogrammar.UntypedLabeling[DATUM])=&gt;org.dianahep.histogrammar.UntypedLabeling[DATUM]"></a>
+      <a id="combineUntypedLabel[DATUM]:(UntypedLabeling[DATUM],UntypedLabeling[DATUM])⇒UntypedLabeling[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">combineUntypedLabel</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result">: (<a href="UntypedLabeling.html" class="extype" name="org.dianahep.histogrammar.UntypedLabeling">UntypedLabeling</a>[<span class="extype" name="org.dianahep.histogrammar.combineUntypedLabel.DATUM">DATUM</span>], <a href="UntypedLabeling.html" class="extype" name="org.dianahep.histogrammar.UntypedLabeling">UntypedLabeling</a>[<span class="extype" name="org.dianahep.histogrammar.combineUntypedLabel.DATUM">DATUM</span>]) ⇒ <a href="UntypedLabeling.html" class="extype" name="org.dianahep.histogrammar.UntypedLabeling">UntypedLabeling</a>[<span class="extype" name="org.dianahep.histogrammar.combineUntypedLabel.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Combine function for Apache Spark's <code>aggregate</code> method (<a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a> only).</p><div class="fullcomment"><div class="comment cmt"><p>Combine function for Apache Spark's <code>aggregate</code> method (<a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a> only).</p><p>Typical use: <code>filledHistogram = datasetRDD.aggregate(initialHistogram)(incrementUntypedLabel[DATUM], combineUntypedLabel[DATUM])</code> where <code>datasetRDD</code> is a collection of type <code>DATUM</code>.</p><p><b>Note:</b> can only be used if <code>initialHistogram</code> is an <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>. See <code>combine</code> otherwise.
+</p></div></div>
+    </li><li name="org.dianahep.histogrammar.package#floatToNumericalFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="floatToNumericalFcn[DATUM](f:DATUM=&gt;Float):org.dianahep.histogrammar.package.NumericalFcn[DATUM]"></a>
+      <a id="floatToNumericalFcn[DATUM]((DATUM)⇒Float):NumericalFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">floatToNumericalFcn</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.floatToNumericalFcn.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Float">Float</span></span>)</span><span class="result">: <a href="package$$NumericalFcn.html" class="extype" name="org.dianahep.histogrammar.NumericalFcn">NumericalFcn</a>[<span class="extype" name="org.dianahep.histogrammar.floatToNumericalFcn.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#floatToSelection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="floatToSelection[DATUM](f:DATUM=&gt;Float):org.dianahep.histogrammar.package.Selection[DATUM]"></a>
+      <a id="floatToSelection[DATUM]((DATUM)⇒Float):Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">floatToSelection</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.floatToSelection.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Float">Float</span></span>)</span><span class="result">: <a href="package$$Selection.html" class="extype" name="org.dianahep.histogrammar.Selection">Selection</a>[<span class="extype" name="org.dianahep.histogrammar.floatToSelection.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#help" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="help:String"></a>
+      <a id="help:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">help</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Help function for interactive use.</p><div class="fullcomment"><div class="comment cmt"><p>Help function for interactive use. Used to discover container types.</p></div></div>
+    </li><li name="org.dianahep.histogrammar.package#increment" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="increment[CONTAINER&lt;:org.dianahep.histogrammar.Container[CONTAINER]withorg.dianahep.histogrammar.Aggregation]:(CONTAINER,h.Datum)=&gt;CONTAINERforSome{valh:CONTAINER}"></a>
+      <a id="increment[CONTAINER&lt;:Container[CONTAINER]withAggregation]:(CONTAINER,histogrammar.increment.$anonfun.h.type.Datum)⇒CONTAINERforSome{valh:CONTAINER}"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">increment</span><span class="tparams">[<span name="CONTAINER">CONTAINER &lt;: <a href="Container.html" class="extype" name="org.dianahep.histogrammar.Container">Container</a>[<span class="extype" name="org.dianahep.histogrammar.increment.CONTAINER">CONTAINER</span>] with <a href="Aggregation.html" class="extype" name="org.dianahep.histogrammar.Aggregation">Aggregation</a></span>]</span><span class="result">: (<span class="extype" name="org.dianahep.histogrammar.increment.CONTAINER">CONTAINER</span>, <span class="extype" name="org.dianahep.histogrammar.Aggregation.Datum">histogrammar.increment.$anonfun.h.type.Datum</span>) ⇒ <span class="extype" name="org.dianahep.histogrammar.increment.CONTAINER">CONTAINER</span> forSome {val h: <span class="extype" name="org.dianahep.histogrammar.increment.CONTAINER">CONTAINER</span>}</span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Increment function for Apache Spark's <code>aggregate</code> method (all containers except <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>).</p><div class="fullcomment"><div class="comment cmt"><p>Increment function for Apache Spark's <code>aggregate</code> method (all containers except <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>).</p><p>Typical use: <code>filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])</code> where <code>datasetRDD</code> is a collection on <code>initialHistogram</code>'s <code>Datum</code> type.</p><p><b>Note:</b> cannot be used if <code>initialHistogram</code> is an <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>. See <code>incrementUntypedLabel</code> otherwise.
+</p></div></div>
+    </li><li name="org.dianahep.histogrammar.package#incrementUntypedLabel" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="incrementUntypedLabel[DATUM]:(org.dianahep.histogrammar.UntypedLabeling[DATUM],DATUM)=&gt;org.dianahep.histogrammar.UntypedLabeling[DATUM]"></a>
+      <a id="incrementUntypedLabel[DATUM]:(UntypedLabeling[DATUM],DATUM)⇒UntypedLabeling[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">incrementUntypedLabel</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result">: (<a href="UntypedLabeling.html" class="extype" name="org.dianahep.histogrammar.UntypedLabeling">UntypedLabeling</a>[<span class="extype" name="org.dianahep.histogrammar.incrementUntypedLabel.DATUM">DATUM</span>], <span class="extype" name="org.dianahep.histogrammar.incrementUntypedLabel.DATUM">DATUM</span>) ⇒ <a href="UntypedLabeling.html" class="extype" name="org.dianahep.histogrammar.UntypedLabeling">UntypedLabeling</a>[<span class="extype" name="org.dianahep.histogrammar.incrementUntypedLabel.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Increment function for Apache Spark's <code>aggregate</code> method (<a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a> only).</p><div class="fullcomment"><div class="comment cmt"><p>Increment function for Apache Spark's <code>aggregate</code> method (<a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a> only).</p><p>Typical use: <code>filledHistogram = datasetRDD.aggregate(initialHistogram)(incrementUntypedLabel[DATUM], combineUntypedLabel[DATUM])</code> where <code>datasetRDD</code> is a collection of type <code>DATUM</code>.</p><p><b>Note:</b> can only be used if <code>initialHistogram</code> is an <a href="UntypedLabel$.html" class="extype" name="org.dianahep.histogrammar.UntypedLabel">org.dianahep.histogrammar.UntypedLabel</a>. See <code>increment</code> otherwise.
+</p></div></div>
+    </li><li name="org.dianahep.histogrammar.package#intToNumericalFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="intToNumericalFcn[DATUM](f:DATUM=&gt;Int):org.dianahep.histogrammar.package.NumericalFcn[DATUM]"></a>
+      <a id="intToNumericalFcn[DATUM]((DATUM)⇒Int):NumericalFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">intToNumericalFcn</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.intToNumericalFcn.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <a href="package$$NumericalFcn.html" class="extype" name="org.dianahep.histogrammar.NumericalFcn">NumericalFcn</a>[<span class="extype" name="org.dianahep.histogrammar.intToNumericalFcn.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#intToSelection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="intToSelection[DATUM](f:DATUM=&gt;Int):org.dianahep.histogrammar.package.Selection[DATUM]"></a>
+      <a id="intToSelection[DATUM]((DATUM)⇒Int):Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">intToSelection</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.intToSelection.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <a href="package$$Selection.html" class="extype" name="org.dianahep.histogrammar.Selection">Selection</a>[<span class="extype" name="org.dianahep.histogrammar.intToSelection.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.json" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="json"></a>
+      <a id="json:json"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="json/package.html"><span class="name">json</span></a>
+      </span>
+      </h4>
+      <p class="comment cmt">Provides support for parsing and stringifying JSON.</p>
+    </li><li name="org.dianahep.histogrammar.package#longToNumericalFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="longToNumericalFcn[DATUM](f:DATUM=&gt;Long):org.dianahep.histogrammar.package.NumericalFcn[DATUM]"></a>
+      <a id="longToNumericalFcn[DATUM]((DATUM)⇒Long):NumericalFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">longToNumericalFcn</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.longToNumericalFcn.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <a href="package$$NumericalFcn.html" class="extype" name="org.dianahep.histogrammar.NumericalFcn">NumericalFcn</a>[<span class="extype" name="org.dianahep.histogrammar.longToNumericalFcn.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#longToSelection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="longToSelection[DATUM](f:DATUM=&gt;Long):org.dianahep.histogrammar.package.Selection[DATUM]"></a>
+      <a id="longToSelection[DATUM]((DATUM)⇒Long):Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">longToSelection</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.longToSelection.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <a href="package$$Selection.html" class="extype" name="org.dianahep.histogrammar.Selection">Selection</a>[<span class="extype" name="org.dianahep.histogrammar.longToSelection.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#scalarToMultivariateFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="scalarToMultivariateFcn[DATUM](f:DATUM=&gt;Double):org.dianahep.histogrammar.package.MultivariateFcn[DATUM]"></a>
+      <a id="scalarToMultivariateFcn[DATUM]((DATUM)⇒Double):MultivariateFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">scalarToMultivariateFcn</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.scalarToMultivariateFcn.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Double">Double</span></span>)</span><span class="result">: <a href="package$$MultivariateFcn.html" class="extype" name="org.dianahep.histogrammar.MultivariateFcn">MultivariateFcn</a>[<span class="extype" name="org.dianahep.histogrammar.scalarToMultivariateFcn.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#shortToNumericalFcn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="shortToNumericalFcn[DATUM](f:DATUM=&gt;Short):org.dianahep.histogrammar.package.NumericalFcn[DATUM]"></a>
+      <a id="shortToNumericalFcn[DATUM]((DATUM)⇒Short):NumericalFcn[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">shortToNumericalFcn</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.shortToNumericalFcn.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Short">Short</span></span>)</span><span class="result">: <a href="package$$NumericalFcn.html" class="extype" name="org.dianahep.histogrammar.NumericalFcn">NumericalFcn</a>[<span class="extype" name="org.dianahep.histogrammar.shortToNumericalFcn.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#shortToSelection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="shortToSelection[DATUM](f:DATUM=&gt;Short):org.dianahep.histogrammar.package.Selection[DATUM]"></a>
+      <a id="shortToSelection[DATUM]((DATUM)⇒Short):Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">shortToSelection</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.dianahep.histogrammar.shortToSelection.DATUM">DATUM</span>) ⇒ <span class="extype" name="scala.Short">Short</span></span>)</span><span class="result">: <a href="package$$Selection.html" class="extype" name="org.dianahep.histogrammar.Selection">Selection</a>[<span class="extype" name="org.dianahep.histogrammar.shortToSelection.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.specialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="specialized"></a>
+      <a id="specialized:specialized"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="specialized/package.html"><span class="name">specialized</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="org.dianahep.histogrammar.package#unweighted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="unweighted[DATUM]:org.dianahep.histogrammar.package.Selection[DATUM]"></a>
+      <a id="unweighted[DATUM]:Selection[DATUM]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">unweighted</span><span class="tparams">[<span name="DATUM">DATUM</span>]</span><span class="result">: <a href="package$$Selection.html" class="extype" name="org.dianahep.histogrammar.Selection">Selection</a>[<span class="extype" name="org.dianahep.histogrammar.unweighted.DATUM">DATUM</span>]</span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Default weighting function that always returns 1.</p><div class="fullcomment"><div class="comment cmt"><p>Default weighting function that always returns 1.0.</p></div></div>
+    </li><li name="org.dianahep.histogrammar.util" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="util"></a>
+      <a id="util:util"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="util/package.html"><span class="name">util</span></a>
+      </span>
+      </h4>
+      <p class="comment cmt">Supporting functions, mostly called by those in <a href="" class="extype" name="org.dianahep.histogrammar">org.dianahep.histogrammar</a>.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../lib/template.js"></script>
+    </body>
+      </html>

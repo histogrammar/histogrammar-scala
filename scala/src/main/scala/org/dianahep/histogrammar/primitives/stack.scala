@@ -32,16 +32,16 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Stacked]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param cuts lower thresholds and their associated containers, starting with negative infinity
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
       */
     def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, cuts: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Stacking]].
       * 
-      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
-      * @param expression numerical expression whose value is compared with the given thresholds
-      * @param cuts thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element
+      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param expression Numerical expression whose value is compared with the given thresholds.
+      * @param cuts Thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value)): _*)
@@ -94,8 +94,8 @@ package histogrammar {
 
   /** An accumulated suite of containers, each collecting data above a given cut on a given expression.
     * 
-    * @param entries weighted number of entries (sum of all weights)
-    * @param cuts lower thresholds and their associated containers, starting with negative infinity
+    * @param entries Weighted number of entries (sum of all weights).
+    * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
   class Stacked[V <: Container[V]](val entries: Double, val cuts: (Double, V)*) extends Container[Stacked[V]] {
     type Type = Stacked[V]
@@ -134,9 +134,9 @@ package histogrammar {
 
   /** Accumulating a suite of containers, each collecting data above a given cut on a given expression.
     * 
-    * @param expression numerical expression whose value is compared with the given thresholds
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param cuts lower thresholds and their associated containers, starting with negative infinity
+    * @param expression Numerical expression whose value is compared with the given thresholds.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
   class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
     type Type = Stacking[DATUM, V]

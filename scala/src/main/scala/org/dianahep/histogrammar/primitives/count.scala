@@ -30,13 +30,13 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Counted]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
+      * @param entries Weighted number of entries (sum of all observed weights).
       */
     def ed(entries: Double) = new Counted(entries)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Counting]].
       * 
-      * @param quantity numerical function to track
+      * @param quantity Numerical function to track.
       */
     def apply() = new Counting(0.0)
 
@@ -56,7 +56,7 @@ package histogrammar {
 
   /** An accumulated count (sum of weights) of data, ignoring its content.
     * 
-    * @param entries weighted number of entries (sum of all weights)
+    * @param entries Weighted number of entries (sum of all weights).
     */
   class Counted(val entries: Double) extends Container[Counted] {
     type Type = Counted
@@ -82,7 +82,7 @@ package histogrammar {
     * 
     * This is the only container with [[org.dianahep.histogrammar.Aggregation]] that doesn't have a configurable data type: its `Datum` is `Any`. It is primarily for the sake of this container that `Aggregation` is contravariant.
     * 
-    * @param entries weighted number of entries (sum of all weights)
+    * @param entries Weighted number of entries (sum of all weights).
     */
   class Counting(var entries: Double) extends Container[Counting] with Aggregation {
     type Type = Counting

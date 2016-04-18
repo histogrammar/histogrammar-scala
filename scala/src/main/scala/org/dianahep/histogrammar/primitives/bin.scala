@@ -31,13 +31,13 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Binned]] from arguments (instead of JSON).
       * 
-      * @param low minimum-value edge of the first bin
-      * @param high maximum-value edge of the last bin
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param values containers for data sent to each bin
-      * @param underflow container for data below the first bin
-      * @param overflow container for data above the last bin
-      * @param nanflow container for data that resulted in `NaN`
+      * @param low Minimum-value edge of the first bin.
+      * @param high Maximum-value edge of the last bin.
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param values Containers for data sent to each bin.
+      * @param underflow Container for data below the first bin.
+      * @param overflow Container for data above the last bin.
+      * @param nanflow Container for data that resulted in `NaN`.
       */
     def ed[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
       (low: Double,
@@ -50,13 +50,13 @@ package histogrammar {
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Binning]].
       * 
-      * @param number of bins
-      * @param low minimum-value edge of the first bin
-      * @param high maximum-value edge of the last bin
-      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
-      * @param underflow container for data below the first bin
-      * @param overflow container for data above the last bin
-      * @param nanflow container for data that resulted in `NaN`
+      * @param number Of bins.
+      * @param low Minimum-value edge of the first bin.
+      * @param high Maximum-value edge of the last bin.
+      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param underflow Container for data below the first bin.
+      * @param overflow Container for data above the last bin.
+      * @param nanflow Container for data that resulted in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (num: Int,
@@ -88,6 +88,7 @@ package histogrammar {
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.entries, x.values, x.underflow, x.overflow, x.nanflow))
 
     trait Methods {
+      /** Number of bins. */
       def num: Int
       def low: Double
       def high: Double
@@ -169,13 +170,13 @@ package histogrammar {
 
   /** An accumulated quantity that was split into equally spaced bins between specified limits and filling only one bin per datum.
     * 
-    * @param low minimum-value edge of the first bin
-    * @param high maximum-value edge of the last bin
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param values containers for data sent to each bin
-    * @param underflow container for data below the first bin
-    * @param overflow container for data above the last bin
-    * @param nanflow container for data that resulted in `NaN`
+    * @param low Minimum-value edge of the first bin.
+    * @param high Maximum-value edge of the last bin.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param values Containers for data sent to each bin.
+    * @param underflow Container for data below the first bin.
+    * @param overflow Container for data above the last bin.
+    * @param nanflow Container for data that resulted in `NaN`.
     */
   class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
     val low: Double,
@@ -197,6 +198,7 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
+    /** Extract the container at a given index. */
     def at(index: Int) = values(index)
 
     def zero = new Binned[V, U, O, N](low, high, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
@@ -251,15 +253,15 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it into equally spaced bins between specified limits and filling only one bin per datum.
     * 
-    * @param low minimum-value edge of the first bin
-    * @param high maximum-value edge of the last bin
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param values containers for data sent to each bin
-    * @param underflow container for data below the first bin
-    * @param overflow container for data above the last bin
-    * @param nanflow container for data that resulted in `NaN`
+    * @param low Minimum-value edge of the first bin.
+    * @param high Maximum-value edge of the last bin.
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param values Containers for data sent to each bin.
+    * @param underflow Container for data below the first bin.
+    * @param overflow Container for data above the last bin.
+    * @param nanflow Container for data that resulted in `NaN`.
     */
   class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](
     val low: Double,
@@ -284,6 +286,7 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
+    /** Extract the container at a given index. */
     def at(index: Int) = values(index)
 
     def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)

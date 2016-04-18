@@ -40,18 +40,23 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Labeled]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param pairs names (strings) associated with containers of the SAME type
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param pairs Names (strings) associated with containers of the SAME type.
       */
     def ed[V <: Container[V]](entries: Double, pairs: (String, V)*) = new Labeled[V](entries, pairs: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Labeling]].
       * 
-      * @param pairs names (strings) associated with containers of the SAME type
+      * @param pairs Names (strings) associated with containers of the SAME type.
       */
     def apply[V <: Container[V] with Aggregation](pairs: (String, V)*) = new Labeling[V](0.0, pairs: _*)
 
+    /** Synonym for `apply`. */
+    def ing[V <: Container[V] with Aggregation](pairs: (String, V)*) = apply(pairs: _*)
+
+    /** Use [[org.dianahep.histogrammar.Labeled]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Labeled[V]) = Some((x.entries, x.pairs))
+    /** Use [[org.dianahep.histogrammar.Labeling]] in Scala pattern-matching. */
     def unapply[V <: Container[V] with Aggregation](x: Labeling[V]) = Some((x.entries, x.pairs))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -81,8 +86,8 @@ package histogrammar {
 
   /** An accumulated collection of containers of the SAME type, labeled by strings.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param pairs names (strings) associated with containers of the SAME type
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param pairs Names (strings) associated with containers of the SAME type.
     */
   class Labeled[V <: Container[V]](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] {
     type Type = Labeled[V]
@@ -137,8 +142,8 @@ package histogrammar {
 
   /** Accumulating a collection of containers of the SAME type, labeled by strings.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param pairs names (strings) associated with containers of the SAME type
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param pairs Names (strings) associated with containers of the SAME type.
     */
   class Labeling[V <: Container[V] with Aggregation](var entries: Double, val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
     type Type = Labeling[V]
@@ -217,18 +222,23 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.UntypedLabeled]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param pairs names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counted]]
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param pairs Names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counted]].
       */
     def ed(entries: Double, pairs: (String, Container[_])*) = new UntypedLabeled(entries, pairs: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.UntypedLabeling]].
       * 
-      * @param pairs names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counting]]
+      * @param pairs Names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counting]].
       */
     def apply[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = new UntypedLabeling(0.0, pairs: _*)
 
+    /** Synonym for `apply`. */
+    def ing[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = apply(pairs: _*)
+
+    /** Use [[org.dianahep.histogrammar.UntypedLabeled]] in Scala pattern-matching. */
     def unapply(x: UntypedLabeled) = Some((x.entries, x.pairs))
+    /** Use [[org.dianahep.histogrammar.UntypedLabeling]] in Scala pattern-matching. */
     def unapply[DATUM](x: UntypedLabeling[DATUM]) = Some((x.entries, x.pairs))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -264,8 +274,8 @@ package histogrammar {
 
   /** An accumulated collection of containers of any type except [[org.dianahep.histogrammar.Counted]], labeled by strings.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param pairs names (strings) associated with containers
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param pairs Names (strings) associated with containers.
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
@@ -323,7 +333,7 @@ package histogrammar {
 
   /** Accumulating a collection of containers of any type except [[org.dianahep.histogrammar.Counting]], labeled by strings.
     * 
-    * @param pairs names (strings) associated with containers
+    * @param pairs Names (strings) associated with containers.
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
@@ -403,18 +413,23 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Indexed]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param values ordered list of containers that can be retrieved by index number
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param values Ordered list of containers that can be retrieved by index number.
       */
     def ed[V <: Container[V]](entries: Double, values: V*) = new Indexed[V](entries, values: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Indexing]].
       * 
-      * @param values ordered list of containers that can be retrieved by index number
+      * @param values Ordered list of containers that can be retrieved by index number.
       */
     def apply[V <: Container[V] with Aggregation](values: V*) = new Indexing[V](0.0, values: _*)
 
+    /** Synonym for `apply`. */
+    def ing[V <: Container[V] with Aggregation](values: V*) = apply(values: _*)
+
+    /** Use [[org.dianahep.histogrammar.Indexed]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Indexed[V]) = Some((x.entries, x.values))
+    /** Use [[org.dianahep.histogrammar.Indexing]] in Scala pattern-matching. */
     def unapply[V <: Container[V] with Aggregation](x: Indexing[V]) = Some((x.entries, x.values))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -445,8 +460,8 @@ package histogrammar {
 
   /** An accumulated collection of containers of the SAME type, indexed by number.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param values ordered list of containers that can be retrieved by index number
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param values Ordered list of containers that can be retrieved by index number.
     */
   class Indexed[V <: Container[V]](val entries: Double, val values: V*) extends Container[Indexed[V]] {
     type Type = Indexed[V]
@@ -493,8 +508,8 @@ package histogrammar {
 
   /** Accumulating a collection of containers of the SAME type, indexed by number.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param values ordered list of containers that can be retrieved by index number
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param values Ordered list of containers that can be retrieved by index number.
     */
   class Indexing[V <: Container[V] with Aggregation](var entries: Double, val values: V*) extends Container[Indexing[V]] with AggregationOnData {
     type Type = Indexing[V]
@@ -557,6 +572,10 @@ package histogrammar {
     * Factory produces mutable [[org.dianahep.histogrammar.Branching]] and immutable [[org.dianahep.histogrammar.Branched]] objects.
     * 
     * '''Note:''' there is nothing intrinsic about the limit of 10 items. The data themselves are stored in a linked list (in value space and type space) and index fields `i0` through `i9` are added implicitly to lists of type-length 2 through 10, respectively. Longer lists can be created by adding more implicit methods.
+    * 
+    * To create a `Branched`, do `Branch.ed(entries, h1, h2, h3, ...)`.
+    * 
+    * To create a `Branching`, do `Branch(h1, h2, h3, ...)`.
     */
   object Branch extends Factory {
     def name = "Branch"
@@ -584,6 +603,17 @@ package histogrammar {
     def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, new Branching(0.0, i6, new Branching(0.0, i7, BranchingNil))))))))
     def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, new Branching(0.0, i6, new Branching(0.0, i7, new Branching(0.0, i8, BranchingNil)))))))))
     def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, C9 <: Container[C9] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8, e09: C0 Compatible C9) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, new Branching(0.0, i6, new Branching(0.0, i7, new Branching(0.0, i8, new Branching(0.0, i9, BranchingNil))))))))))
+
+    def ing[C0 <: Container[C0] with Aggregation](i0: C0) = apply(i0)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation](i0: C0, i1: C1)(implicit e01: C0 Compatible C1) = apply(i0, i1)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation](i0: C0, i1: C1, i2: C2)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2) = apply(i0, i1, i2)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3) = apply(i0, i1, i2, i3)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4) = apply(i0, i1, i2, i3, i4)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5) = apply(i0, i1, i2, i3, i4, i5)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6) = apply(i0, i1, i2, i3, i4, i5, i6)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7) = apply(i0, i1, i2, i3, i4, i5, i6, i7)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8) = apply(i0, i1, i2, i3, i4, i5, i6, i7, i8)
+    def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, C9 <: Container[C9] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8, e09: C0 Compatible C9) = apply(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "data")) =>
@@ -638,9 +668,9 @@ package histogrammar {
 
   /** An accumulated collection of containers of the ANY type, indexed by number.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param head container associated with the first item in the list
-    * @param tail list of all other `Branched` objects (or `BranchedNil`, the end of the list)
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param head Container associated with the first item in the list.
+    * @param tail List of all other `Branched` objects (or `BranchedNil`, the end of the list).
     * 
     * Note that concrete instances of `Branched` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
     */
@@ -690,9 +720,9 @@ package histogrammar {
 
   /** Accumulating a collection of containers of the ANY type, indexed by number.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param head container associated with the first item in the list
-    * @param tail list of all other `Branching` objects (or `BranchingNil`, the end of the list)
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param head Container associated with the first item in the list.
+    * @param tail List of all other `Branching` objects (or `BranchingNil`, the end of the list).
     * 
     * Note that concrete instances of `Branching` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
     */

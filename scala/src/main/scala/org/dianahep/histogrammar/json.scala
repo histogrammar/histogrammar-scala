@@ -397,7 +397,7 @@ package json {
 
   /** Concrete class for JSON arrays.
     * 
-    * @param elements is a varargs sequence; to fill from a Scala `Seq`, use the `myseq: _*` syntax.
+    * @param elements '''Note:''' a varargs sequence; to fill from a Scala `Seq`, use the `myseq: _*` syntax.
     */
   case class JsonArray(elements: Json*) extends JsonContainer {
     override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
@@ -452,7 +452,7 @@ package json {
 
   /** Concrete class for JSON objects (mappings).
     * 
-    * @param pairs is a varargs sequence; to fill from a Scala `Seq`, use the `myseq: _*` syntax.
+    * @param pairs '''Note:''' a varargs sequence; to fill from a Scala `Seq`, use the `myseq: _*` syntax.
     */
   case class JsonObject(pairs: (JsonString, Json)*) extends JsonContainer {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"

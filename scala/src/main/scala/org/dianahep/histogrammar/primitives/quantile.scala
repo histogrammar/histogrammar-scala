@@ -33,18 +33,18 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param bins centers and values of bins used to approximate and summarize the distribution
-      * @param min lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity)
-      * @param max highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity)
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param bins Centers and values of bins used to approximate and summarize the distribution.
+      * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
+      * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       */
     def ed(entries: Double, bins: Iterable[(Double, Counted)], min: Double, max: Double) =
       new Quantiled(new mutable.Clustering1D[Counted](100, 1.0, null.asInstanceOf[Counted], mutable.MetricSortedMap[Double, Counted](bins.toSeq: _*), min, max, entries))
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Quantiling]].
       * 
-      * @param quantity numerical function to track
-      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param quantity Numerical function to track.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
       new Quantiling[DATUM](quantity, selection, mutable.Clustering1D[Counting](100, 1.0, Count(), mutable.Clustering1D.values[Counting](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))
@@ -104,7 +104,7 @@ package histogrammar {
 
   /** An accumulated adaptive histogram, used to compute approximate quantiles, such as the median.
     * 
-    * @param clustering performs the adative binning
+    * @param clustering Performs the adative binning.
     */
   class Quantiled(clustering: mutable.Clustering1D[Counted]) extends Container[Quantiled] with CentralBinsDistribution[Counted] {
 
@@ -139,9 +139,9 @@ package histogrammar {
     /** Location of the top of the fourth quintile (80% of the data have smaller values). */
     def quintile4 = qf(0.80)
 
-    /** Location of a given percentile (`qf` scaled by 100.0). */
+    /** Location of a given percentile (`qf` scaled by 100). */
     def percentile(x: Double) = qf(x / 100.0)
-    /** Location of the given percentiles (`qf` scaled by 100.0). */
+    /** Location of the given percentiles (`qf` scaled by 100). */
     def percentile(xs: Double*) = qf(xs.map(_ / 100.0): _*)
 
     private[histogrammar] def getClustering = clustering
@@ -166,9 +166,9 @@ package histogrammar {
 
   /** Accumulating an adaptive histogram, used to compute approximate quantiles, such as the median.
     * 
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param clustering performs the adative binning
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param clustering Performs the adative binning.
     */
   class Quantiling[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], clustering: mutable.Clustering1D[Counting])
       extends Container[Quantiling[DATUM]] with AggregationOnData with CentralBinsDistribution[Counting] {
@@ -209,9 +209,9 @@ package histogrammar {
     /** Location of the top of the fourth quintile (80% of the data have smaller values). */
     def quintile4 = qf(0.80)
 
-    /** Location of a given percentile (`qf` scaled by 100.0). */
+    /** Location of a given percentile (`qf` scaled by 100). */
     def percentile(x: Double) = qf(x / 100.0)
-    /** Location of the given percentiles (`qf` scaled by 100.0). */
+    /** Location of the given percentiles (`qf` scaled by 100). */
     def percentile(xs: Double*) = qf(xs.map(_ / 100.0): _*)
 
     private[histogrammar] def getClustering = clustering

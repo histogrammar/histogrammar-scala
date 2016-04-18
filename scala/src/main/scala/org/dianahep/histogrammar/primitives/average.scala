@@ -30,15 +30,15 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Averaged]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param mean weighted mean of the quantity
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param mean Weighted mean of the quantity.
       */
     def ed(entries: Double, mean: Double) = new Averaged(entries, mean)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Averaging]].
       * 
-      * @param quantity numerical function to track
-      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param quantity Numerical function to track.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
 
@@ -75,8 +75,8 @@ package histogrammar {
 
   /** An accumulated weighted mean of a given quantity.
     * 
-    * @param entries weighted number of entries (sum of all weights)
-    * @param mean weighted mean of the quantity
+    * @param entries Weighted number of entries (sum of all weights).
+    * @param mean Weighted mean of the quantity.
     */
   class Averaged(val entries: Double, val mean: Double) extends Container[Averaged] {
     type Type = Averaged
@@ -103,10 +103,10 @@ package histogrammar {
 
   /** Accumulating a weighted mean of a given quantity.
     * 
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param entries weighted number of entries (sum of all weights)
-    * @param mean cumulative weighted mean (accrued with a numerically stable algorithm)
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all weights).
+    * @param mean Cumulative weighted mean (accrued with a numerically stable algorithm).
     */
   class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
     type Type = Averaging[DATUM]

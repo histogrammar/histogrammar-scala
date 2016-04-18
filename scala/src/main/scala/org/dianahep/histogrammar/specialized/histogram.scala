@@ -19,9 +19,13 @@ import scala.language.implicitConversions
 
 import org.dianahep.histogrammar._
 
+/** Specialty methods for container combinations that look like histograms. */
 package object histogram {
+  /** Type alias for conventional histograms (filled). */
   type Histogrammed = Binned[Counted, Counted, Counted, Counted]
+  /** Type alias for conventional histograms (filling). */
   type Histogramming[DATUM] = Binning[DATUM, Counting, Counting, Counting, Counting]
+  /** Convenience function for creating a conventional histogram. */
   def Histogram[DATUM]
     (num: Int,
       low: Double,
@@ -30,8 +34,11 @@ package object histogram {
       selection: Selection[DATUM] = unweighted[DATUM]) =
     new Binning[DATUM, Counting, Counting, Counting, Counting](low, high, quantity, selection, 0.0, Array.fill(num)(Count()).toSeq, Count(), Count(), Count())
 
+  /** Type alias for sparsely binned histograms (filled). */
   type SparselyHistogrammed = SparselyBinned[Counted, Counted]
+  /** Type alias for sparsely binned histograms (filling). */
   type SparselyHistogramming[DATUM] = SparselyBinning[DATUM, Counting, Counting]
+  /** Convenience function for creating a sparsely binned histogram. */
   def SparselyHistogram[DATUM]
     (binWidth: Double,
       quantity: NumericalFcn[DATUM],
@@ -55,13 +62,20 @@ package object histogram {
 }
 
 package histogram {
+  /** Methods that are implicitly added to container combinations that look like histograms. */
   class HistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]) {
+    /** Bin values as numbers, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalValues: Seq[Double] = hist.values.map(_.entries)
+    /** Overflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalOverflow: Double = hist.overflow.entries
+    /** Underflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalUnderflow: Double = hist.underflow.entries
+    /** Nanflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalNanflow: Double = hist.nanflow.entries
 
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
     def ascii: String = ascii(80)
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
     def ascii(width: Int): String = {
       val minCount = Math.min(Math.min(Math.min(hist.values.map(_.entries).min, hist.overflow.entries), hist.underflow.entries), hist.nanflow.entries)
       val maxCount = Math.max(Math.max(Math.max(hist.values.map(_.entries).max, hist.overflow.entries), hist.underflow.entries), hist.nanflow.entries)

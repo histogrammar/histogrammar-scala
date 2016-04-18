@@ -30,15 +30,15 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Summed]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param sum the sum of weight times quantity over all entries
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param sum The sum of weight times quantity over all entries.
       */
     def ed(entries: Double, sum: Double) = new Summed(entries, sum)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Summing]].
       * 
-      * @param quantity numerical function to track
-      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param quantity Numerical function to track.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing[DATUM](quantity, selection, 0.0, 0.0)
 
@@ -72,8 +72,8 @@ package histogrammar {
 
   /** An accumulated weighted sum of a given quantity.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param sum the sum of weight times quantity over all entries
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param sum The sum of weight times quantity over all entries.
     */
   class Summed(val entries: Double, val sum: Double) extends Container[Summed] {
     type Type = Summed
@@ -94,10 +94,10 @@ package histogrammar {
 
   /** Accumulating a weighted sum of a given quantity.
     * 
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param sum the sum of weight times quantity over all entries
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param sum The sum of weight times quantity over all entries.
     */
   class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
     type Type = Summing[DATUM]

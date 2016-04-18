@@ -33,22 +33,22 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.CentrallyBinned]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param bins centers and values of each bin
-      * @param min lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity)
-      * @param max highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity)
-      * @param nanflow container for data that resulted in `NaN`
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param bins Centers and values of each bin.
+      * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
+      * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
+      * @param nanflow Container for data that resulted in `NaN`.
       */
     def ed[V <: Container[V], N <: Container[N]](entries: Double, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
       new CentrallyBinned[V, N](entries, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.CentrallyBinning]].
       * 
-      * @param bins centers of each bin
-      * @param quantity numerical function split into fixed but unevenly-spaced bins
-      * @param selection boolean or non-negative function that cuts or weights entries
-      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
-      * @param nanflow container for data that result in `NaN`
+      * @param bins Centers of each bin.
+      * @param quantity Numerical function split into fixed but unevenly-spaced bins.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
+      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param nanflow Container for data that result in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
@@ -154,11 +154,11 @@ package histogrammar {
 
   /** An accumulated quantity that was split into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.
     * 
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param bins metric, sorted map of centers and values for each bin
-    * @param min lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity)
-    * @param max highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity)
-    * @param nanflow container for data that resulted in `NaN`
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param bins Metric, sorted map of centers and values for each bin.
+    * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
+    * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
+    * @param nanflow Container for data that resulted in `NaN`.
     */
   class CentrallyBinned[V <: Container[V], N <: Container[N]](val entries: Double, val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
     extends Container[CentrallyBinned[V, N]] with CentrallyBin.Methods[V] {
@@ -200,14 +200,14 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.
     * 
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param entries weighted number of entries (sum of all observed weights)
-    * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
-    * @param bins metric, sorted map of centers and values for each bin
-    * @param min lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity)
-    * @param max highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity)
-    * @param nanflow container for data that resulted in `NaN`
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+    * @param bins Metric, sorted map of centers and values for each bin.
+    * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
+    * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
+    * @param nanflow Container for data that resulted in `NaN`.
     */
   class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
     (val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)

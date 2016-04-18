@@ -30,15 +30,15 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.AbsoluteErred]] from arguments (instead of JSON).
       * 
-      * @param entries weighted number of entries (sum of all observed weights)
-      * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
       */
     def ed(entries: Double, mae: Double) = new AbsoluteErred(entries, mae)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.AbsoluteErring]].
       * 
-      * @param quantity numerical function to track
-      * @param selection boolean or non-negative function that cuts or weights entries
+      * @param quantity Numerical function to track.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
     def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
 
@@ -75,8 +75,8 @@ package histogrammar {
 
   /** An accumulated weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
     * 
-    * @param entries weighted number of entries (sum of all weights)
-    * @param mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
+    * @param entries Weighted number of entries (sum of all weights).
+    * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
   class AbsoluteErred(val entries: Double, val mae: Double) extends Container[AbsoluteErred] {
     type Type = AbsoluteErred
@@ -103,10 +103,10 @@ package histogrammar {
 
   /** Accumulating a weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
     * 
-    * @param quantity numerical function to track
-    * @param selection boolean or non-negative function that cuts or weights entries
-    * @param entries weighted number of entries (sum of all weights)
-    * @param _mae sum of absolute differences of the quantity from zero (Mean Absolute Error)
+    * @param quantity Numerical function to track.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all weights).
+    * @param _mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
   class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]

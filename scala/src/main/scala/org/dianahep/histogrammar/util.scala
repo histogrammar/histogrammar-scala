@@ -30,7 +30,17 @@ package object util {
 package util {
   //////////////////////////////////////////////////////////////// avoid recomputing a function that appears in many histograms
 
-  /** Wraps a user's function to provide caching. If the function is called two times in a row with the same arguments, a cached result is used instead. */
+  /** Wraps a user's function to provide caching. If the function is called two times in a row with the same arguments, a cached result is used instead.
+    * 
+    * '''Example:'''
+    * 
+    * {{{
+    * val f = cache {x: Double => complexFunction(x)}
+    * f(3.14)   // computes the function
+    * f(3.14)   // re-uses the old value
+    * f(4.56)   // computes the function again at a new point
+    * }}}
+    */
   case class cache[DOMAIN, RANGE](f: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
     private var last: Option[(DOMAIN, RANGE)] = None
     def apply(x: DOMAIN): RANGE = (x, last) match {
@@ -48,7 +58,7 @@ package util {
 
   /** Extension of Scala's `Ordering` trait to include distance. Used by [[org.dianahep.histogrammar.util.MetricSortedMap]]. */
   trait MetricOrdering[T] extends Ordering[T] {
-    /** Extension of `compare` with distance. */
+    /** Extension of `compare` with distance. Sign has the same meaning for ordering as in `compare`. */
     def difference(x: T, y: T): Double
     /** Absolute value of `difference`. */
     def distance(x: T, y: T) = Math.abs(difference(x, y))
@@ -61,8 +71,16 @@ package util {
     }
   }
 
-  /** Result of [[org.dianahep.histogrammar.util.MetricSortedMap]]'s `closest` method. */
-  case class Closest[A, B](difference: Double, key: A, value: B)
+  /** Result of [[org.dianahep.histogrammar.util.MetricSortedMap]]'s `closest` method.
+    * 
+    * @param difference Signed difference between the requested point and the closest match. Absolute value of this is a the distance.
+    * @param key Closest matching key in the [[org.dianahep.histogrammar.util.MetricSortedMap]].
+    * @param value Value associated with the closest matching key.
+    */
+  case class Closest[A, B](difference: Double, key: A, value: B) {
+    /** Convenience function for the absolute value of difference. */
+    def distance = Math.abs(difference)
+  }
 
   /** Extension of Scala's `SortedMap` with a [[org.dianahep.histogrammar.util.MetricOrdering]]. */
   abstract class MetricSortedMap[A, B](elems: (A, B)*)(ordering: MetricOrdering[A]) extends SortedMap[A, B] {
@@ -162,9 +180,17 @@ package util {
       * 
       * The `tailDetail` parameter scales between extremes: `tailDetail = 0` ''only'' considers the content of the bins and `tailDetail = 1` ''only'' considers the distance between bins (pure Ben-Haim/Tom-Tov). Specifically, the first bins to be merged are the ones that minimize
       * 
-      * `tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1 + v2)/entries`
+      * {{{tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1 + v2)/entries}}}
       * 
       * where `x1` and `x2` are the positions of the neighboring bins, `min` and `max` are the most extreme data positions observed so far, `v1` and `v2` are the (weighted) number of entries in the neighboring bins, and `entries` is the total (weighted) number of entries. The corresponding objective function for pure Ben-Haim/Tom-Tov is just `x2 - x1`.
+      * 
+      * @param num Maximum number of bins (used as a constraint when merging).
+      * @param tailDetail Between 0 and 1 inclusive: use 0 to focus on the bulk of the distribution and 1 to focus on the tails; see above for details.
+      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param values Containers for the surviving bins.
+      * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
+      * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
+      * @param entries Weighted number of entries (sum of all observed weights).
       */
     class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, val tailDetail: Double, value: => CONTAINER, val values: MetricSortedMap[Double, CONTAINER], var min: Double, var max: Double, var entries: Double) {
       private def mergeClusters() {
@@ -249,6 +275,7 @@ package util {
 
   /** Mix-in for containers with non-uniform bins defined by centers (such as [[org.dianahep.histogrammar.CentrallyBinned]]/[[org.dianahep.histogrammar.CentrallyBinning]] and [[org.dianahep.histogrammar.AdaptivelyBinned]]/[[org.dianahep.histogrammar.AdaptivelyBinning]]). */
   trait CentralBinsDistribution[CONTAINER <: Container[CONTAINER]] {
+    /**Weighted number of entries (sum of all observed weights). */
     def entries: Double
     /** Bin centers and their contents. */
     def bins: MetricSortedMap[Double, CONTAINER]
@@ -289,14 +316,14 @@ package util {
       */
     def qf(xs: Double*): Seq[Double] = qfTimesEntries(xs.map(_ * entries): _*)
 
-    /** PDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
+    /** PDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
     def pdfTimesEntries(x: Double): Double = pdfTimesEntries(List(x): _*).head
-    /** CDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
+    /** CDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
     def cdfTimesEntries(x: Double): Double = cdfTimesEntries(List(x): _*).head
-    /** QF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
+    /** QF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
     def qfTimesEntries(x: Double): Double = qfTimesEntries(List(x): _*).head
 
-    /** PDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
+    /** PDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
     def pdfTimesEntries(xs: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
@@ -333,7 +360,7 @@ package util {
         out.toSeq
       }
 
-    /** CDF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
+    /** CDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
     def cdfTimesEntries(xs: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(xs.size)(0.0)
@@ -377,7 +404,7 @@ package util {
         out.toSeq
       }
 
-    /** QF without the non-unity number of entries removed (no discontinuity when `entries` is zero). */
+    /** QF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
     def qfTimesEntries(ys: Double*): Seq[Double] =
       if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
         Seq.fill(ys.size)(java.lang.Double.NaN)

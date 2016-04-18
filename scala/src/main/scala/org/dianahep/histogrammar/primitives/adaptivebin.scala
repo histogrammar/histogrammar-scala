@@ -126,7 +126,7 @@ package histogrammar {
     }
   }
 
-  /** An accumulated quanity that was split dynamically into bins with a clustering algorithm, with only one datum filled per bin and no overflows or underflows.
+  /** An accumulated quantity that was split dynamically into bins with a clustering algorithm, with only one datum filled per bin and no overflows or underflows.
     * 
     * @param contentType name of the intended content; used as a placeholder in cases with zero bins (due to no observed data)
     * @param clustering performs the adative binning

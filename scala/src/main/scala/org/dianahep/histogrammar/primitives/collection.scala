@@ -28,12 +28,27 @@ package histogrammar {
   }
 
   //////////////////////////////////////////////////////////////// Label/Labeled/Labeling
+
+  /** Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Labeling]] and immutable [[org.dianahep.histogrammar.Labeled]] objects.
+    */
   object Label extends Factory {
     val name = "Label"
     val help = "Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum."
     val detailedHelp = """Label(pairs: (String, V)*)"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Labeled]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param pairs names (strings) associated with containers of the SAME type
+      */
     def ed[V <: Container[V]](entries: Double, pairs: (String, V)*) = new Labeled[V](entries, pairs: _*)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Labeling]].
+      * 
+      * @param pairs names (strings) associated with containers of the SAME type
+      */
     def apply[V <: Container[V] with Aggregation](pairs: (String, V)*) = new Labeling[V](0.0, pairs: _*)
 
     def unapply[V <: Container[V]](x: Labeled[V]) = Some((x.entries, x.pairs))
@@ -64,6 +79,11 @@ package histogrammar {
     }
   }
 
+  /** An accumulated collection of containers of the SAME type, labeled by strings.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param pairs names (strings) associated with containers of the SAME type
+    */
   class Labeled[V <: Container[V]](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] {
     type Type = Labeled[V]
     def factory = Label
@@ -107,6 +127,11 @@ package histogrammar {
     override def hashCode() = (entries, pairsMap).hashCode
   }
 
+  /** Accumulating a collection of containers of the SAME type, labeled by strings.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param pairs names (strings) associated with containers of the SAME type
+    */
   class Labeling[V <: Container[V] with Aggregation](var entries: Double, val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
     type Type = Labeling[V]
     type Datum = V#Datum
@@ -162,12 +187,29 @@ package histogrammar {
   }
 
   //////////////////////////////////////////////////////////////// UntypedLabel/UntypedLabeled/UntypedLabeling
+
+  /** Accumulate containers of any type except [[org.dianahep.histogrammar.Count]] and label them with strings. Every one is filled with every input datum.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.UntypedLabeling]] and immutable [[org.dianahep.histogrammar.UntypedLabeled]] objects.
+    * 
+    * **Note:** the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
+    */
   object UntypedLabel extends Factory {
     val name = "UntypedLabel"
     val help = "Accumulate containers of any type except Count and label them with strings. Every one is filled with every input datum."
     val detailedHelp = """UntypedLabel(pairs: (String -> Container)*)"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.UntypedLabeled]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param pairs names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counted]]
+      */
     def ed(entries: Double, pairs: (String, Container[_])*) = new UntypedLabeled(entries, pairs: _*)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.UntypedLabeling]].
+      * 
+      * @param pairs names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counting]]
+      */
     def apply[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = new UntypedLabeling(0.0, pairs: _*)
 
     def unapply(x: UntypedLabeled) = Some((x.entries, x.pairs))
@@ -204,6 +246,13 @@ package histogrammar {
       one.asInstanceOf[CONTAINER] + two.asInstanceOf[CONTAINER]
   }
 
+  /** An accumulated collection of containers of any type except [[org.dianahep.histogrammar.Counted]], labeled by strings.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param pairs names (strings) associated with containers
+    * 
+    * **Note:** the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
+    */
   class UntypedLabeled(val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] {
     type Type = UntypedLabeled
     def factory = UntypedLabel
@@ -248,6 +297,12 @@ package histogrammar {
     override def hashCode() = (entries, pairsMap).hashCode
   }
 
+  /** Accumulating a collection of containers of any type except [[org.dianahep.histogrammar.Counting]], labeled by strings.
+    * 
+    * @param pairs names (strings) associated with containers
+    * 
+    * **Note:** the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
+    */
   class UntypedLabeling[DATUM](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData {
     type Type = UntypedLabeled
     type Datum = DATUM
@@ -305,12 +360,26 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Index/Indexed/Indexing
 
+  /** Accumulate any number of containers of the SAME type anonymously in a list. Every one is filled with every input datum.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Indexing]] and immutable [[org.dianahep.histogrammar.Indexed]] objects.
+    */
   object Index extends Factory {
     val name = "Index"
     val help = "Accumulate any number of containers of the SAME type anonymously in a list. Every one is filled with every input datum."
     val detailedHelp = """"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Indexed]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param values ordered list of containers that can be retrieved by index number
+      */
     def ed[V <: Container[V]](entries: Double, values: V*) = new Indexed[V](entries, values: _*)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Indexing]].
+      * 
+      * @param values ordered list of containers that can be retrieved by index number
+      */
     def apply[V <: Container[V] with Aggregation](values: V*) = new Indexing[V](0.0, values: _*)
 
     def unapply[V <: Container[V]](x: Indexed[V]) = Some((x.entries, x.values))
@@ -342,6 +411,11 @@ package histogrammar {
     }
   }
 
+  /** An accumulated collection of containers of the SAME type, indexed by number.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param values ordered list of containers that can be retrieved by index number
+    */
   class Indexed[V <: Container[V]](val entries: Double, val values: V*) extends Container[Indexed[V]] {
     type Type = Indexed[V]
     def factory = Index
@@ -381,6 +455,11 @@ package histogrammar {
     override def hashCode() = (entries, values).hashCode
   }
 
+  /** Accumulating a collection of containers of the SAME type, indexed by number.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param values ordered list of containers that can be retrieved by index number
+    */
   class Indexing[V <: Container[V] with Aggregation](var entries: Double, val values: V*) extends Container[Indexing[V]] with AggregationOnData {
     type Type = Indexing[V]
     type Datum = V#Datum
@@ -433,6 +512,12 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Branch/Branched/Branching
 
+  /** Accumulate containers of DIFFERENT types, indexed by `i0` through `i9`. Every one is filled with every input datum.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Branching]] and immutable [[org.dianahep.histogrammar.Branched]] objects.
+    * 
+    * **Note:** there is nothing intrinsic about the limit of 10 items. The data themselves are stored in a linked list (in value space and type space) and index fields `i0` through `i9` are added implicitly to lists of type-length 2 through 10, respectively. Longer lists can be created by adding more implicit methods.
+    */
   object Branch extends Factory {
     def name = "Branch"
     def help = "Accumulate containers of DIFFERENT types, indexed by i0 through i9. Every one is filled with every input datum."
@@ -511,6 +596,14 @@ package histogrammar {
     def zero = this
   }
 
+  /** An accumulated collection of containers of the ANY type, indexed by number.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param head container associated with the first item in the list
+    * @param tail list of all other `Branched` objects (or `BranchedNil`, the end of the list)
+    * 
+    * Note that concrete instances of `Branched` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
+    */
   class Branched[HEAD <: Container[HEAD], TAIL <: BranchedList](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with BranchedList {
     type Type = Branched[HEAD, TAIL]
     def factory = Branch
@@ -552,6 +645,14 @@ package histogrammar {
     def zero = this
   }
 
+  /** Accumulating a collection of containers of the ANY type, indexed by number.
+    * 
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param head container associated with the first item in the list
+    * @param tail list of all other `Branching` objects (or `BranchingNil`, the end of the list)
+    * 
+    * Note that concrete instances of `Branching` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
+    */
   class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList](var entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
     type Type = Branching[HEAD, TAIL]
     type Datum = head.Datum

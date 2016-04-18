@@ -14,6 +14,8 @@
 
 package org.dianahep
 
+import scala.collection.immutable.SortedSet
+
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
@@ -26,7 +28,7 @@ package histogrammar {
 
     def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, cuts: _*)
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
-      new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
+      new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value)): _*)
 
     def unapply[V <: Container[V]](x: Stacked[V]) = Some((x.entries, x.cuts))
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Stacking[DATUM, V]) = Some((x.entries, x.cuts))

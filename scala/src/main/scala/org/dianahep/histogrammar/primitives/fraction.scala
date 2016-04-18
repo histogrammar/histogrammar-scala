@@ -19,13 +19,13 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
 
-  /** Fill two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
+  /** Accumulate two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Fractioning]] and immutable [[org.dianahep.histogrammar.Fractioned]] objects.
     */
   object Fraction extends Factory {
     val name = "Fraction"
-    val help = "Fill two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
+    val help = "Accumulate two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
     val detailedHelp = """Fraction(numeratorSelection: Selection[DATUM], value: => V = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Fractioned]] from arguments (instead of JSON).

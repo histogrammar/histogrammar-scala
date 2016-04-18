@@ -14,19 +14,37 @@
 
 package org.dianahep
 
+import scala.collection.immutable.SortedSet
+
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
 
+  /** Accumulate a suite containers, filling the one that is between a pair of given cuts on a given expression.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Partitioning]] and immutable [[org.dianahep.histogrammar.Partitioned]] objects.
+    */
   object Partition extends Factory {
     val name = "Partition"
     val help = "Accumulate a suite containers, filling the one that is between a pair of given cuts on a given expression."
     val detailedHelp = """Partition(value: => V, expression: NumericalFcn[DATUM], cuts: Double*)"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Partitioned]] from arguments (instead of JSON).
+      * 
+      * @param entries weighted number of entries (sum of all observed weights)
+      * @param cuts lower thresholds and their associated containers, starting with negative infinity
+      */
     def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Partitioned(entries, cuts: _*)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Partitioning]].
+      * 
+      * @param value new value (note the `=>`: expression is reevaluated every time a new value is needed)
+      * @param expression numerical expression whose value is compared with the given thresholds
+      * @param cuts thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element
+      */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
-      new Partitioning(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: cuts).map((_, value)): _*)
+      new Partitioning(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value)): _*)
 
     def unapply[V <: Container[V]](x: Partitioned[V]) = Some((x.entries, x.cuts))
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Partitioning[DATUM, V]) = Some((x.entries, x.cuts))
@@ -68,6 +86,11 @@ package histogrammar {
     }
   }
 
+  /** An accumulated suite of containers, each between a pair of given cuts on a given expression.
+    * 
+    * @param entries weighted number of entries (sum of all weights)
+    * @param cuts lower thresholds and their associated containers, starting with negative infinity
+    */
   class Partitioned[V <: Container[V]](val entries: Double, val cuts: (Double, V)*) extends Container[Partitioned[V]] {
     type Type = Partitioned[V]
     def factory = Partition
@@ -103,6 +126,12 @@ package histogrammar {
     override def hashCode() = (entries, cuts).hashCode()
   }
 
+  /** Accumulating a suite of containers, each filled if a given expression lies between a given set of cuts.
+    * 
+    * @param expression numerical expression whose value is compared with the given thresholds
+    * @param entries weighted number of entries (sum of all observed weights)
+    * @param cuts lower thresholds and their associated containers, starting with negative infinity
+    */
   class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData {
     type Type = Partitioning[DATUM, V]
     type Datum = DATUM

@@ -109,7 +109,7 @@ package histogrammar {
 
         val name = get("type") match {
           case JsonString(x) => x
-          case x => throw new JsonFormatException(x, "type")
+          case x => throw new JsonFormatException(x, "Factory.type")
         }
 
         Factory(name).fromJsonFragment(get("data"))

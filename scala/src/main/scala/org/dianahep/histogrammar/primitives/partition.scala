@@ -124,7 +124,7 @@ package histogrammar {
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
-    override def toString() = s"""Partitioned[entries=$entries, ${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""Partitioned[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
       case that: Partitioned[V] => this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
@@ -164,13 +164,13 @@ package histogrammar {
             (mycut, me + you)
           }: _*)
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       if (weight > 0.0) {
         val value = expression(datum)
         entries += weight
         // !(value >= high) is true when high == NaN (even if value == +inf)
         range find {case ((low, sub), (high, _)) => value >= low  &&  !(value >= high)} foreach {case ((_, sub), (_, _)) =>
-          sub.fillWeighted(datum, weight)
+          sub.fill(datum, weight)
         }
       }
     }
@@ -180,7 +180,7 @@ package histogrammar {
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
-    override def toString() = s"""Partitioning[entries=$entries, ${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""Partitioning[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
       case that: Partitioning[DATUM, V] => this.expression == that.expression  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false

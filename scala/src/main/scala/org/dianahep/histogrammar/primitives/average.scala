@@ -93,7 +93,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean))
 
-    override def toString() = s"Averaged($mean)"
+    override def toString() = s"Averaged[$mean]"
     override def equals(that: Any) = that match {
       case that: Averaged => this.entries === that.entries  &&  this.mean === that.mean
       case _ => false
@@ -123,7 +123,7 @@ package histogrammar {
       new Averaging(this.quantity, this.selection, newentries, newmean)
     }
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -137,7 +137,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean))
 
-    override def toString() = s"Averaging($mean)"
+    override def toString() = s"Averaging[$mean]"
     override def equals(that: Any) = that match {
       case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.mean === that.mean
       case _ => false

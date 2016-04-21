@@ -70,7 +70,7 @@ package histogrammar {
 
     def toJsonFragment = JsonFloat(entries)
 
-    override def toString() = s"Counted($entries)"
+    override def toString() = s"Counted[$entries]"
     override def equals(that: Any) = that match {
       case that: Counted => this.entries == that.entries
       case _ => false
@@ -95,13 +95,13 @@ package histogrammar {
     def zero = new Counting(0.0)
     def +(that: Counting): Counting = new Counting(this.entries + that.entries)
 
-    def fillWeighted[SUB <: Any](datum: SUB, weight: Double) {
+    def fill[SUB <: Any](datum: SUB, weight: Double = 1.0) {
       entries += weight
     }
 
     def toJsonFragment = JsonFloat(entries)
 
-    override def toString() = s"Counting($entries)"
+    override def toString() = s"Counting[$entries]"
     override def equals(that: Any) = that match {
       case that: Counting => this.entries == that.entries
       case _ => false

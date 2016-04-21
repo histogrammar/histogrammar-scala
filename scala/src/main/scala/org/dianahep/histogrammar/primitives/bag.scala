@@ -149,7 +149,7 @@ package histogrammar {
         }))
     }
 
-    override def toString() = s"""Bagged(entries=$entries, ${if (values.isEmpty) "empty" else "non-empty"})"""
+    override def toString() = s"""Bagged[${if (values.isEmpty) "empty" else "non-empty"}]"""
     override def equals(that: Any) = that match {
       case that: Bagged => this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false
@@ -194,7 +194,7 @@ package histogrammar {
       new Bagging[DATUM](quantity, selection, limit, newentries, newvalues)
     }
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -225,7 +225,7 @@ package histogrammar {
         }))
     }
 
-    override def toString() = s"""Bagging(entries=$entries, ${if (values.isEmpty) "empty" else "non-empty"})"""
+    override def toString() = s"""Bagging[${if (values.isEmpty) "empty" else "non-empty"}]"""
     override def equals(that: Any) = that match {
       case that: Bagging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false

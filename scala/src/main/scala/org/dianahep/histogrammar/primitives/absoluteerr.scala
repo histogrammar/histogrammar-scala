@@ -93,7 +93,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mae" -> JsonFloat(mae))
 
-    override def toString() = s"AbsoluteErred($mae)"
+    override def toString() = s"AbsoluteErred[$mae]"
     override def equals(that: Any) = that match {
       case that: AbsoluteErred => this.entries === that.entries  &&  this.mae === that.mae
       case _ => false
@@ -134,7 +134,7 @@ package histogrammar {
       new AbsoluteErring[DATUM](this.quantity, this.selection, newentries, newmae)
     }
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -145,7 +145,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mae" -> JsonFloat(mae))
 
-    override def toString() = s"AbsoluteErring($mae)"
+    override def toString() = s"AbsoluteErring[$mae]"
     override def equals(that: Any) = that match {
       case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.mae === that.mae
       case _ => false

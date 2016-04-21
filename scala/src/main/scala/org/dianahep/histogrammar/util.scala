@@ -219,11 +219,11 @@ package util {
           // assumes that CONTAINER has Aggregation (can call fillWeighted)
           values.get(x) match {
             case Some(v) =>
-              v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+              v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fill(datum, weight)
 
             case None =>
               val v = value   // create a new one
-              v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fillWeighted(datum, weight)
+              v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fill(datum, weight)
 
               values += (x, v)
               mergeClusters()

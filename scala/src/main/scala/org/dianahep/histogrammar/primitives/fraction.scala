@@ -98,7 +98,7 @@ package histogrammar {
       "numerator" -> numerator.toJsonFragment,
       "denominator" -> denominator.toJsonFragment)
 
-    override def toString() = s"Fractioned[entries=$entries, numerator=$numerator, denominator=$denominator]"
+    override def toString() = s"Fractioned[numerator=$numerator, denominator=$denominator]"
     override def equals(that: Any) = that match {
       case that: Fractioned[V] => this.entries === that.entries  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false
@@ -123,14 +123,14 @@ package histogrammar {
     def zero = new Fractioning[DATUM, V](numeratorSelection, 0.0, numerator.zero, denominator.zero)
     def +(that: Fractioning[DATUM, V]) = new Fractioning(this.numeratorSelection, this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator)
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * numeratorSelection(datum)
 
       entries += weight
       if (weight > 0.0)
-        denominator.fillWeighted(datum, weight)
+        denominator.fill(datum, weight)
       if (w > 0.0)
-        numerator.fillWeighted(datum, w)
+        numerator.fill(datum, w)
     }
 
     def toJsonFragment = JsonObject(
@@ -139,7 +139,7 @@ package histogrammar {
       "numerator" -> numerator.toJsonFragment,
       "denominator" -> denominator.toJsonFragment)
 
-    override def toString() = s"Fractioning[entries=$entries, numerator=$numerator, denominator=$denominator]"
+    override def toString() = s"Fractioning[numerator=$numerator, denominator=$denominator]"
     override def equals(that: Any) = that match {
       case that: Fractioning[DATUM, V] => this.numeratorSelection == that.numeratorSelection  &&  this.entries === that.entries  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false

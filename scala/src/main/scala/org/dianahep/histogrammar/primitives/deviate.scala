@@ -108,7 +108,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
-    override def toString() = s"Deviated($entries, $mean, $variance)"
+    override def toString() = s"Deviated[$mean, $variance]"
     override def equals(that: Any) = that match {
       case that: Deviated => this.entries === that.entries  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
@@ -154,7 +154,7 @@ package histogrammar {
       new Deviating[DATUM](this.quantity, this.selection, newentries, newmean, newvariance)
     }
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -169,7 +169,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
 
-    override def toString() = s"Deviating($entries, $mean, $variance)"
+    override def toString() = s"Deviating[$mean, $variance]"
     override def equals(that: Any) = that match {
       case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false

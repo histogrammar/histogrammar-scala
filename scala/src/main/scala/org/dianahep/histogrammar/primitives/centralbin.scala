@@ -190,7 +190,7 @@ package histogrammar {
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment)
 
-    override def toString() = s"""CentrallyBinned[entries=$entries, bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
+    override def toString() = s"""CentrallyBinned[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
       case that: CentrallyBinned[V, N] => this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
       case _ => false
@@ -232,17 +232,17 @@ package histogrammar {
       new CentrallyBinning[DATUM, V, N](quantity, selection, this.entries + that.entries, value, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
     }
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w >= 0.0) {
         val q = quantity(datum)
 
         entries += w
         if (nan(q))
-          nanflow.fillWeighted(datum, w)
+          nanflow.fill(datum, w)
         else {
           val Some(Closest(_, _, value)) = bins.closest(q)
-          value.fillWeighted(datum, w)
+          value.fill(datum, w)
         }
 
         if (min.isNaN  ||  q < min)
@@ -261,7 +261,7 @@ package histogrammar {
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment)
 
-    override def toString() = s"""CentrallyBinning[entries=$entries, bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
+    override def toString() = s"""CentrallyBinning[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
       case that: CentrallyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
       case _ => false

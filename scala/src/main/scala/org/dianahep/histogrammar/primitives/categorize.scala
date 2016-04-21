@@ -132,7 +132,7 @@ package histogrammar {
       "type" -> JsonString(contentType),
       "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
-    override def toString() = s"""Categorized[entries=$entries, [${if (pairs.isEmpty) contentType else pairs.head._2.toString}..., size=${pairs.size}]]"""
+    override def toString() = s"""Categorized[[${if (pairs.isEmpty) contentType else pairs.head._2.toString}..., size=${pairs.size}]]"""
     override def equals(that: Any) = that match {
       case that: Categorized[V] => this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false
@@ -188,7 +188,7 @@ package histogrammar {
           (key, that.pairsMap(key))
       }: _*))
     
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -196,7 +196,7 @@ package histogrammar {
         entries += w
         if (!(pairs contains q))
           pairs(q) = value
-        pairs(q).fillWeighted(datum, w)
+        pairs(q).fill(datum, w)
       }
     }
 
@@ -205,7 +205,7 @@ package histogrammar {
       "type" -> JsonString(value.factory.name),
       "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
 
-    override def toString() = s"Categorizing[entries=$entries, [${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
+    override def toString() = s"Categorizing[[${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {
       case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false

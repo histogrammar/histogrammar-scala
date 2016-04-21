@@ -211,14 +211,6 @@ package histogrammar {
         throw new ContainerException(s"cannot add Binned because number of values differs (${this.values.size} vs ${that.values.size})")
       if (this.values.isEmpty)
         throw new ContainerException(s"cannot add Binned because number of values is zero")
-      if (this.values.head.factory != that.values.head.factory)
-        throw new ContainerException(s"cannot add Binned because values type differs (${this.values.head.factory.name} vs ${that.values.head.factory.name})")
-      if (this.underflow.factory != that.underflow.factory)
-        throw new ContainerException(s"cannot add Binned because underflow type differs (${this.underflow.factory.name} vs ${that.underflow.factory.name})")
-      if (this.overflow.factory != that.overflow.factory)
-        throw new ContainerException(s"cannot add Binned because overflow type differs (${this.overflow.factory.name} vs ${that.overflow.factory.name})")
-      if (this.nanflow.factory != that.nanflow.factory)
-        throw new ContainerException(s"cannot add Binned because nanflow type differs (${this.nanflow.factory.name} vs ${that.nanflow.factory.name})")
 
       new Binned(
         low,
@@ -243,7 +235,7 @@ package histogrammar {
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment)
 
-    override def toString() = s"Binned[low=$low, high=$high, entries=$entries, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
       case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false
@@ -320,20 +312,20 @@ package histogrammar {
         this.nanflow + that.nanflow)
     }
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
 
         entries += w
         if (under(q))
-          underflow.fillWeighted(datum, w)
+          underflow.fill(datum, w)
         else if (over(q))
-          overflow.fillWeighted(datum, w)
+          overflow.fill(datum, w)
         else if (nan(q))
-          nanflow.fillWeighted(datum, w)
+          nanflow.fill(datum, w)
         else
-          values(bin(q)).fillWeighted(datum, w)
+          values(bin(q)).fill(datum, w)
       }
     }
 
@@ -350,7 +342,7 @@ package histogrammar {
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment)
 
-    override def toString() = s"Binning[low=$low, high=$high, entries=$entries, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
       case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false

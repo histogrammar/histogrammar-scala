@@ -195,11 +195,7 @@ package histogrammar {
       * 
       * The container is changed in-place.
       */
-    def fill[SUB <: Datum](datum: SUB) {
-      fillWeighted(datum, 1.0)
-    }
-    /** Fill method for data with an associated weight. Usually a weight is assigned by a container's [[org.dianahep.histogrammar.Selection]]. */
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double)
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0)
   }
 
   /** Sub-trait of [[org.dianahep.histogrammar.Aggregation]] for all containers except [[org.dianahep.histogrammar.Counting]].

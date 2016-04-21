@@ -156,7 +156,7 @@ package histogrammar {
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max))
 
-    override def toString() = s"""Quantiled[entries=$entries, bins=[${if (bins.isEmpty) "Counted" else bins.head._2.toString}..., size=${bins.size}]]"""
+    override def toString() = s"""Quantiled[bins=[${if (bins.isEmpty) "Counted" else bins.head._2.toString}..., size=${bins.size}]]"""
     override def equals(that: Any) = that match {
       case that: Quantiled => this.clustering == that.getClustering
       case _ => false
@@ -220,7 +220,7 @@ package histogrammar {
     def +(that: Quantiling[DATUM]) =
       new Quantiling[DATUM](quantity, selection, clustering.merge(that.getClustering))
 
-    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
+    def fill[SUB <: DATUM](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w >= 0.0) {
         val q = quantity(datum)
@@ -234,7 +234,7 @@ package histogrammar {
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max))
 
-    override def toString() = s"""Quantiling[entries=$entries, bins=[${if (bins.isEmpty) "Counting" else bins.head._2.toString}..., size=${bins.size}]]"""
+    override def toString() = s"""Quantiling[bins=[${if (bins.isEmpty) "Counting" else bins.head._2.toString}..., size=${bins.size}]]"""
     override def equals(that: Any) = that match {
       case that: Quantiling[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.clustering == that.getClustering
       case _ => false

@@ -95,7 +95,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "min" -> JsonFloat(min))
 
-    override def toString() = s"Minimized($min)"
+    override def toString() = s"Minimized[$min]"
     override def equals(that: Any) = that match {
       case that: Minimized => this.entries === that.entries  &&  this.min === that.min
       case _ => false
@@ -118,7 +118,7 @@ package histogrammar {
     def zero = new Minimizing[DATUM](quantity, selection, 0.0, java.lang.Double.NaN)
     def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.selection, this.entries + that.entries, Minimize.plus(this.min, that.min))
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -130,7 +130,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "min" -> JsonFloat(min))
 
-    override def toString() = s"Minimizing($min)"
+    override def toString() = s"Minimizing[$min]"
     override def equals(that: Any) = that match {
       case that: Minimizing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.min === that.min
       case _ => false
@@ -213,7 +213,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "max" -> JsonFloat(max))
 
-    override def toString() = s"Maximized($max)"
+    override def toString() = s"Maximized[$max]"
     override def equals(that: Any) = that match {
       case that: Maximized => this.entries === that.entries  &&  this.max === that.max
       case _ => false
@@ -236,7 +236,7 @@ package histogrammar {
     def zero = new Maximizing[DATUM](quantity, selection, 0.0, java.lang.Double.NaN)
     def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.selection, this.entries + that.entries, Maximize.plus(this.max, that.max))
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -248,7 +248,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "max" -> JsonFloat(max))
 
-    override def toString() = s"Maximizing($max)"
+    override def toString() = s"Maximizing[$max]"
     override def equals(that: Any) = that match {
       case that: Maximizing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.max === that.max
       case _ => false

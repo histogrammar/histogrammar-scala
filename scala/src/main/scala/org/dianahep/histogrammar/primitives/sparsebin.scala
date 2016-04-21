@@ -215,7 +215,7 @@ package histogrammar {
       "nanflow" -> nanflow.toJsonFragment,
       "origin" -> JsonFloat(origin))
 
-    override def toString() = s"""SparselyBinned[binWidth=$binWidth, entries=$entries, bins=[${if (bins.isEmpty) contentType else bins.head.toString}..., size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
+    override def toString() = s"""SparselyBinned[binWidth=$binWidth, bins=[${if (bins.isEmpty) contentType else bins.head.toString}..., size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {
       case that: SparselyBinned[V, N] => this.binWidth === that.binWidth  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false
@@ -273,19 +273,19 @@ package histogrammar {
       new SparselyBinning[DATUM, V, N](binWidth, this.quantity, this.selection, this.entries + that.entries, this.value, newbins, this.nanflow + that.nanflow, origin)
     }
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
 
         entries += w
         if (nan(q))
-          nanflow.fillWeighted(datum, w)
+          nanflow.fill(datum, w)
         else {
           val b = bin(q)
           if (!(bins contains b))
             bins.update(b, value)
-          bins(b).fillWeighted(datum, w)
+          bins(b).fill(datum, w)
         }
       }
     }
@@ -311,7 +311,7 @@ package histogrammar {
       "nanflow" -> nanflow.toJsonFragment,
       "origin" -> JsonFloat(origin))
 
-    override def toString() = s"""SparselyBinning[binWidth=$binWidth, entries=$entries, bins=[${if (bins.isEmpty) value.factory.name else bins.head.toString}, size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
+    override def toString() = s"""SparselyBinning[binWidth=$binWidth, bins=[${if (bins.isEmpty) value.factory.name else bins.head.toString}, size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {
       case that: SparselyBinning[DATUM, V, N] => this.binWidth === that.binWidth  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false

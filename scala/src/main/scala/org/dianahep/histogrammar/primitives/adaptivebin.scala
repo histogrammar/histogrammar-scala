@@ -183,7 +183,7 @@ package histogrammar {
       "nanflow" -> nanflow.toJsonFragment,
       "tailDetail" -> JsonFloat(tailDetail))
 
-    override def toString() = s"""AdaptivelyBinned[entries=$entries, bins=[${if (bins.isEmpty) contentType else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
+    override def toString() = s"""AdaptivelyBinned[bins=[${if (bins.isEmpty) contentType else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
       case that: AdaptivelyBinned[V, N] => this.clustering == that.getClustering  &&  this.nanflow == that.nanflow
       case _ => false
@@ -237,7 +237,7 @@ package histogrammar {
       new AdaptivelyBinning[DATUM, V, N](quantity, selection, value, clustering.merge(that.getClustering), this.nanflow + that.nanflow)
     }
 
-    def fillWeighted[SUB <: DATUM](datum: SUB, weight: Double) {
+    def fill[SUB <: DATUM](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w >= 0.0) {
         val q = quantity(datum)
@@ -256,7 +256,7 @@ package histogrammar {
       "nanflow" -> nanflow.toJsonFragment,
       "tailDetail" -> JsonFloat(tailDetail))
 
-    override def toString() = s"""AdaptivelyBinning[entries=$entries, bins=[${if (bins.isEmpty) value.factory.name else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
+    override def toString() = s"""AdaptivelyBinning[bins=[${if (bins.isEmpty) value.factory.name else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
       case that: AdaptivelyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.clustering == that.getClustering  &&  this.nanflow == that.nanflow
       case _ => false

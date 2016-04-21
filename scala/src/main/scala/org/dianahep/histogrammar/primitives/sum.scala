@@ -84,7 +84,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "sum" -> JsonFloat(sum))
 
-    override def toString() = s"Summed($sum)"
+    override def toString() = s"Summed[$sum]"
     override def equals(that: Any) = that match {
       case that: Summed => this.entries === that.entries  &&  this.sum === that.sum
       case _ => false
@@ -107,7 +107,7 @@ package histogrammar {
     def zero = new Summing[DATUM](quantity, selection, 0.0, 0.0)
     def +(that: Summing[DATUM]) = new Summing(this.quantity, this.selection, this.entries + that.entries, this.sum + that.sum)
 
-    def fillWeighted[SUB <: Datum](datum: SUB, weight: Double) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
       if (w > 0.0) {
         val q = quantity(datum)
@@ -118,7 +118,7 @@ package histogrammar {
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "sum" -> JsonFloat(sum))
 
-    override def toString() = s"Summing($sum)"
+    override def toString() = s"Summing[$sum]"
     override def equals(that: Any) = that match {
       case that: Summing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.sum === that.sum
       case _ => false

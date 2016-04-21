@@ -207,6 +207,22 @@ package histogrammar {
     * `AggregationOnData` containers actually depend on their `Datum` type; `Counting` is the only one that ignores it.
     */
   trait AggregationOnData extends Aggregation
+
+  /** Increment function for Apache Spark's `aggregate` method.
+    * 
+    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
+    */
+  class Increment[DATUM, CONTAINER <: Container[CONTAINER] with AggregationOnData {type Datum >: DATUM}] extends Function2[CONTAINER, DATUM, CONTAINER] with Serializable {
+    def apply(h: CONTAINER, x: DATUM): CONTAINER = {h.fill(x); h}
+  }
+
+  /** Combine function for Apache Spark's `aggregate` method.
+    * 
+    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
+    */
+  class Combine[CONTAINER <: Container[CONTAINER]] extends Function2[CONTAINER, CONTAINER, CONTAINER] with Serializable {
+    def apply(h1: CONTAINER, h2: CONTAINER): CONTAINER = h1 + h2
+  }
 }
 
 /** Main library for Histogrammar.
@@ -219,36 +235,6 @@ package object histogrammar {
   /** Help function for interactive use. Used to discover container types. */
   def help = Factory.registered map {case (name, factory) => f"${name}%-15s ${factory.help}"} mkString("\n")
 
-  /** Increment function for Apache Spark's `aggregate` method (all containers except [[org.dianahep.histogrammar.UntypedLabel]]).
-    * 
-    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
-    * 
-    * '''Note:''' cannot be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `incrementUntypedLabel` otherwise.
-    */
-  def increment[CONTAINER <: Container[CONTAINER] with Aggregation] = {(h: CONTAINER, x: h.Datum) => h.fill(x); h}
-  /** Combine function for Apache Spark's `aggregate` method (all containers except [[org.dianahep.histogrammar.UntypedLabel]]).
-    * 
-    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
-    * 
-    * '''Note:''' cannot be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `combineUntypedLabel` otherwise.
-    */
-  def combine[CONTAINER <: Container[CONTAINER]] = {(h1: CONTAINER, h2: CONTAINER) => h1 + h2}
-
-  /** Increment function for Apache Spark's `aggregate` method ([[org.dianahep.histogrammar.UntypedLabel]] only).
-    * 
-    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(incrementUntypedLabel[DATUM], combineUntypedLabel[DATUM])` where `datasetRDD` is a collection of type `DATUM`.
-    * 
-    * '''Note:''' can only be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `increment` otherwise.
-    */
-  def incrementUntypedLabel[DATUM] = {(h: UntypedLabeling[DATUM], x: DATUM) => h.fill(x); h}
-  /** Combine function for Apache Spark's `aggregate` method ([[org.dianahep.histogrammar.UntypedLabel]] only).
-    * 
-    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(incrementUntypedLabel[DATUM], combineUntypedLabel[DATUM])` where `datasetRDD` is a collection of type `DATUM`.
-    * 
-    * '''Note:''' can only be used if `initialHistogram` is an [[org.dianahep.histogrammar.UntypedLabel]]. See `combine` otherwise.
-    */
-  def combineUntypedLabel[DATUM] = {(h1: UntypedLabeling[DATUM], h2: UntypedLabeling[DATUM]) => h1 + h2}
-
   //////////////////////////////////////////////////////////////// define implicits
 
   /** Wraps a user's function for weighting data.
@@ -259,28 +245,58 @@ package object histogrammar {
     * 
     * If `Selections` are specified for nested structures, they will be multiplied to provide the final weight. A value of 0.0 at any level skips descent of the subtree.
     */
-  implicit class Selection[-DATUM](f: DATUM => Double) extends Serializable {
+  trait Selection[-DATUM] extends Serializable {
+    def apply[SUB <: DATUM](x: SUB): Double
+  }
+  implicit class SelectionFromBoolean[-DATUM](f: DATUM => Boolean) extends Selection[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = if (f(x)) 1.0 else 0.0
+  }
+  implicit class SelectionFromByte[-DATUM](f: DATUM => Byte) extends Selection[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class SelectionFromShort[-DATUM](f: DATUM => Short) extends Selection[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class SelectionFromInt[-DATUM](f: DATUM => Int) extends Selection[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class SelectionFromLong[-DATUM](f: DATUM => Long) extends Selection[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class SelectionFromFloat[-DATUM](f: DATUM => Float) extends Selection[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class SelectionFromDouble[-DATUM](f: DATUM => Double) extends Selection[DATUM] {
     def apply[SUB <: DATUM](x: SUB): Double = f(x)
   }
-  implicit def booleanToSelection[DATUM](f: DATUM => Boolean) = Selection({x: DATUM => if (f(x)) 1.0 else 0.0})
-  implicit def byteToSelection[DATUM](f: DATUM => Byte) = Selection({x: DATUM => f(x).toDouble})
-  implicit def shortToSelection[DATUM](f: DATUM => Short) = Selection({x: DATUM => f(x).toDouble})
-  implicit def intToSelection[DATUM](f: DATUM => Int) = Selection({x: DATUM => f(x).toDouble})
-  implicit def longToSelection[DATUM](f: DATUM => Long) = Selection({x: DATUM => f(x).toDouble})
-  implicit def floatToSelection[DATUM](f: DATUM => Float) = Selection({x: DATUM => f(x).toDouble})
 
   /** Default weighting function that always returns 1.0. */
-  def unweighted[DATUM] = new Selection[DATUM]({x: DATUM => 1.0})
+  def unweighted[DATUM] = new Selection[DATUM] {
+    def apply[SUB <: DATUM](x: SUB) = 1.0
+  }
 
   /** Wraps a user's function for extracting numbers from the input data type. */
-  implicit class NumericalFcn[-DATUM](f: DATUM => Double) extends Serializable {
+  trait NumericalFcn[-DATUM] extends Serializable {
+    def apply[SUB <: DATUM](x: SUB): Double
+  }
+  implicit class NumericalFcnFromByte[-DATUM](f: DATUM => Byte) extends NumericalFcn[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class NumericalFcnFromShort[-DATUM](f: DATUM => Short) extends NumericalFcn[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class NumericalFcnFromInt[-DATUM](f: DATUM => Int) extends NumericalFcn[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class NumericalFcnFromLong[-DATUM](f: DATUM => Long) extends NumericalFcn[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class NumericalFcnFromFloat[-DATUM](f: DATUM => Float) extends NumericalFcn[DATUM] {
+    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+  }
+  implicit class NumericalFcnFromDouble[-DATUM](f: DATUM => Double) extends NumericalFcn[DATUM] {
     def apply[SUB <: DATUM](x: SUB): Double = f(x)
   }
-  implicit def byteToNumericalFcn[DATUM](f: DATUM => Byte) = NumericalFcn({x: DATUM => f(x).toDouble})
-  implicit def shortToNumericalFcn[DATUM](f: DATUM => Short) = NumericalFcn({x: DATUM => f(x).toDouble})
-  implicit def intToNumericalFcn[DATUM](f: DATUM => Int) = NumericalFcn({x: DATUM => f(x).toDouble})
-  implicit def longToNumericalFcn[DATUM](f: DATUM => Long) = NumericalFcn({x: DATUM => f(x).toDouble})
-  implicit def floatToNumericalFcn[DATUM](f: DATUM => Float) = NumericalFcn({x: DATUM => f(x).toDouble})
 
   /** Wraps a user's function for extracting strings (categories) from the input data type. */
   implicit class CategoricalFcn[-DATUM](f: DATUM => String) extends Serializable {

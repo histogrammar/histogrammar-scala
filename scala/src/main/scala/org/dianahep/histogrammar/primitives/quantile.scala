@@ -29,7 +29,7 @@ package histogrammar {
   object Quantile extends Factory {
     val name = "Quantile"
     val help = "Accumulate an adaptively binned histogram to compute approximate quantiles, such as the median."
-    val detailedHelp = """Quantile"""
+    val detailedHelp = """Quantile(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 

@@ -149,7 +149,7 @@ package histogrammar {
         }))
     }
 
-    override def toString() = s"""Bagged[${if (values.isEmpty) "empty" else "non-empty"}]"""
+    override def toString() = s"""Bagged[${if (!limit.isEmpty  &&  limit.get < entries) "saturated" else "size=" + values.map(_.size).toList.sum.toString}]"""
     override def equals(that: Any) = that match {
       case that: Bagged => this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false
@@ -225,7 +225,7 @@ package histogrammar {
         }))
     }
 
-    override def toString() = s"""Bagging[${if (values.isEmpty) "empty" else "non-empty"}]"""
+    override def toString() = s"""Bagging[${if (!limit.isEmpty  &&  limit.get < entries) "saturated" else "size=" + values.map(_.size).toList.sum.toString}]"""
     override def equals(that: Any) = that match {
       case that: Bagging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false

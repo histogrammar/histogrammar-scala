@@ -233,6 +233,8 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
+      println("left", leftResult, "right", rightResult, "final", finalResult)
+
       checkJson(leftAveraging)
     }
   }

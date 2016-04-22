@@ -19,13 +19,13 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
 
-  /**Accumulate raw data up to an optional limit, at which point only the total number are preserved.
+  /**Accumulate raw data up to an optional limit, at which point only the total number is preserved.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Bagging]] and immutable [[org.dianahep.histogrammar.Bagged]] objects.
     */
   object Bag extends Factory {
     val name = "Bag"
-    val help = "Accumulate raw data up to an optional limit, at which point only the total number are preserved."
+    val help = "Accumulate raw data up to an optional limit, at which point only the total number is preserved."
     val detailedHelp = """Bag(quantity: MultivariateFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], limit: Option[Double] = None)"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).

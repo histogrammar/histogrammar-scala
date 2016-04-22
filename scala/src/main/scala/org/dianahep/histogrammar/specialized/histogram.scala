@@ -53,9 +53,12 @@ package object histogram {
     new HistogramMethods(Factory.fromJson(hist.toJson).as[Binned[Counted, Counted, Counted, Counted]])
 
   implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
-    new HistogramMethods(
-      new Binned(hist.low, hist.high, 0.0, hist.minBin to hist.maxBin map {i => Count.ed(hist.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, Count.ed(0L), Count.ed(0L), hist.nanflow)
-    )
+    if (hist.numFilled > 0)
+      new HistogramMethods(
+        new Binned(hist.low.get, hist.high.get, 0.0, hist.minBin.get to hist.maxBin.get map {i => Count.ed(hist.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, Count.ed(0L), Count.ed(0L), hist.nanflow)
+      )
+    else
+      throw new RuntimeException("sparsel binned histogram has no entries")
 
   implicit def sparselyBinningToHistogramMethods(hist: SparselyBinning[_, _, _]): HistogramMethods =
     sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[SparselyBinned[Counted, Counted]])

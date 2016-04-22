@@ -233,8 +233,6 @@ class DefaultSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
-      println("left", leftResult, "right", rightResult, "final", finalResult)
-
       checkJson(leftAveraging)
     }
   }
@@ -513,9 +511,9 @@ class DefaultSuite extends FlatSpec with Matchers {
     Factory.fromJson(one.toJson).as[SparselyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List(-5 -> 1.0, -3 -> 1.0, -2 -> 2.0, 0 -> 2.0, 1 -> 1.0, 2 -> 1.0, 3 -> 1.0, 7 -> 1.0))
 
     one.numFilled should be (8)
-    one.num should be (12)
-    one.low should be (-5.0)
-    one.high should be (8.0)
+    one.num should be (13)
+    one.low.get should be (-5.0)
+    one.high.get should be (8.0)
 
     checkJson(one)
   }

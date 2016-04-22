@@ -88,11 +88,11 @@ package histogrammar {
       /** The number of bins between the first non-empty one (inclusive) and the last non-empty one (exclusive). */
       def num: Long
       /** The first non-empty bin. */
-      def minBin: Long
+      def minBin: Option[Long]
       /** The last non-empty bin. */
-      def maxBin: Long
-      def low: Double
-      def high: Double
+      def maxBin: Option[Long]
+      def low: Option[Double]
+      def high: Option[Double]
       /** Get a sequence of filled indexes. */
       def indexes: Seq[Long]
       /** Get the low and high edge of a bin (given by index number). */
@@ -102,14 +102,14 @@ package histogrammar {
         * 
         * @return `Long.MIN_VALUE` if `x` is `NaN`; the bin index otherwise.
         */
-      def bin(k: Double): Long =
-        if (nan(k))
+      def bin(x: Double): Long =
+        if (nan(x))
           java.lang.Long.MIN_VALUE
         else
-          Math.floor((k - origin) / binWidth).toLong
+          Math.floor((x - origin) / binWidth).toLong
 
       /** Return `true` iff `x` is in the nanflow region (equal to `NaN`). */
-      def nan(k: Double): Boolean = k.isNaN
+      def nan(x: Double): Boolean = x.isNaN
     }
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -134,7 +134,7 @@ package histogrammar {
           case JsonObject(indexBins @ _*) =>
             SortedMap(indexBins map {
               case (JsonString(i), v) if (integerPattern.pattern.matcher(i).matches) => (i.toLong, binsFactory.fromJsonFragment(v))
-              case (i, _) => throw new JsonFormatException(i, name + s".bins key $i must be an integer")
+              case (i, _) => throw new JsonFormatException(i, name + s".bins key must be an integer")
             }: _*)
           case x => throw new JsonFormatException(x, name + ".bins")
         }
@@ -195,11 +195,11 @@ package histogrammar {
     }
 
     def numFilled = bins.size
-    def num = if (bins.isEmpty) -1L else bins.last._1 - bins.head._1
-    def minBin = if (bins.isEmpty) java.lang.Long.MIN_VALUE else bins.head._1
-    def maxBin = if (bins.isEmpty) java.lang.Long.MIN_VALUE else bins.last._1
-    def low = if (bins.isEmpty) java.lang.Double.NaN else minBin * binWidth + origin
-    def high = if (bins.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
+    def num = if (bins.isEmpty) 0L else 1L + bins.last._1 - bins.head._1
+    def minBin = if (bins.isEmpty) None else Some(bins.head._1)
+    def maxBin = if (bins.isEmpty) None else Some(bins.last._1)
+    def low = if (bins.isEmpty) None else Some(minBin.get * binWidth + origin)
+    def high = if (bins.isEmpty) None else Some((maxBin.get + 1L) * binWidth + origin)
     /** Extract the container at a given index, if it exists. */
     def at(index: Long) = bins.find(_._1 == index).map(_._2)
     def indexes = bins.map(_._1).toSeq
@@ -291,11 +291,11 @@ package histogrammar {
     }
 
     def numFilled = bins.size
-    def num = if (bins.isEmpty) -1L else bins.map(_._1).max - bins.map(_._1).min
-    def minBin = if (bins.isEmpty) java.lang.Long.MIN_VALUE else bins.map(_._1).min
-    def maxBin = if (bins.isEmpty) java.lang.Long.MIN_VALUE else bins.map(_._1).max
-    def low = if (bins.isEmpty) java.lang.Double.NaN else minBin * binWidth + origin
-    def high = if (bins.isEmpty) java.lang.Double.NaN else (maxBin + 1L) * binWidth + origin
+    def num = if (bins.isEmpty) 0L else 1L + bins.map(_._1).max - bins.map(_._1).min
+    def minBin = if (bins.isEmpty) None else Some(bins.map(_._1).min)
+    def maxBin = if (bins.isEmpty) None else Some(bins.map(_._1).max)
+    def low = if (bins.isEmpty) None else Some(minBin.get * binWidth + origin)
+    def high = if (bins.isEmpty) None else Some((maxBin.get + 1L) * binWidth + origin)
     /** Extract the container at a given index, if it exists. */
     def at(index: Long) = bins.get(index)
     def indexes = bins.map(_._1).toSeq

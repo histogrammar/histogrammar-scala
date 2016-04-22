@@ -19,8 +19,8 @@ import scala.language.existentials
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
-  trait Compatible[-X, -Y]
-  object Compatible {
+  private[histogrammar] trait Compatible[-X, -Y]
+  private[histogrammar] object Compatible {
     implicit object BothAreCounting extends Compatible[Counting, Counting]
     implicit object XIsCounting extends Compatible[Counting, AggregationOnData]
     implicit object YIsCounting extends Compatible[AggregationOnData, Counting]

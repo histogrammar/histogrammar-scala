@@ -134,17 +134,17 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    private var varianceTimesTotalWeight = entries * _variance
+    private var varianceTimesEntries = entries * _variance
 
     /** weighted variance of the quantity */
     def variance =
       if (entries == 0.0)
         _variance
       else
-        varianceTimesTotalWeight / entries
+        varianceTimesEntries / entries
 
     def variance_=(_variance: Double) {
-      varianceTimesTotalWeight = entries * _variance
+      varianceTimesEntries = entries * _variance
     }
 
     def zero = new Deviating[DATUM](quantity, selection, 0.0, 0.0, 0.0)
@@ -163,7 +163,7 @@ package histogrammar {
         val delta = q - mean
         val shift = delta * w / entries
         mean += shift
-        varianceTimesTotalWeight += w * delta * (q - mean)   // old delta times new delta
+        varianceTimesEntries += w * delta * (q - mean)   // old delta times new delta
       }
     }
 

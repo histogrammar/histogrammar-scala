@@ -80,10 +80,12 @@ package histogrammar {
 
   /** An accumulated minimum of a given quantity. If no data are observed, the result is `NaN`.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Minimize]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param min Lowest observed value.
     */
-  class Minimized(val entries: Double, val min: Double) extends Container[Minimized] {
+  class Minimized private[histogrammar](val entries: Double, val min: Double) extends Container[Minimized] {
     type Type = Minimized
     def factory = Minimize
 
@@ -105,12 +107,14 @@ package histogrammar {
 
   /** Accumulating the minimum of a given quantity. If no data are observed, the result is `NaN`.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Minimize]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param min Lowest observed value.
     */
-  class Minimizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
+  class Minimizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
     type Type = Minimizing[DATUM]
     type Datum = DATUM
     def factory = Minimize
@@ -201,10 +205,12 @@ package histogrammar {
 
   /** An accumulated maximum of a given quantity. If no data are observed, the result is `NaN`.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Maximize]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param max Highest observed value.
     */
-  class Maximized(val entries: Double, val max: Double) extends Container[Maximized] {
+  class Maximized private[histogrammar](val entries: Double, val max: Double) extends Container[Maximized] {
     type Type = Maximized
     def factory = Maximize
 
@@ -223,12 +229,14 @@ package histogrammar {
 
   /** Accumulating the maximum of a given quantity. If no data are observed, the result is `NaN`.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Maximize]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param max Highest observed value.
     */
-  class Maximizing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
+  class Maximizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
     type Type = Maximizing[DATUM]
     type Datum = DATUM
     def factory = Maximize

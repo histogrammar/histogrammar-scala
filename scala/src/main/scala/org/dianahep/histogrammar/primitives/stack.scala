@@ -94,10 +94,12 @@ package histogrammar {
 
   /** An accumulated suite of containers, each collecting data above a given cut on a given expression.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Stack]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Stacked[V <: Container[V]](val entries: Double, val cuts: (Double, V)*) extends Container[Stacked[V]] {
+  class Stacked[V <: Container[V]] private[histogrammar](val entries: Double, val cuts: (Double, V)*) extends Container[Stacked[V]] {
     type Type = Stacked[V]
     def factory = Stack
 
@@ -134,11 +136,13 @@ package histogrammar {
 
   /** Accumulating a suite of containers, each collecting data above a given cut on a given expression.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Stack]] to construct an instance.
+    * 
     * @param expression Numerical expression whose value is compared with the given thresholds.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
+  class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
     type Type = Stacking[DATUM, V]
     type Datum = DATUM
     def factory = Stack

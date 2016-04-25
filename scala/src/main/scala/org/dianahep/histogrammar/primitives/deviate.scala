@@ -86,13 +86,15 @@ package histogrammar {
 
   /** An accumulated weighted variance (and mean) of a given quantity.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Deviate]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all weights).
     * @param mean Weighted mean of the quantity.
     * @param variance Weighted variance of the quantity.
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviated(val entries: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
+  class Deviated private[histogrammar](val entries: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
     type Type = Deviated
     def factory = Deviate
 
@@ -118,6 +120,8 @@ package histogrammar {
 
   /** Accumulating a weighted variance (and mean) of a given quantity.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Deviate]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all weights).
@@ -126,7 +130,7 @@ package histogrammar {
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviating[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
+  class Deviating[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
     type Type = Deviating[DATUM]
     type Datum = DATUM
     def factory = Deviate

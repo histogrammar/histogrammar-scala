@@ -135,11 +135,13 @@ package histogrammar {
 
   /** An accumulated quantity that was split dynamically into bins with a clustering algorithm, with only one datum filled per bin and no overflows or underflows.
     * 
+    * Use the factory [[org.dianahep.histogrammar.AdaptivelyBin]] to construct an instance.
+    * 
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param clustering Performs the adative binning.
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class AdaptivelyBinned[V <: Container[V], N <: Container[N]](contentType: String, clustering: mutable.Clustering1D[V], val nanflow: N)
+  class AdaptivelyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](contentType: String, clustering: mutable.Clustering1D[V], val nanflow: N)
     extends Container[AdaptivelyBinned[V, N]] with CentrallyBin.Methods[V] {
 
     type Type = AdaptivelyBinned[V, N]
@@ -193,13 +195,15 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it dynamically into bins with a clustering algorithm, filling only one datum per bin with no overflows or underflows.
     * 
+    * Use the factory [[org.dianahep.histogrammar.AdaptivelyBin]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param clustering Performs the adative binning.
     * @param nanflow Container for data that result in `NaN`.
     */
-  class AdaptivelyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+  class AdaptivelyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
     (val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
       extends Container[AdaptivelyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
 

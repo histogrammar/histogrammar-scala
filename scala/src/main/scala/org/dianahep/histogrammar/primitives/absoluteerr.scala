@@ -75,10 +75,12 @@ package histogrammar {
 
   /** An accumulated weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
     * 
+    * Use the factory [[org.dianahep.histogrammar.AbsoluteErr]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all weights).
     * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
-  class AbsoluteErred(val entries: Double, val mae: Double) extends Container[AbsoluteErred] {
+  class AbsoluteErred private[histogrammar](val entries: Double, val mae: Double) extends Container[AbsoluteErred] {
     type Type = AbsoluteErred
     def factory = AbsoluteErr
 
@@ -103,12 +105,14 @@ package histogrammar {
 
   /** Accumulating a weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
     * 
+    * Use the factory [[org.dianahep.histogrammar.AbsoluteErr]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all weights).
     * @param _mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
-  class AbsoluteErring[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
+  class AbsoluteErring[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]
     type Datum = DATUM
     def factory = AbsoluteErr

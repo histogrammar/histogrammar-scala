@@ -158,6 +158,8 @@ package histogrammar {
 
   /** An accumulated quantity that was split into equally spaced bins, filling only one bin per datum and creating new bins as necessary.
     * 
+    * Use the factory [[org.dianahep.histogrammar.SparselyBin]] to construct an instance.
+    * 
     * @param binWidth Width of the equally sized bins.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
@@ -165,7 +167,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     * @param origin Left edge of the bin whose index is zero.
     */
-  class SparselyBinned[V <: Container[V], N <: Container[N]](val binWidth: Double, val entries: Double, contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods {
+  class SparselyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val binWidth: Double, val entries: Double, contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
     def factory = SparselyBin
 
@@ -225,6 +227,8 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it into equally spaced bins, filling only one bin per datum and creating new bins as necessary.
     * 
+    * Use the factory [[org.dianahep.histogrammar.SparselyBin]] to construct an instance.
+    * 
     * @param binWidth Width of the equally sized bins.
     * @param quantity Numerical function to split into bins.
     * @param selection Boolean or non-negative function that cuts or weights entries.
@@ -234,7 +238,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     * @param origin Left edge of the bin whose index is zero.
     */
-  class SparselyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+  class SparselyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
     (val binWidth: Double,
      val quantity: NumericalFcn[DATUM],
      val selection: Selection[DATUM],

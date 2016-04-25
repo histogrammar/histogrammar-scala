@@ -72,10 +72,12 @@ package histogrammar {
 
   /** An accumulated weighted sum of a given quantity.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Sum]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summed(val entries: Double, val sum: Double) extends Container[Summed] {
+  class Summed private[histogrammar](val entries: Double, val sum: Double) extends Container[Summed] {
     type Type = Summed
     def factory = Sum
 
@@ -94,12 +96,14 @@ package histogrammar {
 
   /** Accumulating a weighted sum of a given quantity.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Sum]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summing[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
+  class Summing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
     type Type = Summing[DATUM]
     type Datum = DATUM
     def factory = Sum

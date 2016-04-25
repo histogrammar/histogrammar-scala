@@ -56,9 +56,11 @@ package histogrammar {
 
   /** An accumulated count (sum of weights) of data, ignoring its content.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Count]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all weights).
     */
-  class Counted(val entries: Double) extends Container[Counted] {
+  class Counted private[histogrammar](val entries: Double) extends Container[Counted] {
     type Type = Counted
     def factory = Count
 
@@ -80,11 +82,13 @@ package histogrammar {
 
   /** Accumulating a count (sum of weights) of data, ignoring its content.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Count]] to construct an instance.
+    * 
     * This is the only container with [[org.dianahep.histogrammar.Aggregation]] that doesn't have a configurable data type: its `Datum` is `Any`. It is primarily for the sake of this container that `Aggregation` is contravariant.
     * 
     * @param entries Weighted number of entries (sum of all weights).
     */
-  class Counting(var entries: Double) extends Container[Counting] with Aggregation {
+  class Counting private[histogrammar](var entries: Double) extends Container[Counting] with Aggregation {
     type Type = Counting
     type Datum = Any
     def factory = Count

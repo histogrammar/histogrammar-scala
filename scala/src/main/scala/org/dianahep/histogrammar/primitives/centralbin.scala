@@ -154,13 +154,15 @@ package histogrammar {
 
   /** An accumulated quantity that was split into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.
     * 
+    * Use the factory [[org.dianahep.histogrammar.CentrallyBin]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param bins Metric, sorted map of centers and values for each bin.
     * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
     * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class CentrallyBinned[V <: Container[V], N <: Container[N]](val entries: Double, val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
+  class CentrallyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val entries: Double, val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
     extends Container[CentrallyBinned[V, N]] with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinned[V, N]
@@ -200,6 +202,8 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.
     * 
+    * Use the factory [[org.dianahep.histogrammar.CentrallyBin]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
@@ -209,7 +213,7 @@ package histogrammar {
     * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
+  class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
     (val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
     extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
 

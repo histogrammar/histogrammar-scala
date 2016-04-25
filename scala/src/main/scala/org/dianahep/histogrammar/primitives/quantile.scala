@@ -104,9 +104,11 @@ package histogrammar {
 
   /** An accumulated adaptive histogram, used to compute approximate quantiles, such as the median.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Quantile]] to construct an instance.
+    * 
     * @param clustering Performs the adative binning.
     */
-  class Quantiled(clustering: mutable.Clustering1D[Counted]) extends Container[Quantiled] with CentralBinsDistribution[Counted] {
+  class Quantiled private[histogrammar](clustering: mutable.Clustering1D[Counted]) extends Container[Quantiled] with CentralBinsDistribution[Counted] {
 
     type Type = Quantiled
     def factory = Quantile
@@ -166,11 +168,13 @@ package histogrammar {
 
   /** Accumulating an adaptive histogram, used to compute approximate quantiles, such as the median.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Quantile]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param clustering Performs the adative binning.
     */
-  class Quantiling[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], clustering: mutable.Clustering1D[Counting])
+  class Quantiling[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], clustering: mutable.Clustering1D[Counting])
       extends Container[Quantiling[DATUM]] with AggregationOnData with CentralBinsDistribution[Counting] {
 
     type Type = Quantiling[DATUM]

@@ -75,10 +75,12 @@ package histogrammar {
 
   /** An accumulated weighted mean of a given quantity.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Average]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all weights).
     * @param mean Weighted mean of the quantity.
     */
-  class Averaged(val entries: Double, val mean: Double) extends Container[Averaged] {
+  class Averaged private[histogrammar](val entries: Double, val mean: Double) extends Container[Averaged] {
     type Type = Averaged
     def factory = Average
 
@@ -103,12 +105,14 @@ package histogrammar {
 
   /** Accumulating a weighted mean of a given quantity.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Average]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all weights).
     * @param mean Cumulative weighted mean (accrued with a numerically stable algorithm).
     */
-  class Averaging[DATUM](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
+  class Averaging[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
     type Type = Averaging[DATUM]
     type FixedType = Averaged
     type Datum = DATUM

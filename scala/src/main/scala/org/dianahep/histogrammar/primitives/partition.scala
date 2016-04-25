@@ -94,10 +94,12 @@ package histogrammar {
 
   /** An accumulated suite of containers, each collecting data between a pair of given cuts on a given expression.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Partition]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Partitioned[V <: Container[V]](val entries: Double, val cuts: (Double, V)*) extends Container[Partitioned[V]] {
+  class Partitioned[V <: Container[V]] private[histogrammar](val entries: Double, val cuts: (Double, V)*) extends Container[Partitioned[V]] {
     type Type = Partitioned[V]
     def factory = Partition
 
@@ -134,11 +136,13 @@ package histogrammar {
 
   /** Accumulating a suite of containers, each collecting data between a pair of given cuts on a given expression.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Partition]] to construct an instance.
+    * 
     * @param expression Numerical expression whose value is compared with the given thresholds.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData {
+  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData {
     type Type = Partitioning[DATUM, V]
     type Datum = DATUM
     def factory = Partition

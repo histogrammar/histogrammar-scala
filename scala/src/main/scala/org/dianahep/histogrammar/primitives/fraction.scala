@@ -78,11 +78,13 @@ package histogrammar {
 
   /** An accumulated pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).
     * 
+    * Use the factory [[org.dianahep.histogrammar.Fraction]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioned[V <: Container[V]](val entries: Double, val numerator: V, val denominator: V) extends Container[Fractioned[V]] {
+  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val numerator: V, val denominator: V) extends Container[Fractioned[V]] {
     type Type = Fractioned[V]
     def factory = Fraction
 
@@ -107,12 +109,14 @@ package histogrammar {
 
   /** Accumulating a pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).
     * 
+    * Use the factory [[org.dianahep.histogrammar.Fraction]] to construct an instance.
+    * 
     * @param numeratorSelection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val numeratorSelection: Selection[DATUM], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
+  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val numeratorSelection: Selection[DATUM], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
     type Type = Fractioning[DATUM, V]
     type Datum = DATUM
     def factory = Fraction

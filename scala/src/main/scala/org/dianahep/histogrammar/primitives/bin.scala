@@ -170,6 +170,8 @@ package histogrammar {
 
   /** An accumulated quantity that was split into equally spaced bins between specified limits and filling only one bin per datum.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Bin]] to construct an instance.
+    * 
     * @param low Minimum-value edge of the first bin.
     * @param high Maximum-value edge of the last bin.
     * @param entries Weighted number of entries (sum of all observed weights).
@@ -178,7 +180,7 @@ package histogrammar {
     * @param overflow Container for data above the last bin.
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](
+  class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]] private[histogrammar](
     val low: Double,
     val high: Double,
     val entries: Double,
@@ -245,6 +247,8 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it into equally spaced bins between specified limits and filling only one bin per datum.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Bin]] to construct an instance.
+    * 
     * @param low Minimum-value edge of the first bin.
     * @param high Maximum-value edge of the last bin.
     * @param quantity Numerical function to track.
@@ -255,7 +259,7 @@ package histogrammar {
     * @param overflow Container for data above the last bin.
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](
+  class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar](
     val low: Double,
     val high: Double,
     val quantity: NumericalFcn[DATUM],

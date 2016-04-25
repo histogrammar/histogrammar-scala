@@ -86,11 +86,13 @@ package histogrammar {
 
   /** An accumulated quantity that was split by its categorical (string-based) values, filling only one category per datum.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Categorize]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param pairs String category and the associated container of values associated with it.
     */
-  class Categorized[V <: Container[V]](val entries: Double, contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
+  class Categorized[V <: Container[V]] private[histogrammar](val entries: Double, contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
     type Type = Categorized[V]
     def factory = Categorize
 
@@ -142,13 +144,15 @@ package histogrammar {
 
   /** Accumulating a quantity by splitting it by its categorical (string-based) value and filling only one category per datum.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Categorize]] to construct an instance.
+    * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param pairs Map of string category and the associated container of values associated with it.
     */
-  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
+  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
     type Datum = DATUM
     def factory = Categorize

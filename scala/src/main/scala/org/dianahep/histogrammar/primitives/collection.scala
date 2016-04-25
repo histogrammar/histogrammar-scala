@@ -86,10 +86,12 @@ package histogrammar {
 
   /** An accumulated collection of containers of the SAME type, labeled by strings.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Label]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param pairs Names (strings) associated with containers of the SAME type.
     */
-  class Labeled[V <: Container[V]](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] {
+  class Labeled[V <: Container[V]] private[histogrammar](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] {
     type Type = Labeled[V]
     def factory = Label
 
@@ -142,10 +144,12 @@ package histogrammar {
 
   /** Accumulating a collection of containers of the SAME type, labeled by strings.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Label]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param pairs Names (strings) associated with containers of the SAME type.
     */
-  class Labeling[V <: Container[V] with Aggregation](var entries: Double, val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
+  class Labeling[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
     type Type = Labeling[V]
     type Datum = V#Datum
     def factory = Label
@@ -274,12 +278,14 @@ package histogrammar {
 
   /** An accumulated collection of containers of any type except [[org.dianahep.histogrammar.Counted]], labeled by strings.
     * 
+    * Use the factory [[org.dianahep.histogrammar.UntypedLabel]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param pairs Names (strings) associated with containers.
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
-  class UntypedLabeled(val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] {
+  class UntypedLabeled private[histogrammar](val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] {
     type Type = UntypedLabeled
     def factory = UntypedLabel
 
@@ -333,11 +339,13 @@ package histogrammar {
 
   /** Accumulating a collection of containers of any type except [[org.dianahep.histogrammar.Counting]], labeled by strings.
     * 
+    * Use the factory [[org.dianahep.histogrammar.UntypedLabel]] to construct an instance.
+    * 
     * @param pairs Names (strings) associated with containers.
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
-  class UntypedLabeling[DATUM](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData {
+  class UntypedLabeling[DATUM] private[histogrammar](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData {
     type Type = UntypedLabeled
     type Datum = DATUM
     def factory = UntypedLabel
@@ -460,10 +468,12 @@ package histogrammar {
 
   /** An accumulated collection of containers of the SAME type, indexed by number.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Index]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Ordered list of containers that can be retrieved by index number.
     */
-  class Indexed[V <: Container[V]](val entries: Double, val values: V*) extends Container[Indexed[V]] {
+  class Indexed[V <: Container[V]] private[histogrammar](val entries: Double, val values: V*) extends Container[Indexed[V]] {
     type Type = Indexed[V]
     def factory = Index
 
@@ -508,10 +518,12 @@ package histogrammar {
 
   /** Accumulating a collection of containers of the SAME type, indexed by number.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Index]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Ordered list of containers that can be retrieved by index number.
     */
-  class Indexing[V <: Container[V] with Aggregation](var entries: Double, val values: V*) extends Container[Indexing[V]] with AggregationOnData {
+  class Indexing[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val values: V*) extends Container[Indexing[V]] with AggregationOnData {
     type Type = Indexing[V]
     type Datum = V#Datum
     def factory = Index
@@ -668,13 +680,15 @@ package histogrammar {
 
   /** An accumulated collection of containers of the ANY type, indexed by number.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Branch]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param head Container associated with the first item in the list.
     * @param tail List of all other `Branched` objects (or `BranchedNil`, the end of the list).
     * 
     * Note that concrete instances of `Branched` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
     */
-  class Branched[HEAD <: Container[HEAD], TAIL <: BranchedList](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with BranchedList {
+  class Branched[HEAD <: Container[HEAD], TAIL <: BranchedList] private[histogrammar](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with BranchedList {
     type Type = Branched[HEAD, TAIL]
     def factory = Branch
 
@@ -720,13 +734,15 @@ package histogrammar {
 
   /** Accumulating a collection of containers of the ANY type, indexed by number.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Branch]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param head Container associated with the first item in the list.
     * @param tail List of all other `Branching` objects (or `BranchingNil`, the end of the list).
     * 
     * Note that concrete instances of `Branching` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
     */
-  class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList](var entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
+  class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList] private[histogrammar](var entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
     type Type = Branching[HEAD, TAIL]
     type Datum = head.Datum
     def factory = Branch

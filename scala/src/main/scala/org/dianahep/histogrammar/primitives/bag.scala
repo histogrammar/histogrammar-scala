@@ -103,11 +103,14 @@ package histogrammar {
   }
 
   /** An accumulated set of raw data or just the number of entries if it exceeded its limit.
+    * 
+    * Use the factory [[org.dianahep.histogrammar.Bag]] to construct an instance.
+    * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param limit If not `None` and `entries > limit`, the `values` are dropped, leaving only `entries` to count data.
     * @param values Distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped.
     */
-  class Bagged(val entries: Double, val limit: Option[Double], val values: Option[Map[Vector[Double], Double]]) extends Container[Bagged] {
+  class Bagged private[histogrammar](val entries: Double, val limit: Option[Double], val values: Option[Map[Vector[Double], Double]]) extends Container[Bagged] {
     type Type = Bagged
     def factory = Bag
 
@@ -159,13 +162,15 @@ package histogrammar {
 
   /** Accumulating a quantity as raw data up to an optional limit, at which point only the total number are preserved.
     * 
+    * Use the factory [[org.dianahep.histogrammar.Bag]] to construct an instance.
+    * 
     * @param quantity Multivariate function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param limit If not `None` and `entries > limit`, the `values` are dropped, leaving only `entries` to count data.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped.
     */
-  class Bagging[DATUM](val quantity: MultivariateFcn[DATUM], val selection: Selection[DATUM], val limit: Option[Double], var entries: Double, var values: Option[scala.collection.mutable.Map[Vector[Double], Double]]) extends Container[Bagging[DATUM]] with AggregationOnData {
+  class Bagging[DATUM] private[histogrammar](val quantity: MultivariateFcn[DATUM], val selection: Selection[DATUM], val limit: Option[Double], var entries: Double, var values: Option[scala.collection.mutable.Map[Vector[Double], Double]]) extends Container[Bagging[DATUM]] with AggregationOnData {
     type Type = Bagging[DATUM]
     type Datum = DATUM
     def factory = Bag

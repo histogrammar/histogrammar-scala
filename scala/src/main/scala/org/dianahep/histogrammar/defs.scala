@@ -14,11 +14,13 @@
 
 package org.dianahep
 
-import scala.language.existentials
-
 import scala.collection.immutable.ListMap
+import scala.language.existentials
 import scala.language.implicitConversions
+import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.runtime.universe.typeOf
 
+import org.dianahep.histogrammar.eval.Compiler
 import org.dianahep.histogrammar.json._
 
 package histogrammar {
@@ -265,6 +267,14 @@ package object histogrammar {
   implicit class SelectionFromDouble[-DATUM](f: DATUM => Double) extends Selection[DATUM] {
     def apply[SUB <: DATUM](x: SUB): Double = f(x)
   }
+
+  class SelectionFromString[-DATUM : TypeTag](val varname: String, val code: String) extends Selection[DATUM] {
+    val prefix = s"$varname: ${typeOf[DATUM]} => "
+    val fcn = Compiler.compileSelection[DATUM](prefix + code)
+    def apply[SUB <: DATUM](x: SUB): Double = fcn(x)
+  }
+  def select[DATUM : TypeTag](code: String) = new SelectionFromString[DATUM]("datum", code)
+  def select[DATUM : TypeTag](varname: String, code: String) = new SelectionFromString[DATUM](varname, code)
 
   /** Default weighting function that always returns 1.0. */
   def unweighted[DATUM] = new Selection[DATUM] {

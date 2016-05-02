@@ -85,7 +85,7 @@ package histogrammar {
       def neighbors(center: Double): (Option[Double], Option[Double]) = {
         if (!bins.contains(center))
           throw new IllegalArgumentException(s"position $center is not the exact center of a bin")
-        (bins.closest(Math.nextDown(center), Some((x: Double, v: V) => x < center)).map(_.key), bins.closest(Math.nextUp(center), Some((x: Double, v: V) => x > center)).map(_.key))
+        (bins.closest(Math.nextAfter(center, java.lang.Double.NEGATIVE_INFINITY), Some((x: Double, v: V) => x < center)).map(_.key), bins.closest(Math.nextAfter(center, java.lang.Double.POSITIVE_INFINITY), Some((x: Double, v: V) => x > center)).map(_.key))
       }
 
       /** Get the low and high edge of a bin (given by exact bin center). */

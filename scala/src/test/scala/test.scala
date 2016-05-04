@@ -780,7 +780,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     branching.i0.overflow.entries should be (1.0)
     branching.i0.nanflow.entries should be (0.0)
 
-    branching.i1.entries should be (10L)
+    branching.i1.entries should be (10.0)
 
     branching.i2.entries should be (10.0 +- 1e-12)
     branching.i2.mean should be (100.33 +- 1e-12)

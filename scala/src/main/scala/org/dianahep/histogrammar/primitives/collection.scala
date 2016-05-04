@@ -654,7 +654,7 @@ package histogrammar {
 
             // we've loaded it backwards, so reverse the order before returning it
             var out: BranchedList = BranchedNil
-            while (!backwards.isEmpty) {
+            while (backwards != BranchedNil) {
               val list = backwards.asInstanceOf[Branched[C forSome {type C <: Container[C]}, BranchedList]]
               out = new Branched(list.entries, list.head, out)
               backwards = list.tail
@@ -670,15 +670,15 @@ package histogrammar {
 
   sealed trait BranchedList {
     def values: List[Container[_]]
-    def isEmpty: Boolean
     def size: Int
+    def get(i: Int): Option[Container[_]]
     def zero: BranchedList
   }
 
   object BranchedNil extends BranchedList {
     def values: List[Container[_]] = Nil
-    def isEmpty: Boolean = true
     def size: Int = 0
+    def get(i: Int) = None
     def zero = this
   }
 
@@ -701,10 +701,18 @@ package histogrammar {
 
     /** List the containers (dropping type information). */
     def values: List[Container[_]] = head :: tail.values
-    /** Return `true` iff empty. */
-    def isEmpty: Boolean = false
     /** Return the number of containers. */
     def size: Int = 1 + tail.size
+    /** Attempt to get index `i`, throwing an exception if it does not exist. */
+    def apply(i: Int) = get(i).get
+    /** Attempt to get index `i`, returning `None` if it does not exist. */
+    def get(i: Int) =
+      if (i == 0)
+        Some(head)
+      else
+        tail.get(i - 1)
+    /** Attempt to get index `i`, returning an alternative if it does not exist. */
+    def getOrElse(i: Int, default: => Container[_]) = get(i).getOrElse(default)
 
     def zero = new Branched[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
     def +(that: Branched[HEAD, TAIL]) = new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)
@@ -724,15 +732,15 @@ package histogrammar {
 
   sealed trait BranchingList {
     def values: List[Container[_]]
-    def isEmpty: Boolean
     def size: Int
+    def get(i: Int): Option[Container[_]]
     def zero: BranchingList
   }
 
   object BranchingNil extends BranchingList {
     def values: List[Container[_]] = Nil
-    def isEmpty: Boolean = true
     def size: Int = 0
+    def get(i: Int) = None
     def zero = this
   }
 
@@ -756,10 +764,18 @@ package histogrammar {
 
     /** List the containers (dropping type information). */
     def values: List[Container[_]] = head :: tail.values
-    /** Return `true` iff empty. */
-    def isEmpty: Boolean = false
     /** Return the number of containers. */
     def size: Int = 1 + tail.size
+    /** Attempt to get index `i`, throwing an exception if it does not exist. */
+    def apply(i: Int) = get(i).get
+    /** Attempt to get index `i`, returning `None` if it does not exist. */
+    def get(i: Int) =
+      if (i == 0)
+        Some(head)
+      else
+        tail.get(i - 1)
+    /** Attempt to get index `i`, returning an alternative if it does not exist. */
+    def getOrElse(i: Int, default: => Container[_]) = get(i).getOrElse(default)
 
     def zero = new Branching[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
     def +(that: Branching[HEAD, TAIL]) = new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)

@@ -329,7 +329,11 @@ package histogrammar {
         key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
       }: _*))
 
-    override def toString() = s"UntypedLabeled[[${pairs.head.toString}..., size=${pairs.size}]]"
+    override def toString() =
+      if (pairs.isEmpty)
+        s"UntypedLabeled[[size=${pairs.size}]]"
+      else
+        s"UntypedLabeled[[${pairs.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {
       case that: UntypedLabeled => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false

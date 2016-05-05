@@ -143,7 +143,7 @@ package histogrammar {
       "numerator" -> numerator.toJsonFragment,
       "denominator" -> denominator.toJsonFragment)
 
-    override def toString() = s"Fractioning[numerator=$numerator, denominator=$denominator]"
+    override def toString() = s"Fractioning[$numerator, $denominator]"
     override def equals(that: Any) = that match {
       case that: Fractioning[DATUM, V] => this.numeratorSelection == that.numeratorSelection  &&  this.entries === that.entries  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false

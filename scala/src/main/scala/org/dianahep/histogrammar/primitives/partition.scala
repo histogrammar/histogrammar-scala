@@ -108,25 +108,24 @@ package histogrammar {
     if (cuts.size < 1)
       throw new ContainerException(s"number of cuts (${cuts.size}) must be at least 1 (including the implicit >= -inf, which the Partition.ing factory method adds)")
 
+    def thresholds = cuts.map(_._1)
+    def values = cuts.map(_._2)
+
     def zero = new Partitioned[V](0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioned[V]) =
-      if (this.cuts.size != that.cuts.size)
-        throw new ContainerException(s"cannot add Partitioned because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      if (this.thresholds != that.thresholds)
+        throw new ContainerException(s"cannot add Partitioned because cut thresholds differ")
       else
         new Partitioned(
           this.entries + that.entries,
-          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
-            if (mycut != yourcut)
-              throw new ContainerException(s"cannot add Partitioned because cut differs ($mycut vs $yourcut)")
-            (mycut, me + you)
-          }: _*)
+          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
-    override def toString() = s"""Partitioned[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""Partitioned[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
       case that: Partitioned[V] => this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
@@ -154,19 +153,18 @@ package histogrammar {
 
     private val range = cuts zip (cuts.tail :+ (java.lang.Double.NaN, null))
 
+    def thresholds = cuts.map(_._1)
+    def values = cuts.map(_._2)
+
     def zero = new Partitioning[DATUM, V](expression, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioning[DATUM, V]) =
-      if (this.cuts.size != that.cuts.size)
-        throw new ContainerException(s"cannot add Partitioning because the number of cut differs (${this.cuts.size} vs ${that.cuts.size})")
+      if (this.thresholds != that.thresholds)
+        throw new ContainerException(s"cannot add Partitioning because cut thresholds differ")
       else
         new Partitioning(
           this.expression,
           this.entries + that.entries,
-          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) =>
-            if (mycut != yourcut)
-              throw new ContainerException(s"cannot add Partitioning because cut differs ($mycut vs $yourcut)")
-            (mycut, me + you)
-          }: _*)
+          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       if (weight > 0.0) {
@@ -184,7 +182,7 @@ package histogrammar {
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
 
-    override def toString() = s"""Partitioning[${cuts.head._2}, cuts=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""Partitioning[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
       case that: Partitioning[DATUM, V] => this.expression == that.expression  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false

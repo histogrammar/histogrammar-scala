@@ -39,10 +39,10 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.Fractioning]].
       * 
       * @param numeratorSelection Boolean or non-negative function that cuts or weights entries.
-      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](numeratorSelection: Selection[DATUM], value: => V = Count()) =
-      new Fractioning(numeratorSelection, 0.0, value, value)
+      new Fractioning(numeratorSelection, 0.0, value.zero, value.zero)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](numeratorSelection: Selection[DATUM], value: => V = Count()) =

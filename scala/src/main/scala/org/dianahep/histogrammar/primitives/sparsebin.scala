@@ -52,7 +52,7 @@ package histogrammar {
       * @param binWidth Width of the equally sized bins.
       * @param quantity Numerical function to split into bins.
       * @param selection Boolean or non-negative function that cuts or weights entries.
-      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param nanflow Container for data that resulted in `NaN`.
       * @param origin Left edge of the bin whose index is zero.
       */
@@ -288,7 +288,7 @@ package histogrammar {
         else {
           val b = bin(q)
           if (!(bins contains b))
-            bins.update(b, value)
+            bins.update(b, value.zero)
           bins(b).fill(datum, w)
         }
       }

@@ -39,12 +39,12 @@ package histogrammar {
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Stacking]].
       * 
-      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param expression Numerical expression whose value is compared with the given thresholds.
       * @param cuts Thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
-      new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value)): _*)
+      new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value.zero)): _*)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =

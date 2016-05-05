@@ -51,7 +51,7 @@ package histogrammar {
       * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param num Maximum number of bins (used as a constraint when growing or merging).
       * @param tailDetail Between 0.0 and 1.0 inclusive: use 0.0 to focus on the bulk of the distribution and 1.0 to focus on the tails; see [[org.dianahep.histogrammar.util.mutable.Clustering1D]] for details.
-      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param nanflow Container for data that result in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]

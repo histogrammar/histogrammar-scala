@@ -53,7 +53,7 @@ package histogrammar {
       * @param number Of bins.
       * @param low Minimum-value edge of the first bin.
       * @param high Maximum-value edge of the last bin.
-      * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
+      * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param underflow Container for data below the first bin.
       * @param overflow Container for data above the last bin.
       * @param nanflow Container for data that resulted in `NaN`.
@@ -68,7 +68,7 @@ package histogrammar {
        underflow: U = Count(),
        overflow: O = Count(),
        nanflow: N = Count()) =
-      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(num)(value), underflow, overflow, nanflow)
+      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(num)(value.zero), underflow, overflow, nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]

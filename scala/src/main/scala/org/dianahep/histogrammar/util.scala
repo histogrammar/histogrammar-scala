@@ -222,7 +222,7 @@ package util {
               v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fill(datum, weight)
 
             case None =>
-              val v = value   // create a new one
+              val v = value.zero
               v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fill(datum, weight)
 
               values += (x, v)

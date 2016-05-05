@@ -199,7 +199,7 @@ package histogrammar {
 
         entries += w
         if (!(pairs contains q))
-          pairs(q) = value
+          pairs(q) = value.zero
         pairs(q).fill(datum, w)
       }
     }

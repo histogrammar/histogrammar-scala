@@ -170,7 +170,7 @@ package util {
       def apply[A, B](elems: (A, B)*)(implicit ordering: MetricOrdering[A]) = new MetricSortedMap[A, B](elems: _*)(ordering)
     }
 
-    //////////////////////////////////////////////////////////////// 1D clustering algorithm (used by AdaptivelyBin and Quantile)
+    //////////////////////////////////////////////////////////////// 1D clustering algorithm (used by AdaptivelyBin)
 
     /** Clusters data in one dimension for adaptive histogramming and approximating quantiles (such as the median) in one pass over the data.
       * 

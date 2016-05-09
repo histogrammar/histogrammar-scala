@@ -197,6 +197,7 @@ package util {
         while (values.size > num) {
           val bins = values.iterator.toSeq
           val neighbors = bins.init zip bins.tail
+
           val nearestNeighbors = neighbors.minBy({case ((x1, v1), (x2, v2)) => tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1.entries + v2.entries)/entries})(doubleOrdering)
 
           val ((x1, v1), (x2, v2)) = nearestNeighbors
@@ -220,11 +221,9 @@ package util {
           values.get(x) match {
             case Some(v) =>
               v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fill(datum, weight)
-
             case None =>
               val v = value.zero
               v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fill(datum, weight)
-
               values += (x, v)
               mergeClusters()
           }

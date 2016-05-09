@@ -50,11 +50,6 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       apply(value, expression, cuts: _*)
 
-    /** Use [[org.dianahep.histogrammar.Stacked]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Stacked[V]) = Some((x.entries, x.cuts))
-    /** Use [[org.dianahep.histogrammar.Stacking]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Stacking[DATUM, V]) = Some((x.entries, x.cuts))
-
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
         val get = pairs.toMap

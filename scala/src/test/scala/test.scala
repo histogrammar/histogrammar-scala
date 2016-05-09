@@ -107,12 +107,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftSumming.fill(_))
       right.foreach(rightSumming.fill(_))
 
-      val (Sum(_, leftResult), Sum(_, rightResult)) = (leftSumming, rightSumming)
+      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
 
       leftResult should be (left.sum +- 1e-12)
       rightResult should be (right.sum +- 1e-12)
 
-      val Sum(_, finalResult) = leftSumming + rightSumming
+      val Sum(finalResult) = leftSumming + rightSumming
 
       finalResult should be (simple.sum +- 1e-12)
 
@@ -130,12 +130,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftSumming.fill(_))
       right.foreach(rightSumming.fill(_))
 
-      val (Sum(_, leftResult), Sum(_, rightResult)) = (leftSumming, rightSumming)
+      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
 
       leftResult should be (left.filter(_.bool).map(_.double).sum +- 1e-12)
       rightResult should be (right.filter(_.bool).map(_.double).sum +- 1e-12)
 
-      val Sum(_, finalResult) = leftSumming + rightSumming
+      val Sum(finalResult) = leftSumming + rightSumming
 
       finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
 
@@ -153,12 +153,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftSumming.fill(_))
       right.foreach(rightSumming.fill(_))
 
-      val (Sum(_, leftResult), Sum(_, rightResult)) = (leftSumming, rightSumming)
+      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
 
       leftResult should be (left.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
       rightResult should be (right.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
-      val Sum(_, finalResult) = leftSumming + rightSumming
+      val Sum(finalResult) = leftSumming + rightSumming
 
       finalResult should be (struct.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
@@ -178,12 +178,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
 
-      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
 
       leftResult should be (mean(left) +- 1e-12)
       rightResult should be (mean(right) +- 1e-12)
 
-      val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(simple) +- 1e-12)
 
@@ -201,12 +201,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
 
-      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
 
       leftResult should be (mean(left.filter(_.bool).map(_.double)) +- 1e-12)
       rightResult should be (mean(right.filter(_.bool).map(_.double)) +- 1e-12)
 
-      val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
@@ -224,12 +224,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
 
-      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
 
       leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
@@ -247,12 +247,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
 
-      val (Average(_, leftResult), Average(_, rightResult)) = (leftAveraging, rightAveraging)
+      val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
 
       leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Average(_, finalResult) = leftAveraging + rightAveraging
+      val Average(finalResult) = leftAveraging + rightAveraging
 
       finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
@@ -272,12 +272,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))
 
-      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
 
       leftResult should be (variance(left) +- 1e-12)
       rightResult should be (variance(right) +- 1e-12)
 
-      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(simple) +- 1e-12)
 
@@ -295,12 +295,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))
 
-      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
 
       leftResult should be (variance(left.filter(_.bool).map(_.double)) +- 1e-12)
       rightResult should be (variance(right.filter(_.bool).map(_.double)) +- 1e-12)
 
-      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
@@ -318,12 +318,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))
 
-      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
 
       leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
@@ -341,12 +341,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))
 
-      val (Deviate(_, _, leftResult), Deviate(_, _, rightResult)) = (leftDeviating, rightDeviating)
+      val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
 
       leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Deviate(_, _, finalResult) = leftDeviating + rightDeviating
+      val Deviate(finalResult) = leftDeviating + rightDeviating
 
       finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
@@ -366,12 +366,12 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftAbsoluteErring.fill(_))
       right.foreach(rightAbsoluteErring.fill(_))
 
-      val (AbsoluteErr(_, leftResult), AbsoluteErr(_, rightResult)) = (leftAbsoluteErring, rightAbsoluteErring)
+      val (AbsoluteErr(leftResult), AbsoluteErr(rightResult)) = (leftAbsoluteErring, rightAbsoluteErring)
 
       leftResult should be (mae(left) +- 1e-12)
       rightResult should be (mae(right) +- 1e-12)
 
-      val AbsoluteErr(_, finalResult) = leftAbsoluteErring + rightAbsoluteErring
+      val AbsoluteErr(finalResult) = leftAbsoluteErring + rightAbsoluteErring
 
       finalResult should be (mae(simple) +- 1e-12)
 
@@ -391,14 +391,14 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftMinimizing.fill(_))
       right.foreach(rightMinimizing.fill(_))
 
-      val (Minimize(_, leftResult), Minimize(_, rightResult)) = (leftMinimizing, rightMinimizing)
+      val (Minimize(leftResult), Minimize(rightResult)) = (leftMinimizing, rightMinimizing)
 
       if (left.isEmpty) leftResult.isNaN should be (true)
       else leftResult should be (left.min +- 1e-12)
       if (right.isEmpty) rightResult.isNaN should be (true)
       else rightResult should be (right.min +- 1e-12)
 
-      val Minimize(_, finalResult) = leftMinimizing + rightMinimizing
+      val Minimize(finalResult) = leftMinimizing + rightMinimizing
 
       if (simple.isEmpty) finalResult.isNaN should be (true)
       else finalResult should be (simple.min +- 1e-12)
@@ -419,14 +419,14 @@ class DefaultSuite extends FlatSpec with Matchers {
       left.foreach(leftMaximizing.fill(_))
       right.foreach(rightMaximizing.fill(_))
 
-      val (Maximize(_, leftResult), Maximize(_, rightResult)) = (leftMaximizing, rightMaximizing)
+      val (Maximize(leftResult), Maximize(rightResult)) = (leftMaximizing, rightMaximizing)
 
       if (left.isEmpty) leftResult.isNaN should be (true)
       else leftResult should be (left.max +- 1e-12)
       if (right.isEmpty) rightResult.isNaN should be (true)
       else rightResult should be (right.max +- 1e-12)
 
-      val Maximize(_, finalResult) = leftMaximizing + rightMaximizing
+      val Maximize(finalResult) = leftMaximizing + rightMaximizing
 
       if (simple.isEmpty) finalResult.isNaN should be (true)
       else finalResult should be (simple.max +- 1e-12)
@@ -438,14 +438,76 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Quantile/Quantiling/Quantiled
 
   "Quantile/Quantiling/Quantiled" must "work" in {
-    val one = Quantile({x: Double => x})
-    simple.foreach(one.fill(_))
-    one.qf(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0).toList should be (List(-4.7, -3.85, -2.4, -1.75, -0.85, -0.025000000000000022, 0.8, 1.9000000000000001, 2.8, 5.35, 7.3))
-    one.min should be (-4.7)
-    one.max should be (7.3)
-    one.median should be (-0.025000000000000022)
+    val answers = List(
+      List(java.lang.Double.NaN, -0.481328271104, -0.481328271104),
+      List(3.4, -0.69120847042, -0.282087623378),
+      List(-0.675, -0.736543753016, -0.724235002413),
+      List(-0.58125, -0.958145383329, -0.84507676833),
+      List(0.13623046875, -1.53190059408, -0.864648168945),
+      List(0.302100585937, -0.819002197266, -0.258450805664),
+      List(-0.942007507324, -0.629296875, -0.816923254395),
+      List(0.269603994253, -0.753125, -0.0372147040231),
+      List(-0.628724939722, 0.24375, -0.454229951778),
+      List(-0.562639074418, -1.7, -0.676375166976),
+      List(-0.481328271104, java.lang.Double.NaN, -0.481328271104),
+      List(java.lang.Double.NaN, -0.329460938614, -0.329460938614),
+      List(3.4, -0.457521896462, -0.0717697068155),
+      List(-0.45, -0.511698266503, -0.499358613202),
+      List(-0.425, -0.706904919683, -0.622333443778),
+      List(0.27890625, -0.937865017361, -0.451156510417),
+      List(0.599765625, -0.65764453125, -0.028939453125),
+      List(-0.637327473958, -0.471875, -0.571146484375),
+      List(0.536730209662, -0.595833333333, 0.196961146763),
+      List(-0.423513681061, 0.4875, -0.241310944849),
+      List(-0.382340803288, -1.7, -0.514106722959),
+      List(-0.329460938614, java.lang.Double.NaN, -0.329460938614),
+      List(java.lang.Double.NaN, -0.168649887325, -0.168649887325),
+      List(3.4, -0.227037303799, 0.135666426581),
+      List(-0.225, -0.265185561995, -0.257148449596),
+      List(-0.23125, -0.386842979665, -0.340165085765),
+      List(0.42275390625, -0.477651570638, -0.117489379883),
+      List(0.889514648438, -0.394795166016, 0.247359741211),
+      List(-0.322354390462, -0.264453125, -0.299193884277),
+      List(0.798766766295, -0.344791666667, 0.455699236407),
+      List(-0.213212483191, 0.73125, -0.0243199865526),
+      List(-0.194267772368, -1.7, -0.344840995131),
+      List(-0.168649887325, java.lang.Double.NaN, -0.168649887325)
+    )
+    var line = 0
 
-    checkJson(one)
+    for (p <- List(0.25, 0.5, 0.75))
+      for (i <- 0 to 10) {
+        val (left, right) = simple.splitAt(i)
+
+        val leftQuantiling = Quantile(p, {x: Double => x})
+        val rightQuantiling = Quantile(p, {x: Double => x})
+
+        left.foreach(leftQuantiling.fill(_))
+        right.foreach(rightQuantiling.fill(_))
+
+        val (Quantile(leftResult), Quantile(rightResult)) = (leftQuantiling, rightQuantiling)
+        val Quantile(finalResult) = leftQuantiling + rightQuantiling
+
+        val List(leftAnswer, rightAnswer, finalAnswer) = answers(line)
+        line += 1
+
+        if (leftAnswer.isNaN)
+          leftResult === leftAnswer should be (true)
+        else
+          leftResult should be (leftAnswer +- 1e-10)
+
+        if (rightAnswer.isNaN)
+          rightResult === rightAnswer should be (true)
+        else
+          rightResult should be (rightAnswer +- 1e-10)
+
+        if (finalAnswer.isNaN)
+          finalResult === finalAnswer should be (true)
+        else
+          finalResult should be (finalAnswer +- 1e-10)
+
+        checkJson(leftQuantiling)
+      }
   }
 
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
@@ -580,14 +642,6 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     fracking.numerator.values.map(_.entries).toList should be (List(0.0, 0.0, 2.0, 1.0, 0.0))
     fracking.denominator.values.map(_.entries).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
-
-    fracking match {
-      case Fraction(
-        _,
-        Bin(_, Seq(Count(0.0), Count(0.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _),
-        Bin(_, Seq(Count(3.0), Count(2.0), Count(2.0), Count(1.0), Count(0.0)), _, _, _)) => 1 should be (1)
-      case _ => 0 should be (1)
-    }
 
     checkJson(fracking)
   }

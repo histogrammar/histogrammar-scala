@@ -46,9 +46,9 @@ package histogrammar {
     def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
 
     /** Use [[org.dianahep.histogrammar.Summed]] in Scala pattern-matching. */
-    def unapply(x: Summed) = Some((x.entries, x.sum))
+    def unapply(x: Summed) = Some(x.sum)
     /** Use [[org.dianahep.histogrammar.Summing]] in Scala pattern-matching. */
-    def unapply(x: Summing[_]) = Some((x.entries, x.sum))
+    def unapply(x: Summing[_]) = Some(x.sum)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "sum")) =>

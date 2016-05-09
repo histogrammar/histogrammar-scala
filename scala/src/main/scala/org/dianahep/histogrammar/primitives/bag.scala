@@ -51,9 +51,9 @@ package histogrammar {
       apply(quantity, selection, limit)
 
     /** Use [[org.dianahep.histogrammar.Bagged]] in Scala pattern-matching. */
-    def unapply(x: Bagged) = Some((x.entries, x.limit, x.values))
+    def unapply(x: Bagged) = x.values
     /** Use [[org.dianahep.histogrammar.Bagging]] in Scala pattern-matching. */
-    def unapply[DATUM](x: Bagging[DATUM])  = Some((x.entries, x.limit, x.values))
+    def unapply[DATUM](x: Bagging[DATUM])  = x.values
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "limit", "values")) =>

@@ -22,44 +22,76 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Quantile/Quantiled/Quantiling
 
-  /** Accumulate an adaptively binned histogram to compute approximate quantiles, such as the median.
+  /** Accumulate an approximation to a given quantile, such as 0.5 for the median, (0.25, 0.75) for the first and third quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles.
+    * 
+    * Simple methods for computing quantiles sort the entire dataset and select an item by sorted index, but Histogrammar
+    * 
+    *   - aggregates in a single pass over the data and
+    *   - does not load the entire dataset into memory as it passes over the data.
+    * 
+    * Therefore, sorting and selecting is out of the question. Instead, this primitive (in all languages) estimates the quantile with the following heuristic:
+    * 
+    * {{{
+    * var entries = 0.0
+    * var cumulativeDeviation = 0.0
+    * var estimate = NaN
+    * 
+    * def fill(value: Double, weight: Double) {
+    *   entries += weight
+    * 
+    *   if (datum.isNaN)
+    *     estimate = value
+    * 
+    *   else {
+    *     cumulativeDeviation += abs(value - estimate)
+    *     val learningRate = 1.5 * cumulativeDeviation / entries**2
+    * 
+    *     estimate = weight * learningRate * (cmp(value, estimate) + 2.0*target - 1.0)
+    *   }
+    * }
+    * }}}
+    * 
+    * where `target` is the intended quantile (e.g. 0.5 for median) and `cmp(x, y)` is `-1` for `x < y`, is `+1` for `x > y`, and is `0` for `x == y`. The `cumulativeDeviation` is only used to set a (usually decreasing) `learningRate` and is thread-local to a given aggregator. Only `entries` and `estimate` are persistent (serialized to/from JSON).
+    * 
+    * The combination function (overloaded `+` operator) simply averages the `estimates`, weighted by `entries`.
+    * 
+    * The accuracy of this heuristic is best in the bulk of the distribution, rather than the tails, and accuracy scales with the size of the dataset. '''TODO:''' formal study of the accuracy of this heuristic or a reference to literature.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Quantiling]] and immutable [[org.dianahep.histogrammar.Quantiled]] objects.
     */
   object Quantile extends Factory {
     val name = "Quantile"
-    val help = "Accumulate an adaptively binned histogram to compute approximate quantiles, such as the median."
-    val detailedHelp = """Quantile(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val help = "Estimate a quantile, such as 0.5 for median, (0.25, 0.75) for quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles."
+    val detailedHelp = """Quantile(target: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param bins Centers and values of bins used to approximate and summarize the distribution.
-      * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
-      * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
+      * @param target Intended quantile (e.g. 0.5 for median).
+      * @param estimate Estimated value of the quantile.
       */
-    def ed(entries: Double, bins: Iterable[(Double, Counted)], min: Double, max: Double) =
-      new Quantiled(new mutable.Clustering1D[Counted](100, 1.0, null.asInstanceOf[Counted], mutable.MetricSortedMap[Double, Counted](bins.toSeq: _*), min, max, entries))
+    def ed(entries: Double, target: Double, estimate: Double) = new Quantiled(entries, target, estimate)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Quantiling]].
       * 
+      * @param target Intended quantile (e.g. 0.5 for median).
       * @param quantity Numerical function to track.
       * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
-      new Quantiling[DATUM](quantity, selection, mutable.Clustering1D[Counting](100, 1.0, Count(), mutable.Clustering1D.values[Counting](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))
+    def apply[DATUM](target: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
+      new Quantiling[DATUM](target, quantity, selection, 0.0, java.lang.Double.NaN, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
-      apply(quantity, selection)
+    def ing[DATUM](target: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
+      apply(target, quantity, selection)
 
     /** Use [[org.dianahep.histogrammar.Quantiled]] in Scala pattern-matching. */
-    def unapply(x: Quantiled) = Some((x.entries, x.bins, x.min, x.max))
+    def unapply(x: Quantiled) = Some(x.estimate)
     /** Use [[org.dianahep.histogrammar.Quantiling]] in Scala pattern-matching. */
-    def unapply[DATUM](x: Quantiling[DATUM]) = Some((x.entries, x.bins, x.min, x.max))
+    def unapply[DATUM](x: Quantiling[DATUM]) = Some(x.estimate)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "bins", "min", "max")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "target", "estimate")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -67,103 +99,64 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
-        val factory = Factory("Count")
-        val bins = get("bins") match {
-          case JsonArray(bins @ _*) =>
-            mutable.MetricSortedMap[Double, Counted](bins.zipWithIndex map {
-              case (JsonObject(binpair @ _*), i) if (binpair.keySet == Set("center", "value")) =>
-                val binget = binpair.toMap
-
-                val center = binget("center") match {
-                  case JsonNumber(x) => x
-                  case x => throw new JsonFormatException(x, name + s".bins $i center")
-                }
-
-                val value = factory.fromJsonFragment(binget("value"))
-                (center, value.asInstanceOf[Counted])
-
-              case (x, i) => throw new JsonFormatException(x, name + s".bins $i")
-            }: _*)
-
-          case x => throw new JsonFormatException(x, name + ".bins")
-        }
-
-        val min = get("min") match {
+        val target = get("target") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".min")
+          case x => throw new JsonFormatException(x, name + ".target")
         }
 
-        val max = get("max") match {
+        val estimate = get("estimate") match {
           case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".max")
+          case x => throw new JsonFormatException(x, name + ".estimate")
         }
 
-        new Quantiled(new mutable.Clustering1D[Counted](100, 1.0, null.asInstanceOf[Counted], bins.asInstanceOf[mutable.MetricSortedMap[Double, Counted]], min, max, entries))
+        new Quantiled(entries, target, estimate)
     }
+
+    private[histogrammar] def estimateCombination(xestimate: Double, xentries: Double, yestimate: Double, yentries: Double) =
+      if (xestimate.isNaN  &&  yestimate.isNaN)
+        java.lang.Double.NaN
+      else if (xestimate.isNaN)
+        yestimate
+      else if (yestimate.isNaN)
+        xestimate
+      else
+        (xestimate*xentries + yestimate*yentries) / (xentries + yentries)
   }
 
-  /** An accumulated adaptive histogram, used to compute approximate quantiles, such as the median.
+  /** An estimated quantile, such as 0.5 for median, (0.25, 0.75) for quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles.
     * 
     * Use the factory [[org.dianahep.histogrammar.Quantile]] to construct an instance.
     * 
     * @param clustering Performs the adative binning.
     */
-  class Quantiled private[histogrammar](clustering: mutable.Clustering1D[Counted]) extends Container[Quantiled] with CentralBinsDistribution[Counted] {
+  class Quantiled private[histogrammar](val entries: Double, val target: Double, val estimate: Double) extends Container[Quantiled] {
 
     type Type = Quantiled
     def factory = Quantile
 
-    if (clustering.entries < 0.0)
+    if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+    if (target < 0.0  ||  target > 1.0)
+      throw new ContainerException(s"target ($target) must be between 0 and 1, inclusive")
 
-    /** Weighted number of entries (sum of all observed weights). */
-    def entries = clustering.entries
-    /** Centers and values of bins used to approximate and summarize the distribution. */
-    def bins = clustering.values
-    /** Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity). */
-    def min = clustering.min
-    /** Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity). */
-    def max = clustering.max
-
-    /** Location of the top of the first quartile (25% of the data have smaller values). */
-    def quartile1 = qf(0.25)
-    /** Location of median (50% of the data have smaller values; 50% of the data have larger values). */
-    def median = qf(0.5)
-    /** Location of the top of the third quartile (25% of the data have larger values). */
-    def quartile3 = qf(0.75)
-
-    /** Location of the top of the first quintile (20% of the data have smaller values). */
-    def quintile1 = qf(0.20)
-    /** Location of the top of the second quintile (40% of the data have smaller values). */
-    def quintile2 = qf(0.40)
-    /** Location of the top of the third quintile (60% of the data have smaller values). */
-    def quintile3 = qf(0.60)
-    /** Location of the top of the fourth quintile (80% of the data have smaller values). */
-    def quintile4 = qf(0.80)
-
-    /** Location of a given percentile (`qf` scaled by 100). */
-    def percentile(x: Double) = qf(x / 100.0)
-    /** Location of the given percentiles (`qf` scaled by 100). */
-    def percentile(xs: Double*) = qf(xs.map(_ / 100.0): _*)
-
-    private[histogrammar] def getClustering = clustering
-
-    def zero = new Quantiled(mutable.Clustering1D[Counted](100, 1.0, null.asInstanceOf[Counted], mutable.Clustering1D.values[Counted](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))
+    def zero = new Quantiled(0.0, target, java.lang.Double.NaN)
     def +(that: Quantiled) =
-      new Quantiled(clustering.merge(that.getClustering))
+      if (this.target == that.target)
+        new Quantiled(this.entries + that.entries, target, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries))
+      else
+        throw new ContainerException(s"cannot add Quantiled because targets do not match (${this.target} vs ${that.target})")
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
-      "min" -> JsonFloat(min),
-      "max" -> JsonFloat(max))
+      "target" -> JsonFloat(target),
+      "estimate" -> JsonFloat(estimate))
 
-    override def toString() = s"""Quantiled[bins=[${if (bins.isEmpty) "Counted" else bins.head._2.toString}..., size=${bins.size}]]"""
+    override def toString() = s"""Quantiled[$target, estimate=$estimate]"""
     override def equals(that: Any) = that match {
-      case that: Quantiled => this.clustering == that.getClustering
+      case that: Quantiled => this.entries == that.entries  &&  this.target == that.target  &&  this.estimate == that.estimate
       case _ => false
     }
-    override def hashCode() = clustering.hashCode()
+    override def hashCode() = (entries, target, estimate).hashCode()
   }
 
   /** Accumulating an adaptive histogram, used to compute approximate quantiles, such as the median.
@@ -172,78 +165,58 @@ package histogrammar {
     * 
     * @param quantity Numerical function to track.
     * @param selection Boolean or non-negative function that cuts or weights entries.
-    * @param clustering Performs the adative binning.
     */
-  class Quantiling[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], clustering: mutable.Clustering1D[Counting])
-      extends Container[Quantiling[DATUM]] with AggregationOnData with CentralBinsDistribution[Counting] {
+  class Quantiling[DATUM] private[histogrammar](val target: Double, val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var estimate: Double, var cumulativeDeviation: Double)
+      extends Container[Quantiling[DATUM]] with AggregationOnData {
 
     type Type = Quantiling[DATUM]
     type Datum = DATUM
     def factory = Quantile
 
-    if (clustering.entries < 0.0)
+    if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+    if (target < 0.0  ||  target > 1.0)
+      throw new ContainerException(s"target ($target) must be between 0 and 1, inclusive")
 
-    /** Weighted number of entries (sum of all observed weights). */
-    def entries = clustering.entries
-    /** Centers and values of bins used to approximate and summarize the distribution. */
-    def bins = clustering.values
-    /** Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity). */
-    def min = clustering.min
-    /** Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity). */
-    def max = clustering.max
-
-    def entries_=(x: Double) {clustering.entries = x}
-    def min_=(x: Double) {clustering.min = x}
-    def max_=(x: Double) {clustering.max = x}
-
-    /** Location of the top of the first quartile (25% of the data have smaller values). */
-    def quartile1 = qf(0.25)
-    /** Location of median (50% of the data have smaller values; 50% of the data have larger values). */
-    def median = qf(0.5)
-    /** Location of the top of the third quartile (25% of the data have larger values). */
-    def quartile3 = qf(0.75)
-
-    /** Location of the top of the first quintile (20% of the data have smaller values). */
-    def quintile1 = qf(0.20)
-    /** Location of the top of the second quintile (40% of the data have smaller values). */
-    def quintile2 = qf(0.40)
-    /** Location of the top of the third quintile (60% of the data have smaller values). */
-    def quintile3 = qf(0.60)
-    /** Location of the top of the fourth quintile (80% of the data have smaller values). */
-    def quintile4 = qf(0.80)
-
-    /** Location of a given percentile (`qf` scaled by 100). */
-    def percentile(x: Double) = qf(x / 100.0)
-    /** Location of the given percentiles (`qf` scaled by 100). */
-    def percentile(xs: Double*) = qf(xs.map(_ / 100.0): _*)
-
-    private[histogrammar] def getClustering = clustering
-
-    def zero = new Quantiling[DATUM](quantity, selection, mutable.Clustering1D[Counting](100, 1.0, Count(), mutable.Clustering1D.values[Counting](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0))
+    def zero = new Quantiling[DATUM](target, quantity, selection, 0.0, java.lang.Double.NaN, 0.0)
     def +(that: Quantiling[DATUM]) =
-      new Quantiling[DATUM](quantity, selection, clustering.merge(that.getClustering))
+      if (this.target == that.target)
+        new Quantiling[DATUM](target, quantity, selection, this.entries + that.entries, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries), this.cumulativeDeviation + that.cumulativeDeviation)
+      else
+        throw new ContainerException(s"cannot add Quantiling because targets do not match (${this.target} vs ${that.target})")
 
     def fill[SUB <: DATUM](datum: SUB, weight: Double = 1.0) {
       val w = weight * selection(datum)
-      if (w >= 0.0) {
+      if (w > 0.0) {
         val q = quantity(datum)
-        clustering.update(q, datum, w)
+        entries += w
+
+        if (estimate.isNaN)
+          estimate = q
+        else {
+          cumulativeDeviation += Math.abs(q - estimate)
+          val learningRate = 1.5 * cumulativeDeviation / (entries * entries)
+          val sgn =
+            if      (q < estimate) -1.0
+            else if (q > estimate)  1.0
+            else                    0.0
+
+          estimate = w * learningRate * (sgn + 2.0*target - 1.0)
+        }
       }
     }
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
-      "min" -> JsonFloat(min),
-      "max" -> JsonFloat(max))
+      "target" -> JsonFloat(target),
+      "estimate" -> JsonFloat(estimate))
 
-    override def toString() = s"""Quantiling[bins=[${if (bins.isEmpty) "Counting" else bins.head._2.toString}..., size=${bins.size}]]"""
+    override def toString() = s"""Quantiling[$target, estimate=$estimate]"""
     override def equals(that: Any) = that match {
-      case that: Quantiling[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.clustering == that.getClustering
+      case that: Quantiling[DATUM] => this.entries == that.entries  &&  this.target == that.target  &&  this.estimate == that.estimate  &&  this.cumulativeDeviation == that.cumulativeDeviation  &&  this.quantity == that.quantity  &&  this.selection == that.selection
       case _ => false
     }
-    override def hashCode() = (quantity, selection, clustering).hashCode()
+    override def hashCode() = (entries, target, estimate, cumulativeDeviation, quantity, selection).hashCode()
   }
 
 }

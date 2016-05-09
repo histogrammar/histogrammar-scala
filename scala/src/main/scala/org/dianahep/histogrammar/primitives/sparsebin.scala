@@ -74,11 +74,6 @@ package histogrammar {
        nanflow: N = Count(),
        origin: Double = 0.0) = apply(binWidth, quantity, selection, value, nanflow, origin)
 
-    /** Use [[org.dianahep.histogrammar.SparselyBinned]] in Scala pattern-matching. */
-    def unapply[V <: Container[V], N <: Container[N]](x: SparselyBinned[V, N]) = Some((x.binWidth, x.entries, x.bins, x.nanflow, x.origin))
-    /** Use [[org.dianahep.histogrammar.SparselyBinning]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: SparselyBinning[DATUM, V, N]) = Some((x.binWidth, x.entries, x.bins, x.nanflow, x.origin))
-
     trait Methods {
       def binWidth: Double
       def origin: Double

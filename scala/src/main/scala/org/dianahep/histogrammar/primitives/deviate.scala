@@ -49,9 +49,9 @@ package histogrammar {
     def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
 
     /** Use [[org.dianahep.histogrammar.Deviated]] in Scala pattern-matching. */
-    def unapply(x: Deviated) = Some((x.entries, x.mean, x.variance))
+    def unapply(x: Deviated) = Some(x.variance)
     /** Use [[org.dianahep.histogrammar.Deviating]] in Scala pattern-matching. */
-    def unapply[DATUM](x: Deviating[DATUM]) = Some((x.entries, x.mean, x.variance))
+    def unapply[DATUM](x: Deviating[DATUM]) = Some(x.variance)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "mean", "variance")) =>

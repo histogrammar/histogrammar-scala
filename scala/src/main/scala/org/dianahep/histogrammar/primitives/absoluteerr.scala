@@ -46,9 +46,9 @@ package histogrammar {
     def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
 
     /** Use [[org.dianahep.histogrammar.AbsoluteErred]] in Scala pattern-matching. */
-    def unapply(x: AbsoluteErred) = Some((x.entries, x.mae))
+    def unapply(x: AbsoluteErred) = Some(x.mae)
     /** Use [[org.dianahep.histogrammar.AbsoluteErring]] in Scala pattern-matching. */
-    def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some((x.entries, x.mae))
+    def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some(x.mae)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "mae")) =>

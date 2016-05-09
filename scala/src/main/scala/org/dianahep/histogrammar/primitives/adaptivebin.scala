@@ -63,13 +63,6 @@ package histogrammar {
       (quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
       apply(quantity, selection, num, tailDetail, value, nanflow)
 
-    /** Use [[org.dianahep.histogrammar.AdaptivelyBinned]] in Scala pattern-matching. */
-    def unapply[V <: Container[V], N <: Container[N]](x: AdaptivelyBinned[V, N]) =
-      Some((x.entries, x.num, x.tailDetail, x.bins, x.min, x.max, x.nanflow))
-    /** Use [[org.dianahep.histogrammar.AdaptivelyBinning]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: AdaptivelyBinning[DATUM, V, N]) =
-      Some((x.entries, x.num, x.tailDetail, x.bins, x.min, x.max, x.nanflow))
-
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "num", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow", "tailDetail")) =>
         val get = pairs.toMap

@@ -54,11 +54,6 @@ package histogrammar {
     /** Synonym for `apply`. */
     def ing[V <: Container[V] with Aggregation](pairs: (String, V)*) = apply(pairs: _*)
 
-    /** Use [[org.dianahep.histogrammar.Labeled]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Labeled[V]) = Some((x.entries, x.pairs))
-    /** Use [[org.dianahep.histogrammar.Labeling]] in Scala pattern-matching. */
-    def unapply[V <: Container[V] with Aggregation](x: Labeling[V]) = Some((x.entries, x.pairs))
-
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
         val get = pairs.toMap
@@ -239,11 +234,6 @@ package histogrammar {
 
     /** Synonym for `apply`. */
     def ing[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = apply(pairs: _*)
-
-    /** Use [[org.dianahep.histogrammar.UntypedLabeled]] in Scala pattern-matching. */
-    def unapply(x: UntypedLabeled) = Some((x.entries, x.pairs))
-    /** Use [[org.dianahep.histogrammar.UntypedLabeling]] in Scala pattern-matching. */
-    def unapply[DATUM](x: UntypedLabeling[DATUM]) = Some((x.entries, x.pairs))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "data")) =>
@@ -438,11 +428,6 @@ package histogrammar {
 
     /** Synonym for `apply`. */
     def ing[V <: Container[V] with Aggregation](values: V*) = apply(values: _*)
-
-    /** Use [[org.dianahep.histogrammar.Indexed]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Indexed[V]) = Some((x.entries, x.values))
-    /** Use [[org.dianahep.histogrammar.Indexing]] in Scala pattern-matching. */
-    def unapply[V <: Container[V] with Aggregation](x: Indexing[V]) = Some((x.entries, x.values))
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>

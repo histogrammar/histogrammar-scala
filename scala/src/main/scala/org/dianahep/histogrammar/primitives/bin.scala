@@ -82,11 +82,6 @@ package histogrammar {
        overflow: O = Count(),
        nanflow: N = Count()) = apply(num, low, high, quantity, selection, value, underflow, overflow, nanflow)
 
-    /** Use [[org.dianahep.histogrammar.Binned]] in Scala pattern-matching. */
-    def unapply[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]](x: Binned[V, U, O, N]) = Some((x.entries, x.values, x.underflow, x.overflow, x.nanflow))
-    /** Use [[org.dianahep.histogrammar.Binning]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: Binning[DATUM, V, U, O, N]) = Some((x.entries, x.values, x.underflow, x.overflow, x.nanflow))
-
     trait Methods {
       /** Number of bins. */
       def num: Int

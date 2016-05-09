@@ -48,11 +48,6 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](numeratorSelection: Selection[DATUM], value: => V = Count()) =
       apply(numeratorSelection, value)
 
-    /** Use [[org.dianahep.histogrammar.Fractioned]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Fractioned[V]) = Some((x.entries, x.numerator, x.denominator))
-    /** Use [[org.dianahep.histogrammar.Fractioning]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Fractioning[DATUM, V]) = Some((x.entries, x.numerator, x.denominator))
-
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "numerator", "denominator")) =>
         val get = pairs.toMap

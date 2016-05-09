@@ -59,13 +59,6 @@ package histogrammar {
       (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
       apply(bins, quantity, selection, value, nanflow)
 
-    /** Use [[org.dianahep.histogrammar.CentrallyBinned]] in Scala pattern-matching. */
-    def unapply[V <: Container[V], N <: Container[N]](x: CentrallyBinned[V, N]) =
-      Some((x.entries, x.bins, x.min, x.max, x.nanflow))
-    /** Use [[org.dianahep.histogrammar.CentrallyBinning]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](x: CentrallyBinning[DATUM, V, N]) =
-      Some((x.entries, x.bins, x.min, x.max, x.nanflow))
-
     trait Methods[V <: Container[V]] extends CentralBinsDistribution[V] {
       def bins: MetricSortedMap[Double, V]
 

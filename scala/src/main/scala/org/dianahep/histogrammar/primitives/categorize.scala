@@ -51,11 +51,6 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
       apply(quantity, selection, value)
 
-    /** Use [[org.dianahep.histogrammar.Categorized]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Categorized[V]) = Some((x.entries, x.pairsMap))
-    /** Use [[org.dianahep.histogrammar.Categorizing]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Categorizing[DATUM, V]) = Some((x.entries, x.pairsMap))
-
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
         val get = pairs.toMap

@@ -78,6 +78,8 @@ package histogrammar {
 
       /** Return the exact center of the bin that `x` belongs to. */
       def center(x: Double): Double = bins.closest(x).get.key
+      /** Return the aggregator at the center of the bin that `x` belongs to. */
+      def value(x: Double): V = bins.closest(x).get.value
       /** Return `true` iff `x` is in the nanflow region (equal to `NaN`). */
       def nan(x: Double): Boolean = x.isNaN
 

@@ -77,7 +77,7 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def isEmpty = value.isEmpty
+    def saturated = value.isEmpty
     def get = value.get
     def getOrElse(default: => V) = value.getOrElse(default)
 
@@ -104,7 +104,7 @@ package histogrammar {
         case Some(x) => x.toJsonFragment
       }))
 
-    override def toString() = s"""Limited[${if (isEmpty) "saturated" else value.get}]"""
+    override def toString() = s"""Limited[${if (saturated) "saturated" else value.get}]"""
     override def equals(that: Any) = that match {
       case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
       case _ => false
@@ -120,7 +120,7 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def isEmpty = value.isEmpty
+    def saturated = value.isEmpty
     def get = value.get
     def getOrElse(default: => V) = value.getOrElse(default)
 
@@ -155,7 +155,7 @@ package histogrammar {
         case Some(x) => x.toJsonFragment
       }))
 
-    override def toString() = s"""Limiting[${if (isEmpty) "saturated" else value.get}]"""
+    override def toString() = s"""Limiting[${if (saturated) "saturated" else value.get}]"""
     override def equals(that: Any) = that match {
       case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
       case _ => false

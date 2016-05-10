@@ -537,7 +537,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     val two = Limit(Bag({x: Struct => x.string}), 9)
     struct.foreach(two.fill(_))
-    two.isEmpty should be (true)
+    two.saturated should be (true)
 
     checkJson(one)
     checkJson(two)

@@ -515,14 +515,19 @@ class DefaultSuite extends FlatSpec with Matchers {
   "Bag/Bagged/Bagging" must "work" in  {
     val one = Bag({x: Double => x})
     simple.foreach(one.fill(_))
-    one.values.get should be (Map(7.3 -> 1.0, 2.2 -> 1.0, -1.7 -> 1.0, -4.7 -> 1.0, 0.0 -> 2.0, -1.8 -> 1.0, -3.0 -> 1.0, 1.6 -> 1.0, 3.4 -> 1.0))
+    one.values should be (Map(7.3 -> 1.0, 2.2 -> 1.0, -1.7 -> 1.0, -4.7 -> 1.0, 0.0 -> 2.0, -1.8 -> 1.0, -3.0 -> 1.0, 1.6 -> 1.0, 3.4 -> 1.0))
 
-    val two = Bag({x: Double => x}, limit = Some(5))
+    val two = Bag({x: Double => Vector(x, x)})
     simple.foreach(two.fill(_))
-    two.values should be (None)
+    two.values should be (Map(Vector(7.3, 7.3) -> 1.0, Vector(2.2, 2.2) -> 1.0, Vector(-1.7, -1.7) -> 1.0, Vector(-4.7, -4.7) -> 1.0, Vector(0.0, 0.0) -> 2.0, Vector(-1.8, -1.8) -> 1.0, Vector(-3.0, -3.0) -> 1.0, Vector(1.6, 1.6) -> 1.0, Vector(3.4, 3.4) -> 1.0))
+
+    val three = Bag({x: Struct => x.string.substring(0, 1)})
+    struct.foreach(three.fill(_))
+    three.values should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
 
     checkJson(one)
     checkJson(two)
+    checkJson(three)
   }
 
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning

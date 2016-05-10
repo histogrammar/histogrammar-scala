@@ -270,8 +270,13 @@ package object histogrammar {
     def apply[SUB <: DATUM](x: SUB) = 1.0
   }
 
+  /** (Sealed) base trait for user functions. */
+  sealed trait UserFcn[-DOMAIN, +RANGE] extends Serializable {
+    def apply[SUB <: DOMAIN](x: SUB): RANGE
+  }
+
   /** Wraps a user's function for extracting numbers from the input data type. */
-  trait NumericalFcn[-DATUM] extends Serializable {
+  trait NumericalFcn[-DATUM] extends UserFcn[DATUM, Double] {
     def apply[SUB <: DATUM](x: SUB): Double
   }
   implicit class NumericalFcnFromByte[-DATUM](f: DATUM => Byte) extends NumericalFcn[DATUM] {
@@ -294,15 +299,14 @@ package object histogrammar {
   }
 
   /** Wraps a user's function for extracting strings (categories) from the input data type. */
-  implicit class CategoricalFcn[-DATUM](f: DATUM => String) extends Serializable {
+  implicit class CategoricalFcn[-DATUM](f: DATUM => String) extends UserFcn[DATUM, String] {
     def apply[SUB <: DATUM](x: SUB): String = f(x)
   }
 
   /** Wraps a user's function for extracting multidimensional numeric data from the input data type. */
-  implicit class MultivariateFcn[-DATUM](f: DATUM => Iterable[Double]) extends Serializable {
+  implicit class MultivariateFcn[-DATUM](f: DATUM => Iterable[Double]) extends UserFcn[DATUM, Vector[Double]] {
     def apply[SUB <: DATUM](x: SUB): Vector[Double] = f(x).toVector
   }
-  implicit def scalarToMultivariateFcn[DATUM](f: DATUM => Double) = MultivariateFcn({x: DATUM => Vector(f(x))})
 
   /** Introduces a `===` operator for `Double` precision numbers in which `NaN === NaN`. */
   implicit class nanEquality(val x: Double) extends AnyVal {

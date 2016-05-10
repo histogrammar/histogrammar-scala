@@ -29,16 +29,37 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Limit/Limited/Limiting
 
+  /** Accumulate an aggregator until its number of entries reaches a predefined limit.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Limiting]] and immutable [[org.dianahep.histogrammar.Limited]] objects.
+    */
   object Limit extends Factory {
     val name = "Limit"
-    val help = "Accumulate an aggregator until the number of entries reaches a predefined limit."
-    val detailedHelp = """HERE"""
+    val help = "Accumulate an aggregator until its number of entries reaches a predefined limit."
+    val detailedHelp = """Limit(value: V, limit: Double)"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Limited]] from arguments (instead of JSON).
+      * 
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
+      * @param contentType Name of the Factory for `value`.
+      * @param value Some aggregator or `None`.
+      */
     def ed[V <: Container[V]](entries: Double, limit: Double, contentType: String, value: Option[V]) = new Limited[V](entries, limit, contentType, value)
+
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
+      * 
+      * @param value Aggregator to apply a limit to.
+      * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
+      */
     def apply[DATUM, V <: Container[V] with Aggregation](value: V, limit: Double) = new Limiting[DATUM, V](0.0, limit, value.factory.name, Some(value))
+
+    /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation](value: V, limit: Double) = apply[DATUM, V](value, limit)
 
+    /** Use [[org.dianahep.histogrammar.Limited]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Limited[V]) = x.value
+    /** Use [[org.dianahep.histogrammar.Limiting]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation](x: Limiting[DATUM, V]) = x.value
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -70,6 +91,13 @@ package histogrammar {
     }
   }
 
+  /** An accumulated aggregator or `None` if the number of entries exceeded the limit.
+    * 
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
+    * @param contentType Name of the Factory for `value`.
+    * @param value Some aggregator or `None`.
+    */
   class Limited[V <: Container[V]] private[histogrammar](val entries: Double, val limit: Double, val contentType: String, val value: Option[V]) extends Container[Limited[V]] {
     type Type = Limited[V]
     def factory = Limit
@@ -77,8 +105,11 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** True if `entries` exceeds `limit` and `value` is `None`. */
     def saturated = value.isEmpty
+    /** Get the value of `value` or raise an error if it is `None`. */
     def get = value.get
+    /** Get the value of `value` or return a default if it is `None`. */
     def getOrElse(default: => V) = value.getOrElse(default)
 
     def zero = new Limited[V](0.0, limit, contentType, value.map(_.zero))
@@ -112,6 +143,13 @@ package histogrammar {
     override def hashCode() = (entries, limit, contentType, value).hashCode
   }
 
+  /** Accumulating an aggregator or `None` if the number of entries exceeds the limit.
+    * 
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
+    * @param contentType Name of the Factory for `value`.
+    * @param value Some aggregator or `None`.
+    */
   class Limiting[DATUM, V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val limit: Double, val contentType: String, var value: Option[V]) extends Container[Limiting[DATUM, V]] with AggregationOnData {
     type Type = Limiting[DATUM, V]
     type Datum = V#Datum
@@ -120,8 +158,11 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
+    /** True if `entries` exceeds `limit` and `value` is `None`. */
     def saturated = value.isEmpty
+    /** Get the value of `value` or raise an error if it is `None`. */
     def get = value.get
+    /** Get the value of `value` or return a default if it is `None`. */
     def getOrElse(default: => V) = value.getOrElse(default)
 
     def zero = new Limiting[DATUM, V](0.0, limit, contentType, value.map(_.zero))

@@ -84,6 +84,7 @@ package histogrammar {
     register(Partition)
     register(Categorize)
 
+    register(Limit)
     register(Label)
     register(UntypedLabel)
     register(Index)

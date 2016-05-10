@@ -27,6 +27,142 @@ package histogrammar {
     implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
   }
 
+  //////////////////////////////////////////////////////////////// Limit/Limited/Limiting
+
+  object Limit extends Factory {
+    val name = "Limit"
+    val help = "Accumulate an aggregator until the number of entries reaches a predefined limit."
+    val detailedHelp = """HERE"""
+
+    def ed[V <: Container[V]](entries: Double, limit: Double, contentType: String, value: Option[V]) = new Limited[V](entries, limit, contentType, value)
+    def apply[DATUM, V <: Container[V] with Aggregation](value: V, limit: Double) = new Limiting[DATUM, V](0.0, limit, value.factory.name, Some(value))
+    def ing[DATUM, V <: Container[V] with Aggregation](value: V, limit: Double) = apply[DATUM, V](value, limit)
+
+    def unapply[V <: Container[V]](x: Limited[V]) = x.value
+    def unapply[DATUM, V <: Container[V] with Aggregation](x: Limiting[DATUM, V]) = x.value
+
+    def fromJsonFragment(json: Json): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "limit", "type", "data")) =>
+        val get = pairs.toMap
+
+        val entries = get("entries") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val limit = get("limit") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".limit")
+        }
+
+        val contentType = get("type") match {
+          case JsonString(x) => x
+          case x => throw new JsonFormatException(x, name + ".type")
+        }
+        val factory = Factory(contentType)
+
+        get("data") match {
+          case JsonNull => new Limited[Container[_]](entries, limit, contentType, None)
+          case x => new Limited[Container[_]](entries, limit, contentType, Some(factory.fromJsonFragment(x)))
+        }
+
+      case _ => throw new JsonFormatException(json, name)
+    }
+  }
+
+  class Limited[V <: Container[V]] private[histogrammar](val entries: Double, val limit: Double, val contentType: String, val value: Option[V]) extends Container[Limited[V]] {
+    type Type = Limited[V]
+    def factory = Limit
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def isEmpty = value.isEmpty
+    def get = value.get
+    def getOrElse(default: => V) = value.getOrElse(default)
+
+    def zero = new Limited[V](0.0, limit, contentType, value.map(_.zero))
+    def +(that: Limited[V]) =
+      if (this.limit != that.limit)
+        throw new ContainerException(s"""cannot add Limited because they have different limits (${this.limit} vs ${that.limit}))""")
+      else {
+        val newentries = this.entries + that.entries
+        val newvalue =
+          if (newentries > limit)
+            None
+          else
+            Some(this.value.get + that.value.get)
+        new Limited[V](newentries, limit, contentType, newvalue)
+      }
+
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "limit" -> JsonFloat(limit),
+      "type" -> JsonString(contentType),
+      "data" -> (value match {
+        case None => JsonNull
+        case Some(x) => x.toJsonFragment
+      }))
+
+    override def toString() = s"""Limited[${if (isEmpty) "saturated" else value.get}]"""
+    override def equals(that: Any) = that match {
+      case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
+      case _ => false
+    }
+    override def hashCode() = (entries, limit, contentType, value).hashCode
+  }
+
+  class Limiting[DATUM, V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val limit: Double, val contentType: String, var value: Option[V]) extends Container[Limiting[DATUM, V]] with AggregationOnData {
+    type Type = Limiting[DATUM, V]
+    type Datum = V#Datum
+    def factory = Limit
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def isEmpty = value.isEmpty
+    def get = value.get
+    def getOrElse(default: => V) = value.getOrElse(default)
+
+    def zero = new Limiting[DATUM, V](0.0, limit, contentType, value.map(_.zero))
+    def +(that: Limiting[DATUM, V]) =
+      if (this.limit != that.limit)
+        throw new ContainerException(s"""cannot add Limiting because they have different limits (${this.limit} vs ${that.limit}))""")
+      else {
+        val newentries = this.entries + that.entries
+        val newvalue =
+          if (newentries > limit)
+            None
+          else
+            Some(this.value.get + that.value.get)
+        new Limiting[DATUM, V](newentries, limit, contentType, newvalue)
+      }
+
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      entries += weight
+      if (entries > limit)
+        value = None
+      else
+        value.foreach(v => v.fill(datum.asInstanceOf[v.Datum], weight))
+    }
+
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "limit" -> JsonFloat(limit),
+      "type" -> JsonString(contentType),
+      "data" -> (value match {
+        case None => JsonNull
+        case Some(x) => x.toJsonFragment
+      }))
+
+    override def toString() = s"""Limiting[${if (isEmpty) "saturated" else value.get}]"""
+    override def equals(that: Any) = that match {
+      case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
+      case _ => false
+    }
+    override def hashCode() = (entries, limit, contentType, value).hashCode
+  }
+
   //////////////////////////////////////////////////////////////// Label/Labeled/Labeling
 
   /** Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum.

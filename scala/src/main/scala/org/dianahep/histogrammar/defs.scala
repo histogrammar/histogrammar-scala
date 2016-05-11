@@ -254,14 +254,14 @@ package object histogrammar {
     def named(n: String) =
       if (hasName)
         throw new IllegalArgumentException(s"two names applied to the same function: ${name.get} and $n")
-    else {
-      val f = this
-      new Selection[DATUM] {
-        def name = Some(n)
-        def hasCache = f.hasCache
-        def apply[SUB <: DATUM](x: SUB): Double = f(x)
+      else {
+        val f = this
+        new Selection[DATUM] {
+          def name = Some(n)
+          def hasCache = f.hasCache
+          def apply[SUB <: DATUM](x: SUB): Double = f(x)
+        }
       }
-    }
 
     def cached =
       if (hasCache)
@@ -329,11 +329,49 @@ package object histogrammar {
 
   /** (Sealed) base trait for user functions. */
   sealed trait UserFcn[-DOMAIN, +RANGE] extends Serializable {
+    def name: Option[String]
+    def hasCache: Boolean
     def apply[SUB <: DOMAIN](x: SUB): RANGE
+
+    def hasName = !name.isEmpty
+
+    def named(n: String) =
+      if (hasName)
+        throw new IllegalArgumentException(s"two names applied to the same function: ${name.get} and $n")
+      else {
+        val f = this
+        new UserFcn[DOMAIN, RANGE] {
+          def name = Some(n)
+          def hasCache = f.hasCache
+          def apply[SUB <: DOMAIN](x: SUB): RANGE = f(x)
+        }
+      }
+
+    def cached =
+      if (hasCache)
+        this
+      else {
+        val f = this
+        new UserFcn[DOMAIN, RANGE] {
+          private var last: Option[(DOMAIN, RANGE)] = None
+          def name = f.name
+          def hasCache = true
+          def apply[SUB <: DOMAIN](x: SUB): RANGE = (x, last) match {
+            case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
+            case (_,            Some((oldx, oldy)))         if (x == oldx)    => oldy
+            case _ =>
+              val y = f(x)
+              last = Some(x -> y)
+              y
+          }
+        }
+      }
   }
 
   /** Wraps a user's function for extracting numbers from the input data type. */
   trait NumericalFcn[-DATUM] extends UserFcn[DATUM, Double] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double
   }
   implicit class NumericalFcnFromByte[-DATUM](f: DATUM => Byte) extends NumericalFcn[DATUM] {
@@ -357,11 +395,15 @@ package object histogrammar {
 
   /** Wraps a user's function for extracting strings (categories) from the input data type. */
   implicit class CategoricalFcn[-DATUM](f: DATUM => String) extends UserFcn[DATUM, String] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): String = f(x)
   }
 
   /** Wraps a user's function for extracting multidimensional numeric data from the input data type. */
   implicit class MultivariateFcn[-DATUM](f: DATUM => Iterable[Double]) extends UserFcn[DATUM, Vector[Double]] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Vector[Double] = f(x).toVector
   }
 

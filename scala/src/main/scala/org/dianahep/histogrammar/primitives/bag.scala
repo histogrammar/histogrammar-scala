@@ -19,7 +19,7 @@ import org.dianahep.histogrammar.json._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
 
-  /**Accumulate raw numbers, vectors of numbers, or strings, merging identical values.
+  /** Accumulate raw numbers, vectors of numbers, or strings, merging identical values.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Bagging]] and immutable [[org.dianahep.histogrammar.Bagged]] objects.
     */
@@ -93,6 +93,18 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    private[histogrammar] def rangeOrdering[RANGE] = new Ordering[RANGE] {
+      def compare(x: RANGE, y: RANGE) = (x, y) match {
+        case (xx: String, yy: String) => xx compare yy
+        case (xx: Double, yy: Double) => xx compare yy
+        case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty  &&  xx.head == yy.head) => compare(xx.tail.asInstanceOf[RANGE], yy.tail.asInstanceOf[RANGE])
+        case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty) => xx.head.asInstanceOf[Double] compare yy.head.asInstanceOf[Double]
+        case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty  &&  yy.isEmpty) => 0
+        case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty) => -1
+        case (xx: Vector[_], yy: Vector[_]) if (yy.isEmpty) => 1
+      }
+    }
   }
 
   /** An accumulated bag of numbers, vectors of numbers, or strings.
@@ -124,18 +136,7 @@ package histogrammar {
     }
 
     def toJsonFragment = {
-      implicit val rangeOrdering = new Ordering[RANGE] {
-        def compare(x: RANGE, y: RANGE) = (x, y) match {
-          case (xx: String, yy: String) => xx compare yy
-          case (xx: Double, yy: Double) => xx compare yy
-          case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty  &&  xx.head == yy.head) => compare(xx.tail.asInstanceOf[RANGE], yy.tail.asInstanceOf[RANGE])
-          case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty) => xx.head.asInstanceOf[Double] compare yy.head.asInstanceOf[Double]
-          case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty  &&  yy.isEmpty) => 0
-          case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty) => -1
-          case (xx: Vector[_], yy: Vector[_]) if (yy.isEmpty) => 1
-        }
-      }
-
+      implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
       JsonObject(
         "entries" -> JsonFloat(entries),
         "values" -> JsonArray(values.toSeq.sortBy(_._1).map({
@@ -197,18 +198,7 @@ package histogrammar {
     }
 
     def toJsonFragment = {
-      implicit val rangeOrdering = new Ordering[RANGE] {
-        def compare(x: RANGE, y: RANGE) = (x, y) match {
-          case (xx: String, yy: String) => xx compare yy
-          case (xx: Double, yy: Double) => xx compare yy
-          case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty  &&  xx.head == yy.head) => compare(xx.tail.asInstanceOf[RANGE], yy.tail.asInstanceOf[RANGE])
-          case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty) => xx.head.asInstanceOf[Double] compare yy.head.asInstanceOf[Double]
-          case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty  &&  yy.isEmpty) => 0
-          case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty) => -1
-          case (xx: Vector[_], yy: Vector[_]) if (yy.isEmpty) => 1
-        }
-      }
-
+      implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
       JsonObject(
         "entries" -> JsonFloat(entries),
         "values" -> JsonArray(values.toSeq.sortBy(_._1).map({

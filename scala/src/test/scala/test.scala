@@ -512,7 +512,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
 
-  "Bag/Bagged/Bagging" must "work" in  {
+  "Bag/Bagged/Bagging" must "work" in {
     val one = Bag({x: Double => x})
     simple.foreach(one.fill(_))
     one.values should be (Map(7.3 -> 1.0, 2.2 -> 1.0, -1.7 -> 1.0, -4.7 -> 1.0, 0.0 -> 2.0, -1.8 -> 1.0, -3.0 -> 1.0, 1.6 -> 1.0, 3.4 -> 1.0))
@@ -530,7 +530,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     checkJson(three)
   }
 
-  it must "work with Limit" in  {
+  it must "work with Limit" in {
     val one = Limit(Bag({x: Struct => x.string}), 20)
     struct.foreach(one.fill(_))
     one.get.values should be (Map("one" -> 1.0, "two" -> 1.0, "three" -> 1.0, "four" -> 1.0, "five" -> 1.0, "six" -> 1.0, "seven" -> 1.0, "eight" -> 1.0, "nine" -> 1.0, "ten" -> 1.0))
@@ -541,6 +541,37 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     checkJson(one)
     checkJson(two)
+  }
+
+  //////////////////////////////////////////////////////////////// Sample/Sampled/Sampling
+
+  "Sample/Sampled/Sampling" must "work" in {
+    val one = Sample(100, {x: Double => x})
+    simple.foreach(one.fill(_))
+    one.values.toSet should be (Set((3.4, 1.0), (2.2, 1.0), (-1.8, 1.0), (0.0, 1.0), (7.3, 1.0), (-4.7, 1.0), (1.6, 1.0), (0.0, 1.0), (-3.0, 1.0), (-1.7, 1.0)))
+
+    val two = Sample(3, {x: Double => x})
+    simple.foreach(two.fill(_))
+    two.values.size should be (3)
+    two.size should be (3)
+
+    val three = Sample(100, {x: Double => Vector(x, x)})
+    simple.foreach(three.fill(_))
+    three.values.toSet should be (Set((Vector(3.4, 3.4), 1.0), (Vector(2.2, 2.2), 1.0), (Vector(-1.8, -1.8), 1.0), (Vector(0.0, 0.0), 1.0), (Vector(7.3, 7.3), 1.0), (Vector(-4.7, -4.7), 1.0), (Vector(1.6, 1.6), 1.0), (Vector(0.0, 0.0), 1.0), (Vector(-3.0, -3.0), 1.0), (Vector(-1.7, -1.7), 1.0)))
+
+    val four = Sample(100, {x: Struct => x.string.substring(0, 1)})
+    struct.foreach(four.fill(_))
+    four.values.sorted should be (Vector("e" -> 1.0, "f" -> 1.0, "f" -> 1.0, "n" -> 1.0, "o" -> 1.0, "s" -> 1.0, "s" -> 1.0, "t" -> 1.0, "t" -> 1.0, "t" -> 1.0))
+
+    val five = Sample(100, {x: Struct => x.string})
+    struct.foreach(five.fill(_))
+    five.values.sorted should be (Vector("eight" -> 1.0, "five" -> 1.0, "four" -> 1.0, "nine" -> 1.0, "one" -> 1.0, "seven" -> 1.0, "six" -> 1.0, "ten" -> 1.0, "three" -> 1.0, "two" -> 1.0))
+
+    checkJson(one)
+    checkJson(two)
+    checkJson(three)
+    checkJson(four)
+    checkJson(five)
   }
 
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning

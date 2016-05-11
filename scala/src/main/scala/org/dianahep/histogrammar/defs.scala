@@ -73,22 +73,24 @@ package histogrammar {
     register(Maximize)
     register(Quantile)
 
-    register(Bag)
-
     register(Bin)
     register(SparselyBin)
     register(CentrallyBin)
     register(AdaptivelyBin)
+    register(Categorize)
+
     register(Fraction)
     register(Stack)
     register(Partition)
-    register(Categorize)
 
     register(Limit)
     register(Label)
     register(UntypedLabel)
     register(Index)
     register(Branch)
+
+    register(Bag)
+    register(Sample)
 
     /** Get a registered container by its name. */
     def apply(name: String) = known.get(name) match {

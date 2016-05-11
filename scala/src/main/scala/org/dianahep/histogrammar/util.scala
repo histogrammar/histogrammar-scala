@@ -58,43 +58,45 @@ package util {
   //////////////////////////////////////////////////////////////// random sampling
 
   package mutable {
-    /** Utility for reservoir sampling on data of type DATUM.
+    /** Utility for reservoir sampling on data of type RANGE.
       * 
       * Collects up to `limit` data points (based on count, not sum of weights), including their weights. Once the `limit` is reached, points are deweighted such that the final sample is a statistically unbiased representative of the full sample.
       * 
-      * Merge step assumes that DATUM is immutable.
+      * Merge step assumes that RANGE is immutable.
       */
-    class Reservoir[DATUM](limit: Int) {
-      var size = 0
-      var sortedMap = SortedMap[Double, (DATUM, Double)]()
+    class Reservoir[RANGE](val limit: Int, initial: (RANGE, Double)*) {
+      var numObserved = 0
+      var sortedMap = SortedMap[Double, (RANGE, Double)]()
+      initial foreach {case (y, weight) => update(y, weight)}
 
       /** Add a point to the reservoir.
         * 
-        * @param datum data point to insert or possibly insert in the sample
+        * @param y data point to insert or possibly insert in the sample
         * @param weight weight of the point; data in the final sample are represented in proportion to these weights (probability of a point with weight `w` to be in the final sample: `w/W` where `W` is the sum of all weights)
         */
-      def update(datum: DATUM, weight: Double = 1.0) {
-        size += 1
+      def update(y: RANGE, weight: Double = 1.0) {
+        numObserved += 1
 
         val r = Math.pow(Random.nextDouble, 1.0/weight)
-        if (size <= limit)
-          sortedMap = sortedMap.updated(r, (datum, weight))
+        if (numObserved <= limit)
+          sortedMap = sortedMap.updated(r, (y, weight))
         else if (sortedMap.head._1 < r) {
           sortedMap = sortedMap.tail
-          sortedMap = sortedMap.updated(r, (datum, weight))
+          sortedMap = sortedMap.updated(r, (y, weight))
         }
       }
 
-      /** Merge two Reservoirs, returning a new object. (Note: assumes `DATUM` is immutable). */
-      def merge(that: Reservoir[DATUM]) = {
-        val out = new Reservoir[DATUM](limit)
-        this.sortedMap foreach {case (_, (datum, weight)) => out.update(datum, weight)}
-        that.sortedMap foreach {case (_, (datum, weight)) => out.update(datum, weight)}
-        out
-      }
-
       /** Get a snapshot of the sample. */
-      def sample = sortedMap.values
+      def values: Seq[(RANGE, Double)] = sortedMap.values.toVector
+
+      /** Get some element of the sample. */
+      def some: (RANGE, Double) = sortedMap.values.head
+
+      /** Get the number of elements in the sample (saturates at `limit`). */
+      def size = sortedMap.size
+
+      /** Determine if the sample is empty. */
+      def isEmpty = sortedMap.isEmpty
     }
   }
 

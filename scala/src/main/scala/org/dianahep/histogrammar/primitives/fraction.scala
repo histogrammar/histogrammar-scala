@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
@@ -48,8 +49,9 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: => V = Count()) =
       apply(selection, value)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "numerator", "denominator")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "numerator", "denominator")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

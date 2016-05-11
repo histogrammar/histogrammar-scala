@@ -459,6 +459,11 @@ package json {
     def stringify = "{" + pairs.map({case (k, v) => k.stringify + ": " + v.stringify}).mkString(", ") + "}"
     def to[T <: Json] = pairs.map({case (k, v) => (k.value, v.asInstanceOf[T])})
 
+    def maybe(kv: (JsonString, Option[Json])): JsonObject = kv match {
+      case (_, None) => this
+      case (k, Some(v)) => JsonObject((pairs :+ (k, v)) : _*)
+    }
+
     override def equals(that: Any) = that match {
       case that: JsonObject => this.pairs.toSet == that.pairs.toSet
       case _ => false

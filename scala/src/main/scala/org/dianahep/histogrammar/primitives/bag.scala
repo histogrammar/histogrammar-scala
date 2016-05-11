@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
@@ -51,8 +52,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Bagging]] in Scala pattern-matching. */
     def unapply[DATUM, RANGE](x: Bagging[DATUM, RANGE]) = x.values
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "values")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "values")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -62,7 +64,7 @@ package histogrammar {
 
         val values = get("values") match {
           case JsonArray(elems @ _*) => Map[Any, Double](elems.zipWithIndex map {
-            case (JsonObject(nv @ _*), i) if (nv.keySet == Set("n", "v")) =>
+            case (JsonObject(nv @ _*), i) if (nv.keySet has Set("n", "v")) =>
               val nvget = nv.toMap
 
               val n = nvget("n") match {

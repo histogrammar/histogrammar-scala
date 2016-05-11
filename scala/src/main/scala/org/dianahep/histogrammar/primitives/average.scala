@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Average/Averaged/Averaging
@@ -49,8 +50,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Averaging]] in Scala pattern-matching. */
     def unapply[DATUM](x: Averaging[DATUM]) = Some(x.mean)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "mean")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

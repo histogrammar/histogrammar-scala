@@ -29,6 +29,29 @@ package object util {
 }
 
 package util {
+  //////////////////////////////////////////////////////////////// handling key set comparisons with optional keys
+
+  object KeySetComparisons {
+    trait KeySet {
+      def required: Set[String]
+      def optional: Set[String]
+
+      def maybe(string: String) = {
+        val t = this
+        new KeySet {
+          def required = t.required
+          def optional = t.optional ++ Set(string)
+        }
+      }
+    }
+
+    implicit class KeySetFromSet(s: Set[String]) extends KeySet {
+      def required = s
+      def optional = Set[String]()
+      def has(that: KeySet) = (that.required subsetOf s)  &&  (s subsetOf (that.required ++ that.optional))
+    }
+  }
+
   //////////////////////////////////////////////////////////////// random sampling
 
   package mutable {

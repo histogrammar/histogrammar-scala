@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Minimize/Minimized/Minimizing
@@ -49,8 +50,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Minimizing]] in Scala pattern-matching. */
     def unapply[DATUM](x: Minimizing[DATUM]) = Some(x.min)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "min")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "min")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -171,8 +173,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Maximizing]] in Scala pattern-matching. */
     def unapply[DATUM](x: Maximizing[DATUM]) = Some(x.max)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "max")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "max")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

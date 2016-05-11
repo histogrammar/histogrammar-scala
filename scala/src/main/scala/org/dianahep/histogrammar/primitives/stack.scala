@@ -17,6 +17,7 @@ package org.dianahep
 import scala.collection.immutable.SortedSet
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
@@ -50,8 +51,9 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
       apply(value, expression, cuts: _*)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -68,7 +70,7 @@ package histogrammar {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
             new Stacked[Container[_]](entries, elements.zipWithIndex map {case (element, i) =>
               element match {
-                case JsonObject(elementPairs @ _*) if (elementPairs.keySet == Set("atleast", "data")) =>
+                case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
                   val elementGet = elementPairs.toMap
                   val atleast = elementGet("atleast") match {
                     case JsonNumber(x) => x

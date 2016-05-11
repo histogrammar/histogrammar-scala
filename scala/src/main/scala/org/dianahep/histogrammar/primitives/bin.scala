@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
@@ -110,8 +111,9 @@ package histogrammar {
       def range(index: Int): (Double, Double) = ((high - low) * index / num + low, (high - low) * (index + 1) / num + low)
     }
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
         val get = pairs.toMap
 
         val low = get("low") match {

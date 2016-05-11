@@ -88,8 +88,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Quantiling]] in Scala pattern-matching. */
     def unapply[DATUM](x: Quantiling[DATUM]) = Some(x.estimate)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "target", "estimate")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "target", "estimate")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

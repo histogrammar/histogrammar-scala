@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Sum/Summed/Summing
@@ -49,8 +50,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Summing]] in Scala pattern-matching. */
     def unapply(x: Summing[_]) = Some(x.sum)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "sum")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sum")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

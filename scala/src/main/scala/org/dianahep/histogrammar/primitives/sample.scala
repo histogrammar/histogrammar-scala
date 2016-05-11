@@ -54,8 +54,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Sampling]] in Scala pattern-matching. */
     def unapply[DATUM, RANGE](x: Sampling[DATUM, RANGE]) = x.values
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "limit", "values")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "values")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -70,7 +71,7 @@ package histogrammar {
 
         val values = get("values") match {
           case JsonArray(elems @ _*) => Seq[(Any, Double)](elems.zipWithIndex map {
-            case (JsonObject(wv @ _*), i) if (wv.keySet == Set("w", "v")) =>
+            case (JsonObject(wv @ _*), i) if (wv.keySet has Set("w", "v")) =>
               val wvget = wv.toMap
 
               val n = wvget("w") match {

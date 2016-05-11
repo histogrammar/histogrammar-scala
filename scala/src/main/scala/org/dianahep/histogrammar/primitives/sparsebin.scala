@@ -19,6 +19,7 @@ import scala.collection.immutable.SortedMap
 import scala.language.existentials
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
@@ -103,8 +104,9 @@ package histogrammar {
       def nan(x: Double): Boolean = x.isNaN
     }
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("binWidth", "entries", "bins:type", "bins", "nanflow:type", "nanflow", "origin")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("binWidth", "entries", "bins:type", "bins", "nanflow:type", "nanflow", "origin")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

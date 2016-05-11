@@ -91,8 +91,9 @@ package histogrammar {
       }
     }
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -107,7 +108,7 @@ package histogrammar {
         val bins = get("bins") match {
           case JsonArray(bins @ _*) if (bins.size >= 2) =>
             immutable.MetricSortedMap(bins.zipWithIndex map {
-              case (JsonObject(binpair @ _*), i) if (binpair.keySet == Set("center", "value")) =>
+              case (JsonObject(binpair @ _*), i) if (binpair.keySet has Set("center", "value")) =>
                 val binget = binpair.toMap
 
                 val center = binget("center") match {

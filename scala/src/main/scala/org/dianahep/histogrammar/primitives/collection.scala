@@ -17,6 +17,7 @@ package org.dianahep
 import scala.language.existentials
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   private[histogrammar] trait Compatible[-X, -Y]
@@ -60,8 +61,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Cutting]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Cutting[DATUM, V]) = Some(x.value)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -185,8 +187,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Limiting]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation](x: Limiting[DATUM, V]) = x.value
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "limit", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -354,8 +357,9 @@ package histogrammar {
     /** Synonym for `apply`. */
     def ing[V <: Container[V] with Aggregation](pairs: (String, V)*) = apply(pairs: _*)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -535,8 +539,9 @@ package histogrammar {
     /** Synonym for `apply`. */
     def ing[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = apply(pairs: _*)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -547,7 +552,7 @@ package histogrammar {
         get("data") match {
           case JsonObject(subpairs @ _*) =>
             new UntypedLabeled(entries, subpairs map {
-              case (JsonString(label), JsonObject(typedata @ _*)) if (typedata.keySet == Set("type", "data")) =>
+              case (JsonString(label), JsonObject(typedata @ _*)) if (typedata.keySet has Set("type", "data")) =>
                 val subget = typedata.toMap
                   (subget("type"), subget("data")) match {
                   case (JsonString(factory), sub) => (label.toString, Factory(factory).fromJsonFragment(sub))
@@ -729,8 +734,9 @@ package histogrammar {
     /** Synonym for `apply`. */
     def ing[V <: Container[V] with Aggregation](values: V*) = apply(values: _*)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -916,8 +922,9 @@ package histogrammar {
     def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8) = apply(i0, i1, i2, i3, i4, i5, i6, i7, i8)
     def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, C9 <: Container[C9] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8, e09: C0 Compatible C9) = apply(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

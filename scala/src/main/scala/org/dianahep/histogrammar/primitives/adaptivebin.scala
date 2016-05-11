@@ -62,8 +62,9 @@ package histogrammar {
       (quantity: NumericalFcn[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
       apply(quantity, num, tailDetail, value, nanflow)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "num", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow", "tailDetail")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "num", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow", "tailDetail")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -83,7 +84,7 @@ package histogrammar {
         val bins = get("bins") match {
           case JsonArray(bins @ _*) =>
             mutable.MetricSortedMap[Double, Container[_]](bins.zipWithIndex map {
-              case (JsonObject(binpair @ _*), i) if (binpair.keySet == Set("center", "value")) =>
+              case (JsonObject(binpair @ _*), i) if (binpair.keySet has Set("center", "value")) =>
                 val binget = binpair.toMap
 
                 val center = binget("center") match {

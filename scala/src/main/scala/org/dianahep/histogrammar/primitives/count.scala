@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Count/Counted/Counting
@@ -48,6 +49,7 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Counting]] in Scala pattern-matching. */
     def unapply(x: Counting) = Some(x.entries)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonFloat(entries) => new Counted(entries)
       case _ => throw new JsonFormatException(json, name)

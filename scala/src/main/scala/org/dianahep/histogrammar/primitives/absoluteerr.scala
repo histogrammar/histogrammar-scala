@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErred/AbsoluteErring
@@ -49,8 +50,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.AbsoluteErring]] in Scala pattern-matching. */
     def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some(x.mae)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "mae")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mae")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

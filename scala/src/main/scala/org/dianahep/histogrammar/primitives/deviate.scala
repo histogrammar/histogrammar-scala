@@ -15,6 +15,7 @@
 package org.dianahep
 
 import org.dianahep.histogrammar.json._
+import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Deviate/Deviated/Deviating
@@ -52,8 +53,9 @@ package histogrammar {
     /** Use [[org.dianahep.histogrammar.Deviating]] in Scala pattern-matching. */
     def unapply[DATUM](x: Deviating[DATUM]) = Some(x.variance)
 
+    import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "mean", "variance")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean", "variance")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {

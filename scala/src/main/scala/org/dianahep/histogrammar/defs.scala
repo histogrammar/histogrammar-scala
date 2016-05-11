@@ -245,32 +245,85 @@ package object histogrammar {
     * If `Selections` are specified for nested structures, they will be multiplied to provide the final weight. A value of 0.0 at any level skips descent of the subtree.
     */
   trait Selection[-DATUM] extends Serializable {
+    def name: Option[String]
+    def hasCache: Boolean
     def apply[SUB <: DATUM](x: SUB): Double
+
+    def hasName = !name.isEmpty
+
+    def named(n: String) =
+      if (hasName)
+        throw new IllegalArgumentException(s"two names applied to the same function: ${name.get} and $n")
+    else {
+      val f = this
+      new Selection[DATUM] {
+        def name = Some(n)
+        def hasCache = f.hasCache
+        def apply[SUB <: DATUM](x: SUB): Double = f(x)
+      }
+    }
+
+    def cached =
+      if (hasCache)
+        this
+      else {
+        val f = this
+        new Selection[DATUM] {
+          private var last: Option[(DATUM, Double)] = None
+          def name = f.name
+          def hasCache = true
+          def apply[SUB <: DATUM](x: SUB): Double = (x, last) match {
+            case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
+            case (_,            Some((oldx, oldy)))         if (x == oldx)    => oldy
+            case _ =>
+              val y = f(x)
+              last = Some(x -> y)
+              y
+          }
+        }
+      }
   }
+
   implicit class SelectionFromBoolean[-DATUM](f: DATUM => Boolean) extends Selection[DATUM] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = if (f(x)) 1.0 else 0.0
   }
   implicit class SelectionFromByte[-DATUM](f: DATUM => Byte) extends Selection[DATUM] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
   implicit class SelectionFromShort[-DATUM](f: DATUM => Short) extends Selection[DATUM] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
   implicit class SelectionFromInt[-DATUM](f: DATUM => Int) extends Selection[DATUM] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
   implicit class SelectionFromLong[-DATUM](f: DATUM => Long) extends Selection[DATUM] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
   implicit class SelectionFromFloat[-DATUM](f: DATUM => Float) extends Selection[DATUM] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
   implicit class SelectionFromDouble[-DATUM](f: DATUM => Double) extends Selection[DATUM] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x)
   }
 
   /** Default weighting function that always returns 1.0. */
   def unweighted[DATUM] = new Selection[DATUM] {
+    def name = Some("unweighted")
+    def hasCache = true
     def apply[SUB <: DATUM](x: SUB) = 1.0
   }
 

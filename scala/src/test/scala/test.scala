@@ -99,9 +99,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val somename = if (i < 5) None else Some("name")
-      val leftCounting = Cut({x: Double => x > 0.0}, Count(), somename)
-      val rightCounting = Cut({x: Double => x > 0.0}, Count(), somename)
+      val leftCounting = Cut({x: Double => x > 0.0} named "something" cached, Count())
+      val rightCounting = Cut({x: Double => x > 0.0} named "something" cached, Count())
 
       left.foreach(leftCounting.fill(_))
       right.foreach(rightCounting.fill(_))

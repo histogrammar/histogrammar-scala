@@ -38,7 +38,7 @@ package histogrammar {
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Bagging]].
       * 
-      * @param quantity Multivariate function to track.
+      * @param quantity Function that produces numbers, vectors of numbers, or strings.
       * @param selection Boolean or non-negative function that cuts or weights entries.
       */
     def apply[DATUM, RANGE](quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM]) =
@@ -158,7 +158,7 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.Bag]] to construct an instance.
     * 
-    * @param quantity Multivariate function to track.
+    * @param quantity Function that produces numbers, vectors of numbers, or strings.
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Distinct values and the (weighted) number of times they were observed.

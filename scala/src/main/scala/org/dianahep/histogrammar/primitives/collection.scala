@@ -29,18 +29,37 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Cut/Cutted/Cutting
 
+  /** Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting).
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Cutting]] and immutable [[org.dianahep.histogrammar.Cutted]] (sic) objects.
+    */
   object Cut extends Factory {
     val name = "Cut"
     val help = "Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting)."
     val detailedHelp = """Cut(selection: Selection[DATUM], value: V, name: Option[String] = None)"""
 
+    /** Create an immutable [[org.dianahep.histogrammar.Cutted]] from arguments (instead of JSON).
+      * 
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param value Aggregator that accumulated values that passed the cut.
+      * @param name Optional name for bookkeeping.
+      */
     def ed[V <: Container[V]](entries: Double, value: V, name: Option[String]) = new Cutted[V](entries, value, name)
 
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
+      * 
+      * @param selection Boolean or non-negative function that cuts or weights entries.
+      * @param value Aggregator to accumulate for values that pass `selection`.
+      * @param name Optional name for bookkeeping.
+      */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V, name: Option[String] = None) = new Cutting[DATUM, V](0.0, selection, value, name)
 
+    /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V, name: Option[String] = None) = apply(selection, value, name)
 
+    /** Use [[org.dianahep.histogrammar.Cutted]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Cutted[V]) = Some(x.value)
+    /** Use [[org.dianahep.histogrammar.Cutting]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Cutting[DATUM, V]) = Some(x.value)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -71,6 +90,12 @@ package histogrammar {
     }
   }
 
+  /** An accumulated aggregator of data that passed the cut.
+    * 
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param value Aggregator that accumulated values that passed the cut.
+    * @param name Optional name for bookkeeping.
+    */
   class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val value: V, val name: Option[String]) extends Container[Cutted[V]] {
     type Type = Cutted[V]
     def factory = Cut
@@ -96,6 +121,13 @@ package histogrammar {
     override def hashCode() = (entries, value, name).hashCode
   }
 
+  /** Accumulating an aggregator of data that passes a cut.
+    * 
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param value Aggregator to accumulate values that pass the cut.
+    * @param name Optional name for bookkeeping.
+    */
   class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: Selection[DATUM], val value: V, val name: Option[String]) extends Container[Cutting[DATUM, V]] with AggregationOnData {
     type Type = Cutting[DATUM, V]
     type Datum = DATUM

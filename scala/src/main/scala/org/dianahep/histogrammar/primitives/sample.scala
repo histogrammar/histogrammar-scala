@@ -20,20 +20,39 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Sample
 
+  /** Accumulate raw numbers, vectors of numbers, or strings, merging identical values.
+    * 
+    * Factory produces mutable [[org.dianahep.histogrammar.Sampling]] and immutable [[org.dianahep.histogrammar.Sampled]] objects.
+    */
   object Sample extends Factory {
     val name = "Sample"
     val help = "Accumulate raw numbers, vectors of numbers, or strings that are an unbiased sample of the observed distribution."
     val detailedHelp = "Sample(limit: Int, quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM])"
 
+    /** Create an immutable [[org.dianahep.histogrammar.Sampled]] from arguments (instead of JSON).
+      * 
+      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param limit Maximum number of data points in the sample.
+      * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
+      */
     def ed[RANGE](entries: Double, limit: Int, values: (RANGE, Double)*) =
       new Sampled(entries, limit, values: _*)
 
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Sampling]].
+      * 
+      * @param limit Maximum number of data points in the sample.
+      * @param quantity Function that produces numbers, vectors of numbers, or strings.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
+      */
     def apply[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM]) =
       new Sampling[DATUM, RANGE](quantity, selection, 0.0, new mutable.Reservoir[RANGE](limit))
 
+    /** Synonym for `apply`. */
     def ing[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM]) = apply(limit, quantity, selection)
 
+    /** Use [[org.dianahep.histogrammar.Sampled]] in Scala pattern-matching. */
     def unapply[RANGE](x: Sampled[RANGE]) = x.values
+    /** Use [[org.dianahep.histogrammar.Sampling]] in Scala pattern-matching. */
     def unapply[DATUM, RANGE](x: Sampling[DATUM, RANGE]) = x.values
 
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -83,6 +102,14 @@ package histogrammar {
     }
   }
 
+  /** An accumulated sample of numbers, vectors of numbers, or strings.
+    * 
+    * Use the factory [[org.dianahep.histogrammar.Sample]] to construct an instance.
+    * 
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param limit Maximum number of data points in the sample.
+    * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
+    */
   class Sampled[RANGE] private[histogrammar](val entries: Double, val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] {
     type Type = Sampled[RANGE]
     def factory = Sample
@@ -90,7 +117,9 @@ package histogrammar {
     if (limit <= 0)
       throw new ContainerException(s"limit ($limit) must be positive")
 
+    /** Number of data points in the sample (saturates at `limit`). */
     def size = values.size
+    /** Determine if the sample is empty. */
     def isEmpty = values.isEmpty
 
     def zero = new Sampled(0.0, limit)
@@ -117,15 +146,22 @@ package histogrammar {
     }
 
     override def toString() = s"""Sampled[${if (isEmpty) "empty" else values.head.toString + "..."}, size=${size}]"""
-
     override def equals(that: Any) = that match {
       case that: Sampled[RANGE] => this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false
     }
-
     override def hashCode() = (entries, limit, values).hashCode()
   }
 
+  /** An accumulated sample of numbers, vectors of numbers, or strings.
+    * 
+    * Use the factory [[org.dianahep.histogrammar.Sample]] to construct an instance.
+    * 
+    * @param quantity Function that produces numbers, vectors of numbers, or strings.
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param reservoir Data structure to perform weighted reservoir sampling.
+    */
   class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], val selection: Selection[DATUM], var entries: Double, reservoir: mutable.Reservoir[RANGE]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData {
     type Type = Sampling[DATUM, RANGE]
     type Datum = DATUM
@@ -134,9 +170,13 @@ package histogrammar {
     if (limit <= 0)
       throw new ContainerException(s"limit ($limit) must be positive")
 
+    /** Maximum number of data points in the sample. */
     def limit = reservoir.limit
+    /** Distinct multidimensional vectors and their weights, sampled from the observed distribution. */
     def values = reservoir.values
+    /** Number of data points in the sample (saturates at `limit`). */
     def size = reservoir.size
+    /** Determine if the sample is empty. */
     def isEmpty = reservoir.isEmpty
 
     def zero = new Sampling(quantity, selection, 0.0, new mutable.Reservoir[RANGE](limit))

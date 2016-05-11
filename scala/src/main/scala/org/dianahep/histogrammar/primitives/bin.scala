@@ -53,6 +53,8 @@ package histogrammar {
       * @param number Of bins.
       * @param low Minimum-value edge of the first bin.
       * @param high Maximum-value edge of the last bin.
+      * @param quantity Numerical function to split into bins.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param underflow Container for data below the first bin.
       * @param overflow Container for data above the last bin.

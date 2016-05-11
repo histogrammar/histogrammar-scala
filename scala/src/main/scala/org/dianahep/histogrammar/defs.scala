@@ -83,6 +83,7 @@ package histogrammar {
     register(Stack)
     register(Partition)
 
+    register(Cut)
     register(Limit)
     register(Label)
     register(UntypedLabel)

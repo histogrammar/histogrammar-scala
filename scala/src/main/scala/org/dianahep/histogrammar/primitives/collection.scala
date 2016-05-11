@@ -27,6 +27,109 @@ package histogrammar {
     implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
   }
 
+  //////////////////////////////////////////////////////////////// Cut/Cutted/Cutting
+
+  object Cut extends Factory {
+    val name = "Cut"
+    val help = "Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting)."
+    val detailedHelp = """Cut(selection: Selection[DATUM], value: V, name: Option[String] = None)"""
+
+    def ed[V <: Container[V]](entries: Double, value: V, name: Option[String]) = new Cutted[V](entries, value, name)
+
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V, name: Option[String] = None) = new Cutting[DATUM, V](0.0, selection, value, name)
+
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V, name: Option[String] = None) = apply(selection, value, name)
+
+    def unapply[V <: Container[V]](x: Cutted[V]) = Some(x.value)
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Cutting[DATUM, V]) = Some(x.value)
+
+    def fromJsonFragment(json: Json): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")  ||  pairs.keySet == Set("entries", "type", "data", "name")) =>
+        val get = pairs.toMap
+
+        val entries = get("entries") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val factory = get("type") match {
+          case JsonString(x) => Factory(x)
+          case x => throw new JsonFormatException(x, name + ".type")
+        }
+
+        val value = factory.fromJsonFragment(get("data"))
+
+        val n = get.getOrElse("name", JsonNull) match {
+          case JsonNull => None
+          case JsonString(x) => Some(x)
+          case x => throw new JsonFormatException(x, name + ".name")
+        }
+
+        new Cutted[Container[_]](entries, value, n)
+
+      case _ => throw new JsonFormatException(json, name)
+    }
+  }
+
+  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val value: V, val name: Option[String]) extends Container[Cutted[V]] {
+    type Type = Cutted[V]
+    def factory = Cut
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def zero = new Cutted[V](0.0, value.zero, name)
+    def +(that: Cutted[V]) = {
+      if (this.name != that.name)
+        throw new ContainerException(s"cannot add Cutted because they have different names (${this.name} vs ${that.name})")
+      new Cutted[V](this.entries + that.entries, this.value + that.value, name)
+    }
+
+    def toJsonFragment = JsonObject(
+      (Seq("entries" -> JsonFloat(entries), "type" -> JsonString(value.factory.name), "data" -> value.toJsonFragment) ++ name.map("name" -> JsonString(_))): _*)
+
+    override def toString() = s"""Cutted[$value${if (name.isEmpty) "" else ", name=\"" + name.get + "\""}]"""
+    override def equals(that: Any) = that match {
+      case that: Cutted[V] => this.entries === that.entries  &&  this.value == that.value  &&  this.name == that.name
+      case _ => false
+    }
+    override def hashCode() = (entries, value, name).hashCode
+  }
+
+  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: Selection[DATUM], val value: V, val name: Option[String]) extends Container[Cutting[DATUM, V]] with AggregationOnData {
+    type Type = Cutting[DATUM, V]
+    type Datum = DATUM
+    def factory = Cut
+
+    if (entries < 0.0)
+      throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def zero = new Cutting[DATUM, V](0.0, selection, value.zero, name)
+    def +(that: Cutting[DATUM, V]) = {
+      if (this.name != that.name)
+        throw new ContainerException(s"cannot add Cutting because they have different names (${this.name} vs ${that.name})")
+      new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value, this.name)
+    }
+
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      val w = weight * selection(datum)
+      if (w > 0.0) {
+        entries += w
+        value.fill(datum, w)
+      }
+    }
+
+    def toJsonFragment = JsonObject(
+      (Seq("entries" -> JsonFloat(entries), "type" -> JsonString(value.factory.name), "data" -> value.toJsonFragment) ++ name.map("name" -> JsonString(_))): _*)
+
+    override def toString() = s"""Cutting[$value${if (name.isEmpty) "" else ", name=\"" + name.get + "\""}]"""
+    override def equals(that: Any) = that match {
+      case that: Cutting[DATUM, V] => this.entries === that.entries  &&  this.selection == that.selection  &&  this.value == that.value  &&  this.name == that.name
+      case _ => false
+    }
+    override def hashCode() = (entries, selection, value, name).hashCode
+  }
+
   //////////////////////////////////////////////////////////////// Limit/Limited/Limiting
 
   /** Accumulate an aggregator until its number of entries reaches a predefined limit.
@@ -36,7 +139,7 @@ package histogrammar {
   object Limit extends Factory {
     val name = "Limit"
     val help = "Accumulate an aggregator until its number of entries reaches a predefined limit."
-    val detailedHelp = """Limit(value: V, limit: Double)"""
+    val detailedHelp = """Limit(limit: Double, value: V)"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Limited]] from arguments (instead of JSON).
       * 
@@ -52,10 +155,10 @@ package histogrammar {
       * @param value Aggregator to apply a limit to.
       * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation](value: V, limit: Double) = new Limiting[DATUM, V](0.0, limit, value.factory.name, Some(value))
+    def apply[DATUM, V <: Container[V] with Aggregation](limit: Double, value: V) = new Limiting[DATUM, V](0.0, limit, value.factory.name, Some(value))
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation](value: V, limit: Double) = apply[DATUM, V](value, limit)
+    def ing[DATUM, V <: Container[V] with Aggregation](limit: Double, value: V) = apply[DATUM, V](limit, value)
 
     /** Use [[org.dianahep.histogrammar.Limited]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Limited[V]) = x.value

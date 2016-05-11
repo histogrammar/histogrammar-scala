@@ -95,6 +95,29 @@ class DefaultSuite extends FlatSpec with Matchers {
     }
   }
 
+  "Count/Counting/Counted" must "work with a filter" in {
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
+
+      val leftCounting = Cut({x: Double => x > 0.0}, Count())
+      val rightCounting = Cut({x: Double => x > 0.0}, Count())
+
+      left.foreach(leftCounting.fill(_))
+      right.foreach(rightCounting.fill(_))
+
+      val (Cut(Count(leftResult)), Cut(Count(rightResult))) = (leftCounting, rightCounting)
+
+      leftResult should be (left.filter(_ > 0.0).size)
+      rightResult should be (right.filter(_ > 0.0).size)
+
+      val Cut(Count(finalResult)) = leftCounting + rightCounting
+
+      finalResult should be (simple.filter(_ > 0.0).size)
+
+      checkJson(leftCounting)
+    }
+  }
+
   //////////////////////////////////////////////////////////////// Sum/Summed/Summing
 
   "Sum/Summing/Summed" must "work unfiltered" in {
@@ -531,11 +554,11 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Limit" in {
-    val one = Limit(Bag({x: Struct => x.string}), 20)
+    val one = Limit(20, Bag({x: Struct => x.string}))
     struct.foreach(one.fill(_))
     one.get.values should be (Map("one" -> 1.0, "two" -> 1.0, "three" -> 1.0, "four" -> 1.0, "five" -> 1.0, "six" -> 1.0, "seven" -> 1.0, "eight" -> 1.0, "nine" -> 1.0, "ten" -> 1.0))
 
-    val two = Limit(Bag({x: Struct => x.string}), 9)
+    val two = Limit(9, Bag({x: Struct => x.string}))
     struct.foreach(two.fill(_))
     two.saturated should be (true)
 

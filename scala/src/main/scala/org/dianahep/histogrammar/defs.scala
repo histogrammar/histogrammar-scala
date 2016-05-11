@@ -245,12 +245,22 @@ package object histogrammar {
     * If `Selections` are specified for nested structures, they will be multiplied to provide the final weight. A value of 0.0 at any level skips descent of the subtree.
     */
   trait Selection[-DATUM] extends Serializable {
+    /** Optional name for the function; added to JSON for bookkeeping if present. */
     def name: Option[String]
+    /** Tracks whether this function has a cache to ensure that a function doesn't get double-cached. */
     def hasCache: Boolean
+    /** Call the function. */
     def apply[SUB <: DATUM](x: SUB): Double
 
+    /** Tracks whether this function has a name to raise an error if it gets named again. */
     def hasName = !name.isEmpty
 
+    /** Create a named version of this function.
+      * 
+      * Note that the `{x: Datum => f(x)} named "something"` syntax is more human-readable.
+      * 
+      * Note that this function commutes with `cached` (they can be applied in either order).
+      */
     def named(n: String) =
       if (hasName)
         throw new IllegalArgumentException(s"two names applied to the same function: ${name.get} and $n")
@@ -263,6 +273,21 @@ package object histogrammar {
         }
       }
 
+    /** Create a cached version of this function.
+      * 
+      * Note that the `{x: Datum => f(x)} cached` syntax is more human-readable.
+      * 
+      * Note that this function commutes with `named` (they can be applied in either order).
+      * 
+      * '''Example:'''
+      * 
+      * {{{
+      * val f = cache {x: Double => complexFunction(x)}
+      * f(3.14)   // computes the function
+      * f(3.14)   // re-uses the old value
+      * f(4.56)   // computes the function again at a new point
+      * }}}
+      */
     def cached =
       if (hasCache)
         this
@@ -329,12 +354,22 @@ package object histogrammar {
 
   /** (Sealed) base trait for user functions. */
   sealed trait UserFcn[-DOMAIN, +RANGE] extends Serializable {
+    /** Optional name for the function; added to JSON for bookkeeping if present. */
     def name: Option[String]
+    /** Tracks whether this function has a cache to ensure that a function doesn't get double-cached. */
     def hasCache: Boolean
+    /** Call the function. */
     def apply[SUB <: DOMAIN](x: SUB): RANGE
 
+    /** Tracks whether this function has a name to raise an error if it gets named again. */
     def hasName = !name.isEmpty
 
+    /** Create a named version of this function.
+      * 
+      * Note that the `{x: Datum => f(x)} named "something"` syntax is more human-readable.
+      * 
+      * Note that this function commutes with `cached` (they can be applied in either order).
+      */
     def named(n: String) =
       if (hasName)
         throw new IllegalArgumentException(s"two names applied to the same function: ${name.get} and $n")
@@ -347,6 +382,21 @@ package object histogrammar {
         }
       }
 
+    /** Create a cached version of this function.
+      * 
+      * Note that the `{x: Datum => f(x)} cached` syntax is more human-readable.
+      * 
+      * Note that this function commutes with `named` (they can be applied in either order).
+      * 
+      * '''Example:'''
+      * 
+      * {{{
+      * val f = cache {x: Double => complexFunction(x)}
+      * f(3.14)   // computes the function
+      * f(3.14)   // re-uses the old value
+      * f(4.56)   // computes the function again at a new point
+      * }}}
+      */
     def cached =
       if (hasCache)
         this

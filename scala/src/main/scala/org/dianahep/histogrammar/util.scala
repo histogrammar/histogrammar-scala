@@ -29,32 +29,6 @@ package object util {
 }
 
 package util {
-  //////////////////////////////////////////////////////////////// avoid recomputing a function that appears in many histograms
-
-  /** Wraps a user's function to provide caching. If the function is called two times in a row with the same arguments, a cached result is used instead.
-    * 
-    * '''Example:'''
-    * 
-    * {{{
-    * val f = cache {x: Double => complexFunction(x)}
-    * f(3.14)   // computes the function
-    * f(3.14)   // re-uses the old value
-    * f(4.56)   // computes the function again at a new point
-    * }}}
-    */
-  case class cache[DOMAIN, RANGE](f: DOMAIN => RANGE) extends Function1[DOMAIN, RANGE] {
-    private var last: Option[(DOMAIN, RANGE)] = None
-    def apply(x: DOMAIN): RANGE = (x, last) match {
-      case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
-      case (_,            Some((oldx, oldy)))         if (x == oldx)    => oldy
-      case _ =>
-        val y = f(x)
-        last = Some(x -> y)
-        y
-    }
-    def clear() { last = None }
-  }
-
   //////////////////////////////////////////////////////////////// random sampling
 
   package mutable {

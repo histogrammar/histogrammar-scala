@@ -36,26 +36,24 @@ package histogrammar {
   object Cut extends Factory {
     val name = "Cut"
     val help = "Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting)."
-    val detailedHelp = """Cut(selection: Selection[DATUM], value: V, name: Option[String] = None)"""
+    val detailedHelp = """Cut(selection: Selection[DATUM], value: V)"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Cutted]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
       * @param value Aggregator that accumulated values that passed the cut.
-      * @param name Optional name for bookkeeping.
       */
-    def ed[V <: Container[V]](entries: Double, value: V, name: Option[String] = None) = new Cutted[V](entries, value, name)
+    def ed[V <: Container[V]](entries: Double, value: V) = new Cutted[V](entries, value)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
       * 
       * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value Aggregator to accumulate for values that pass `selection`.
-      * @param name Optional name for bookkeeping.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V, name: Option[String] = None) = new Cutting[DATUM, V](0.0, selection, value, name)
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V) = new Cutting[DATUM, V](0.0, selection, value)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V, name: Option[String] = None) = apply(selection, value, name)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V) = apply(selection, value)
 
     /** Use [[org.dianahep.histogrammar.Cutted]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Cutted[V]) = Some(x.value)
@@ -63,7 +61,7 @@ package histogrammar {
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Cutting[DATUM, V]) = Some(x.value)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")  ||  pairs.keySet == Set("entries", "type", "data", "name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -78,13 +76,7 @@ package histogrammar {
 
         val value = factory.fromJsonFragment(get("data"))
 
-        val n = get.getOrElse("name", JsonNull) match {
-          case JsonNull => None
-          case JsonString(x) => Some(x)
-          case x => throw new JsonFormatException(x, name + ".name")
-        }
-
-        new Cutted[Container[_]](entries, value, n)
+        new Cutted[Container[_]](entries, value)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -94,31 +86,29 @@ package histogrammar {
     * 
     * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
     * @param value Aggregator that accumulated values that passed the cut.
-    * @param name Optional name for bookkeeping.
     */
-  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val value: V, val name: Option[String]) extends Container[Cutted[V]] {
+  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val value: V) extends Container[Cutted[V]] {
     type Type = Cutted[V]
     def factory = Cut
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Cutted[V](0.0, value.zero, name)
-    def +(that: Cutted[V]) = {
-      if (this.name != that.name)
-        throw new ContainerException(s"cannot add Cutted because they have different names (${this.name} vs ${that.name})")
-      new Cutted[V](this.entries + that.entries, this.value + that.value, name)
-    }
+    def zero = new Cutted[V](0.0, value.zero)
+    def +(that: Cutted[V]) =
+      new Cutted[V](this.entries + that.entries, this.value + that.value)
 
     def toJsonFragment = JsonObject(
-      (Seq("entries" -> JsonFloat(entries), "type" -> JsonString(value.factory.name), "data" -> value.toJsonFragment) ++ name.map("name" -> JsonString(_))): _*)
+      "entries" -> JsonFloat(entries),
+      "type" -> JsonString(value.factory.name),
+      "data" -> value.toJsonFragment)
 
-    override def toString() = s"""Cutted[$value${if (name.isEmpty) "" else ", name=\"" + name.get + "\""}]"""
+    override def toString() = s"""Cutted[$value]"""
     override def equals(that: Any) = that match {
-      case that: Cutted[V] => this.entries === that.entries  &&  this.value == that.value  &&  this.name == that.name
+      case that: Cutted[V] => this.entries === that.entries  &&  this.value == that.value
       case _ => false
     }
-    override def hashCode() = (entries, value, name).hashCode
+    override def hashCode() = (entries, value).hashCode
   }
 
   /** Accumulating an aggregator of data that passes a cut.
@@ -126,9 +116,8 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param value Aggregator to accumulate values that pass the cut.
-    * @param name Optional name for bookkeeping.
     */
-  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: Selection[DATUM], val value: V, val name: Option[String]) extends Container[Cutting[DATUM, V]] with AggregationOnData {
+  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: Selection[DATUM], val value: V) extends Container[Cutting[DATUM, V]] with AggregationOnData {
     type Type = Cutting[DATUM, V]
     type Datum = DATUM
     def factory = Cut
@@ -136,12 +125,9 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Cutting[DATUM, V](0.0, selection, value.zero, name)
-    def +(that: Cutting[DATUM, V]) = {
-      if (this.name != that.name)
-        throw new ContainerException(s"cannot add Cutting because they have different names (${this.name} vs ${that.name})")
-      new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value, this.name)
-    }
+    def zero = new Cutting[DATUM, V](0.0, selection, value.zero)
+    def +(that: Cutting[DATUM, V]) =
+      new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -152,14 +138,16 @@ package histogrammar {
     }
 
     def toJsonFragment = JsonObject(
-      (Seq("entries" -> JsonFloat(entries), "type" -> JsonString(value.factory.name), "data" -> value.toJsonFragment) ++ name.map("name" -> JsonString(_))): _*)
+      "entries" -> JsonFloat(entries),
+      "type" -> JsonString(value.factory.name),
+      "data" -> value.toJsonFragment)
 
-    override def toString() = s"""Cutting[$value${if (name.isEmpty) "" else ", name=\"" + name.get + "\""}]"""
+    override def toString() = s"""Cutting[$value]"""
     override def equals(that: Any) = that match {
-      case that: Cutting[DATUM, V] => this.entries === that.entries  &&  this.selection == that.selection  &&  this.value == that.value  &&  this.name == that.name
+      case that: Cutting[DATUM, V] => this.entries === that.entries  &&  this.selection == that.selection  &&  this.value == that.value
       case _ => false
     }
-    override def hashCode() = (entries, selection, value, name).hashCode
+    override def hashCode() = (entries, selection, value).hashCode
   }
 
   //////////////////////////////////////////////////////////////// Limit/Limited/Limiting

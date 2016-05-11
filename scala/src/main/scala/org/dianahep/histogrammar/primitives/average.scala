@@ -26,7 +26,7 @@ package histogrammar {
   object Average extends Factory {
     val name = "Average"
     val help = "Accumulate the weighted mean of a given quantity."
-    val detailedHelp = """Average(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """Average(quantity: NumericalFcn[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Averaged]] from arguments (instead of JSON).
       * 
@@ -38,12 +38,11 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.Averaging]].
       * 
       * @param quantity Numerical function to track.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Averaging(quantity, selection, 0.0, 0.0)
+    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Averaging(quantity, 0.0, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Averaged]] in Scala pattern-matching. */
     def unapply(x: Averaged) = Some(x.mean)
@@ -77,7 +76,7 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.Average]] to construct an instance.
     * 
-    * @param entries Weighted number of entries (sum of all weights).
+    * @param entries Weighted number of entries (sum of all observed weights).
     * @param mean Weighted mean of the quantity.
     */
   class Averaged private[histogrammar](val entries: Double, val mean: Double) extends Container[Averaged] {
@@ -108,11 +107,10 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Average]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all weights).
     * @param mean Cumulative weighted mean (accrued with a numerically stable algorithm).
     */
-  class Averaging[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
+  class Averaging[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
     type Type = Averaging[DATUM]
     type FixedType = Averaged
     type Datum = DATUM
@@ -121,20 +119,19 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Averaging[DATUM](quantity, selection, 0.0, 0.0)
+    def zero = new Averaging[DATUM](quantity, 0.0, 0.0)
     def +(that: Averaging[DATUM]) = {
       val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
-      new Averaging(this.quantity, this.selection, newentries, newmean)
+      new Averaging(this.quantity, newentries, newmean)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
 
-        entries += w
         val delta = q - mean
-        val shift = delta * w / entries
+        val shift = delta * weight / entries
         mean += shift
       }
     }
@@ -143,9 +140,9 @@ package histogrammar {
 
     override def toString() = s"Averaging[$mean]"
     override def equals(that: Any) = that match {
-      case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.mean === that.mean
+      case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.mean === that.mean
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, mean).hashCode
+    override def hashCode() = (quantity, entries, mean).hashCode
   }
 }

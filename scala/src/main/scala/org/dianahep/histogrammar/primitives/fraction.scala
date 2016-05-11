@@ -26,11 +26,11 @@ package histogrammar {
   object Fraction extends Factory {
     val name = "Fraction"
     val help = "Accumulate two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
-    val detailedHelp = """Fraction(numeratorSelection: Selection[DATUM], value: => V = Count())"""
+    val detailedHelp = """Fraction(selection: Selection[DATUM], value: => V = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Fractioned]] from arguments (instead of JSON).
       * 
-      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
       * @param numerator Container for data that passed the given selection.
       * @param denominator Container for all data, regardless of whether it passed the given selection.
       */
@@ -38,15 +38,15 @@ package histogrammar {
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Fractioning]].
       * 
-      * @param numeratorSelection Boolean or non-negative function that cuts or weights entries.
+      * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](numeratorSelection: Selection[DATUM], value: => V = Count()) =
-      new Fractioning(numeratorSelection, 0.0, value.zero, value.zero)
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: => V = Count()) =
+      new Fractioning(selection, 0.0, value.zero, value.zero)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](numeratorSelection: Selection[DATUM], value: => V = Count()) =
-      apply(numeratorSelection, value)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: => V = Count()) =
+      apply(selection, value)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "numerator", "denominator")) =>
@@ -75,7 +75,7 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.Fraction]] to construct an instance.
     * 
-    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
@@ -106,12 +106,12 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.Fraction]] to construct an instance.
     * 
-    * @param numeratorSelection Boolean or non-negative function that cuts or weights entries.
-    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val numeratorSelection: Selection[DATUM], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
+  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val selection: Selection[DATUM], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
     type Type = Fractioning[DATUM, V]
     type Datum = DATUM
     def factory = Fraction
@@ -119,13 +119,13 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Fractioning[DATUM, V](numeratorSelection, 0.0, numerator.zero, denominator.zero)
-    def +(that: Fractioning[DATUM, V]) = new Fractioning(this.numeratorSelection, this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator)
+    def zero = new Fractioning[DATUM, V](selection, 0.0, numerator.zero, denominator.zero)
+    def +(that: Fractioning[DATUM, V]) = new Fractioning(this.selection, this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * numeratorSelection(datum)
-
       entries += weight
+      val w = weight * selection(datum)
+
       if (weight > 0.0)
         denominator.fill(datum, weight)
       if (w > 0.0)
@@ -140,7 +140,7 @@ package histogrammar {
 
     override def toString() = s"Fractioning[$numerator, $denominator]"
     override def equals(that: Any) = that match {
-      case that: Fractioning[DATUM, V] => this.numeratorSelection == that.numeratorSelection  &&  this.entries === that.entries  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
+      case that: Fractioning[DATUM, V] => this.selection == that.selection  &&  this.entries === that.entries  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false
     }
   }

@@ -26,7 +26,7 @@ package histogrammar {
   object Bin extends Factory {
     val name = "Bin"
     val help = "Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum."
-    val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM],
+    val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: NumericalFcn[DATUM],
            value: => V = Count(), underflow: U = Count(), overflow: O = Count(), nanflow: N = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Binned]] from arguments (instead of JSON).
@@ -54,7 +54,6 @@ package histogrammar {
       * @param low Minimum-value edge of the first bin.
       * @param high Maximum-value edge of the last bin.
       * @param quantity Numerical function to split into bins.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param underflow Container for data below the first bin.
       * @param overflow Container for data above the last bin.
@@ -65,12 +64,11 @@ package histogrammar {
        low: Double,
        high: Double,
        quantity: NumericalFcn[DATUM],
-       selection: Selection[DATUM] = unweighted[DATUM],
        value: => V = Count(),
        underflow: U = Count(),
        overflow: O = Count(),
        nanflow: N = Count()) =
-      new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(num)(value.zero), underflow, overflow, nanflow)
+      new Binning[DATUM, V, U, O, N](low, high, quantity, 0.0, Seq.fill(num)(value.zero), underflow, overflow, nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
@@ -78,11 +76,10 @@ package histogrammar {
        low: Double,
        high: Double,
        quantity: NumericalFcn[DATUM],
-       selection: Selection[DATUM] = unweighted[DATUM],
        value: => V = Count(),
        underflow: U = Count(),
        overflow: O = Count(),
-       nanflow: N = Count()) = apply(num, low, high, quantity, selection, value, underflow, overflow, nanflow)
+       nanflow: N = Count()) = apply(num, low, high, quantity, value, underflow, overflow, nanflow)
 
     trait Methods {
       /** Number of bins. */
@@ -247,7 +244,6 @@ package histogrammar {
     * @param low Minimum-value edge of the first bin.
     * @param high Maximum-value edge of the last bin.
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Containers for data sent to each bin.
     * @param underflow Container for data below the first bin.
@@ -258,7 +254,6 @@ package histogrammar {
     val low: Double,
     val high: Double,
     val quantity: NumericalFcn[DATUM],
-    val selection: Selection[DATUM],
     var entries: Double,
     val values: Seq[V],
     val underflow: U,
@@ -280,7 +275,7 @@ package histogrammar {
     /** Extract the container at a given index. */
     def at(index: Int) = values(index)
 
-    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, selection, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
+    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")
@@ -293,7 +288,6 @@ package histogrammar {
         low,
         high,
         this.quantity,
-        this.selection,
         this.entries + that.entries,
         this.values zip that.values map {case (me, you) => me + you},
         this.underflow + that.underflow,
@@ -302,19 +296,18 @@ package histogrammar {
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
 
-        entries += w
         if (under(q))
-          underflow.fill(datum, w)
+          underflow.fill(datum, weight)
         else if (over(q))
-          overflow.fill(datum, w)
+          overflow.fill(datum, weight)
         else if (nan(q))
-          nanflow.fill(datum, w)
+          nanflow.fill(datum, weight)
         else
-          values(bin(q)).fill(datum, w)
+          values(bin(q)).fill(datum, weight)
       }
     }
 
@@ -333,9 +326,9 @@ package histogrammar {
 
     override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
-      case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
+      case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (low, high, quantity, selection, entries, values, underflow, overflow, nanflow).hashCode
+    override def hashCode() = (low, high, quantity, entries, values, underflow, overflow, nanflow).hashCode
   }
 }

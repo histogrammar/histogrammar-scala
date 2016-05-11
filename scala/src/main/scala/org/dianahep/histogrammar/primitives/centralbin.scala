@@ -29,7 +29,7 @@ package histogrammar {
   object CentrallyBin extends Factory {
     val name = "CentrallyBin"
     val help = "Split a quantity into bins defined by a set of bin centers, filling only one datum per bin with no overflows or underflows."
-    val detailedHelp = """CentrallyBin(bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count())"""
+    val detailedHelp = """CentrallyBin(bins: Iterable[Double], quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.CentrallyBinned]] from arguments (instead of JSON).
       * 
@@ -46,18 +46,17 @@ package histogrammar {
       * 
       * @param bins Centers of each bin.
       * @param quantity Numerical function split into fixed but unevenly-spaced bins.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param nanflow Container for data that result in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
-      new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value.zero)): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow)
+      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count()) =
+      new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value.zero)): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count(), nanflow: N = Count()) =
-      apply(bins, quantity, selection, value, nanflow)
+      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count()) =
+      apply(bins, quantity, value, nanflow)
 
     trait Methods[V <: Container[V]] extends CentralBinsDistribution[V] {
       def bins: MetricSortedMap[Double, V]
@@ -200,7 +199,6 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.CentrallyBin]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param bins Metric, sorted map of centers and values for each bin.
@@ -209,7 +207,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     */
   class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
-    (val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
+    (val quantity: NumericalFcn[DATUM], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
     extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinning[DATUM, V, N]
@@ -221,27 +219,26 @@ package histogrammar {
     if (bins.size < 2)
       throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def zero = new CentrallyBinning[DATUM, V, N](quantity, selection, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
+    def zero = new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
     def +(that: CentrallyBinning[DATUM, V, N]) = {
       if (this.centers != that.centers)
         throw new ContainerException(s"cannot add CentrallyBinning because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
       val newbins = mutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
 
-      new CentrallyBinning[DATUM, V, N](quantity, selection, this.entries + that.entries, value, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
+      new CentrallyBinning[DATUM, V, N](quantity, this.entries + that.entries, value, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w >= 0.0) {
+      entries += weight
+      if (weight >= 0.0) {
         val q = quantity(datum)
 
-        entries += w
         if (nan(q))
-          nanflow.fill(datum, w)
+          nanflow.fill(datum, weight)
         else {
           val Some(Closest(_, _, value)) = bins.closest(q)
-          value.fill(datum, w)
+          value.fill(datum, weight)
         }
 
         if (min.isNaN  ||  q < min)
@@ -262,10 +259,10 @@ package histogrammar {
 
     override def toString() = s"""CentrallyBinning[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
-      case that: CentrallyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
+      case that: CentrallyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, bins, min, max, nanflow).hashCode
+    override def hashCode() = (quantity, entries, bins, min, max, nanflow).hashCode
   }
 
 }

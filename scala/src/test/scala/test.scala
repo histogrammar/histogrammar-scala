@@ -149,18 +149,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = struct.splitAt(i)
 
-      val leftSumming = Sum({x: Struct => x.double}, {x: Struct => x.bool})
-      val rightSumming = Sum({x: Struct => x.double}, {x: Struct => x.bool})
+      val leftSumming = Cut({x: Struct => x.bool}, Sum({x: Struct => x.double}))
+      val rightSumming = Cut({x: Struct => x.bool}, Sum({x: Struct => x.double}))
 
       left.foreach(leftSumming.fill(_))
       right.foreach(rightSumming.fill(_))
 
-      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
+      val (Cut(Sum(leftResult)), Cut(Sum(rightResult))) = (leftSumming, rightSumming)
 
       leftResult should be (left.filter(_.bool).map(_.double).sum +- 1e-12)
       rightResult should be (right.filter(_.bool).map(_.double).sum +- 1e-12)
 
-      val Sum(finalResult) = leftSumming + rightSumming
+      val Cut(Sum(finalResult)) = leftSumming + rightSumming
 
       finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
 
@@ -172,18 +172,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = struct.splitAt(i)
 
-      val leftSumming = Sum({x: Struct => x.double}, {x: Struct => x.int})
-      val rightSumming = Sum({x: Struct => x.double}, {x: Struct => x.int})
+      val leftSumming = Cut({x: Struct => x.int}, Sum({x: Struct => x.double}))
+      val rightSumming = Cut({x: Struct => x.int}, Sum({x: Struct => x.double}))
 
       left.foreach(leftSumming.fill(_))
       right.foreach(rightSumming.fill(_))
 
-      val (Sum(leftResult), Sum(rightResult)) = (leftSumming, rightSumming)
+      val (Cut(Sum(leftResult)), Cut(Sum(rightResult))) = (leftSumming, rightSumming)
 
       leftResult should be (left.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
       rightResult should be (right.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
-      val Sum(finalResult) = leftSumming + rightSumming
+      val Cut(Sum(finalResult)) = leftSumming + rightSumming
 
       finalResult should be (struct.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
@@ -220,18 +220,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = struct.splitAt(i)
 
-      val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.bool})
-      val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.bool})
+      val leftAveraging = Cut({x: Struct => x.bool}, Average({x: Struct => x.double}))
+      val rightAveraging = Cut({x: Struct => x.bool}, Average({x: Struct => x.double}))
 
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
 
-      val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
+      val (Cut(Average(leftResult)), Cut(Average(rightResult))) = (leftAveraging, rightAveraging)
 
       leftResult should be (mean(left.filter(_.bool).map(_.double)) +- 1e-12)
       rightResult should be (mean(right.filter(_.bool).map(_.double)) +- 1e-12)
 
-      val Average(finalResult) = leftAveraging + rightAveraging
+      val Cut(Average(finalResult)) = leftAveraging + rightAveraging
 
       finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
@@ -243,18 +243,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = struct.splitAt(i)
 
-      val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
-      val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
+      val leftAveraging = Cut({x: Struct => x.int}, Average({x: Struct => x.double}))
+      val rightAveraging = Cut({x: Struct => x.int}, Average({x: Struct => x.double}))
 
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
 
-      val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
+      val (Cut(Average(leftResult)), Cut(Average(rightResult))) = (leftAveraging, rightAveraging)
 
       leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Average(finalResult) = leftAveraging + rightAveraging
+      val Cut(Average(finalResult)) = leftAveraging + rightAveraging
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
@@ -266,18 +266,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = backward.splitAt(i)
 
-      val leftAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
-      val rightAveraging = Average({x: Struct => x.double}, {x: Struct => x.int})
+      val leftAveraging = Cut({x: Struct => x.int}, Average({x: Struct => x.double}))
+      val rightAveraging = Cut({x: Struct => x.int}, Average({x: Struct => x.double}))
 
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
 
-      val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
+      val (Cut(Average(leftResult)), Cut(Average(rightResult))) = (leftAveraging, rightAveraging)
 
       leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Average(finalResult) = leftAveraging + rightAveraging
+      val Cut(Average(finalResult)) = leftAveraging + rightAveraging
 
       finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
@@ -314,18 +314,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = struct.splitAt(i)
 
-      val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.bool})
-      val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.bool})
+      val leftDeviating = Cut({x: Struct => x.bool}, Deviate({x: Struct => x.double}))
+      val rightDeviating = Cut({x: Struct => x.bool}, Deviate({x: Struct => x.double}))
 
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))
 
-      val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
+      val (Cut(Deviate(leftResult)), Cut(Deviate(rightResult))) = (leftDeviating, rightDeviating)
 
       leftResult should be (variance(left.filter(_.bool).map(_.double)) +- 1e-12)
       rightResult should be (variance(right.filter(_.bool).map(_.double)) +- 1e-12)
 
-      val Deviate(finalResult) = leftDeviating + rightDeviating
+      val Cut(Deviate(finalResult)) = leftDeviating + rightDeviating
 
       finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
@@ -337,18 +337,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = struct.splitAt(i)
 
-      val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
-      val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
+      val leftDeviating = Cut({x: Struct => x.int}, Deviate({x: Struct => x.double}))
+      val rightDeviating = Cut({x: Struct => x.int}, Deviate({x: Struct => x.double}))
 
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))
 
-      val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
+      val (Cut(Deviate(leftResult)), Cut(Deviate(rightResult))) = (leftDeviating, rightDeviating)
 
       leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Deviate(finalResult) = leftDeviating + rightDeviating
+      val Cut(Deviate(finalResult)) = leftDeviating + rightDeviating
 
       finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
@@ -360,18 +360,18 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = backward.splitAt(i)
 
-      val leftDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
-      val rightDeviating = Deviate({x: Struct => x.double}, {x: Struct => x.int})
+      val leftDeviating = Cut({x: Struct => x.int}, Deviate({x: Struct => x.double}))
+      val rightDeviating = Cut({x: Struct => x.int}, Deviate({x: Struct => x.double}))
 
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))
 
-      val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
+      val (Cut(Deviate(leftResult)), Cut(Deviate(rightResult))) = (leftDeviating, rightDeviating)
 
       leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
       rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
-      val Deviate(finalResult) = leftDeviating + rightDeviating
+      val Cut(Deviate(finalResult)) = leftDeviating + rightDeviating
 
       finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
@@ -609,31 +609,31 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.overflow.entries should be (1.0)
     one.nanflow.entries should be (0.0)
 
-    val two = Bin(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool})
+    val two = Cut({x: Struct => x.bool}, Bin(5, -3.0, 7.0, {x: Struct => x.double}))
     struct.foreach(two.fill(_))
-    two.values.map(_.entries).toList should be (List(2.0, 1.0, 1.0, 1.0, 0.0))
-    two.underflow.entries should be (0.0)
-    two.overflow.entries should be (0.0)
-    two.nanflow.entries should be (0.0)
+    two.value.values.map(_.entries).toList should be (List(2.0, 1.0, 1.0, 1.0, 0.0))
+    two.value.underflow.entries should be (0.0)
+    two.value.overflow.entries should be (0.0)
+    two.value.nanflow.entries should be (0.0)
 
     checkJson(one)
     checkJson(two)
   }
 
   "Binning/Binned" must "work with Sum/Summing/Summed" in {
-    val one = Bin(5, -3.0, 7.0, {x: Double => x}, unweighted, Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
+    val one = Bin(5, -3.0, 7.0, {x: Double => x}, Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
     simple.foreach(one.fill(_))
     one.values.map(_.sum).toList should be (List(30.0, 20.0, 20.0, 10.0, 0.0))
     one.underflow.sum should be (10.0)
     one.overflow.sum should be (10.0)
     one.nanflow.sum should be (0.0)
 
-    val two = Bin(5, -3.0, 7.0, {x: Struct => x.double}, {x: Struct => x.bool}, Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}))
+    val two = Cut({x: Struct => x.bool}, Bin(5, -3.0, 7.0, {x: Struct => x.double}, Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0})))
     struct.foreach(two.fill(_))
-    two.values.map(_.sum).toList should be (List(20.0, 10.0, 10.0, 10.0, 0.0))
-    two.underflow.sum should be (0.0)
-    two.overflow.sum should be (0.0)
-    two.nanflow.sum should be (0.0)
+    two.value.values.map(_.sum).toList should be (List(20.0, 10.0, 10.0, 10.0, 0.0))
+    two.value.underflow.sum should be (0.0)
+    two.value.overflow.sum should be (0.0)
+    two.value.nanflow.sum should be (0.0)
 
     checkJson(one)
     checkJson(two)
@@ -714,8 +714,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     val fracking = Fraction({x: Double => x > 0.0}, Histogram(5, -3.0, 7.0, {x: Double => x}))
     simple.foreach(fracking.fill(_))
 
-    fracking.numerator.values.map(_.entries).toList should be (List(0.0, 0.0, 2.0, 1.0, 0.0))
-    fracking.denominator.values.map(_.entries).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
+    fracking.numerator.numericalValues.toList should be (List(0.0, 0.0, 2.0, 1.0, 0.0))
+    fracking.denominator.numericalValues.toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
 
     checkJson(fracking)
   }
@@ -849,7 +849,7 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     simple.foreach(mapping.fill(_))
 
-    mapping("one").as[one.Type].values.map(_.entries).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
+    mapping("one").as[one.Type].numericalValues.toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
     mapping("two").as[two.Type].sum should be (10.0)
     mapping("three").as[three.Type].entries should be (10.0 +- 1e-12)
     mapping("three").as[three.Type].mean should be (100.33 +- 1e-12)
@@ -903,10 +903,10 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     simple.foreach(branching.fill(_))
 
-    branching.i0.values.map(_.entries).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
-    branching.i0.underflow.entries should be (1.0)
-    branching.i0.overflow.entries should be (1.0)
-    branching.i0.nanflow.entries should be (0.0)
+    branching.i0.numericalValues.toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
+    branching.i0.numericalUnderflow should be (1.0)
+    branching.i0.numericalOverflow should be (1.0)
+    branching.i0.numericalNanflow should be (0.0)
 
     branching.i1.entries should be (10.0)
 
@@ -924,8 +924,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val (left, right) = simple.splitAt(i)
 
       val partialHists = Seq(
-        left.foldLeft(Bin(5, -3.0, 7.0, {x: Double => x}))({(hist, x) => hist.fill(x); hist}),
-        right.foldLeft(Bin(5, -3.0, 7.0, {x: Double => x}))({(hist, x) => hist.fill(x); hist}))
+        left.foldLeft(Cut(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x})))({(hist, x) => hist.fill(x); hist}),
+        right.foldLeft(Cut(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x})))({(hist, x) => hist.fill(x); hist}))
 
       val finalHist = partialHists.reduce(_ + _)
 
@@ -940,8 +940,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
-      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist1 = Cut(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x}))
+      val hist2 = Cut(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x}))
 
       val partialHists = Seq(
         left.foldLeft(hist1)(new Increment[Double, hist1.Type]),
@@ -960,8 +960,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
-      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist1 = Cut(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x}))
+      val hist2 = Cut(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x}))
 
       val collection1 = Label("hist" -> hist1)
       val collection2 = Label("hist" -> hist2)

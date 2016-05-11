@@ -28,7 +28,7 @@ package histogrammar {
   object Deviate extends Factory {
     val name = "Deviate"
     val help = "Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers)."
-    val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Deviated]] from arguments (instead of JSON).
       * 
@@ -41,12 +41,11 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.Deviating]].
       * 
       * @param quantity Numerical function to track.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Deviating(quantity, selection, 0.0, 0.0, 0.0)
+    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Deviating(quantity, 0.0, 0.0, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Deviated]] in Scala pattern-matching. */
     def unapply(x: Deviated) = Some(x.variance)
@@ -88,7 +87,7 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.Deviate]] to construct an instance.
     * 
-    * @param entries Weighted number of entries (sum of all weights).
+    * @param entries Weighted number of entries (sum of all observed weights).
     * @param mean Weighted mean of the quantity.
     * @param variance Weighted variance of the quantity.
     * 
@@ -123,14 +122,13 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Deviate]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
-    * @param entries Weighted number of entries (sum of all weights).
+    * @param entries Weighted number of entries (sum of all observed weights).
     * @param mean Weighted mean of the quantity.
     * @param _variance Weighted variance of the quantity.
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviating[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
+  class Deviating[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
     type Type = Deviating[DATUM]
     type Datum = DATUM
     def factory = Deviate
@@ -151,23 +149,22 @@ package histogrammar {
       varianceTimesEntries = entries * _variance
     }
 
-    def zero = new Deviating[DATUM](quantity, selection, 0.0, 0.0, 0.0)
+    def zero = new Deviating[DATUM](quantity, 0.0, 0.0, 0.0)
     def +(that: Deviating[DATUM]) = {
       val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
                                                             that.entries, that.mean, that.variance * that.entries)
-      new Deviating[DATUM](this.quantity, this.selection, newentries, newmean, newvariance)
+      new Deviating[DATUM](this.quantity, newentries, newmean, newvariance)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
 
-        entries += w
         val delta = q - mean
-        val shift = delta * w / entries
+        val shift = delta * weight / entries
         mean += shift
-        varianceTimesEntries += w * delta * (q - mean)   // old delta times new delta
+        varianceTimesEntries += weight * delta * (q - mean)   // old delta times new delta
       }
     }
 
@@ -175,9 +172,9 @@ package histogrammar {
 
     override def toString() = s"Deviating[$mean, $variance]"
     override def equals(that: Any) = that match {
-      case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.mean === that.mean  &&  this.variance === that.variance
+      case that: Deviating[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, mean, variance).hashCode
+    override def hashCode() = (quantity, entries, mean, variance).hashCode
   }
 }

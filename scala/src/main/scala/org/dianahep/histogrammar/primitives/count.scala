@@ -86,7 +86,7 @@ package histogrammar {
     * 
     * This is the only container with [[org.dianahep.histogrammar.Aggregation]] that doesn't have a configurable data type: its `Datum` is `Any`. It is primarily for the sake of this container that `Aggregation` is contravariant.
     * 
-    * @param entries Weighted number of entries (sum of all weights).
+    * @param entries Weighted number of entries (sum of all observed weights).
     */
   class Counting private[histogrammar](var entries: Double) extends Container[Counting] with Aggregation {
     type Type = Counting

@@ -29,7 +29,7 @@ package histogrammar {
   object AdaptivelyBin extends Factory {
     val name = "AdaptivelyBin"
     val help = "Split a quanity into bins dynamically with a clustering algorithm, filling only one datum per bin with no overflows or underflows."
-    val detailedHelp = """AdaptivelyBin(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count())"""
+    val detailedHelp = """AdaptivelyBin(quantity: NumericalFcn[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.AdaptivelyBinned]] from arguments (instead of JSON).
       * 
@@ -48,20 +48,19 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.AdaptivelyBinning]].
       * 
       * @param quantity Numerical function to split into bins.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param num Maximum number of bins (used as a constraint when growing or merging).
       * @param tailDetail Between 0.0 and 1.0 inclusive: use 0.0 to focus on the bulk of the distribution and 1.0 to focus on the tails; see [[org.dianahep.histogrammar.util.mutable.Clustering1D]] for details.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param nanflow Container for data that result in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
-      new AdaptivelyBinning[DATUM, V, N](quantity, selection, value, mutable.Clustering1D[V](num, tailDetail, value, mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow)
+      (quantity: NumericalFcn[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
+      new AdaptivelyBinning[DATUM, V, N](quantity, value, mutable.Clustering1D[V](num, tailDetail, value, mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
-      apply(quantity, selection, num, tailDetail, value, nanflow)
+      (quantity: NumericalFcn[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
+      apply(quantity, num, tailDetail, value, nanflow)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "num", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow", "tailDetail")) =>
@@ -191,13 +190,12 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.AdaptivelyBin]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param clustering Performs the adative binning.
     * @param nanflow Container for data that result in `NaN`.
     */
   class AdaptivelyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
-    (val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
+    (val quantity: NumericalFcn[DATUM], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
       extends Container[AdaptivelyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
 
     type Type = AdaptivelyBinning[DATUM, V, N]
@@ -211,11 +209,11 @@ package histogrammar {
     if (clustering.tailDetail < 0.0  ||  clustering.tailDetail > 1.0)
       throw new ContainerException(s"tailDetail parameter ($tailDetail) must be between 0.0 and 1.0 inclusive")
 
+    def entries = clustering.entries
     /** Maximum number of bins (used as a constraint when filling and merging). */
     def num = clustering.num
     /** Clustering hyperparameter, between 0.0 and 1.0 inclusive: use 0.0 to focus on the bulk of the distribution and 1.0 to focus on the tails; see [[org.dianahep.histogrammar.util.mutable.Clustering1D]] for details. */
     def tailDetail = clustering.tailDetail
-    def entries = clustering.entries
     def bins = clustering.values
     def min = clustering.min
     def max = clustering.max
@@ -224,21 +222,20 @@ package histogrammar {
     def max_=(x: Double) {clustering.max = x}
     private[histogrammar] def getClustering = clustering
 
-    def zero = new AdaptivelyBinning[DATUM, V, N](quantity, selection, value, mutable.Clustering1D[V](num, tailDetail, value, mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow.zero)
+    def zero = new AdaptivelyBinning[DATUM, V, N](quantity, value, mutable.Clustering1D[V](num, tailDetail, value, mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow.zero)
     def +(that: AdaptivelyBinning[DATUM, V, N]) = {
       if (this.num != that.num)
         throw new ContainerException(s"cannot add AdaptivelyBinning because number of bins is different (${this.num} vs ${that.num})")
       if (this.tailDetail != that.tailDetail)
         throw new ContainerException(s"cannot add AdaptivelyBinning because tailDetail parameter is different (${this.tailDetail} vs ${that.tailDetail})")
 
-      new AdaptivelyBinning[DATUM, V, N](quantity, selection, value, clustering.merge(that.getClustering), this.nanflow + that.nanflow)
+      new AdaptivelyBinning[DATUM, V, N](quantity, value, clustering.merge(that.getClustering), this.nanflow + that.nanflow)
     }
 
     def fill[SUB <: DATUM](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w >= 0.0) {
+      if (weight >= 0.0) {
         val q = quantity(datum)
-        clustering.update(q, datum, w)
+        clustering.update(q, datum, weight)
       }
     }
 
@@ -255,10 +252,10 @@ package histogrammar {
 
     override def toString() = s"""AdaptivelyBinning[bins=[${if (bins.isEmpty) value.factory.name else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
-      case that: AdaptivelyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.clustering == that.getClustering  &&  this.nanflow == that.nanflow
+      case that: AdaptivelyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.clustering == that.getClustering  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (quantity, selection, clustering, nanflow).hashCode()
+    override def hashCode() = (quantity, clustering, nanflow).hashCode()
   }
 
 }

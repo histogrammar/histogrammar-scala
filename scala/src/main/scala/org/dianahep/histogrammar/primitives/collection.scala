@@ -40,11 +40,11 @@ package histogrammar {
 
     /** Create an immutable [[org.dianahep.histogrammar.Cutted]] from arguments (instead of JSON).
       * 
-      * @param entries Weighted number of entries (sum of all observed weights).
+      * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
       * @param value Aggregator that accumulated values that passed the cut.
       * @param name Optional name for bookkeeping.
       */
-    def ed[V <: Container[V]](entries: Double, value: V, name: Option[String]) = new Cutted[V](entries, value, name)
+    def ed[V <: Container[V]](entries: Double, value: V, name: Option[String] = None) = new Cutted[V](entries, value, name)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
       * 
@@ -92,7 +92,7 @@ package histogrammar {
 
   /** An accumulated aggregator of data that passed the cut.
     * 
-    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
     * @param value Aggregator that accumulated values that passed the cut.
     * @param name Optional name for bookkeeping.
     */
@@ -123,7 +123,7 @@ package histogrammar {
 
   /** Accumulating an aggregator of data that passes a cut.
     * 
-    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param value Aggregator to accumulate values that pass the cut.
     * @param name Optional name for bookkeeping.
@@ -144,9 +144,9 @@ package histogrammar {
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      entries += weight
       val w = weight * selection(datum)
       if (w > 0.0) {
-        entries += w
         value.fill(datum, w)
       }
     }

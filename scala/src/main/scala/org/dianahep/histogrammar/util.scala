@@ -262,6 +262,7 @@ package util {
         * This method assumes that `CONTAINER` (mutable or immutable) is actually a `CONTAINER with Aggregation{type Datum >: DATUM}` (mutable only). If it is used on an immutable container, it will raise a runtime exception.
         */
       def update[DATUM](x: Double, datum: DATUM, weight: Double) {
+        entries += weight
         if (weight > 0.0) {
           // assumes that CONTAINER has Aggregation (can call fillWeighted)
           values.get(x) match {
@@ -279,8 +280,6 @@ package util {
 
           if (max.isNaN  ||  x > max)
             max = x
-
-          entries += weight
         }
       }
 

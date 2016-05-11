@@ -62,7 +62,7 @@ package histogrammar {
   object Quantile extends Factory {
     val name = "Quantile"
     val help = "Estimate a quantile, such as 0.5 for median, (0.25, 0.75) for quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles."
-    val detailedHelp = """Quantile(target: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """Quantile(target: Double, quantity: NumericalFcn[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 
@@ -76,14 +76,12 @@ package histogrammar {
       * 
       * @param target Intended quantile (e.g. 0.5 for median).
       * @param quantity Numerical function to track.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](target: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
-      new Quantiling[DATUM](target, quantity, selection, 0.0, java.lang.Double.NaN, 0.0)
+    def apply[DATUM](target: Double, quantity: NumericalFcn[DATUM]) =
+      new Quantiling[DATUM](target, quantity, 0.0, java.lang.Double.NaN, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](target: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) =
-      apply(target, quantity, selection)
+    def ing[DATUM](target: Double, quantity: NumericalFcn[DATUM]) = apply(target, quantity)
 
     /** Use [[org.dianahep.histogrammar.Quantiled]] in Scala pattern-matching. */
     def unapply(x: Quantiled) = Some(x.estimate)
@@ -164,9 +162,8 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Quantile]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     */
-  class Quantiling[DATUM] private[histogrammar](val target: Double, val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var estimate: Double, var cumulativeDeviation: Double)
+  class Quantiling[DATUM] private[histogrammar](val target: Double, val quantity: NumericalFcn[DATUM], var entries: Double, var estimate: Double, var cumulativeDeviation: Double)
       extends Container[Quantiling[DATUM]] with AggregationOnData {
 
     type Type = Quantiling[DATUM]
@@ -178,18 +175,17 @@ package histogrammar {
     if (target < 0.0  ||  target > 1.0)
       throw new ContainerException(s"target ($target) must be between 0 and 1, inclusive")
 
-    def zero = new Quantiling[DATUM](target, quantity, selection, 0.0, java.lang.Double.NaN, 0.0)
+    def zero = new Quantiling[DATUM](target, quantity, 0.0, java.lang.Double.NaN, 0.0)
     def +(that: Quantiling[DATUM]) =
       if (this.target == that.target)
-        new Quantiling[DATUM](target, quantity, selection, this.entries + that.entries, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries), this.cumulativeDeviation + that.cumulativeDeviation)
+        new Quantiling[DATUM](target, quantity, this.entries + that.entries, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries), this.cumulativeDeviation + that.cumulativeDeviation)
       else
         throw new ContainerException(s"cannot add Quantiling because targets do not match (${this.target} vs ${that.target})")
 
     def fill[SUB <: DATUM](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
-        entries += w
 
         if (estimate.isNaN)
           estimate = q
@@ -201,7 +197,7 @@ package histogrammar {
             else if (q > estimate)  1.0
             else                    0.0
 
-          estimate = w * learningRate * (sgn + 2.0*target - 1.0)
+          estimate = weight * learningRate * (sgn + 2.0*target - 1.0)
         }
       }
     }
@@ -213,10 +209,10 @@ package histogrammar {
 
     override def toString() = s"""Quantiling[$target, estimate=$estimate]"""
     override def equals(that: Any) = that match {
-      case that: Quantiling[DATUM] => this.entries == that.entries  &&  this.target == that.target  &&  this.estimate == that.estimate  &&  this.cumulativeDeviation == that.cumulativeDeviation  &&  this.quantity == that.quantity  &&  this.selection == that.selection
+      case that: Quantiling[DATUM] => this.entries == that.entries  &&  this.target == that.target  &&  this.estimate == that.estimate  &&  this.cumulativeDeviation == that.cumulativeDeviation  &&  this.quantity == that.quantity
       case _ => false
     }
-    override def hashCode() = (entries, target, estimate, cumulativeDeviation, quantity, selection).hashCode()
+    override def hashCode() = (entries, target, estimate, cumulativeDeviation, quantity).hashCode()
   }
 
 }

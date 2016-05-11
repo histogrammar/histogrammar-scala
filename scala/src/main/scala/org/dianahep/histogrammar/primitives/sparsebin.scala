@@ -30,8 +30,7 @@ package histogrammar {
   object SparselyBin extends Factory {
     val name = "SparselyBin"
     val help = "Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary."
-    val detailedHelp = """SparselyBin(binWidth: Double, quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM],
-            value: => V = Count(), nanflow: N = Count(), origin: Double = 0.0)"""
+    val detailedHelp = """SparselyBin(binWidth: Double, quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count(), origin: Double = 0.0)"""
 
     private val integerPattern = "-?[0-9]+".r
 
@@ -51,7 +50,6 @@ package histogrammar {
       * 
       * @param binWidth Width of the equally sized bins.
       * @param quantity Numerical function to split into bins.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param nanflow Container for data that resulted in `NaN`.
       * @param origin Left edge of the bin whose index is zero.
@@ -59,20 +57,18 @@ package histogrammar {
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (binWidth: Double,
        quantity: NumericalFcn[DATUM],
-       selection: Selection[DATUM] = unweighted[DATUM],
        value: => V = Count(),
        nanflow: N = Count(),
        origin: Double = 0.0) =
-      new SparselyBinning[DATUM, V, N](binWidth, quantity, selection, 0.0, value, mutable.HashMap[Long, V](), nanflow, origin)
+      new SparselyBinning[DATUM, V, N](binWidth, quantity, 0.0, value, mutable.HashMap[Long, V](), nanflow, origin)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (binWidth: Double,
        quantity: NumericalFcn[DATUM],
-       selection: Selection[DATUM] = unweighted[DATUM],
        value: => V = Count(),
        nanflow: N = Count(),
-       origin: Double = 0.0) = apply(binWidth, quantity, selection, value, nanflow, origin)
+       origin: Double = 0.0) = apply(binWidth, quantity, value, nanflow, origin)
 
     trait Methods {
       def binWidth: Double
@@ -226,7 +222,6 @@ package histogrammar {
     * 
     * @param binWidth Width of the equally sized bins.
     * @param quantity Numerical function to split into bins.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param bins Centers and values of each bin.
@@ -236,7 +231,6 @@ package histogrammar {
   class SparselyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
     (val binWidth: Double,
      val quantity: NumericalFcn[DATUM],
-     val selection: Selection[DATUM],
      var entries: Double,
      value: => V,
      val bins: mutable.Map[Long, V],
@@ -252,7 +246,7 @@ package histogrammar {
     if (binWidth <= 0.0)
       throw new ContainerException(s"binWidth ($binWidth) must be greater than zero")
 
-    def zero = new SparselyBinning[DATUM, V, N](binWidth, quantity, selection, 0.0, value, mutable.Map(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
+    def zero = new SparselyBinning[DATUM, V, N](binWidth, quantity, 0.0, value, mutable.Map(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
     def +(that: SparselyBinning[DATUM, V, N]) = {
       if (this.binWidth != that.binWidth)
         throw new ContainerException(s"cannot add SparselyBinning because binWidth differs (${this.binWidth} vs ${that.binWidth})")
@@ -269,22 +263,21 @@ package histogrammar {
           }
         }: _*)
 
-      new SparselyBinning[DATUM, V, N](binWidth, this.quantity, this.selection, this.entries + that.entries, this.value, newbins, this.nanflow + that.nanflow, origin)
+      new SparselyBinning[DATUM, V, N](binWidth, this.quantity, this.entries + that.entries, this.value, newbins, this.nanflow + that.nanflow, origin)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
 
-        entries += w
         if (nan(q))
-          nanflow.fill(datum, w)
+          nanflow.fill(datum, weight)
         else {
           val b = bin(q)
           if (!(bins contains b))
             bins.update(b, value.zero)
-          bins(b).fill(datum, w)
+          bins(b).fill(datum, weight)
         }
       }
     }
@@ -312,9 +305,9 @@ package histogrammar {
 
     override def toString() = s"""SparselyBinning[binWidth=$binWidth, bins=[${if (bins.isEmpty) value.factory.name else bins.head.toString}, size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {
-      case that: SparselyBinning[DATUM, V, N] => this.binWidth === that.binWidth  &&  this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
+      case that: SparselyBinning[DATUM, V, N] => this.binWidth === that.binWidth  &&  this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false
     }
-    override def hashCode() = (binWidth, quantity, selection, entries, bins, nanflow, origin).hashCode
+    override def hashCode() = (binWidth, quantity, entries, bins, nanflow, origin).hashCode
   }
 }

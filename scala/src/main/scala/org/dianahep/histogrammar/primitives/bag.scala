@@ -26,7 +26,7 @@ package histogrammar {
   object Bag extends Factory {
     val name = "Bag"
     val help = "Accumulate raw numbers, vectors of numbers, or strings, merging identical values."
-    val detailedHelp = """Bag(quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """Bag(quantity: UserFcn[DATUM, RANGE])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).
       * 
@@ -39,14 +39,12 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.Bagging]].
       * 
       * @param quantity Function that produces numbers, vectors of numbers, or strings.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM, RANGE](quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM]) =
-      new Bagging[DATUM, RANGE](quantity, selection, 0.0, scala.collection.mutable.Map[RANGE, Double]())
+    def apply[DATUM, RANGE](quantity: UserFcn[DATUM, RANGE]) =
+      new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double]())
 
     /** Synonym for `apply`. */
-    def ing[DATUM, RANGE](quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM]) =
-      apply(quantity, selection)
+    def ing[DATUM, RANGE](quantity: UserFcn[DATUM, RANGE]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Bagged]] in Scala pattern-matching. */
     def unapply[RANGE](x: Bagged[RANGE]) = x.values
@@ -159,16 +157,15 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Bag]] to construct an instance.
     * 
     * @param quantity Function that produces numbers, vectors of numbers, or strings.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Distinct values and the (weighted) number of times they were observed.
     */
-  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], val selection: Selection[DATUM], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double]) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData {
+  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double]) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData {
     type Type = Bagging[DATUM, RANGE]
     type Datum = DATUM
     def factory = Bag
 
-    def zero = new Bagging[DATUM, RANGE](quantity, selection, 0.0, scala.collection.mutable.Map[RANGE, Double]())
+    def zero = new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double]())
     def +(that: Bagging[DATUM, RANGE]) = {
       val newentries = this.entries + that.entries
       val newvalues = {
@@ -182,18 +179,17 @@ package histogrammar {
         out
       }
 
-      new Bagging[DATUM, RANGE](quantity, selection, newentries, newvalues)
+      new Bagging[DATUM, RANGE](quantity, newentries, newvalues)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
-        entries += w
         if (values contains q)
-          values(q) += w
+          values(q) += weight
         else
-          values(q) = w
+          values(q) = weight
       }
     }
 
@@ -210,10 +206,10 @@ package histogrammar {
 
     override def toString() = s"""Bagging[${if (values.isEmpty) "size=0" else values.head.toString + "..., size=" + values.size.toString}]"""
     override def equals(that: Any) = that match {
-      case that: Bagging[DATUM, RANGE] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.values == that.values
+      case that: Bagging[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, values).hashCode()
+    override def hashCode() = (quantity, entries, values).hashCode()
   }
 
 }

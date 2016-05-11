@@ -91,7 +91,7 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.Partition]] to construct an instance.
     * 
-    * @param entries Weighted number of entries (sum of all weights).
+    * @param entries Weighted number of entries (sum of all observed weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
   class Partitioned[V <: Container[V]] private[histogrammar](val entries: Double, val cuts: (Double, V)*) extends Container[Partitioned[V]] {
@@ -162,9 +162,9 @@ package histogrammar {
           this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      entries += weight
       if (weight > 0.0) {
         val value = expression(datum)
-        entries += weight
         // !(value >= high) is true when high == NaN (even if value == +inf)
         range find {case ((low, sub), (high, _)) => value >= low  &&  !(value >= high)} foreach {case ((_, sub), (_, _)) =>
           sub.fill(datum, weight)

@@ -26,7 +26,7 @@ package histogrammar {
   object Minimize extends Factory {
     val name = "Minimize"
     val help = "Find the minimum value of a given quantity. If no data are observed, the result is NaN."
-    val detailedHelp = """Minimize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """Minimize(quantity: NumericalFcn[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Minimized]] from arguments (instead of JSON).
       * 
@@ -38,12 +38,11 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Minimizing]].
       * 
       * @param quantity Numerical function to track.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Minimizing(quantity, selection, 0.0, java.lang.Double.NaN)
+    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Minimizing(quantity, 0.0, java.lang.Double.NaN)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Minimized]] in Scala pattern-matching. */
     def unapply(x: Minimized) = Some(x.min)
@@ -110,23 +109,21 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Minimize]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param min Lowest observed value.
     */
-  class Minimizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
+  class Minimizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
     type Type = Minimizing[DATUM]
     type Datum = DATUM
     def factory = Minimize
 
-    def zero = new Minimizing[DATUM](quantity, selection, 0.0, java.lang.Double.NaN)
-    def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.selection, this.entries + that.entries, Minimize.plus(this.min, that.min))
+    def zero = new Minimizing[DATUM](quantity, 0.0, java.lang.Double.NaN)
+    def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.entries + that.entries, Minimize.plus(this.min, that.min))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
-        entries += w
         if (min.isNaN  ||  q < min)
           min = q
       }
@@ -136,10 +133,10 @@ package histogrammar {
 
     override def toString() = s"Minimizing[$min]"
     override def equals(that: Any) = that match {
-      case that: Minimizing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.min === that.min
+      case that: Minimizing[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.min === that.min
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, min).hashCode
+    override def hashCode() = (quantity, entries, min).hashCode
   }
 
   //////////////////////////////////////////////////////////////// Maximize/Maximized/Maximizing
@@ -151,7 +148,7 @@ package histogrammar {
   object Maximize extends Factory {
     val name = "Maximize"
     val help = "Find the maximum value of a given quantity. If no data are observed, the result is NaN."
-    val detailedHelp = """Maximize(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """Maximize(quantity: NumericalFcn[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Maximized]] from arguments (instead of JSON).
       * 
@@ -163,12 +160,11 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Maximizing]].
       * 
       * @param quantity Numerical function to track.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Maximizing(quantity, selection, 0.0, java.lang.Double.NaN)
+    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Maximizing(quantity, 0.0, java.lang.Double.NaN)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Maximized]] in Scala pattern-matching. */
     def unapply(x: Maximized) = Some(x.max)
@@ -232,23 +228,21 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Maximize]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param max Highest observed value.
     */
-  class Maximizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
+  class Maximizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
     type Type = Maximizing[DATUM]
     type Datum = DATUM
     def factory = Maximize
 
-    def zero = new Maximizing[DATUM](quantity, selection, 0.0, java.lang.Double.NaN)
-    def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.selection, this.entries + that.entries, Maximize.plus(this.max, that.max))
+    def zero = new Maximizing[DATUM](quantity, 0.0, java.lang.Double.NaN)
+    def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.entries + that.entries, Maximize.plus(this.max, that.max))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
-        entries += w
         if (max.isNaN  ||  q > max)
           max = q
       }
@@ -258,9 +252,9 @@ package histogrammar {
 
     override def toString() = s"Maximizing[$max]"
     override def equals(that: Any) = that match {
-      case that: Maximizing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.max === that.max
+      case that: Maximizing[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.max === that.max
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, max).hashCode
+    override def hashCode() = (quantity, entries, max).hashCode
   }
 }

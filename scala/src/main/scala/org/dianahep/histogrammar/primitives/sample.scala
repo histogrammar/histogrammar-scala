@@ -27,7 +27,7 @@ package histogrammar {
   object Sample extends Factory {
     val name = "Sample"
     val help = "Accumulate raw numbers, vectors of numbers, or strings that are an unbiased sample of the observed distribution."
-    val detailedHelp = "Sample(limit: Int, quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM])"
+    val detailedHelp = "Sample(limit: Int, quantity: UserFcn[DATUM, RANGE])"
 
     /** Create an immutable [[org.dianahep.histogrammar.Sampled]] from arguments (instead of JSON).
       * 
@@ -42,13 +42,12 @@ package histogrammar {
       * 
       * @param limit Maximum number of data points in the sample.
       * @param quantity Function that produces numbers, vectors of numbers, or strings.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM]) =
-      new Sampling[DATUM, RANGE](quantity, selection, 0.0, new mutable.Reservoir[RANGE](limit))
+    def apply[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE]) =
+      new Sampling[DATUM, RANGE](quantity, 0.0, new mutable.Reservoir[RANGE](limit))
 
     /** Synonym for `apply`. */
-    def ing[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE], selection: Selection[DATUM] = unweighted[DATUM]) = apply(limit, quantity, selection)
+    def ing[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE]) = apply(limit, quantity)
 
     /** Use [[org.dianahep.histogrammar.Sampled]] in Scala pattern-matching. */
     def unapply[RANGE](x: Sampled[RANGE]) = x.values
@@ -158,11 +157,10 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Sample]] to construct an instance.
     * 
     * @param quantity Function that produces numbers, vectors of numbers, or strings.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param reservoir Data structure to perform weighted reservoir sampling.
     */
-  class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], val selection: Selection[DATUM], var entries: Double, reservoir: mutable.Reservoir[RANGE]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData {
+  class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, reservoir: mutable.Reservoir[RANGE]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData {
     type Type = Sampling[DATUM, RANGE]
     type Datum = DATUM
     def factory = Sample
@@ -179,7 +177,7 @@ package histogrammar {
     /** Determine if the sample is empty. */
     def isEmpty = reservoir.isEmpty
 
-    def zero = new Sampling(quantity, selection, 0.0, new mutable.Reservoir[RANGE](limit))
+    def zero = new Sampling(quantity, 0.0, new mutable.Reservoir[RANGE](limit))
     def +(that: Sampling[DATUM, RANGE]) = {
       if (this.limit != that.limit)
         throw new ContainerException(s"cannot add Sampling because limit differs (${this.limit} vs ${that.limit})")
@@ -187,15 +185,14 @@ package histogrammar {
       val newreservoir = new mutable.Reservoir[RANGE](this.limit, this.values: _*)
       that.values foreach {case (y, weight) => newreservoir.update(y, weight)}
 
-      new Sampling[DATUM, RANGE](quantity, selection, this.entries + that.entries, newreservoir)
+      new Sampling[DATUM, RANGE](quantity, this.entries + that.entries, newreservoir)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
-        entries += w
-        reservoir.update(q, w)
+        reservoir.update(q, weight)
       }
     }
 
@@ -214,10 +211,10 @@ package histogrammar {
     override def toString() = s"""Sampling[${if (isEmpty) "empty" else reservoir.some.toString + "..."}, size=${size}]"""
 
     override def equals(that: Any) = that match {
-      case that: Sampling[DATUM, RANGE] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
+      case that: Sampling[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false
     }
 
-    override def hashCode() = (quantity, selection, entries, limit, values).hashCode()
+    override def hashCode() = (quantity, entries, limit, values).hashCode()
   }
 }

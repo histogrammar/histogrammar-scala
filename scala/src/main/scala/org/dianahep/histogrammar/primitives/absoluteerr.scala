@@ -26,7 +26,7 @@ package histogrammar {
   object AbsoluteErr extends Factory {
     val name = "AbsoluteErr"
     val help = "Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero."
-    val detailedHelp = """AbsoluteErr(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """AbsoluteErr(quantity: NumericalFcn[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.AbsoluteErred]] from arguments (instead of JSON).
       * 
@@ -38,12 +38,11 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.AbsoluteErring]].
       * 
       * @param quantity Numerical function to track.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new AbsoluteErring(quantity, selection, 0.0, 0.0)
+    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new AbsoluteErring(quantity, 0.0, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.AbsoluteErred]] in Scala pattern-matching. */
     def unapply(x: AbsoluteErred) = Some(x.mae)
@@ -77,7 +76,7 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.AbsoluteErr]] to construct an instance.
     * 
-    * @param entries Weighted number of entries (sum of all weights).
+    * @param entries Weighted number of entries (sum of all observed weights).
     * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
   class AbsoluteErred private[histogrammar](val entries: Double, val mae: Double) extends Container[AbsoluteErred] {
@@ -108,11 +107,10 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.AbsoluteErr]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
-    * @param entries Weighted number of entries (sum of all weights).
+    * @param entries Weighted number of entries (sum of all observed weights).
     * @param _mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
-  class AbsoluteErring[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
+  class AbsoluteErring[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
     type Type = AbsoluteErring[DATUM]
     type Datum = DATUM
     def factory = AbsoluteErr
@@ -132,18 +130,17 @@ package histogrammar {
       absoluteSum = entries * _mae
     }
 
-    def zero = new AbsoluteErring[DATUM](quantity, selection, 0.0, 0.0)
+    def zero = new AbsoluteErring[DATUM](quantity, 0.0, 0.0)
     def +(that: AbsoluteErring[DATUM]) = {
       val (newentries, newmae) = AbsoluteErr.plus(this.entries, this.mae, that.entries, that.mae)
-      new AbsoluteErring[DATUM](this.quantity, this.selection, newentries, newmae)
+      new AbsoluteErring[DATUM](this.quantity, newentries, newmae)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
-        entries += w
-        absoluteSum += Math.abs(q)
+        absoluteSum += weight * Math.abs(q)
       }
     }
 
@@ -151,9 +148,9 @@ package histogrammar {
 
     override def toString() = s"AbsoluteErring[$mae]"
     override def equals(that: Any) = that match {
-      case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.mae === that.mae
+      case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.mae === that.mae
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, mae).hashCode
+    override def hashCode() = (quantity, entries, mae).hashCode
   }
 }

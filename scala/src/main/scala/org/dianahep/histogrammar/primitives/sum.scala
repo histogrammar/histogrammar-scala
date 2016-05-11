@@ -26,7 +26,7 @@ package histogrammar {
   object Sum extends Factory {
     val name = "Sum"
     val help = "Accumulate the sum of a given quantity."
-    val detailedHelp = """Sum(quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM])"""
+    val detailedHelp = """Sum(quantity: NumericalFcn[DATUM])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Summed]] from arguments (instead of JSON).
       * 
@@ -38,12 +38,11 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.Summing]].
       * 
       * @param quantity Numerical function to track.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = new Summing[DATUM](quantity, selection, 0.0, 0.0)
+    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Summing[DATUM](quantity, 0.0, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM]) = apply(quantity, selection)
+    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Summed]] in Scala pattern-matching. */
     def unapply(x: Summed) = Some(x.sum)
@@ -99,24 +98,22 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Sum]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
+  class Summing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
     type Type = Summing[DATUM]
     type Datum = DATUM
     def factory = Sum
 
-    def zero = new Summing[DATUM](quantity, selection, 0.0, 0.0)
-    def +(that: Summing[DATUM]) = new Summing(this.quantity, this.selection, this.entries + that.entries, this.sum + that.sum)
+    def zero = new Summing[DATUM](quantity, 0.0, 0.0)
+    def +(that: Summing[DATUM]) = new Summing(this.quantity, this.entries + that.entries, this.sum + that.sum)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
-        entries += w
-        sum += q * w
+        sum += q * weight
       }
     }
 
@@ -124,9 +121,9 @@ package histogrammar {
 
     override def toString() = s"Summing[$sum]"
     override def equals(that: Any) = that match {
-      case that: Summing[DATUM] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.sum === that.sum
+      case that: Summing[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.sum === that.sum
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, sum).hashCode
+    override def hashCode() = (quantity, entries, sum).hashCode
   }
 }

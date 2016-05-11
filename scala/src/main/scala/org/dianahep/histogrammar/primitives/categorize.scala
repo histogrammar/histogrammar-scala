@@ -28,7 +28,7 @@ package histogrammar {
   object Categorize extends Factory {
     val name = "Categorize"
     val help = "Split a given quantity by its categorical (string-based) value and fill only one category per datum."
-    val detailedHelp = """Categorize(quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count())"""
+    val detailedHelp = """Categorize(quantity: CategoricalFcn[DATUM], value: => V = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Categorized]] from arguments (instead of JSON).
       * 
@@ -41,15 +41,14 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
       * 
       * @param quantity Numerical function to split into bins.
-      * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
-      new Categorizing(quantity, selection, 0.0, value, mutable.HashMap[String, V]())
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], value: => V = Count()) =
+      new Categorizing(quantity, 0.0, value, mutable.HashMap[String, V]())
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], selection: Selection[DATUM] = unweighted[DATUM], value: => V = Count()) =
-      apply(quantity, selection, value)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], value: => V = Count()) =
+      apply(quantity, value)
 
     def fromJsonFragment(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("entries", "type", "data")) =>
@@ -142,12 +141,11 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Categorize]] to construct an instance.
     * 
     * @param quantity Numerical function to track.
-    * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param pairs Map of string category and the associated container of values associated with it.
     */
-  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: CategoricalFcn[DATUM], val selection: Selection[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
+  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: CategoricalFcn[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
     type Datum = DATUM
     def factory = Categorize
@@ -172,10 +170,9 @@ package histogrammar {
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
-    def zero = new Categorizing[DATUM, V](quantity, selection, 0.0, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
+    def zero = new Categorizing[DATUM, V](quantity, 0.0, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
     def +(that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
       this.quantity,
-      this.selection,
       this.entries + that.entries,
       this.value,
       mutable.HashMap[String, V]((this.keySet union that.keySet).toSeq map {key =>
@@ -188,14 +185,13 @@ package histogrammar {
       }: _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
-      if (w > 0.0) {
+      entries += weight
+      if (weight > 0.0) {
         val q = quantity(datum)
 
-        entries += w
         if (!(pairs contains q))
           pairs(q) = value.zero
-        pairs(q).fill(datum, w)
+        pairs(q).fill(datum, weight)
       }
     }
 
@@ -206,9 +202,9 @@ package histogrammar {
 
     override def toString() = s"Categorizing[[${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {
-      case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.selection == that.selection  &&  this.entries === that.entries  &&  this.pairs == that.pairs
+      case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false
     }
-    override def hashCode() = (quantity, selection, entries, pairs).hashCode()
+    override def hashCode() = (quantity, entries, pairs).hashCode()
   }
 }

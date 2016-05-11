@@ -690,7 +690,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
 
   "Fraction/Fractioned/Fractioning" must "work with Count/Counting/Counted" in {
-    val fracking = Fraction({x: Double => x > 0.0}, Count())
+    val fracking = Fraction({x: Double => x > 0.0} named "something", Count())
     simple.foreach(fracking.fill(_))
 
     fracking.numerator.entries should be (4.0)

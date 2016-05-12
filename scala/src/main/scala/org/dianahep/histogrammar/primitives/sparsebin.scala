@@ -31,7 +31,7 @@ package histogrammar {
   object SparselyBin extends Factory {
     val name = "SparselyBin"
     val help = "Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary."
-    val detailedHelp = """SparselyBin(binWidth: Double, quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count(), origin: Double = 0.0)"""
+    val detailedHelp = """SparselyBin(binWidth: Double, quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count(), origin: Double = 0.0)"""
 
     private val integerPattern = "-?[0-9]+".r
 
@@ -57,7 +57,7 @@ package histogrammar {
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (binWidth: Double,
-       quantity: NumericalFcn[DATUM],
+       quantity: UserFcn[DATUM, Double],
        value: => V = Count(),
        nanflow: N = Count(),
        origin: Double = 0.0) =
@@ -66,7 +66,7 @@ package histogrammar {
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (binWidth: Double,
-       quantity: NumericalFcn[DATUM],
+       quantity: UserFcn[DATUM, Double],
        value: => V = Count(),
        nanflow: N = Count(),
        origin: Double = 0.0) = apply(binWidth, quantity, value, nanflow, origin)
@@ -232,7 +232,7 @@ package histogrammar {
     */
   class SparselyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
     (val binWidth: Double,
-     val quantity: NumericalFcn[DATUM],
+     val quantity: UserFcn[DATUM, Double],
      var entries: Double,
      value: => V,
      val bins: mutable.Map[Long, V],

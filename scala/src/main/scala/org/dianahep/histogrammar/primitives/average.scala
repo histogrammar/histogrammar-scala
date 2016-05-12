@@ -27,7 +27,7 @@ package histogrammar {
   object Average extends Factory {
     val name = "Average"
     val help = "Accumulate the weighted mean of a given quantity."
-    val detailedHelp = """Average(quantity: NumericalFcn[DATUM])"""
+    val detailedHelp = """Average(quantity: UserFcn[DATUM, Double])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Averaged]] from arguments (instead of JSON).
       * 
@@ -40,10 +40,10 @@ package histogrammar {
       * 
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Averaging(quantity, 0.0, 0.0)
+    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Averaging(quantity, 0.0, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
+    def ing[DATUM](quantity: UserFcn[DATUM, Double]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Averaged]] in Scala pattern-matching. */
     def unapply(x: Averaged) = Some(x.mean)
@@ -112,7 +112,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all weights).
     * @param mean Cumulative weighted mean (accrued with a numerically stable algorithm).
     */
-  class Averaging[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
+  class Averaging[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
     type Type = Averaging[DATUM]
     type FixedType = Averaged
     type Datum = DATUM

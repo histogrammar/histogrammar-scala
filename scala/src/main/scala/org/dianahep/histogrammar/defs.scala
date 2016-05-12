@@ -236,122 +236,6 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// define implicits
 
-  /** Wraps a user's function for weighting data.
-    * 
-    * If a boolean-valued function is supplied, it will automatically be converted into a function that returns 0.0 and 1.0.
-    * 
-    * A value of 1.0 corresponds to normal weight, and a value of 0.0 ''or less'' causes the datum to be skipped.
-    * 
-    * If `Selections` are specified for nested structures, they will be multiplied to provide the final weight. A value of 0.0 at any level skips descent of the subtree.
-    */
-  trait Selection[-DATUM] extends Serializable {
-    /** Optional name for the function; added to JSON for bookkeeping if present. */
-    def name: Option[String]
-    /** Tracks whether this function has a cache to ensure that a function doesn't get double-cached. */
-    def hasCache: Boolean
-    /** Call the function. */
-    def apply[SUB <: DATUM](x: SUB): Double
-
-    /** Tracks whether this function has a name to raise an error if it gets named again. */
-    def hasName = !name.isEmpty
-
-    /** Create a named version of this function.
-      * 
-      * Note that the `{x: Datum => f(x)} named "something"` syntax is more human-readable.
-      * 
-      * Note that this function commutes with `cached` (they can be applied in either order).
-      */
-    def named(n: String) =
-      if (hasName)
-        throw new IllegalArgumentException(s"two names applied to the same function: ${name.get} and $n")
-      else {
-        val f = this
-        new Selection[DATUM] {
-          def name = Some(n)
-          def hasCache = f.hasCache
-          def apply[SUB <: DATUM](x: SUB): Double = f(x)
-        }
-      }
-
-    /** Create a cached version of this function.
-      * 
-      * Note that the `{x: Datum => f(x)} cached` syntax is more human-readable.
-      * 
-      * Note that this function commutes with `named` (they can be applied in either order).
-      * 
-      * '''Example:'''
-      * 
-      * {{{
-      * val f = cache {x: Double => complexFunction(x)}
-      * f(3.14)   // computes the function
-      * f(3.14)   // re-uses the old value
-      * f(4.56)   // computes the function again at a new point
-      * }}}
-      */
-    def cached =
-      if (hasCache)
-        this
-      else {
-        val f = this
-        new Selection[DATUM] {
-          private var last: Option[(DATUM, Double)] = None
-          def name = f.name
-          def hasCache = true
-          def apply[SUB <: DATUM](x: SUB): Double = (x, last) match {
-            case (xref: AnyRef, Some((oldx: AnyRef, oldy))) if (xref eq oldx) => oldy
-            case (_,            Some((oldx, oldy)))         if (x == oldx)    => oldy
-            case _ =>
-              val y = f(x)
-              last = Some(x -> y)
-              y
-          }
-        }
-      }
-  }
-
-  implicit class SelectionFromBoolean[-DATUM](f: DATUM => Boolean) extends Selection[DATUM] {
-    def name = None
-    def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = if (f(x)) 1.0 else 0.0
-  }
-  implicit class SelectionFromByte[-DATUM](f: DATUM => Byte) extends Selection[DATUM] {
-    def name = None
-    def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
-  }
-  implicit class SelectionFromShort[-DATUM](f: DATUM => Short) extends Selection[DATUM] {
-    def name = None
-    def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
-  }
-  implicit class SelectionFromInt[-DATUM](f: DATUM => Int) extends Selection[DATUM] {
-    def name = None
-    def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
-  }
-  implicit class SelectionFromLong[-DATUM](f: DATUM => Long) extends Selection[DATUM] {
-    def name = None
-    def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
-  }
-  implicit class SelectionFromFloat[-DATUM](f: DATUM => Float) extends Selection[DATUM] {
-    def name = None
-    def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
-  }
-  implicit class SelectionFromDouble[-DATUM](f: DATUM => Double) extends Selection[DATUM] {
-    def name = None
-    def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x)
-  }
-
-  /** Default weighting function that always returns 1.0. */
-  def unweighted[DATUM] = new Selection[DATUM] {
-    def name = Some("unweighted")
-    def hasCache = true
-    def apply[SUB <: DATUM](x: SUB) = 1.0
-  }
-
   /** (Sealed) base trait for user functions. */
   sealed trait UserFcn[-DOMAIN, +RANGE] extends Serializable {
     /** Optional name for the function; added to JSON for bookkeeping if present. */
@@ -418,28 +302,39 @@ package object histogrammar {
       }
   }
 
-  /** Wraps a user's function for extracting numbers from the input data type. */
-  trait NumericalFcn[-DATUM] extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromBoolean[-DATUM](f: DATUM => Boolean) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double
+    def apply[SUB <: DATUM](x: SUB): Double = if (f(x)) 1.0 else 0.0
   }
-  implicit class NumericalFcnFromByte[-DATUM](f: DATUM => Byte) extends NumericalFcn[DATUM] {
+  implicit class NumericalFcnFromByte[-DATUM](f: DATUM => Byte) extends UserFcn[DATUM, Double] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
-  implicit class NumericalFcnFromShort[-DATUM](f: DATUM => Short) extends NumericalFcn[DATUM] {
+  implicit class NumericalFcnFromShort[-DATUM](f: DATUM => Short) extends UserFcn[DATUM, Double] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
-  implicit class NumericalFcnFromInt[-DATUM](f: DATUM => Int) extends NumericalFcn[DATUM] {
+  implicit class NumericalFcnFromInt[-DATUM](f: DATUM => Int) extends UserFcn[DATUM, Double] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
-  implicit class NumericalFcnFromLong[-DATUM](f: DATUM => Long) extends NumericalFcn[DATUM] {
+  implicit class NumericalFcnFromLong[-DATUM](f: DATUM => Long) extends UserFcn[DATUM, Double] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
-  implicit class NumericalFcnFromFloat[-DATUM](f: DATUM => Float) extends NumericalFcn[DATUM] {
+  implicit class NumericalFcnFromFloat[-DATUM](f: DATUM => Float) extends UserFcn[DATUM, Double] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
   }
-  implicit class NumericalFcnFromDouble[-DATUM](f: DATUM => Double) extends NumericalFcn[DATUM] {
+  implicit class NumericalFcnFromDouble[-DATUM](f: DATUM => Double) extends UserFcn[DATUM, Double] {
+    def name = None
+    def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Double = f(x)
   }
 
@@ -455,6 +350,13 @@ package object histogrammar {
     def name = None
     def hasCache = false
     def apply[SUB <: DATUM](x: SUB): Vector[Double] = f(x).toVector
+  }
+
+  /** Default weighting function that always returns 1.0. */
+  def unweighted[DATUM] = new UserFcn[DATUM, Double] {
+    def name = Some("unweighted")
+    def hasCache = true
+    def apply[SUB <: DATUM](x: SUB) = 1.0
   }
 
   /** Introduces a `===` operator for `Double` precision numbers in which `NaN === NaN`. */

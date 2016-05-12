@@ -29,7 +29,7 @@ package histogrammar {
   object Deviate extends Factory {
     val name = "Deviate"
     val help = "Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers)."
-    val detailedHelp = """Deviate(quantity: NumericalFcn[DATUM])"""
+    val detailedHelp = """Deviate(quantity: UserFcn[DATUM, Double])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Deviated]] from arguments (instead of JSON).
       * 
@@ -43,10 +43,10 @@ package histogrammar {
       * 
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Deviating(quantity, 0.0, 0.0, 0.0)
+    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Deviating(quantity, 0.0, 0.0, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
+    def ing[DATUM](quantity: UserFcn[DATUM, Double]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Deviated]] in Scala pattern-matching. */
     def unapply(x: Deviated) = Some(x.variance)
@@ -130,7 +130,7 @@ package histogrammar {
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviating[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
+  class Deviating[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
     type Type = Deviating[DATUM]
     type Datum = DATUM
     def factory = Deviate

@@ -27,7 +27,7 @@ package histogrammar {
   object Minimize extends Factory {
     val name = "Minimize"
     val help = "Find the minimum value of a given quantity. If no data are observed, the result is NaN."
-    val detailedHelp = """Minimize(quantity: NumericalFcn[DATUM])"""
+    val detailedHelp = """Minimize(quantity: UserFcn[DATUM, Double])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Minimized]] from arguments (instead of JSON).
       * 
@@ -40,10 +40,10 @@ package histogrammar {
       * 
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Minimizing(quantity, 0.0, java.lang.Double.NaN)
+    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Minimizing(quantity, 0.0, java.lang.Double.NaN)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
+    def ing[DATUM](quantity: UserFcn[DATUM, Double]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Minimized]] in Scala pattern-matching. */
     def unapply(x: Minimized) = Some(x.min)
@@ -114,7 +114,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param min Lowest observed value.
     */
-  class Minimizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
+  class Minimizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
     type Type = Minimizing[DATUM]
     type Datum = DATUM
     def factory = Minimize
@@ -150,7 +150,7 @@ package histogrammar {
   object Maximize extends Factory {
     val name = "Maximize"
     val help = "Find the maximum value of a given quantity. If no data are observed, the result is NaN."
-    val detailedHelp = """Maximize(quantity: NumericalFcn[DATUM])"""
+    val detailedHelp = """Maximize(quantity: UserFcn[DATUM, Double])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Maximized]] from arguments (instead of JSON).
       * 
@@ -163,10 +163,10 @@ package histogrammar {
       * 
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Maximizing(quantity, 0.0, java.lang.Double.NaN)
+    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Maximizing(quantity, 0.0, java.lang.Double.NaN)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
+    def ing[DATUM](quantity: UserFcn[DATUM, Double]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Maximized]] in Scala pattern-matching. */
     def unapply(x: Maximized) = Some(x.max)
@@ -234,7 +234,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param max Highest observed value.
     */
-  class Maximizing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
+  class Maximizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
     type Type = Maximizing[DATUM]
     type Datum = DATUM
     def factory = Maximize

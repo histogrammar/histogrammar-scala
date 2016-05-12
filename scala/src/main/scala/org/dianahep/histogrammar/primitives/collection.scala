@@ -37,7 +37,7 @@ package histogrammar {
   object Cut extends Factory {
     val name = "Cut"
     val help = "Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting)."
-    val detailedHelp = """Cut(selection: Selection[DATUM], value: V)"""
+    val detailedHelp = """Cut(selection: UserFcn[DATUM, Double], value: V)"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Cutted]] from arguments (instead of JSON).
       * 
@@ -51,10 +51,10 @@ package histogrammar {
       * @param selection Boolean or non-negative function that cuts or weights entries.
       * @param value Aggregator to accumulate for values that pass `selection`.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V) = new Cutting[DATUM, V](0.0, selection, value)
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: UserFcn[DATUM, Double], value: V) = new Cutting[DATUM, V](0.0, selection, value)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: Selection[DATUM], value: V) = apply(selection, value)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: UserFcn[DATUM, Double], value: V) = apply(selection, value)
 
     /** Use [[org.dianahep.histogrammar.Cutted]] in Scala pattern-matching. */
     def unapply[V <: Container[V]](x: Cutted[V]) = Some(x.value)
@@ -119,7 +119,7 @@ package histogrammar {
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param value Aggregator to accumulate values that pass the cut.
     */
-  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: Selection[DATUM], val value: V) extends Container[Cutting[DATUM, V]] with AggregationOnData {
+  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: UserFcn[DATUM, Double], val value: V) extends Container[Cutting[DATUM, V]] with AggregationOnData {
     type Type = Cutting[DATUM, V]
     type Datum = DATUM
     def factory = Cut

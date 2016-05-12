@@ -29,7 +29,7 @@ package histogrammar {
   object Stack extends Factory {
     val name = "Stack"
     val help = "Accumulate a suite containers, filling all that are above a given cut on a given expression."
-    val detailedHelp = """Stack(value: => V, expression: NumericalFcn[DATUM], cuts: Double*)"""
+    val detailedHelp = """Stack(value: => V, expression: UserFcn[DATUM, Double], cuts: Double*)"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Stacked]] from arguments (instead of JSON).
       * 
@@ -44,11 +44,11 @@ package histogrammar {
       * @param expression Numerical expression whose value is compared with the given thresholds.
       * @param cuts Thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: UserFcn[DATUM, Double], cuts: Double*) =
       new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value.zero)): _*)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: NumericalFcn[DATUM], cuts: Double*) =
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: UserFcn[DATUM, Double], cuts: Double*) =
       apply(value, expression, cuts: _*)
 
     import KeySetComparisons._
@@ -138,7 +138,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val expression: NumericalFcn[DATUM], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
+  class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val expression: UserFcn[DATUM, Double], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData {
     type Type = Stacking[DATUM, V]
     type Datum = DATUM
     def factory = Stack

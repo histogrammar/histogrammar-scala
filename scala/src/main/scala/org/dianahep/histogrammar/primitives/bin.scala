@@ -27,7 +27,7 @@ package histogrammar {
   object Bin extends Factory {
     val name = "Bin"
     val help = "Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum."
-    val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: NumericalFcn[DATUM],
+    val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: UserFcn[DATUM, Double],
            value: => V = Count(), underflow: U = Count(), overflow: O = Count(), nanflow: N = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Binned]] from arguments (instead of JSON).
@@ -64,7 +64,7 @@ package histogrammar {
       (num: Int,
        low: Double,
        high: Double,
-       quantity: NumericalFcn[DATUM],
+       quantity: UserFcn[DATUM, Double],
        value: => V = Count(),
        underflow: U = Count(),
        overflow: O = Count(),
@@ -76,7 +76,7 @@ package histogrammar {
       (num: Int,
        low: Double,
        high: Double,
-       quantity: NumericalFcn[DATUM],
+       quantity: UserFcn[DATUM, Double],
        value: => V = Count(),
        underflow: U = Count(),
        overflow: O = Count(),
@@ -255,7 +255,7 @@ package histogrammar {
   class Binning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar](
     val low: Double,
     val high: Double,
-    val quantity: NumericalFcn[DATUM],
+    val quantity: UserFcn[DATUM, Double],
     var entries: Double,
     val values: Seq[V],
     val underflow: U,

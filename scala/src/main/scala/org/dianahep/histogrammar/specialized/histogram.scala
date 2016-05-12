@@ -30,8 +30,8 @@ package object histogram {
     (num: Int,
       low: Double,
       high: Double,
-      quantity: NumericalFcn[DATUM],
-      selection: Selection[DATUM] = unweighted[DATUM]) =
+      quantity: UserFcn[DATUM, Double],
+      selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
     Cut(selection, Bin(num, low, high, quantity))
 
   /** Type alias for sparsely binned histograms (filled). */
@@ -41,8 +41,8 @@ package object histogram {
   /** Convenience function for creating a sparsely binned histogram. */
   def SparselyHistogram[DATUM]
     (binWidth: Double,
-      quantity: NumericalFcn[DATUM],
-      selection: Selection[DATUM] = unweighted[DATUM],
+      quantity: UserFcn[DATUM, Double],
+      selection: UserFcn[DATUM, Double] = unweighted[DATUM],
       origin: Double = 0.0) =
     Cut(selection, SparselyBin(binWidth, quantity, origin = origin))
 

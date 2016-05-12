@@ -62,7 +62,7 @@ package histogrammar {
   object Quantile extends Factory {
     val name = "Quantile"
     val help = "Estimate a quantile, such as 0.5 for median, (0.25, 0.75) for quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles."
-    val detailedHelp = """Quantile(target: Double, quantity: NumericalFcn[DATUM])"""
+    val detailedHelp = """Quantile(target: Double, quantity: UserFcn[DATUM, Double])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 
@@ -77,11 +77,11 @@ package histogrammar {
       * @param target Intended quantile (e.g. 0.5 for median).
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](target: Double, quantity: NumericalFcn[DATUM]) =
+    def apply[DATUM](target: Double, quantity: UserFcn[DATUM, Double]) =
       new Quantiling[DATUM](target, quantity, 0.0, java.lang.Double.NaN, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](target: Double, quantity: NumericalFcn[DATUM]) = apply(target, quantity)
+    def ing[DATUM](target: Double, quantity: UserFcn[DATUM, Double]) = apply(target, quantity)
 
     /** Use [[org.dianahep.histogrammar.Quantiled]] in Scala pattern-matching. */
     def unapply(x: Quantiled) = Some(x.estimate)
@@ -164,7 +164,7 @@ package histogrammar {
     * 
     * @param quantity Numerical function to track.
     */
-  class Quantiling[DATUM] private[histogrammar](val target: Double, val quantity: NumericalFcn[DATUM], var entries: Double, var estimate: Double, var cumulativeDeviation: Double)
+  class Quantiling[DATUM] private[histogrammar](val target: Double, val quantity: UserFcn[DATUM, Double], var entries: Double, var estimate: Double, var cumulativeDeviation: Double)
       extends Container[Quantiling[DATUM]] with AggregationOnData {
 
     type Type = Quantiling[DATUM]

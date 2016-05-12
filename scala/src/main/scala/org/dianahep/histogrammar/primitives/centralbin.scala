@@ -29,7 +29,7 @@ package histogrammar {
   object CentrallyBin extends Factory {
     val name = "CentrallyBin"
     val help = "Split a quantity into bins defined by a set of bin centers, filling only one datum per bin with no overflows or underflows."
-    val detailedHelp = """CentrallyBin(bins: Iterable[Double], quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count())"""
+    val detailedHelp = """CentrallyBin(bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.CentrallyBinned]] from arguments (instead of JSON).
       * 
@@ -50,12 +50,12 @@ package histogrammar {
       * @param nanflow Container for data that result in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count()) =
+      (bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
       new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value.zero)): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (bins: Iterable[Double], quantity: NumericalFcn[DATUM], value: => V = Count(), nanflow: N = Count()) =
+      (bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
       apply(bins, quantity, value, nanflow)
 
     trait Methods[V <: Container[V]] extends CentralBinsDistribution[V] {
@@ -208,7 +208,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     */
   class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
-    (val quantity: NumericalFcn[DATUM], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
+    (val quantity: UserFcn[DATUM, Double], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
     extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinning[DATUM, V, N]

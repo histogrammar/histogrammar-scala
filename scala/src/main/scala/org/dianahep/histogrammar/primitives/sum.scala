@@ -27,7 +27,7 @@ package histogrammar {
   object Sum extends Factory {
     val name = "Sum"
     val help = "Accumulate the sum of a given quantity."
-    val detailedHelp = """Sum(quantity: NumericalFcn[DATUM])"""
+    val detailedHelp = """Sum(quantity: UserFcn[DATUM, Double])"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Summed]] from arguments (instead of JSON).
       * 
@@ -40,10 +40,10 @@ package histogrammar {
       * 
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](quantity: NumericalFcn[DATUM]) = new Summing[DATUM](quantity, 0.0, 0.0)
+    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Summing[DATUM](quantity, 0.0, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](quantity: NumericalFcn[DATUM]) = apply(quantity)
+    def ing[DATUM](quantity: UserFcn[DATUM, Double]) = apply(quantity)
 
     /** Use [[org.dianahep.histogrammar.Summed]] in Scala pattern-matching. */
     def unapply(x: Summed) = Some(x.sum)
@@ -103,7 +103,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summing[DATUM] private[histogrammar](val quantity: NumericalFcn[DATUM], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
+  class Summing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
     type Type = Summing[DATUM]
     type Datum = DATUM
     def factory = Sum

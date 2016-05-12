@@ -29,7 +29,7 @@ package histogrammar {
   object AdaptivelyBin extends Factory {
     val name = "AdaptivelyBin"
     val help = "Split a quanity into bins dynamically with a clustering algorithm, filling only one datum per bin with no overflows or underflows."
-    val detailedHelp = """AdaptivelyBin(quantity: NumericalFcn[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count())"""
+    val detailedHelp = """AdaptivelyBin(quantity: UserFcn[DATUM, Double], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.AdaptivelyBinned]] from arguments (instead of JSON).
       * 
@@ -54,12 +54,12 @@ package histogrammar {
       * @param nanflow Container for data that result in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (quantity: NumericalFcn[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
+      (quantity: UserFcn[DATUM, Double], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
       new AdaptivelyBinning[DATUM, V, N](quantity, value, mutable.Clustering1D[V](num, tailDetail, value, mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
-      (quantity: NumericalFcn[DATUM], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
+      (quantity: UserFcn[DATUM, Double], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count()) =
       apply(quantity, num, tailDetail, value, nanflow)
 
     import KeySetComparisons._
@@ -196,7 +196,7 @@ package histogrammar {
     * @param nanflow Container for data that result in `NaN`.
     */
   class AdaptivelyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
-    (val quantity: NumericalFcn[DATUM], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
+    (val quantity: UserFcn[DATUM, Double], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
       extends Container[AdaptivelyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
 
     type Type = AdaptivelyBinning[DATUM, V, N]

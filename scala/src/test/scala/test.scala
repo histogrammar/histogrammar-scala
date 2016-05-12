@@ -384,8 +384,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val leftAbsoluteErring = AbsoluteErr({x: Double => x})
-      val rightAbsoluteErring = AbsoluteErr({x: Double => x})
+      val leftAbsoluteErring = AbsoluteErr({x: Double => x} named "something")
+      val rightAbsoluteErring = AbsoluteErr({x: Double => x} named "something")
 
       left.foreach(leftAbsoluteErring.fill(_))
       right.foreach(rightAbsoluteErring.fill(_))

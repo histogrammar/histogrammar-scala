@@ -32,11 +32,12 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Sampled]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param limit Maximum number of data points in the sample.
       * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
       */
-    def ed[RANGE](entries: Double, limit: Int, values: (RANGE, Double)*) =
-      new Sampled(entries, limit, values: _*)
+    def ed[RANGE](entries: Double, quantityName: Option[String], limit: Int, values: (RANGE, Double)*) =
+      new Sampled(entries, quantityName, limit, values: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Sampling]].
       * 
@@ -56,12 +57,18 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "values")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "values").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val limit = get("limit") match {
@@ -96,7 +103,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".values")
         }
 
-        new Sampled[Any](entries, limit.toInt, values: _*)
+        new Sampled[Any](entries, quantityName, limit.toInt, values: _*)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -107,10 +114,11 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Sample]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param limit Maximum number of data points in the sample.
     * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
     */
-  class Sampled[RANGE] private[histogrammar](val entries: Double, val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] {
+  class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] {
     type Type = Sampled[RANGE]
     def factory = Sample
 
@@ -122,15 +130,17 @@ package histogrammar {
     /** Determine if the sample is empty. */
     def isEmpty = values.isEmpty
 
-    def zero = new Sampled(0.0, limit)
+    def zero = new Sampled(0.0, quantityName, limit)
     def +(that: Sampled[RANGE]) = {
       if (this.limit != that.limit)
         throw new ContainerException(s"cannot add Sampled because limit differs (${this.limit} vs ${that.limit})")
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Sampled because quantityName differs (${this.quantityName} vs ${that.quantityName})")
 
       val reservoir = new mutable.Reservoir[RANGE](limit, values: _*)
       that.values foreach {case (y, weight) => reservoir.update(y, weight)}
 
-      new Sampled[RANGE](this.entries + that.entries, this.limit, reservoir.values: _*)
+      new Sampled[RANGE](this.entries + that.entries, this.quantityName, this.limit, reservoir.values: _*)
     }
 
     def toJsonFragment = {
@@ -142,15 +152,16 @@ package histogrammar {
           case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
-        }): _*))
+        }): _*)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
     }
 
     override def toString() = s"""Sampled[${if (isEmpty) "empty" else values.head.toString + "..."}, size=${size}]"""
     override def equals(that: Any) = that match {
-      case that: Sampled[RANGE] => this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
+      case that: Sampled[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false
     }
-    override def hashCode() = (entries, limit, values).hashCode()
+    override def hashCode() = (entries, quantityName, limit, values).hashCode()
   }
 
   /** An accumulated sample of numbers, vectors of numbers, or strings.
@@ -182,6 +193,8 @@ package histogrammar {
     def +(that: Sampling[DATUM, RANGE]) = {
       if (this.limit != that.limit)
         throw new ContainerException(s"cannot add Sampling because limit differs (${this.limit} vs ${that.limit})")
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Sampling because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
 
       val newreservoir = new mutable.Reservoir[RANGE](this.limit, this.values: _*)
       that.values foreach {case (y, weight) => newreservoir.update(y, weight)}
@@ -206,7 +219,8 @@ package histogrammar {
           case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
-        }): _*))
+        }): _*)).
+        maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
     }
 
     override def toString() = s"""Sampling[${if (isEmpty) "empty" else reservoir.some.toString + "..."}, size=${size}]"""

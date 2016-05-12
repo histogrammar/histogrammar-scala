@@ -570,7 +570,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Sample/Sampled/Sampling
 
   "Sample/Sampled/Sampling" must "work" in {
-    val one = Sample(100, {x: Double => x})
+    val one = Sample(100, {x: Double => x} named "something")
     simple.foreach(one.fill(_))
     one.values.toSet should be (Set((3.4, 1.0), (2.2, 1.0), (-1.8, 1.0), (0.0, 1.0), (7.3, 1.0), (-4.7, 1.0), (1.6, 1.0), (0.0, 1.0), (-3.0, 1.0), (-1.7, 1.0)))
 

@@ -503,8 +503,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       for (i <- 0 to 10) {
         val (left, right) = simple.splitAt(i)
 
-        val leftQuantiling = Quantile(p, {x: Double => x})
-        val rightQuantiling = Quantile(p, {x: Double => x})
+        val leftQuantiling = Quantile(p, {x: Double => x} named "something")
+        val rightQuantiling = Quantile(p, {x: Double => x} named "something")
 
         left.foreach(leftQuantiling.fill(_))
         right.foreach(rightQuantiling.fill(_))

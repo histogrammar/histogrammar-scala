@@ -67,10 +67,11 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param target Intended quantile (e.g. 0.5 for median).
       * @param estimate Estimated value of the quantile.
       */
-    def ed(entries: Double, target: Double, estimate: Double) = new Quantiled(entries, target, estimate)
+    def ed(entries: Double, quantityName: Option[String], target: Double, estimate: Double) = new Quantiled(entries, quantityName, target, estimate)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Quantiling]].
       * 
@@ -90,12 +91,18 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "target", "estimate")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "target", "estimate").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val target = get("target") match {
@@ -108,7 +115,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".estimate")
         }
 
-        new Quantiled(entries, target, estimate)
+        new Quantiled(entries, quantityName, target, estimate)
     }
 
     private[histogrammar] def estimateCombination(xestimate: Double, xentries: Double, yestimate: Double, yentries: Double) =
@@ -126,9 +133,12 @@ package histogrammar {
     * 
     * Use the factory [[org.dianahep.histogrammar.Quantile]] to construct an instance.
     * 
-    * @param clustering Performs the adative binning.
+    * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
+    * @param target Intended quantile (e.g. 0.5 for median).
+    * @param estimate Estimated value of the quantile.
     */
-  class Quantiled private[histogrammar](val entries: Double, val target: Double, val estimate: Double) extends Container[Quantiled] {
+  class Quantiled private[histogrammar](val entries: Double, val quantityName: Option[String], val target: Double, val estimate: Double) extends Container[Quantiled] {
 
     type Type = Quantiled
     def factory = Quantile
@@ -138,24 +148,26 @@ package histogrammar {
     if (target < 0.0  ||  target > 1.0)
       throw new ContainerException(s"target ($target) must be between 0 and 1, inclusive")
 
-    def zero = new Quantiled(0.0, target, java.lang.Double.NaN)
-    def +(that: Quantiled) =
-      if (this.target == that.target)
-        new Quantiled(this.entries + that.entries, target, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries))
-      else
+    def zero = new Quantiled(0.0, quantityName, target, java.lang.Double.NaN)
+    def +(that: Quantiled) = {
+      if (this.target != that.target)
         throw new ContainerException(s"cannot add Quantiled because targets do not match (${this.target} vs ${that.target})")
-
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Quantiled because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      new Quantiled(this.entries + that.entries, this.quantityName, target, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries))
+    }
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "target" -> JsonFloat(target),
-      "estimate" -> JsonFloat(estimate))
+      "estimate" -> JsonFloat(estimate)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"""Quantiled[$target, estimate=$estimate]"""
     override def equals(that: Any) = that match {
-      case that: Quantiled => this.entries == that.entries  &&  this.target == that.target  &&  this.estimate == that.estimate
+      case that: Quantiled => this.entries == that.entries  &&  this.quantityName == that.quantityName  &&  this.target == that.target  &&  this.estimate == that.estimate
       case _ => false
     }
-    override def hashCode() = (entries, target, estimate).hashCode()
+    override def hashCode() = (entries, quantityName, target, estimate).hashCode()
   }
 
   /** Accumulating an adaptive histogram, used to compute approximate quantiles, such as the median.
@@ -177,11 +189,13 @@ package histogrammar {
       throw new ContainerException(s"target ($target) must be between 0 and 1, inclusive")
 
     def zero = new Quantiling[DATUM](target, quantity, 0.0, java.lang.Double.NaN, 0.0)
-    def +(that: Quantiling[DATUM]) =
-      if (this.target == that.target)
-        new Quantiling[DATUM](target, quantity, this.entries + that.entries, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries), this.cumulativeDeviation + that.cumulativeDeviation)
-      else
+    def +(that: Quantiling[DATUM]) = {
+      if (this.target != that.target)
         throw new ContainerException(s"cannot add Quantiling because targets do not match (${this.target} vs ${that.target})")
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Quantiling because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      new Quantiling[DATUM](target, quantity, this.entries + that.entries, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries), this.cumulativeDeviation + that.cumulativeDeviation)
+    }
 
     def fill[SUB <: DATUM](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -206,7 +220,8 @@ package histogrammar {
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "target" -> JsonFloat(target),
-      "estimate" -> JsonFloat(estimate))
+      "estimate" -> JsonFloat(estimate)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"""Quantiling[$target, estimate=$estimate]"""
     override def equals(that: Any) = that match {

@@ -32,10 +32,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.AbsoluteErred]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
       * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
+      * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
       */
-    def ed(entries: Double, mae: Double, quantityName: Option[String]) = new AbsoluteErred(entries, mae, quantityName)
+    def ed(entries: Double, quantityName: Option[String], mae: Double) = new AbsoluteErred(entries, quantityName, mae)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.AbsoluteErring]].
       * 
@@ -61,18 +61,18 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
-        val mae = get("mae") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".mae")
-        }
-
         val quantityName = get.getOrElse("name", JsonNull) match {
           case JsonString(x) => Some(x)
           case JsonNull => None
           case x => throw new JsonFormatException(x, name + ".name")
         }
 
-        new AbsoluteErred(entries, mae, quantityName)
+        val mae = get("mae") match {
+          case JsonNumber(x) => x
+          case x => throw new JsonFormatException(x, name + ".mae")
+        }
+
+        new AbsoluteErred(entries, quantityName, mae)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -86,23 +86,23 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.AbsoluteErr]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
-    * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
+    * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
-  class AbsoluteErred private[histogrammar](val entries: Double, val mae: Double, val quantityName: Option[String]) extends Container[AbsoluteErred] {
+  class AbsoluteErred private[histogrammar](val entries: Double, val quantityName: Option[String], val mae: Double) extends Container[AbsoluteErred] {
     type Type = AbsoluteErred
     def factory = AbsoluteErr
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new AbsoluteErred(0.0, 0.0, this.quantityName)
+    def zero = new AbsoluteErred(0.0, this.quantityName, 0.0)
     def +(that: AbsoluteErred) =
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add AbsoluteErred because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else {
         val (newentries, newmae) = AbsoluteErr.plus(this.entries, this.mae, that.entries, that.mae)
-        new AbsoluteErred(newentries, newmae, this.quantityName)
+        new AbsoluteErred(newentries, this.quantityName, newmae)
       }
 
     def toJsonFragment = JsonObject(
@@ -112,10 +112,10 @@ package histogrammar {
 
     override def toString() = s"AbsoluteErred[$mae]"
     override def equals(that: Any) = that match {
-      case that: AbsoluteErred => this.entries === that.entries  &&  this.mae === that.mae  &&  this.quantityName == that.quantityName
+      case that: AbsoluteErred => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.mae === that.mae
       case _ => false
     }
-    override def hashCode() = (entries, mae, quantityName).hashCode
+    override def hashCode() = (entries, quantityName, mae).hashCode
   }
 
   /** Accumulating a weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.

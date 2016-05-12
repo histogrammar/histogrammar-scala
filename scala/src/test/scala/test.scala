@@ -196,8 +196,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val leftAveraging = Average({x: Double => x})
-      val rightAveraging = Average({x: Double => x})
+      val leftAveraging = Average({x: Double => x} named "something")
+      val rightAveraging = Average({x: Double => x} named "something")
 
       left.foreach(leftAveraging.fill(_))
       right.foreach(rightAveraging.fill(_))
@@ -537,7 +537,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
 
   "Bag/Bagged/Bagging" must "work" in {
-    val one = Bag({x: Double => x})
+    val one = Bag({x: Double => x} named "something")
     simple.foreach(one.fill(_))
     one.values should be (Map(7.3 -> 1.0, 2.2 -> 1.0, -1.7 -> 1.0, -4.7 -> 1.0, 0.0 -> 2.0, -1.8 -> 1.0, -3.0 -> 1.0, 1.6 -> 1.0, 3.4 -> 1.0))
 

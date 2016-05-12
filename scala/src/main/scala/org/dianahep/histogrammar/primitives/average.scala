@@ -32,9 +32,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Averaged]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param mean Weighted mean of the quantity.
       */
-    def ed(entries: Double, mean: Double) = new Averaged(entries, mean)
+    def ed(entries: Double, quantityName: Option[String], mean: Double) = new Averaged(entries, quantityName, mean)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Averaging]].
       * 
@@ -52,7 +53,7 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -60,12 +61,18 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
+        }
+
         val mean = get("mean") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".mean")
         }
 
-        new Averaged(entries, mean)
+        new Averaged(entries, quantityName, mean)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -79,29 +86,36 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Average]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param mean Weighted mean of the quantity.
     */
-  class Averaged private[histogrammar](val entries: Double, val mean: Double) extends Container[Averaged] {
+  class Averaged private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double) extends Container[Averaged] {
     type Type = Averaged
     def factory = Average
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Averaged(0.0, 0.0)
-    def +(that: Averaged) = {
-      val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
-      new Averaged(newentries, newmean)
-    }
+    def zero = new Averaged(0.0, quantityName, 0.0)
+    def +(that: Averaged) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Averaged because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      else {
+        val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
+        new Averaged(newentries, this.quantityName, newmean)
+      }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "mean" -> JsonFloat(mean)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"Averaged[$mean]"
     override def equals(that: Any) = that match {
-      case that: Averaged => this.entries === that.entries  &&  this.mean === that.mean
+      case that: Averaged => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.mean === that.mean
       case _ => false
     }
-    override def hashCode() = (entries, mean).hashCode
+    override def hashCode() = (entries, quantityName, mean).hashCode
   }
 
   /** Accumulating a weighted mean of a given quantity.
@@ -122,10 +136,13 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
     def zero = new Averaging[DATUM](quantity, 0.0, 0.0)
-    def +(that: Averaging[DATUM]) = {
-      val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
-      new Averaging(this.quantity, newentries, newmean)
-    }
+    def +(that: Averaging[DATUM]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Averaging because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else {
+        val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
+        new Averaging(this.quantity, newentries, newmean)
+      }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -138,7 +155,10 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "mean" -> JsonFloat(mean)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"Averaging[$mean]"
     override def equals(that: Any) = that match {

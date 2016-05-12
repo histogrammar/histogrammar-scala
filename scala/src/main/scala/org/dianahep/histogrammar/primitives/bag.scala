@@ -32,10 +32,11 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param values Distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped.
       */
-    def ed[RANGE](entries: Double, values: Map[RANGE, Double]) =
-      new Bagged[RANGE](entries, values)
+    def ed[RANGE](entries: Double, quantityName: Option[String], values: Map[RANGE, Double]) =
+      new Bagged[RANGE](entries, quantityName, values)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Bagging]].
       * 
@@ -54,12 +55,18 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "values")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "values").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val values = get("values") match {
@@ -89,7 +96,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".values")
         }
 
-        new Bagged[Any](entries, values)
+        new Bagged[Any](entries, quantityName, values)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -112,16 +119,20 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Bag]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param values Distinct values and the (weighted) number of times they were observed.
     */
-  class Bagged[RANGE] private[histogrammar](val entries: Double, val values: Map[RANGE, Double]) extends Container[Bagged[RANGE]] {
+  class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[RANGE, Double]) extends Container[Bagged[RANGE]] {
     type Type = Bagged[RANGE]
     def factory = Bag
 
-    def zero = new Bagged(0.0, Map[RANGE, Double]())
-    def +(that: Bagged[RANGE]) = {
-      val newentries = this.entries + that.entries
-      val newvalues = {
+    def zero = new Bagged(0.0, this.quantityName, Map[RANGE, Double]())
+    def +(that: Bagged[RANGE]) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Bagged because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      else {
+        val newentries = this.entries + that.entries
+        val newvalues = {
           val out = scala.collection.mutable.Map(this.values.toSeq: _*)
           that.values foreach {case (k, v) =>
             if (out contains k)
@@ -132,8 +143,8 @@ package histogrammar {
           out.toMap
         }
 
-      new Bagged[RANGE](newentries, newvalues)
-    }
+        new Bagged[RANGE](newentries, this.quantityName, newvalues)
+      }
 
     def toJsonFragment = {
       implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
@@ -143,15 +154,15 @@ package histogrammar {
           case (v: String, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonString(v))
           case (v: Double, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
-        }): _*))
+        }): _*)).maybe(JsonString("name") -> quantityName.map(JsonString(_)))
     }
 
     override def toString() = s"""Bagged[${if (values.isEmpty) "size=0" else values.head.toString + "..., size=" + values.size.toString}]"""
     override def equals(that: Any) = that match {
-      case that: Bagged[RANGE] => this.entries === that.entries  &&  this.values == that.values
+      case that: Bagged[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values
       case _ => false
     }
-    override def hashCode() = (entries, values).hashCode()
+    override def hashCode() = (entries, quantityName, values).hashCode()
   }
 
   /** An accumulated bag of numbers, vectors of numbers, or strings.
@@ -168,21 +179,24 @@ package histogrammar {
     def factory = Bag
 
     def zero = new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double]())
-    def +(that: Bagging[DATUM, RANGE]) = {
-      val newentries = this.entries + that.entries
-      val newvalues = {
-        val out = scala.collection.mutable.Map(this.values.toSeq: _*)
-        that.values foreach {case (k, v) =>
-          if (out contains k)
-            out(k) += v
-          else
-            out(k) = v
+    def +(that: Bagging[DATUM, RANGE]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Bagging because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else {
+        val newentries = this.entries + that.entries
+        val newvalues = {
+          val out = scala.collection.mutable.Map(this.values.toSeq: _*)
+          that.values foreach {case (k, v) =>
+            if (out contains k)
+              out(k) += v
+            else
+              out(k) = v
+          }
+          out
         }
-        out
-      }
 
-      new Bagging[DATUM, RANGE](quantity, newentries, newvalues)
-    }
+        new Bagging[DATUM, RANGE](quantity, newentries, newvalues)
+      }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -203,7 +217,7 @@ package histogrammar {
           case (v: String, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonString(v))
           case (v: Double, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
-        }): _*))
+        }): _*)).maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
     }
 
     override def toString() = s"""Bagging[${if (values.isEmpty) "size=0" else values.head.toString + "..., size=" + values.size.toString}]"""

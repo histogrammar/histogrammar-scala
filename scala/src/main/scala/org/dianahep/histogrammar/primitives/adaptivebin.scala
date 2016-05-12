@@ -34,6 +34,7 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.AdaptivelyBinned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param num Maximum number of bins (used as a constraint when merging).
       * @param tailDetail Between 0.0 and 1.0 inclusive: use 0.0 to focus on the bulk of the distribution and 1.0 to focus on the tails; see [[org.dianahep.histogrammar.util.mutable.Clustering1D]] for details.
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
@@ -41,10 +42,9 @@ package histogrammar {
       * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
       * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       * @param nanflow Container for data that resulted in `NaN`.
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       */
-    def ed[V <: Container[V], N <: Container[N]](entries: Double, num: Int, tailDetail: Double, contentType: String, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N, quantityName: Option[String]) =
-      new AdaptivelyBinned[V, N](contentType, new mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.MetricSortedMap[Double, V](bins.toSeq: _*), min, max, entries), nanflow, quantityName)
+    def ed[V <: Container[V], N <: Container[N]](entries: Double, quantityName: Option[String], num: Int, tailDetail: Double, contentType: String, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
+      new AdaptivelyBinned[V, N](contentType, new mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.MetricSortedMap[Double, V](bins.toSeq: _*), min, max, entries), quantityName, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.AdaptivelyBinning]].
       * 
@@ -71,6 +71,12 @@ package histogrammar {
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val num = get("num") match {
@@ -123,13 +129,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".tailDetail")
         }
 
-        val quantityName = get.getOrElse("name", JsonNull) match {
-          case JsonString(x) => Some(x)
-          case JsonNull => None
-          case x => throw new JsonFormatException(x, name + ".name")
-        }
-
-        new AdaptivelyBinned[Container[_], Container[_]](contentType, new mutable.Clustering1D[Container[_]](num.toInt, tailDetail, null.asInstanceOf[Container[_]], bins.asInstanceOf[mutable.MetricSortedMap[Double, Container[_]]], min, max, entries), nanflow, quantityName)
+        new AdaptivelyBinned[Container[_], Container[_]](contentType, new mutable.Clustering1D[Container[_]](num.toInt, tailDetail, null.asInstanceOf[Container[_]], bins.asInstanceOf[mutable.MetricSortedMap[Double, Container[_]]], min, max, entries), quantityName, nanflow)
     }
   }
 
@@ -139,10 +139,10 @@ package histogrammar {
     * 
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param clustering Performs the adative binning.
-    * @param nanflow Container for data that resulted in `NaN`.
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
+    * @param nanflow Container for data that resulted in `NaN`.
     */
-  class AdaptivelyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](contentType: String, clustering: mutable.Clustering1D[V], val nanflow: N, val quantityName: Option[String])
+  class AdaptivelyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](contentType: String, clustering: mutable.Clustering1D[V], val quantityName: Option[String], val nanflow: N)
     extends Container[AdaptivelyBinned[V, N]] with CentrallyBin.Methods[V] {
 
     type Type = AdaptivelyBinned[V, N]
@@ -165,7 +165,7 @@ package histogrammar {
     def max = clustering.max
     private[histogrammar] def getClustering = clustering
 
-    def zero = new AdaptivelyBinned[V, N](contentType, mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow.zero, quantityName)
+    def zero = new AdaptivelyBinned[V, N](contentType, mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), quantityName, nanflow.zero)
     def +(that: AdaptivelyBinned[V, N]) = {
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add AdaptivelyBinned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
@@ -174,7 +174,7 @@ package histogrammar {
       if (this.tailDetail != that.tailDetail)
         throw new ContainerException(s"cannot add AdaptivelyBinned because tailDetail parameter is different (${this.tailDetail} vs ${that.tailDetail})")
 
-      new AdaptivelyBinned[V, N](contentType, clustering.merge(that.getClustering), this.nanflow + that.nanflow, this.quantityName)
+      new AdaptivelyBinned[V, N](contentType, clustering.merge(that.getClustering), this.quantityName, this.nanflow + that.nanflow)
     }
 
     def toJsonFragment = JsonObject(
@@ -191,10 +191,10 @@ package histogrammar {
 
     override def toString() = s"""AdaptivelyBinned[bins=[${if (bins.isEmpty) contentType else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
-      case that: AdaptivelyBinned[V, N] => this.clustering == that.getClustering  &&  this.nanflow == that.nanflow  &&  this.quantityName == that.quantityName
+      case that: AdaptivelyBinned[V, N] => this.clustering == that.getClustering  &&  this.quantityName == that.quantityName  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (clustering, nanflow, quantityName).hashCode()
+    override def hashCode() = (clustering, quantityName, nanflow).hashCode()
   }
 
   /** Accumulating a quantity by splitting it dynamically into bins with a clustering algorithm, filling only one datum per bin with no overflows or underflows.

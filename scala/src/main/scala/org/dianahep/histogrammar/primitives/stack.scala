@@ -34,9 +34,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Stacked]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param expressionName Optional name given to the expression function, passed for bookkeeping.
       * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
       */
-    def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, cuts: _*)
+    def ed[V <: Container[V]](entries: Double, expressionName: Option[String], cuts: (Double, V)*) = new Stacked(entries, expressionName, cuts: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Stacking]].
       * 
@@ -44,21 +45,27 @@ package histogrammar {
       * @param expression Numerical expression whose value is compared with the given thresholds.
       * @param cuts Thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: UserFcn[DATUM, Double], cuts: Double*) =
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](expression: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
       new Stacking(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value.zero)): _*)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](value: => V, expression: UserFcn[DATUM, Double], cuts: Double*) =
-      apply(value, expression, cuts: _*)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](expression: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
+      apply(expression, value, cuts: _*)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val expressionName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val factory = get("type") match {
@@ -68,7 +75,7 @@ package histogrammar {
 
         get("data") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
-            new Stacked[Container[_]](entries, elements.zipWithIndex map {case (element, i) =>
+            new Stacked[Container[_]](entries, expressionName, elements.zipWithIndex map {case (element, i) =>
               element match {
                 case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
                   val elementGet = elementPairs.toMap
@@ -94,9 +101,10 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Stack]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param expressionName Optional name given to the expression function, passed for bookkeeping.
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Stacked[V <: Container[V]] private[histogrammar](val entries: Double, val cuts: (Double, V)*) extends Container[Stacked[V]] {
+  class Stacked[V <: Container[V]] private[histogrammar](val entries: Double, val expressionName: Option[String], val cuts: (Double, V)*) extends Container[Stacked[V]] {
     type Type = Stacked[V]
     def factory = Stack
 
@@ -108,26 +116,30 @@ package histogrammar {
     def thresholds = cuts.map(_._1)
     def values = cuts.map(_._2)
 
-    def zero = new Stacked[V](0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
-    def +(that: Stacked[V]) =
+    def zero = new Stacked[V](0.0, expressionName, cuts map {case (c, v) => (c, v.zero)}: _*)
+    def +(that: Stacked[V]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add Stacked because cut thresholds differ")
-      else
-        new Stacked(
-          this.entries + that.entries,
-          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
+      if (this.expressionName != that.expressionName)
+        throw new ContainerException(s"cannot add Stacked because expressionName differs (${this.expressionName} vs ${that.expressionName})")
+      new Stacked(
+        this.entries + that.entries,
+        this.expressionName,
+        this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
+    }
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
-      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*)).
+      maybe(JsonString("name") -> expressionName.map(JsonString(_)))
 
     override def toString() = s"""Stacked[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
-      case that: Stacked[V] => this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
+      case that: Stacked[V] => this.entries === that.entries  &&  this.expressionName == that.expressionName  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
-    override def hashCode() = (entries, cuts).hashCode()
+    override def hashCode() = (entries, expressionName, cuts).hashCode()
   }
 
   /** Accumulating a suite of containers, each collecting data above a given cut on a given expression.
@@ -152,14 +164,16 @@ package histogrammar {
     def values = cuts.map(_._2)
 
     def zero = new Stacking[DATUM, V](expression, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
-    def +(that: Stacking[DATUM, V]) =
+    def +(that: Stacking[DATUM, V]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add Stacking because cut thresholds differ")
-      else
+      if (this.expression.name != that.expression.name)
+        throw new ContainerException(s"cannot add Stacking because quantity name differs (${this.expression.name} vs ${that.expression.name})")
         new Stacking(
           this.expression,
           this.entries + that.entries,
           this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
+    }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -175,7 +189,8 @@ package histogrammar {
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
-      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*))
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*)).
+      maybe(JsonString("name") -> expression.name.map(JsonString(_)))
 
     override def toString() = s"""Stacking[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {

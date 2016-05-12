@@ -722,7 +722,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
 
   "Stack/Stacked/Stacking" must "work with Count/Counting/Counted" in {
-    val stacking = Stack(Count(), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    val stacking = Stack({x: Double => x} named "something", Count(), 0.0, 2.0, 4.0, 6.0, 8.0)
     simple.foreach(stacking.fill(_))
 
     stacking.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 10.0, 0.0 -> 6.0, 2.0 -> 3.0, 4.0 -> 1.0, 6.0 -> 1.0, 8.0 -> 0.0))
@@ -731,7 +731,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val stacking = Stack(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    val stacking = Stack({x: Double => x}, Sum({x: Double => x}), 0.0, 2.0, 4.0, 6.0, 8.0)
     simple.foreach(stacking.fill(_))
 
     stacking.cuts(1)._2.sum should be (14.5 +- 1e-12)
@@ -742,7 +742,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
 
   "Partition/Partitioned/Partitioning" must "work with Count/Counting/Counted" in {
-    val partitioning = Partition(Count(), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    val partitioning = Partition({x: Double => x} named "something", Count(), 0.0, 2.0, 4.0, 6.0, 8.0)
     simple.foreach(partitioning.fill(_))
     
     partitioning.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 4.0, 0.0 -> 3.0, 2.0 -> 2.0, 4.0 -> 0.0, 6.0 -> 1.0, 8.0 -> 0.0))
@@ -751,7 +751,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val partitioning = Partition(Sum({x: Double => x}), {x: Double => x}, 0.0, 2.0, 4.0, 6.0, 8.0)
+    val partitioning = Partition({x: Double => x}, Sum({x: Double => x}), 0.0, 2.0, 4.0, 6.0, 8.0)
     simple.foreach(partitioning.fill(_))
 
     partitioning.cuts(0)._2.sum should be (-11.2 +- 1e-12)

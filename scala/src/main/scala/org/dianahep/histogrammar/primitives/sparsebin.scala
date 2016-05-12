@@ -39,13 +39,14 @@ package histogrammar {
       * 
       * @param binWidth Width of the equally sized bins.
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
       * @param bins Centers and values of each bin.
       * @param nanflow Container for data that resulted in `NaN`.
       * @param origin Left edge of the bin whose index is zero.
       */
-    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
-      new SparselyBinned[V, N](binWidth, entries, contentType, bins, nanflow, origin)
+    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, quantityName: Option[String], contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
+      new SparselyBinned[V, N](binWidth, entries, quantityName, contentType, bins, nanflow, origin)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.SparselyBinning]].
       * 
@@ -106,12 +107,18 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("binWidth", "entries", "bins:type", "bins", "nanflow:type", "nanflow", "origin")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("binWidth", "entries", "bins:type", "bins", "nanflow:type", "nanflow", "origin").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val binWidth = get("binWidth") match {
@@ -143,7 +150,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".origin")
         }
 
-        new SparselyBinned[Container[_], Container[_]](binWidth, entries, contentType, bins.asInstanceOf[SortedMap[Long, Container[_]]], nanflow, origin)
+        new SparselyBinned[Container[_], Container[_]](binWidth, entries, quantityName, contentType, bins.asInstanceOf[SortedMap[Long, Container[_]]], nanflow, origin)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -155,12 +162,13 @@ package histogrammar {
     * 
     * @param binWidth Width of the equally sized bins.
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param bins Centers and values of each bin.
     * @param nanflow Container for data that resulted in `NaN`.
     * @param origin Left edge of the bin whose index is zero.
     */
-  class SparselyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val binWidth: Double, val entries: Double, contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods {
+  class SparselyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
     def factory = SparselyBin
 
@@ -169,8 +177,10 @@ package histogrammar {
     if (binWidth <= 0.0)
       throw new ContainerException(s"binWidth ($binWidth) must be greater than zero")
 
-    def zero = new SparselyBinned[V, N](binWidth, 0.0, contentType, SortedMap(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
+    def zero = new SparselyBinned[V, N](binWidth, 0.0, quantityName, contentType, SortedMap(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
     def +(that: SparselyBinned[V, N]) = {
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add SparselyBinned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.binWidth != that.binWidth)
         throw new ContainerException(s"cannot add SparselyBinned because binWidth differs (${this.binWidth} vs ${that.binWidth})")
       if (this.origin != that.origin)
@@ -186,7 +196,7 @@ package histogrammar {
           }
         }: _*)
 
-      new SparselyBinned[V, N](binWidth, this.entries + that.entries, contentType, newbins, this.nanflow + that.nanflow, origin)
+      new SparselyBinned[V, N](binWidth, this.entries + that.entries, quantityName, contentType, newbins, this.nanflow + that.nanflow, origin)
     }
 
     def numFilled = bins.size
@@ -208,14 +218,15 @@ package histogrammar {
       "bins" -> JsonObject(bins.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment)}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment,
-      "origin" -> JsonFloat(origin))
+      "origin" -> JsonFloat(origin)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"""SparselyBinned[binWidth=$binWidth, bins=[${if (bins.isEmpty) contentType else bins.head.toString}..., size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {
-      case that: SparselyBinned[V, N] => this.binWidth === that.binWidth  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
+      case that: SparselyBinned[V, N] => this.binWidth === that.binWidth  &&  this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false
     }
-    override def hashCode() = (binWidth, entries, bins, nanflow, origin).hashCode
+    override def hashCode() = (binWidth, entries, quantityName, bins, nanflow, origin).hashCode
   }
 
   /** Accumulating a quantity by splitting it into equally spaced bins, filling only one bin per datum and creating new bins as necessary.
@@ -250,6 +261,8 @@ package histogrammar {
 
     def zero = new SparselyBinning[DATUM, V, N](binWidth, quantity, 0.0, value, mutable.Map(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
     def +(that: SparselyBinning[DATUM, V, N]) = {
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add SparselyBinning because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.binWidth != that.binWidth)
         throw new ContainerException(s"cannot add SparselyBinning because binWidth differs (${this.binWidth} vs ${that.binWidth})")
       if (this.origin != that.origin)
@@ -303,7 +316,8 @@ package histogrammar {
       "bins" -> JsonObject(bins.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment)}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment,
-      "origin" -> JsonFloat(origin))
+      "origin" -> JsonFloat(origin)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"""SparselyBinning[binWidth=$binWidth, bins=[${if (bins.isEmpty) value.factory.name else bins.head.toString}, size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {

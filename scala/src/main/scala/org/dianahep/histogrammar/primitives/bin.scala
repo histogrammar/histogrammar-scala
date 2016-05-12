@@ -35,6 +35,7 @@ package histogrammar {
       * @param low Minimum-value edge of the first bin.
       * @param high Maximum-value edge of the last bin.
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param values Containers for data sent to each bin.
       * @param underflow Container for data below the first bin.
       * @param overflow Container for data above the last bin.
@@ -44,10 +45,11 @@ package histogrammar {
       (low: Double,
        high: Double,
        entries: Double,
+       quantityName: Option[String],
        values: Seq[V],
        underflow: U,
        overflow: O,
-       nanflow: N) = new Binned[V, U, O, N](low, high, entries, values, underflow, overflow, nanflow)
+       nanflow: N) = new Binned[V, U, O, N](low, high, entries, quantityName, values, underflow, overflow, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Binning]].
       * 
@@ -113,7 +115,7 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow").maybe("name")) =>
         val get = pairs.toMap
 
         val low = get("low") match {
@@ -129,6 +131,12 @@ package histogrammar {
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val valuesFactory = get("values:type") match {
@@ -158,7 +166,7 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
-        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, entries, values, underflow, overflow, nanflow)
+        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, entries, quantityName, values, underflow, overflow, nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -171,6 +179,7 @@ package histogrammar {
     * @param low Minimum-value edge of the first bin.
     * @param high Maximum-value edge of the last bin.
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param values Containers for data sent to each bin.
     * @param underflow Container for data below the first bin.
     * @param overflow Container for data above the last bin.
@@ -180,6 +189,7 @@ package histogrammar {
     val low: Double,
     val high: Double,
     val entries: Double,
+    val quantityName: Option[String],
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
@@ -199,8 +209,10 @@ package histogrammar {
     /** Extract the container at a given index. */
     def at(index: Int) = values(index)
 
-    def zero = new Binned[V, U, O, N](low, high, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
+    def zero = new Binned[V, U, O, N](low, high, 0.0, quantityName, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binned[V, U, O, N]): Binned[V, U, O, N] = {
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Binned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
       if (this.high != that.high)
@@ -212,6 +224,7 @@ package histogrammar {
         low,
         high,
         this.entries + that.entries,
+        this.quantityName,
         this.values zip that.values map {case (me, you) => me + you},
         this.underflow + that.underflow,
         this.overflow + that.overflow,
@@ -229,14 +242,15 @@ package histogrammar {
       "overflow:type" -> JsonString(overflow.factory.name),
       "overflow" -> overflow.toJsonFragment,
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment)
+      "nanflow" -> nanflow.toJsonFragment).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
-      case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
+      case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (low, high, entries, values, underflow, overflow, nanflow).hashCode
+    override def hashCode() = (low, high, entries, quantityName, values, underflow, overflow, nanflow).hashCode
   }
 
   /** Accumulating a quantity by splitting it into equally spaced bins between specified limits and filling only one bin per datum.
@@ -279,6 +293,8 @@ package histogrammar {
 
     def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Binning because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.low != that.low)
         throw new ContainerException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")
       if (this.high != that.high)
@@ -324,7 +340,8 @@ package histogrammar {
       "overflow:type" -> JsonString(overflow.factory.name),
       "overflow" -> overflow.toJsonFragment,
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment)
+      "nanflow" -> nanflow.toJsonFragment).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {

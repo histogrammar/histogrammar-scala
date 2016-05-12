@@ -601,7 +601,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
   "Bin/Binning/Binned" must "work with Count/Counting/Counted" in {
-    val one = Bin(5, -3.0, 7.0, {x: Double => x})
+    val one = Bin(5, -3.0, 7.0, {x: Double => x} named "something")
     simple.foreach(one.fill(_))
     one.values.map(_.entries).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
     one.underflow.entries should be (1.0)
@@ -641,7 +641,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
 
   "SparselyBin/SparselyBinned/SparselyBinning" must "work with Count/Counting/Counted" in {
-    val one = SparselyBin(1.0, {x: Double => x})
+    val one = SparselyBin(1.0, {x: Double => x} named "something")
     simple.foreach(one.fill(_))
     Factory.fromJson(one.toJson).as[SparselyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List(-5 -> 1.0, -3 -> 1.0, -2 -> 2.0, 0 -> 2.0, 1 -> 1.0, 2 -> 1.0, 3 -> 1.0, 7 -> 1.0))
 

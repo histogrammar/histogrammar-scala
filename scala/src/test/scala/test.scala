@@ -678,7 +678,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning
 
   "AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning" must "work with Count/Counting/Counted" in {
-    val one = AdaptivelyBin({x: Double => x}, num = 5)
+    val one = AdaptivelyBin({x: Double => x} named "something", num = 5)
 
     simple.foreach(one.fill(_))
 

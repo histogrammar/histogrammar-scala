@@ -45,10 +45,10 @@ package util {
       }
     }
 
-    implicit class KeySetFromSet(s: Set[String]) extends KeySet {
-      def required = s
+    implicit class KeySetFromSet(test: Set[String]) extends KeySet {
+      def required = test
       def optional = Set[String]()
-      def has(that: KeySet) = (that.required subsetOf s)  &&  (s subsetOf (that.required ++ that.optional))
+      def has(that: KeySet) = (that.required subsetOf test)  &&  (test subsetOf (that.required ++ that.optional))
     }
   }
 

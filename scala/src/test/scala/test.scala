@@ -125,8 +125,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val leftSumming = Sum({x: Double => x})
-      val rightSumming = Sum({x: Double => x})
+      val leftSumming = Sum({x: Double => x} named "something")
+      val rightSumming = Sum({x: Double => x} named "something")
 
       left.foreach(leftSumming.fill(_))
       right.foreach(rightSumming.fill(_))

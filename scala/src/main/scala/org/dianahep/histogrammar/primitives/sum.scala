@@ -32,9 +32,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Summed]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param sum The sum of weight times quantity over all entries.
       */
-    def ed(entries: Double, sum: Double) = new Summed(entries, sum)
+    def ed(entries: Double, quantityName: Option[String], sum: Double) = new Summed(entries, quantityName, sum)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Summing]].
       * 
@@ -52,7 +53,7 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sum")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sum").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -60,12 +61,18 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
+        }
+
         val sum = get("sum") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".sum")
         }
 
-        new Summed(entries, sum)
+        new Summed(entries, quantityName, sum)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -76,23 +83,31 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Sum]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summed private[histogrammar](val entries: Double, val sum: Double) extends Container[Summed] {
+  class Summed private[histogrammar](val entries: Double, val quantityName: Option[String], val sum: Double) extends Container[Summed] {
     type Type = Summed
     def factory = Sum
 
-    def zero = new Summed(0.0, 0.0)
-    def +(that: Summed) = new Summed(this.entries + that.entries, this.sum + that.sum)
+    def zero = new Summed(0.0, quantityName, 0.0)
+    def +(that: Summed) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Summed because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      else
+        new Summed(this.entries + that.entries, this.quantityName, this.sum + that.sum)
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "sum" -> JsonFloat(sum))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "sum" -> JsonFloat(sum)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"Summed[$sum]"
     override def equals(that: Any) = that match {
-      case that: Summed => this.entries === that.entries  &&  this.sum === that.sum
+      case that: Summed => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.sum === that.sum
       case _ => false
     }
-    override def hashCode() = (entries, sum).hashCode
+    override def hashCode() = (entries, quantityName, sum).hashCode
   }
 
   /** Accumulating a weighted sum of a given quantity.
@@ -109,7 +124,11 @@ package histogrammar {
     def factory = Sum
 
     def zero = new Summing[DATUM](quantity, 0.0, 0.0)
-    def +(that: Summing[DATUM]) = new Summing(this.quantity, this.entries + that.entries, this.sum + that.sum)
+    def +(that: Summing[DATUM]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Summing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else
+        new Summing(this.quantity, this.entries + that.entries, this.sum + that.sum)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -119,7 +138,10 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "sum" -> JsonFloat(sum))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "sum" -> JsonFloat(sum)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"Summing[$sum]"
     override def equals(that: Any) = that match {

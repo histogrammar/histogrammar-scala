@@ -290,8 +290,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val leftDeviating = Deviate({x: Double => x})
-      val rightDeviating = Deviate({x: Double => x})
+      val leftDeviating = Deviate({x: Double => x} named "something")
+      val rightDeviating = Deviate({x: Double => x} named "something")
 
       left.foreach(leftDeviating.fill(_))
       right.foreach(rightDeviating.fill(_))

@@ -34,10 +34,11 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Deviated]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param mean Weighted mean of the quantity.
       * @param variance Weighted variance of the quantity.
       */
-    def ed(entries: Double, mean: Double, variance: Double) = new Deviated(entries, mean, variance)
+    def ed(entries: Double, quantityName: Option[String], mean: Double, variance: Double) = new Deviated(entries, quantityName, mean, variance)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Deviating]].
       * 
@@ -55,12 +56,18 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean", "variance")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean", "variance").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val mean = get("mean") match {
@@ -73,7 +80,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".variance")
         }
 
-        new Deviated(entries, mean, variance)
+        new Deviated(entries, quantityName, mean, variance)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -90,33 +97,41 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Deviate]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param mean Weighted mean of the quantity.
     * @param variance Weighted variance of the quantity.
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviated private[histogrammar](val entries: Double, val mean: Double, val variance: Double) extends Container[Deviated] {
+  class Deviated private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double, val variance: Double) extends Container[Deviated] {
     type Type = Deviated
     def factory = Deviate
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Deviated(0.0, 0.0, 0.0)
-    def +(that: Deviated) = {
-      val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
-                                                            that.entries, that.mean, that.variance * that.entries)
-      new Deviated(newentries, newmean, newvariance)
-    }
+    def zero = new Deviated(0.0, quantityName, 0.0, 0.0)
+    def +(that: Deviated) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Deviated because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      else {
+        val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
+                                                              that.entries, that.mean, that.variance * that.entries)
+        new Deviated(newentries, this.quantityName, newmean, newvariance)
+      }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "mean" -> JsonFloat(mean),
+      "variance" -> JsonFloat(variance)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"Deviated[$mean, $variance]"
     override def equals(that: Any) = that match {
-      case that: Deviated => this.entries === that.entries  &&  this.mean === that.mean  &&  this.variance === that.variance
+      case that: Deviated => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.mean === that.mean  &&  this.variance === that.variance
       case _ => false
     }
-    override def hashCode() = (entries, mean, variance).hashCode
+    override def hashCode() = (entries, quantityName, mean, variance).hashCode
   }
 
   /** Accumulating a weighted variance (and mean) of a given quantity.
@@ -152,11 +167,14 @@ package histogrammar {
     }
 
     def zero = new Deviating[DATUM](quantity, 0.0, 0.0, 0.0)
-    def +(that: Deviating[DATUM]) = {
-      val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
-                                                            that.entries, that.mean, that.variance * that.entries)
-      new Deviating[DATUM](this.quantity, newentries, newmean, newvariance)
-    }
+    def +(that: Deviating[DATUM]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Deviating because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else {
+        val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
+                                                              that.entries, that.mean, that.variance * that.entries)
+        new Deviating[DATUM](this.quantity, newentries, newmean, newvariance)
+      }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -170,7 +188,11 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "mean" -> JsonFloat(mean), "variance" -> JsonFloat(variance))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "mean" -> JsonFloat(mean),
+      "variance" -> JsonFloat(variance)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"Deviating[$mean, $variance]"
     override def equals(that: Any) = that match {

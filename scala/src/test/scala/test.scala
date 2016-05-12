@@ -763,7 +763,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
 
   "Categorize/Categorized/Categorizing" must "work" in {
-    val categorizing = Categorize({x: Struct => x.string.substring(0, 1)})
+    val categorizing = Categorize({x: Struct => x.string.substring(0, 1)} named "something")
     struct.foreach(categorizing.fill(_))
 
     categorizing.pairsMap map {case (k, v) => (k, v.entries)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))

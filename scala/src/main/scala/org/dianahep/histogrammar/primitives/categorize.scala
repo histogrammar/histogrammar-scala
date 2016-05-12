@@ -29,36 +29,43 @@ package histogrammar {
   object Categorize extends Factory {
     val name = "Categorize"
     val help = "Split a given quantity by its categorical (string-based) value and fill only one category per datum."
-    val detailedHelp = """Categorize(quantity: CategoricalFcn[DATUM], value: => V = Count())"""
+    val detailedHelp = """Categorize(quantity: UserFcn[DATUM, String], value: => V = Count())"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Categorized]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
       * @param pairs String category and the associated container of values associated with it.
       */
-    def ed[V <: Container[V]](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, contentType, pairs: _*)
+    def ed[V <: Container[V]](entries: Double, quantityName: Option[String], contentType: String, pairs: (String, V)*) = new Categorized(entries, quantityName, contentType, pairs: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
       * 
       * @param quantity Numerical function to split into bins.
       * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], value: => V = Count()) =
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, String], value: => V = Count()) =
       new Categorizing(quantity, 0.0, value, mutable.HashMap[String, V]())
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: CategoricalFcn[DATUM], value: => V = Count()) =
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, String], value: => V = Count()) =
       apply(quantity, value)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val (contentType, factory) = get("type") match {
@@ -68,7 +75,7 @@ package histogrammar {
 
         get("data") match {
           case JsonObject(categoryPairs @ _*) =>
-            new Categorized[Container[_]](entries, contentType, categoryPairs map {
+            new Categorized[Container[_]](entries, quantityName, contentType, categoryPairs map {
               case (JsonString(category), value) =>
                 category -> factory.fromJsonFragment(value)
             }: _*)
@@ -85,10 +92,11 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Categorize]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param pairs String category and the associated container of values associated with it.
     */
-  class Categorized[V <: Container[V]] private[histogrammar](val entries: Double, contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
+  class Categorized[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
     type Type = Categorized[V]
     def factory = Categorize
 
@@ -112,30 +120,36 @@ package histogrammar {
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
-    def zero = new Categorized[V](0.0, contentType)
-    def +(that: Categorized[V]) = new Categorized(
-      this.entries + that.entries,
-      contentType,
-      (this.keySet union that.keySet).toSeq map {key =>
-        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-          (key, this.pairsMap(key) + that.pairsMap(key))
-        else if (this.pairsMap contains key)
-          (key, this.pairsMap(key))
-        else
-          (key, that.pairsMap(key))
-      }: _*)
+    def zero = new Categorized[V](0.0, quantityName, contentType)
+    def +(that: Categorized[V]) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Categorized because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      else
+        new Categorized(
+          this.entries + that.entries,
+          this.quantityName,
+          contentType,
+          (this.keySet union that.keySet).toSeq map {key =>
+            if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+              (key, this.pairsMap(key) + that.pairsMap(key))
+            else if (this.pairsMap contains key)
+              (key, this.pairsMap(key))
+            else
+              (key, that.pairsMap(key))
+          }: _*)
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(contentType),
-      "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
+      "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"""Categorized[[${if (pairs.isEmpty) contentType else pairs.head._2.toString}..., size=${pairs.size}]]"""
     override def equals(that: Any) = that match {
-      case that: Categorized[V] => this.entries === that.entries  &&  this.pairs == that.pairs
+      case that: Categorized[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.pairs == that.pairs
       case _ => false
     }
-    override def hashCode() = (entries, pairs).hashCode()
+    override def hashCode() = (entries, quantityName, pairs).hashCode()
   }
 
   /** Accumulating a quantity by splitting it by its categorical (string-based) value and filling only one category per datum.
@@ -147,7 +161,7 @@ package histogrammar {
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param pairs Map of string category and the associated container of values associated with it.
     */
-  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: CategoricalFcn[DATUM], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
+  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, String], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
     type Type = Categorizing[DATUM, V]
     type Datum = DATUM
     def factory = Categorize
@@ -173,18 +187,22 @@ package histogrammar {
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
 
     def zero = new Categorizing[DATUM, V](quantity, 0.0, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
-    def +(that: Categorizing[DATUM, V]) = new Categorizing[DATUM, V](
-      this.quantity,
-      this.entries + that.entries,
-      this.value,
-      mutable.HashMap[String, V]((this.keySet union that.keySet).toSeq map {key =>
-        if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-          (key, this.pairsMap(key) + that.pairsMap(key))
-        else if (this.pairsMap contains key)
-          (key, this.pairsMap(key))
-        else
-          (key, that.pairsMap(key))
-      }: _*))
+    def +(that: Categorizing[DATUM, V]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Categorizing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else
+        new Categorizing[DATUM, V](
+          this.quantity,
+          this.entries + that.entries,
+          this.value,
+          mutable.HashMap[String, V]((this.keySet union that.keySet).toSeq map {key =>
+            if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
+              (key, this.pairsMap(key) + that.pairsMap(key))
+            else if (this.pairsMap contains key)
+              (key, this.pairsMap(key))
+            else
+              (key, that.pairsMap(key))
+          }: _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -200,7 +218,8 @@ package histogrammar {
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
-      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*))
+      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"Categorizing[[${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {

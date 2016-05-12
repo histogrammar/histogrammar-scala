@@ -656,7 +656,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// CentrallyBin/CentrallyBinned/CentrallyBinning
 
   "CentrallyBin/CentrallyBinned/CentrallyBinning" must "work with Count/Counting/Counted" in {
-    val one = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x})
+    val one = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x} named "something")
     one.center(1.5) should be (1.0)
     one.neighbors(1.0) should be ((Some(0.0), Some(3.0)))
     one.neighbors(10.0) should be ((Some(3.0), None))

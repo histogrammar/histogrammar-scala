@@ -34,13 +34,14 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.CentrallyBinned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param bins Centers and values of each bin.
       * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
       * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V], N <: Container[N]](entries: Double, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
-      new CentrallyBinned[V, N](entries, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
+    def ed[V <: Container[V], N <: Container[N]](entries: Double, quantityName: Option[String], bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
+      new CentrallyBinned[V, N](entries, quantityName, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.CentrallyBinning]].
       * 
@@ -93,12 +94,18 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val binsFactory = get("bins:type") match {
@@ -141,7 +148,7 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
 
-        new CentrallyBinned[Container[_], Container[_]](entries, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], min, max, nanflow)
+        new CentrallyBinned[Container[_], Container[_]](entries, quantityName, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], min, max, nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -152,12 +159,13 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.CentrallyBin]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param bins Metric, sorted map of centers and values for each bin.
     * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
     * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class CentrallyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val entries: Double, val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
+  class CentrallyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
     extends Container[CentrallyBinned[V, N]] with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinned[V, N]
@@ -168,14 +176,16 @@ package histogrammar {
     if (bins.size < 2)
       throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def zero = new CentrallyBinned[V, N](0.0, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow.zero)
+    def zero = new CentrallyBinned[V, N](0.0, quantityName, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow.zero)
     def +(that: CentrallyBinned[V, N]) = {
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add CentrallyBinned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.centers != that.centers)
         throw new ContainerException(s"cannot add CentrallyBinned because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
       val newbins = immutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
       
-      new CentrallyBinned[V, N](this.entries + that.entries, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
+      new CentrallyBinned[V, N](this.entries + that.entries, quantityName, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
     }
 
     def toJsonFragment = JsonObject(
@@ -185,14 +195,15 @@ package histogrammar {
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment)
+      "nanflow" -> nanflow.toJsonFragment).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"""CentrallyBinned[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
-      case that: CentrallyBinned[V, N] => this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
+      case that: CentrallyBinned[V, N] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (entries, bins, min, max, nanflow).hashCode
+    override def hashCode() = (entries, quantityName, bins, min, max, nanflow).hashCode
   }
 
   /** Accumulating a quantity by splitting it into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.
@@ -222,6 +233,8 @@ package histogrammar {
 
     def zero = new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
     def +(that: CentrallyBinning[DATUM, V, N]) = {
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add CentrallyBinning because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.centers != that.centers)
         throw new ContainerException(s"cannot add CentrallyBinning because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
@@ -256,7 +269,8 @@ package histogrammar {
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment)
+      "nanflow" -> nanflow.toJsonFragment).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"""CentrallyBinning[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {

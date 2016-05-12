@@ -99,7 +99,7 @@ package histogrammar {
     def zero = new Averaged(0.0, quantityName, 0.0)
     def +(that: Averaged) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Averaged because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else {
         val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
         new Averaged(newentries, this.quantityName, newmean)
@@ -138,7 +138,7 @@ package histogrammar {
     def zero = new Averaging[DATUM](quantity, 0.0, 0.0)
     def +(that: Averaging[DATUM]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Averaging because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else {
         val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
         new Averaging(this.quantity, newentries, newmean)

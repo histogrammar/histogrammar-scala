@@ -133,9 +133,9 @@ package histogrammar {
     def zero = new Sampled(0.0, quantityName, limit)
     def +(that: Sampled[RANGE]) = {
       if (this.limit != that.limit)
-        throw new ContainerException(s"cannot add Sampled because limit differs (${this.limit} vs ${that.limit})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because limit differs (${this.limit} vs ${that.limit})")
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Sampled because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
 
       val reservoir = new mutable.Reservoir[RANGE](limit, values: _*)
       that.values foreach {case (y, weight) => reservoir.update(y, weight)}
@@ -192,9 +192,9 @@ package histogrammar {
     def zero = new Sampling(quantity, 0.0, new mutable.Reservoir[RANGE](limit))
     def +(that: Sampling[DATUM, RANGE]) = {
       if (this.limit != that.limit)
-        throw new ContainerException(s"cannot add Sampling because limit differs (${this.limit} vs ${that.limit})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because limit differs (${this.limit} vs ${that.limit})")
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Sampling because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
 
       val newreservoir = new mutable.Reservoir[RANGE](this.limit, this.values: _*)
       that.values foreach {case (y, weight) => newreservoir.update(y, weight)}
@@ -229,7 +229,6 @@ package histogrammar {
       case that: Sampling[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false
     }
-
     override def hashCode() = (quantity, entries, limit, values).hashCode()
   }
 }

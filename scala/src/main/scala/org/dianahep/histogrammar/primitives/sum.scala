@@ -93,7 +93,7 @@ package histogrammar {
     def zero = new Summed(0.0, quantityName, 0.0)
     def +(that: Summed) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Summed because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
         new Summed(this.entries + that.entries, this.quantityName, this.sum + that.sum)
 
@@ -126,7 +126,7 @@ package histogrammar {
     def zero = new Summing[DATUM](quantity, 0.0, 0.0)
     def +(that: Summing[DATUM]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Summing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Summing(this.quantity, this.entries + that.entries, this.sum + that.sum)
 

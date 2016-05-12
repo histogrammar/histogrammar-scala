@@ -168,11 +168,11 @@ package histogrammar {
     def zero = new AdaptivelyBinned[V, N](contentType, mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), quantityName, nanflow.zero)
     def +(that: AdaptivelyBinned[V, N]) = {
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add AdaptivelyBinned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.num != that.num)
-        throw new ContainerException(s"cannot add AdaptivelyBinned because number of bins is different (${this.num} vs ${that.num})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because number of bins is different (${this.num} vs ${that.num})")
       if (this.tailDetail != that.tailDetail)
-        throw new ContainerException(s"cannot add AdaptivelyBinned because tailDetail parameter is different (${this.tailDetail} vs ${that.tailDetail})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because tailDetail parameter is different (${this.tailDetail} vs ${that.tailDetail})")
 
       new AdaptivelyBinned[V, N](contentType, clustering.merge(that.getClustering), this.quantityName, this.nanflow + that.nanflow)
     }
@@ -237,11 +237,11 @@ package histogrammar {
     def zero = new AdaptivelyBinning[DATUM, V, N](quantity, value, mutable.Clustering1D[V](num, tailDetail, value, mutable.Clustering1D.values[V](), java.lang.Double.NaN, java.lang.Double.NaN, 0.0), nanflow.zero)
     def +(that: AdaptivelyBinning[DATUM, V, N]) = {
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add AdaptivelyBinning because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.num != that.num)
-        throw new ContainerException(s"cannot add AdaptivelyBinning because number of bins is different (${this.num} vs ${that.num})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because number of bins is different (${this.num} vs ${that.num})")
       if (this.tailDetail != that.tailDetail)
-        throw new ContainerException(s"cannot add AdaptivelyBinning because tailDetail parameter is different (${this.tailDetail} vs ${that.tailDetail})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because tailDetail parameter is different (${this.tailDetail} vs ${that.tailDetail})")
 
       new AdaptivelyBinning[DATUM, V, N](quantity, value, clustering.merge(that.getClustering), this.nanflow + that.nanflow)
     }

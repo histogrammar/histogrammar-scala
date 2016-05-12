@@ -119,9 +119,9 @@ package histogrammar {
     def zero = new Partitioned[V](0.0, expressionName, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioned[V]) = {
       if (this.thresholds != that.thresholds)
-        throw new ContainerException(s"cannot add Partitioned because cut thresholds differ")
+        throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.expressionName != that.expressionName)
-        throw new ContainerException(s"cannot add Partitioned because expressionName differs (${this.expressionName} vs ${that.expressionName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because expressionName differs (${this.expressionName} vs ${that.expressionName})")
       new Partitioned(
         this.entries + that.entries,
         this.expressionName,
@@ -168,9 +168,9 @@ package histogrammar {
     def zero = new Partitioning[DATUM, V](expression, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioning[DATUM, V]) = {
       if (this.thresholds != that.thresholds)
-        throw new ContainerException(s"cannot add Partitioning because cut thresholds differ")
+        throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.expression.name != that.expression.name)
-        throw new ContainerException(s"cannot add Partitioning because expression name differs (${this.expression.name} vs ${that.expression.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because expression name differs (${this.expression.name} vs ${that.expression.name})")
         new Partitioning(
           this.expression,
           this.entries + that.entries,

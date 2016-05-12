@@ -180,11 +180,11 @@ package histogrammar {
     def zero = new SparselyBinned[V, N](binWidth, 0.0, quantityName, contentType, SortedMap(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
     def +(that: SparselyBinned[V, N]) = {
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add SparselyBinned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.binWidth != that.binWidth)
-        throw new ContainerException(s"cannot add SparselyBinned because binWidth differs (${this.binWidth} vs ${that.binWidth})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because binWidth differs (${this.binWidth} vs ${that.binWidth})")
       if (this.origin != that.origin)
-        throw new ContainerException(s"cannot add SparselyBinned because origin differs (${this.origin} vs ${that.origin})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because origin differs (${this.origin} vs ${that.origin})")
 
       val newbins =
         SortedMap[Long, V]((this.bins.keySet union that.bins.keySet).toSeq map {case i =>
@@ -262,11 +262,11 @@ package histogrammar {
     def zero = new SparselyBinning[DATUM, V, N](binWidth, quantity, 0.0, value, mutable.Map(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
     def +(that: SparselyBinning[DATUM, V, N]) = {
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add SparselyBinning because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.binWidth != that.binWidth)
-        throw new ContainerException(s"cannot add SparselyBinning because binWidth differs (${this.binWidth} vs ${that.binWidth})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because binWidth differs (${this.binWidth} vs ${that.binWidth})")
       if (this.origin != that.origin)
-        throw new ContainerException(s"cannot add SparselyBinning because origin differs (${this.origin} vs ${that.origin})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because origin differs (${this.origin} vs ${that.origin})")
 
       val newbins =
         mutable.Map[Long, V]((this.bins.keySet union that.bins.keySet).toSeq map {case i =>

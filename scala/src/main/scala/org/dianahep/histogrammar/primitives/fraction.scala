@@ -99,7 +99,7 @@ package histogrammar {
     def zero = new Fractioned[V](0.0, selectionName, numerator.zero, denominator.zero)
     def +(that: Fractioned[V]) =
       if (this.selectionName != that.selectionName)
-        throw new ContainerException(s"cannot add Fractioned because selectionName differs (${this.selectionName} vs ${that.selectionName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because selectionName differs (${this.selectionName} vs ${that.selectionName})")
       else
         new Fractioned(this.entries + that.entries, this.selectionName, this.numerator + that.numerator, this.denominator + that.denominator)
 
@@ -138,7 +138,7 @@ package histogrammar {
     def zero = new Fractioning[DATUM, V](selection, 0.0, numerator.zero, denominator.zero)
     def +(that: Fractioning[DATUM, V]) =
       if (this.selection.name != that.selection.name)
-        throw new ContainerException(s"cannot add Fractioning because selection name differs (${this.selection.name} vs ${that.selection.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because selection name differs (${this.selection.name} vs ${that.selection.name})")
       else
         new Fractioning(this.selection, this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator)
 

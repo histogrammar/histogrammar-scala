@@ -129,7 +129,7 @@ package histogrammar {
     def zero = new Bagged(0.0, this.quantityName, Map[RANGE, Double]())
     def +(that: Bagged[RANGE]) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Bagged because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else {
         val newentries = this.entries + that.entries
         val newvalues = {
@@ -181,7 +181,7 @@ package histogrammar {
     def zero = new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double]())
     def +(that: Bagging[DATUM, RANGE]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Bagging because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else {
         val newentries = this.entries + that.entries
         val newvalues = {

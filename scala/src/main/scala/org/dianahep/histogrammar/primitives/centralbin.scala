@@ -179,9 +179,9 @@ package histogrammar {
     def zero = new CentrallyBinned[V, N](0.0, quantityName, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow.zero)
     def +(that: CentrallyBinned[V, N]) = {
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add CentrallyBinned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.centers != that.centers)
-        throw new ContainerException(s"cannot add CentrallyBinned because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
+        throw new ContainerException(s"cannot add ${getClass.getName} because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
       val newbins = immutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
       
@@ -234,9 +234,9 @@ package histogrammar {
     def zero = new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
     def +(that: CentrallyBinning[DATUM, V, N]) = {
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add CentrallyBinning because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.centers != that.centers)
-        throw new ContainerException(s"cannot add CentrallyBinning because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
+        throw new ContainerException(s"cannot add ${getClass.getName} because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
       val newbins = mutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
 

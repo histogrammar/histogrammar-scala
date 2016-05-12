@@ -113,7 +113,7 @@ package histogrammar {
     def zero = new Deviated(0.0, quantityName, 0.0, 0.0)
     def +(that: Deviated) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Deviated because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else {
         val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
                                                               that.entries, that.mean, that.variance * that.entries)
@@ -169,7 +169,7 @@ package histogrammar {
     def zero = new Deviating[DATUM](quantity, 0.0, 0.0, 0.0)
     def +(that: Deviating[DATUM]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Deviating because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else {
         val (newentries, newmean, newvariance) = Deviate.plus(this.entries, this.mean, this.variance * this.entries,
                                                               that.entries, that.mean, that.variance * that.entries)

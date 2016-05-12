@@ -123,7 +123,7 @@ package histogrammar {
     def zero = new Categorized[V](0.0, quantityName, contentType)
     def +(that: Categorized[V]) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Categorized because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
         new Categorized(
           this.entries + that.entries,
@@ -189,7 +189,7 @@ package histogrammar {
     def zero = new Categorizing[DATUM, V](quantity, 0.0, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
     def +(that: Categorizing[DATUM, V]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Categorizing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Categorizing[DATUM, V](
           this.quantity,

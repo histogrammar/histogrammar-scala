@@ -212,13 +212,13 @@ package histogrammar {
     def zero = new Binned[V, U, O, N](low, high, 0.0, quantityName, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binned[V, U, O, N]): Binned[V, U, O, N] = {
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Binned because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.low != that.low)
-        throw new ContainerException(s"cannot add Binned because low differs (${this.low} vs ${that.low})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because low differs (${this.low} vs ${that.low})")
       if (this.high != that.high)
-        throw new ContainerException(s"cannot add Binned because high differs (${this.high} vs ${that.high})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because high differs (${this.high} vs ${that.high})")
       if (this.values.size != that.values.size)
-        throw new ContainerException(s"cannot add Binned because number of values differs (${this.values.size} vs ${that.values.size})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because number of values differs (${this.values.size} vs ${that.values.size})")
 
       new Binned(
         low,
@@ -294,13 +294,13 @@ package histogrammar {
     def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Binning because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.low != that.low)
-        throw new ContainerException(s"cannot add Binning because low differs (${this.low} vs ${that.low})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because low differs (${this.low} vs ${that.low})")
       if (this.high != that.high)
-        throw new ContainerException(s"cannot add Binning because high differs (${this.high} vs ${that.high})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because high differs (${this.high} vs ${that.high})")
       if (this.values.size != that.values.size)
-        throw new ContainerException(s"cannot add Binning because number of values differs (${this.values.size} vs ${that.values.size})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because number of values differs (${this.values.size} vs ${that.values.size})")
 
       new Binning[DATUM, V, U, O, N](
         low,

@@ -107,7 +107,7 @@ package histogrammar {
     def zero = new Cutted[V](0.0, selectionName, value.zero)
     def +(that: Cutted[V]) =
       if (this.selectionName != that.selectionName)
-        throw new ContainerException(s"cannot add Cutted because selectionName differs (${this.selectionName} vs ${that.selectionName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because selectionName differs (${this.selectionName} vs ${that.selectionName})")
       else
         new Cutted[V](this.entries + that.entries, this.selectionName, this.value + that.value)
 
@@ -142,7 +142,7 @@ package histogrammar {
     def zero = new Cutting[DATUM, V](0.0, selection, value.zero)
     def +(that: Cutting[DATUM, V]) =
       if (this.selection.name != that.selection.name)
-        throw new ContainerException(s"cannot add Cutting because selection name differs (${this.selection.name} vs ${that.selection.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because selection name differs (${this.selection.name} vs ${that.selection.name})")
       else
         new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value)
 

@@ -99,7 +99,7 @@ package histogrammar {
     def zero = new AbsoluteErred(0.0, this.quantityName, 0.0)
     def +(that: AbsoluteErred) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add AbsoluteErred because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else {
         val (newentries, newmae) = AbsoluteErr.plus(this.entries, this.mae, that.entries, that.mae)
         new AbsoluteErred(newentries, this.quantityName, newmae)
@@ -149,7 +149,7 @@ package histogrammar {
     def zero = new AbsoluteErring[DATUM](quantity, 0.0, 0.0)
     def +(that: AbsoluteErring[DATUM]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add AbsoluteErring because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else {
         val (newentries, newmae) = AbsoluteErr.plus(this.entries, this.mae, that.entries, that.mae)
         new AbsoluteErring[DATUM](this.quantity, newentries, newmae)

@@ -104,7 +104,7 @@ package histogrammar {
     def zero = new Minimized(0.0, quantityName, java.lang.Double.NaN)
     def +(that: Minimized) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Minimized because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
         new Minimized(this.entries + that.entries, quantityName, Minimize.plus(this.min, that.min))
 
@@ -137,7 +137,7 @@ package histogrammar {
     def zero = new Minimizing[DATUM](quantity, 0.0, java.lang.Double.NaN)
     def +(that: Minimizing[DATUM]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Minimizing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Minimizing[DATUM](this.quantity, this.entries + that.entries, Minimize.plus(this.min, that.min))
 
@@ -246,7 +246,7 @@ package histogrammar {
     def zero = new Maximized(0.0, quantityName, java.lang.Double.NaN)
     def +(that: Maximized) =
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Maximized because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
     else
       new Maximized(this.entries + that.entries, this.quantityName, Maximize.plus(this.max, that.max))
 
@@ -279,7 +279,7 @@ package histogrammar {
     def zero = new Maximizing[DATUM](quantity, 0.0, java.lang.Double.NaN)
     def +(that: Maximizing[DATUM]) =
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Maximizing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Maximizing[DATUM](this.quantity, this.entries + that.entries, Maximize.plus(this.max, that.max))
 

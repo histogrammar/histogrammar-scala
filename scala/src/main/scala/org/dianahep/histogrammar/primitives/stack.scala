@@ -119,9 +119,9 @@ package histogrammar {
     def zero = new Stacked[V](0.0, expressionName, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Stacked[V]) = {
       if (this.thresholds != that.thresholds)
-        throw new ContainerException(s"cannot add Stacked because cut thresholds differ")
+        throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.expressionName != that.expressionName)
-        throw new ContainerException(s"cannot add Stacked because expressionName differs (${this.expressionName} vs ${that.expressionName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because expressionName differs (${this.expressionName} vs ${that.expressionName})")
       new Stacked(
         this.entries + that.entries,
         this.expressionName,
@@ -166,9 +166,9 @@ package histogrammar {
     def zero = new Stacking[DATUM, V](expression, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Stacking[DATUM, V]) = {
       if (this.thresholds != that.thresholds)
-        throw new ContainerException(s"cannot add Stacking because cut thresholds differ")
+        throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.expression.name != that.expression.name)
-        throw new ContainerException(s"cannot add Stacking because quantity name differs (${this.expression.name} vs ${that.expression.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.expression.name} vs ${that.expression.name})")
         new Stacking(
           this.expression,
           this.entries + that.entries,

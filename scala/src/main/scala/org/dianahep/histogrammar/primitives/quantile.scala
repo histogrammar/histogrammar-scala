@@ -151,9 +151,9 @@ package histogrammar {
     def zero = new Quantiled(0.0, quantityName, target, java.lang.Double.NaN)
     def +(that: Quantiled) = {
       if (this.target != that.target)
-        throw new ContainerException(s"cannot add Quantiled because targets do not match (${this.target} vs ${that.target})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because targets do not match (${this.target} vs ${that.target})")
       if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add Quantiled because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       new Quantiled(this.entries + that.entries, this.quantityName, target, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries))
     }
     def toJsonFragment = JsonObject(
@@ -191,9 +191,9 @@ package histogrammar {
     def zero = new Quantiling[DATUM](target, quantity, 0.0, java.lang.Double.NaN, 0.0)
     def +(that: Quantiling[DATUM]) = {
       if (this.target != that.target)
-        throw new ContainerException(s"cannot add Quantiling because targets do not match (${this.target} vs ${that.target})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because targets do not match (${this.target} vs ${that.target})")
       if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add Quantiling because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       new Quantiling[DATUM](target, quantity, this.entries + that.entries, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries), this.cumulativeDeviation + that.cumulativeDeviation)
     }
 

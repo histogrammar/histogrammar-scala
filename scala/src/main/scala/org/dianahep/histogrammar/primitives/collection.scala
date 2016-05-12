@@ -42,9 +42,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Cutted]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
+      * @param selectionName Optional name given to the selection function, passed for bookkeeping.
       * @param value Aggregator that accumulated values that passed the cut.
       */
-    def ed[V <: Container[V]](entries: Double, value: V) = new Cutted[V](entries, value)
+    def ed[V <: Container[V]](entries: Double, selectionName: Option[String], value: V) = new Cutted[V](entries, selectionName, value)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
       * 
@@ -63,12 +64,18 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".entries")
+        }
+
+        val selectionName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
         }
 
         val factory = get("type") match {
@@ -78,7 +85,7 @@ package histogrammar {
 
         val value = factory.fromJsonFragment(get("data"))
 
-        new Cutted[Container[_]](entries, value)
+        new Cutted[Container[_]](entries, selectionName, value)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -87,30 +94,35 @@ package histogrammar {
   /** An accumulated aggregator of data that passed the cut.
     * 
     * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
+    * @param selectionName Optional name given to the selection function, passed for bookkeeping.
     * @param value Aggregator that accumulated values that passed the cut.
     */
-  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val value: V) extends Container[Cutted[V]] {
+  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val selectionName: Option[String], val value: V) extends Container[Cutted[V]] {
     type Type = Cutted[V]
     def factory = Cut
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Cutted[V](0.0, value.zero)
+    def zero = new Cutted[V](0.0, selectionName, value.zero)
     def +(that: Cutted[V]) =
-      new Cutted[V](this.entries + that.entries, this.value + that.value)
+      if (this.selectionName != that.selectionName)
+        throw new ContainerException(s"cannot add Cutted because selectionName differs (${this.selectionName} vs ${that.selectionName})")
+      else
+        new Cutted[V](this.entries + that.entries, this.selectionName, this.value + that.value)
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
-      "data" -> value.toJsonFragment)
+      "data" -> value.toJsonFragment).
+      maybe(JsonString("name") -> selectionName.map(JsonString(_)))
 
     override def toString() = s"""Cutted[$value]"""
     override def equals(that: Any) = that match {
-      case that: Cutted[V] => this.entries === that.entries  &&  this.value == that.value
+      case that: Cutted[V] => this.entries === that.entries  &&  this.selectionName == that.selectionName  &&  this.value == that.value
       case _ => false
     }
-    override def hashCode() = (entries, value).hashCode
+    override def hashCode() = (entries, selectionName, value).hashCode
   }
 
   /** Accumulating an aggregator of data that passes a cut.
@@ -129,7 +141,10 @@ package histogrammar {
 
     def zero = new Cutting[DATUM, V](0.0, selection, value.zero)
     def +(that: Cutting[DATUM, V]) =
-      new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value)
+      if (this.selection.name != that.selection.name)
+        throw new ContainerException(s"cannot add Cutting because selection name differs (${this.selection.name} vs ${that.selection.name})")
+      else
+        new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -142,7 +157,8 @@ package histogrammar {
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
-      "data" -> value.toJsonFragment)
+      "data" -> value.toJsonFragment).
+      maybe(JsonString("name") -> selection.name.map(JsonString(_)))
 
     override def toString() = s"""Cutting[$value]"""
     override def equals(that: Any) = that match {

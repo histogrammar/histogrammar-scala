@@ -55,7 +55,7 @@ package object histogram {
   implicit def sparselyBinnedToHistogramMethods(hist: Cutted[SparselyBinned[Counted, Counted]]): HistogramMethods =
     if (hist.value.numFilled > 0)
       new HistogramMethods(
-        Cut.ed(hist.entries, Bin.ed(hist.value.low.get, hist.value.high.get, 0.0, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => Count.ed(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, Count.ed(0L), Count.ed(0L), hist.value.nanflow))
+        Cut.ed(hist.entries, hist.selectionName, Bin.ed(hist.value.low.get, hist.value.high.get, 0.0, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => Count.ed(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, Count.ed(0L), Count.ed(0L), hist.value.nanflow))
       )
     else
       throw new RuntimeException("sparsely binned histogram has no entries")

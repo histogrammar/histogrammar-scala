@@ -409,8 +409,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val leftMinimizing = Minimize({x: Double => x})
-      val rightMinimizing = Minimize({x: Double => x})
+      val leftMinimizing = Minimize({x: Double => x} named "something")
+      val rightMinimizing = Minimize({x: Double => x} named "something")
 
       left.foreach(leftMinimizing.fill(_))
       right.foreach(rightMinimizing.fill(_))
@@ -437,8 +437,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val leftMaximizing = Maximize({x: Double => x})
-      val rightMaximizing = Maximize({x: Double => x})
+      val leftMaximizing = Maximize({x: Double => x} named "something")
+      val rightMaximizing = Maximize({x: Double => x} named "something")
 
       left.foreach(leftMaximizing.fill(_))
       right.foreach(rightMaximizing.fill(_))

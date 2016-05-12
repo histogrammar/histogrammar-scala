@@ -32,11 +32,11 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Fractioned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
+      * @param selectionName Optional name given to the selection function, passed for bookkeeping.
       * @param numerator Container for data that passed the given selection.
       * @param denominator Container for all data, regardless of whether it passed the given selection.
-      * @param selectionName Optional name given to the selection function, passed for bookkeeping.
       */
-    def ed[V <: Container[V]](entries: Double, numerator: V, denominator: V, selectionName: Option[String]) = new Fractioned(entries, numerator, denominator, selectionName)
+    def ed[V <: Container[V]](entries: Double, selectionName: Option[String], numerator: V, denominator: V) = new Fractioned(entries, selectionName, numerator, denominator)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Fractioning]].
       * 
@@ -60,6 +60,12 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
+        val selectionName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
+        }
+
         val factory = get("type") match {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".type")
@@ -68,13 +74,7 @@ package histogrammar {
         val numerator = factory.fromJsonFragment(get("numerator"))
         val denominator = factory.fromJsonFragment(get("denominator"))
 
-        val selectionName = get.getOrElse("name", JsonNull) match {
-          case JsonString(x) => Some(x)
-          case JsonNull => None
-          case x => throw new JsonFormatException(x, name + ".name")
-        }
-
-        new Fractioned[Container[_]](entries, numerator, denominator, selectionName)
+        new Fractioned[Container[_]](entries, selectionName, numerator, denominator)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -85,23 +85,23 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Fraction]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
+    * @param selectionName Optional name given to the selection function, passed for bookkeeping.
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
-    * @param selectionName Optional name given to the selection function, passed for bookkeeping.
     */
-  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val numerator: V, val denominator: V, val selectionName: Option[String]) extends Container[Fractioned[V]] {
+  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val selectionName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] {
     type Type = Fractioned[V]
     def factory = Fraction
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Fractioned[V](0.0, numerator.zero, denominator.zero, selectionName)
+    def zero = new Fractioned[V](0.0, selectionName, numerator.zero, denominator.zero)
     def +(that: Fractioned[V]) =
       if (this.selectionName != that.selectionName)
         throw new ContainerException(s"cannot add Fractioned because selectionName differs (${this.selectionName} vs ${that.selectionName})")
       else
-        new Fractioned(this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator, this.selectionName)
+        new Fractioned(this.entries + that.entries, this.selectionName, this.numerator + that.numerator, this.denominator + that.denominator)
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
@@ -112,10 +112,10 @@ package histogrammar {
 
     override def toString() = s"Fractioned[numerator=$numerator, denominator=$denominator]"
     override def equals(that: Any) = that match {
-      case that: Fractioned[V] => this.entries === that.entries  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator  &&  this.selectionName == that.selectionName
+      case that: Fractioned[V] => this.entries === that.entries  &&  this.selectionName == that.selectionName  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false
     }
-    override def hashCode() = (entries, numerator, denominator, selectionName).hashCode
+    override def hashCode() = (entries, selectionName, numerator, denominator).hashCode
   }
 
   /** Accumulating a pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).

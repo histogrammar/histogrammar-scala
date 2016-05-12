@@ -32,9 +32,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Minimized]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param min Lowest observed value.
       */
-    def ed(entries: Double, min: Double) = new Minimized(entries, min)
+    def ed(entries: Double, quantityName: Option[String], min: Double) = new Minimized(entries, quantityName, min)
 
     /** Create an immutable [[org.dianahep.histogrammar.Minimizing]].
       * 
@@ -52,7 +53,7 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "min")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "min").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -60,8 +61,14 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
+        }
+
         get("min") match {
-          case JsonNumber(x) => new Minimized(entries, x)
+          case JsonNumber(x) => new Minimized(entries, quantityName, x)
           case x => throw new JsonFormatException(x, name)
         }
 
@@ -84,26 +91,34 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Minimize]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param min Lowest observed value.
     */
-  class Minimized private[histogrammar](val entries: Double, val min: Double) extends Container[Minimized] {
+  class Minimized private[histogrammar](val entries: Double, val quantityName: Option[String], val min: Double) extends Container[Minimized] {
     type Type = Minimized
     def factory = Minimize
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Minimized(0.0, java.lang.Double.NaN)
-    def +(that: Minimized) = new Minimized(this.entries + that.entries, Minimize.plus(this.min, that.min))
+    def zero = new Minimized(0.0, quantityName, java.lang.Double.NaN)
+    def +(that: Minimized) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Minimized because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      else
+        new Minimized(this.entries + that.entries, quantityName, Minimize.plus(this.min, that.min))
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "min" -> JsonFloat(min))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "min" -> JsonFloat(min)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"Minimized[$min]"
     override def equals(that: Any) = that match {
-      case that: Minimized => this.entries === that.entries  &&  this.min === that.min
+      case that: Minimized => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.min === that.min
       case _ => false
     }
-    override def hashCode() = (entries, min).hashCode
+    override def hashCode() = (entries, quantityName, min).hashCode
   }
 
   /** Accumulating the minimum of a given quantity. If no data are observed, the result is `NaN`.
@@ -120,7 +135,11 @@ package histogrammar {
     def factory = Minimize
 
     def zero = new Minimizing[DATUM](quantity, 0.0, java.lang.Double.NaN)
-    def +(that: Minimizing[DATUM]) = new Minimizing[DATUM](this.quantity, this.entries + that.entries, Minimize.plus(this.min, that.min))
+    def +(that: Minimizing[DATUM]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Minimizing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else
+        new Minimizing[DATUM](this.quantity, this.entries + that.entries, Minimize.plus(this.min, that.min))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -131,7 +150,10 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "min" -> JsonFloat(min))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "min" -> JsonFloat(min)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"Minimizing[$min]"
     override def equals(that: Any) = that match {
@@ -155,9 +177,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Maximized]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
+      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param max Highest observed value.
       */
-    def ed(entries: Double, max: Double) = new Maximized(entries, max)
+    def ed(entries: Double, quantityName: Option[String], max: Double) = new Maximized(entries, quantityName, max)
 
     /** Create an immutable [[org.dianahep.histogrammar.Maximizing]].
       * 
@@ -175,7 +198,7 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "max")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "max").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -183,8 +206,14 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
+        val quantityName = get.getOrElse("name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".name")
+        }
+
         get("max") match {
-          case JsonNumber(x) => new Maximized(entries, x)
+          case JsonNumber(x) => new Maximized(entries, quantityName, x)
           case x => throw new JsonFormatException(x, name)
         }
 
@@ -207,23 +236,31 @@ package histogrammar {
     * Use the factory [[org.dianahep.histogrammar.Maximize]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param max Highest observed value.
     */
-  class Maximized private[histogrammar](val entries: Double, val max: Double) extends Container[Maximized] {
+  class Maximized private[histogrammar](val entries: Double, val quantityName: Option[String], val max: Double) extends Container[Maximized] {
     type Type = Maximized
     def factory = Maximize
 
-    def zero = new Maximized(0.0, java.lang.Double.NaN)
-    def +(that: Maximized) = new Maximized(this.entries + that.entries, Maximize.plus(this.max, that.max))
+    def zero = new Maximized(0.0, quantityName, java.lang.Double.NaN)
+    def +(that: Maximized) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add Maximized because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+    else
+      new Maximized(this.entries + that.entries, this.quantityName, Maximize.plus(this.max, that.max))
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "max" -> JsonFloat(max))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "max" -> JsonFloat(max)).
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"Maximized[$max]"
     override def equals(that: Any) = that match {
-      case that: Maximized => this.entries === that.entries  &&  this.max === that.max
+      case that: Maximized => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.max === that.max
       case _ => false
     }
-    override def hashCode() = (entries, max).hashCode
+    override def hashCode() = (entries, quantityName, max).hashCode
   }
 
   /** Accumulating the maximum of a given quantity. If no data are observed, the result is `NaN`.
@@ -240,7 +277,11 @@ package histogrammar {
     def factory = Maximize
 
     def zero = new Maximizing[DATUM](quantity, 0.0, java.lang.Double.NaN)
-    def +(that: Maximizing[DATUM]) = new Maximizing[DATUM](this.quantity, this.entries + that.entries, Maximize.plus(this.max, that.max))
+    def +(that: Maximizing[DATUM]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add Maximizing because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else
+        new Maximizing[DATUM](this.quantity, this.entries + that.entries, Maximize.plus(this.max, that.max))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       entries += weight
@@ -251,7 +292,10 @@ package histogrammar {
       }
     }
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "max" -> JsonFloat(max))
+    def toJsonFragment = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "max" -> JsonFloat(max)).
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"Maximizing[$max]"
     override def equals(that: Any) = that match {

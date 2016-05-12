@@ -131,9 +131,11 @@ package histogrammar {
         new Summing(this.quantity, this.entries + that.entries, this.sum + that.sum)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       if (weight > 0.0) {
         val q = quantity(datum)
+
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
         sum += q * weight
       }
     }

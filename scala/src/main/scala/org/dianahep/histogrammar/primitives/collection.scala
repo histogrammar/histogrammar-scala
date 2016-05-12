@@ -147,11 +147,11 @@ package histogrammar {
         new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       val w = weight * selection(datum)
-      if (w > 0.0) {
+      if (w > 0.0)
         value.fill(datum, w)
-      }
+      // no possibility of exception from here on out (for rollback)
+      entries += weight
     }
 
     def toJsonFragment = JsonObject(
@@ -322,11 +322,12 @@ package histogrammar {
       }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
-      if (entries > limit)
+      if (entries + weight > limit)
         value = None
       else
         value.foreach(v => v.fill(datum.asInstanceOf[v.Datum], weight))
+      // no possibility of exception from here on out (for rollback)
+      entries += weight
     }
 
     def toJsonFragment = JsonObject(
@@ -504,13 +505,14 @@ package histogrammar {
           }: _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       var i = 0
       while (i < size) {
         val (_, v) = pairs(i)
         v.fill(datum.asInstanceOf[v.Datum], weight)      // see notes in Indexing[V]
         i += 1
       }
+      // no possibility of exception from here on out (for rollback)
+      entries += weight
     }
 
     def toJsonFragment = JsonObject(
@@ -700,13 +702,14 @@ package histogrammar {
           }): _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       var i = 0
       while (i < size) {
         val (_, v) = pairs(i)
         v.fill(datum.asInstanceOf[v.Datum], weight)      // see notes in Indexing[V]
         i += 1
       }
+      // no possibility of exception from here on out (for rollback)
+      entries += weight
     }
 
     def toJsonFragment = JsonObject(
@@ -869,13 +872,14 @@ package histogrammar {
         new Indexing[V](this.entries + that.entries, this.values zip that.values map {case (me, you) => me + you}: _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       var i = 0
       while (i < size) {
         val v = values(i)
         v.fill(datum.asInstanceOf[v.Datum], weight)   // This type is ensured, but Scala doesn't recognize it.
         i += 1                                        // Also, Scala undergoes infinite recursion in a
       }                                               // "foreach" version of this loop--- that's weird!
+      // no possibility of exception from here on out (for rollback)
+      entries += weight
     }
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
@@ -1089,12 +1093,13 @@ package histogrammar {
     def +(that: Branching[HEAD, TAIL]) = new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       head.fill(datum, weight)
       tail match {
         case x: Aggregation => x.fill(datum.asInstanceOf[x.Datum], weight)
         case _ =>
       }
+      // no possibility of exception from here on out (for rollback)
+      entries += weight
     }
 
     def toJsonFragment = JsonObject(

@@ -75,6 +75,8 @@ package util {
         numObserved += 1
 
         val r = Math.pow(Random.nextDouble, 1.0/weight)
+
+        // exception in updated WILL leave old sortedMap in previous state, since it's immutable (for rollback)
         if (numObserved <= limit)
           sortedMap = sortedMap.updated(r, (y, weight))
         else if (sortedMap.head._1 < r) {
@@ -237,6 +239,7 @@ package util {
       */
     class Clustering1D[CONTAINER <: Container[CONTAINER]](val num: Int, val tailDetail: Double, value: => CONTAINER, val values: MetricSortedMap[Double, CONTAINER], var min: Double, var max: Double, var entries: Double) {
       private def mergeClusters() {
+        // assuming this function cannot throw an exception (for rollback)
         while (values.size > num) {
           val bins = values.iterator.toSeq
           val neighbors = bins.init zip bins.tail
@@ -259,7 +262,6 @@ package util {
         * This method assumes that `CONTAINER` (mutable or immutable) is actually a `CONTAINER with Aggregation{type Datum >: DATUM}` (mutable only). If it is used on an immutable container, it will raise a runtime exception.
         */
       def update[DATUM](x: Double, datum: DATUM, weight: Double) {
-        entries += weight
         if (weight > 0.0) {
           // assumes that CONTAINER has Aggregation (can call fillWeighted)
           values.get(x) match {
@@ -268,9 +270,13 @@ package util {
             case None =>
               val v = value.zero
               v.asInstanceOf[CONTAINER with Aggregation{type Datum >: DATUM}].fill(datum, weight)
+
+              // assuming that += cannot throw an exception (for rollback)
               values += (x, v)
               mergeClusters()
           }
+
+          entries += weight
 
           if (min.isNaN  ||  x < min)
             min = x

@@ -282,7 +282,6 @@ package histogrammar {
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       if (weight > 0.0) {
         val q = quantity(datum)
 
@@ -294,6 +293,9 @@ package histogrammar {
             bins.update(b, value.zero)
           bins(b).fill(datum, weight)
         }
+
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
       }
     }
 

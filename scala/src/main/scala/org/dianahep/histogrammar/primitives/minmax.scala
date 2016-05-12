@@ -142,9 +142,11 @@ package histogrammar {
         new Minimizing[DATUM](this.quantity, this.entries + that.entries, Minimize.plus(this.min, that.min))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       if (weight > 0.0) {
         val q = quantity(datum)
+
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
         if (min.isNaN  ||  q < min)
           min = q
       }
@@ -284,9 +286,11 @@ package histogrammar {
         new Maximizing[DATUM](this.quantity, this.entries + that.entries, Maximize.plus(this.max, that.max))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       if (weight > 0.0) {
         val q = quantity(datum)
+
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
         if (max.isNaN  ||  q > max)
           max = q
       }

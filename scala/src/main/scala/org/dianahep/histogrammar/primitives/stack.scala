@@ -176,13 +176,15 @@ package histogrammar {
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       if (weight > 0.0) {
         val value = expression(datum)
         cuts foreach {case (threshold, sub) =>
           if (value >= threshold)
             sub.fill(datum, weight)
         }
+
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
       }
     }
 

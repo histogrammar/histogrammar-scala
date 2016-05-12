@@ -205,13 +205,15 @@ package histogrammar {
           }: _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       if (weight > 0.0) {
         val q = quantity(datum)
 
         if (!(pairs contains q))
           pairs(q) = value.zero
         pairs(q).fill(datum, weight)
+
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
       }
     }
 

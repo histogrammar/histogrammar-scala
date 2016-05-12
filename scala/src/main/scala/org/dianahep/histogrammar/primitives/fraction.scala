@@ -143,13 +143,15 @@ package histogrammar {
         new Fractioning(this.selection, this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      entries += weight
       val w = weight * selection(datum)
 
       if (weight > 0.0)
         denominator.fill(datum, weight)
       if (w > 0.0)
         numerator.fill(datum, w)
+
+      // no possibility of exception from here on out (for rollback)
+      entries += weight
     }
 
     def toJsonFragment = JsonObject(

@@ -32,10 +32,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Summed]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param sum The sum of weight times quantity over all entries.
       */
-    def ed(entries: Double, quantityName: Option[String], sum: Double) = new Summed(entries, quantityName, sum)
+    def ed(entries: Double, sum: Double) = new Summed(entries, None, sum)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Summing]].
       * 

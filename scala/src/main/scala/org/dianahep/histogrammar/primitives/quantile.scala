@@ -67,11 +67,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param target Intended quantile (e.g. 0.5 for median).
       * @param estimate Estimated value of the quantile.
       */
-    def ed(entries: Double, quantityName: Option[String], target: Double, estimate: Double) = new Quantiled(entries, quantityName, target, estimate)
+    def ed(entries: Double, target: Double, estimate: Double) = new Quantiled(entries, None, target, estimate)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Quantiling]].
       * 

@@ -32,10 +32,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Averaged]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param mean Weighted mean of the quantity.
       */
-    def ed(entries: Double, quantityName: Option[String], mean: Double) = new Averaged(entries, quantityName, mean)
+    def ed(entries: Double, mean: Double) = new Averaged(entries, None, mean)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Averaging]].
       * 

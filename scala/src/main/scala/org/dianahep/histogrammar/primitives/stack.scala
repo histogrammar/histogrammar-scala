@@ -34,10 +34,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Stacked]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param expressionName Optional name given to the expression function, passed for bookkeeping.
       * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
       */
-    def ed[V <: Container[V]](entries: Double, expressionName: Option[String], cuts: (Double, V)*) = new Stacked(entries, expressionName, cuts: _*)
+    def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, None, cuts: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Stacking]].
       * 

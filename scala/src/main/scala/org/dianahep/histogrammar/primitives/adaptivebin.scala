@@ -34,7 +34,6 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.AdaptivelyBinned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param num Maximum number of bins (used as a constraint when merging).
       * @param tailDetail Between 0.0 and 1.0 inclusive: use 0.0 to focus on the bulk of the distribution and 1.0 to focus on the tails; see [[org.dianahep.histogrammar.util.mutable.Clustering1D]] for details.
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
@@ -43,8 +42,8 @@ package histogrammar {
       * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V], N <: Container[N]](entries: Double, quantityName: Option[String], num: Int, tailDetail: Double, contentType: String, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
-      new AdaptivelyBinned[V, N](contentType, new mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.MetricSortedMap[Double, V](bins.toSeq: _*), min, max, entries), quantityName, nanflow)
+    def ed[V <: Container[V], N <: Container[N]](entries: Double, num: Int, tailDetail: Double, contentType: String, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
+      new AdaptivelyBinned[V, N](contentType, new mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.MetricSortedMap[Double, V](bins.toSeq: _*), min, max, entries), None, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.AdaptivelyBinning]].
       * 

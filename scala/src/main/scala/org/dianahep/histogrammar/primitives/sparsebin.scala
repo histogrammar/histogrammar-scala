@@ -39,14 +39,13 @@ package histogrammar {
       * 
       * @param binWidth Width of the equally sized bins.
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
       * @param bins Centers and values of each bin.
       * @param nanflow Container for data that resulted in `NaN`.
       * @param origin Left edge of the bin whose index is zero.
       */
-    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, quantityName: Option[String], contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
-      new SparselyBinned[V, N](binWidth, entries, quantityName, contentType, bins, nanflow, origin)
+    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
+      new SparselyBinned[V, N](binWidth, entries, None, contentType, bins, nanflow, origin)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.SparselyBinning]].
       * 

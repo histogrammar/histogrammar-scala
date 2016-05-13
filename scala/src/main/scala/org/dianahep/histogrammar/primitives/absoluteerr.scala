@@ -32,10 +32,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.AbsoluteErred]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
       */
-    def ed(entries: Double, quantityName: Option[String], mae: Double) = new AbsoluteErred(entries, quantityName, mae)
+    def ed(entries: Double, mae: Double) = new AbsoluteErred(entries, None, mae)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.AbsoluteErring]].
       * 

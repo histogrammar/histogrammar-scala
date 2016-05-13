@@ -34,14 +34,13 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.CentrallyBinned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param bins Centers and values of each bin.
       * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
       * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V], N <: Container[N]](entries: Double, quantityName: Option[String], bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
-      new CentrallyBinned[V, N](entries, quantityName, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
+    def ed[V <: Container[V], N <: Container[N]](entries: Double, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
+      new CentrallyBinned[V, N](entries, None, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.CentrallyBinning]].
       * 

@@ -35,7 +35,6 @@ package histogrammar {
       * @param low Minimum-value edge of the first bin.
       * @param high Maximum-value edge of the last bin.
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param values Containers for data sent to each bin.
       * @param underflow Container for data below the first bin.
       * @param overflow Container for data above the last bin.
@@ -45,11 +44,10 @@ package histogrammar {
       (low: Double,
        high: Double,
        entries: Double,
-       quantityName: Option[String],
        values: Seq[V],
        underflow: U,
        overflow: O,
-       nanflow: N) = new Binned[V, U, O, N](low, high, entries, quantityName, values, underflow, overflow, nanflow)
+       nanflow: N) = new Binned[V, U, O, N](low, high, entries, None, values, underflow, overflow, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Binning]].
       * 

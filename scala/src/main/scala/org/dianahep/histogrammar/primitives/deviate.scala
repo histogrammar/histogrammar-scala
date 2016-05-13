@@ -34,11 +34,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Deviated]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param mean Weighted mean of the quantity.
       * @param variance Weighted variance of the quantity.
       */
-    def ed(entries: Double, quantityName: Option[String], mean: Double, variance: Double) = new Deviated(entries, quantityName, mean, variance)
+    def ed(entries: Double, mean: Double, variance: Double) = new Deviated(entries, None, mean, variance)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Deviating]].
       * 

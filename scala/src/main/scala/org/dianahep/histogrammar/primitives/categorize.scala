@@ -34,11 +34,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Categorized]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
       * @param pairs String category and the associated container of values associated with it.
       */
-    def ed[V <: Container[V]](entries: Double, quantityName: Option[String], contentType: String, pairs: (String, V)*) = new Categorized(entries, quantityName, contentType, pairs: _*)
+    def ed[V <: Container[V]](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, None, contentType, pairs: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
       * 

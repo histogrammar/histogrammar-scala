@@ -32,10 +32,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Minimized]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param min Lowest observed value.
       */
-    def ed(entries: Double, quantityName: Option[String], min: Double) = new Minimized(entries, quantityName, min)
+    def ed(entries: Double, min: Double) = new Minimized(entries, None, min)
 
     /** Create an immutable [[org.dianahep.histogrammar.Minimizing]].
       * 
@@ -179,10 +178,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Maximized]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param max Highest observed value.
       */
-    def ed(entries: Double, quantityName: Option[String], max: Double) = new Maximized(entries, quantityName, max)
+    def ed(entries: Double, max: Double) = new Maximized(entries, None, max)
 
     /** Create an immutable [[org.dianahep.histogrammar.Maximizing]].
       * 

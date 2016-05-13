@@ -42,10 +42,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Cutted]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
-      * @param selectionName Optional name given to the selection function, passed for bookkeeping.
       * @param value Aggregator that accumulated values that passed the cut.
       */
-    def ed[V <: Container[V]](entries: Double, selectionName: Option[String], value: V) = new Cutted[V](entries, selectionName, value)
+    def ed[V <: Container[V]](entries: Double, value: V) = new Cutted[V](entries, None, value)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
       * 

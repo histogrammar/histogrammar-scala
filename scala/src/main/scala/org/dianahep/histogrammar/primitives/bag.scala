@@ -32,11 +32,9 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param values Distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped.
       */
-    def ed[RANGE](entries: Double, quantityName: Option[String], values: Map[RANGE, Double]) =
-      new Bagged[RANGE](entries, quantityName, values)
+    def ed[RANGE](entries: Double, values: Map[RANGE, Double]) = new Bagged[RANGE](entries, None, values)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Bagging]].
       * 

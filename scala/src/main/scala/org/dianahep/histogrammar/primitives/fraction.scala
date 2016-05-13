@@ -32,11 +32,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Fractioned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
-      * @param selectionName Optional name given to the selection function, passed for bookkeeping.
       * @param numerator Container for data that passed the given selection.
       * @param denominator Container for all data, regardless of whether it passed the given selection.
       */
-    def ed[V <: Container[V]](entries: Double, selectionName: Option[String], numerator: V, denominator: V) = new Fractioned(entries, selectionName, numerator, denominator)
+    def ed[V <: Container[V]](entries: Double, numerator: V, denominator: V) = new Fractioned(entries, None, numerator, denominator)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Fractioning]].
       * 

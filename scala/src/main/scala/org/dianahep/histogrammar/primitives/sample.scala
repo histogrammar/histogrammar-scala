@@ -32,12 +32,10 @@ package histogrammar {
     /** Create an immutable [[org.dianahep.histogrammar.Sampled]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
-      * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
       * @param limit Maximum number of data points in the sample.
       * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
       */
-    def ed[RANGE](entries: Double, quantityName: Option[String], limit: Int, values: (RANGE, Double)*) =
-      new Sampled(entries, quantityName, limit, values: _*)
+    def ed[RANGE](entries: Double, limit: Int, values: (RANGE, Double)*) = new Sampled(entries, None, limit, values: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Sampling]].
       * 

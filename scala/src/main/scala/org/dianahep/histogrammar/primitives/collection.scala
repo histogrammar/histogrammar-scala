@@ -149,6 +149,7 @@ package histogrammar {
       val w = weight * selection(datum)
       if (w > 0.0)
         value.fill(datum, w)
+
       // no possibility of exception from here on out (for rollback)
       entries += weight
     }

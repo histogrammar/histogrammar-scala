@@ -21,7 +21,7 @@
 
   <groupId>org.diana-hep</groupId>
   <artifactId>histogrammar</artifactId>
-  <version>0.6-prerelease</version>
+  <version>0.6</version>
   <packaging>jar</packaging>
 
   <licenses>

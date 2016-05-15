@@ -69,15 +69,6 @@ package histogram {
   class HistogramMethods(hist: Cutted[Binned[Counted, Counted, Counted, Counted]]) {
     def binned = hist.value
 
-    /** Sum of weights observed without applying the selection. */
-    def entriesBeforeCut = hist.entries
-
-    /** Sum of weights that pass the selection. */
-    def entriesAfterCut = binned.entries
-
-    /** Fraction of weights that pass the selection. */
-    def fractionPassingCut = binned.entries / hist.entries
-
     /** Bin values as numbers, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalValues: Seq[Double] = binned.values.map(_.entries)
     /** Overflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */

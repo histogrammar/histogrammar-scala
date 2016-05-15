@@ -88,12 +88,14 @@ package histogrammar {
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val selectionName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] {
+  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val selectionName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with Cut.Methods {
     type Type = Fractioned[V]
     def factory = Fraction
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def fractionPassing = numerator.entries / entries
 
     def zero = new Fractioned[V](0.0, selectionName, numerator.zero, denominator.zero)
     def +(that: Fractioned[V]) =
@@ -126,13 +128,15 @@ package histogrammar {
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val selection: UserFcn[DATUM, Double], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData {
+  class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val selection: UserFcn[DATUM, Double], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData with Cut.Methods {
     type Type = Fractioning[DATUM, V]
     type Datum = DATUM
     def factory = Fraction
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def fractionPassing = numerator.entries / entries
 
     def zero = new Fractioning[DATUM, V](selection, 0.0, numerator.zero, denominator.zero)
     def +(that: Fractioning[DATUM, V]) =

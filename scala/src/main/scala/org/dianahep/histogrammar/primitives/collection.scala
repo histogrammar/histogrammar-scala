@@ -88,6 +88,11 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, name)
     }
+
+    trait Methods {
+      /** Fraction of weights that pass the selection. */
+      def fractionPassing
+    }
   }
 
   /** An accumulated aggregator of data that passed the cut.
@@ -96,12 +101,14 @@ package histogrammar {
     * @param selectionName Optional name given to the selection function, passed for bookkeeping.
     * @param value Aggregator that accumulated values that passed the cut.
     */
-  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val selectionName: Option[String], val value: V) extends Container[Cutted[V]] {
+  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val selectionName: Option[String], val value: V) extends Container[Cutted[V]] with Cut.Methods {
     type Type = Cutted[V]
     def factory = Cut
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def fractionPassing = value.entries / entries
 
     def zero = new Cutted[V](0.0, selectionName, value.zero)
     def +(that: Cutted[V]) =
@@ -130,13 +137,15 @@ package histogrammar {
     * @param selection Boolean or non-negative function that cuts or weights entries.
     * @param value Aggregator to accumulate values that pass the cut.
     */
-  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: UserFcn[DATUM, Double], val value: V) extends Container[Cutting[DATUM, V]] with AggregationOnData {
+  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: UserFcn[DATUM, Double], val value: V) extends Container[Cutting[DATUM, V]] with AggregationOnData with Cut.Methods {
     type Type = Cutting[DATUM, V]
     type Datum = DATUM
     def factory = Cut
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    def fractionPassing = value.entries / entries
 
     def zero = new Cutting[DATUM, V](0.0, selection, value.zero)
     def +(that: Cutting[DATUM, V]) =

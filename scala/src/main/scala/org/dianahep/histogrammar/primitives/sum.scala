@@ -96,6 +96,8 @@ package histogrammar {
       else
         new Summed(this.entries + that.entries, this.quantityName, this.sum + that.sum)
 
+    def children = Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "sum" -> JsonFloat(sum)).
@@ -117,7 +119,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData {
+  class Summing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Summing[DATUM]
     type Datum = DATUM
     def factory = Sum
@@ -138,6 +140,8 @@ package histogrammar {
         sum += q * weight
       }
     }
+
+    def children = Nil
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),

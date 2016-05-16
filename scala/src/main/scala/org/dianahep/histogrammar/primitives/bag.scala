@@ -144,6 +144,8 @@ package histogrammar {
         new Bagged[RANGE](newentries, this.quantityName, newvalues)
       }
 
+    def children = Nil
+
     def toJsonFragment = {
       implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
       JsonObject(
@@ -171,7 +173,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Distinct values and the (weighted) number of times they were observed.
     */
-  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double]) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData {
+  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double]) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
     type Type = Bagging[DATUM, RANGE]
     type Datum = DATUM
     def factory = Bag
@@ -209,6 +211,8 @@ package histogrammar {
       }
     }
 
+    def children = Nil
+
     def toJsonFragment = {
       implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
       JsonObject(
@@ -227,5 +231,4 @@ package histogrammar {
     }
     override def hashCode() = (quantity, entries, values).hashCode()
   }
-
 }

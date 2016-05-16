@@ -187,6 +187,8 @@ package histogrammar {
       new CentrallyBinned[V, N](this.entries + that.entries, quantityName, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
     }
 
+    def children = nanflow :: values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(bins.head._2.factory.name),
@@ -219,7 +221,7 @@ package histogrammar {
     */
   class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
     (val quantity: UserFcn[DATUM, Double], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
-    extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
+    extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinning[DATUM, V, N]
     type Datum = DATUM
@@ -262,6 +264,8 @@ package histogrammar {
       }
     }
 
+    def children = nanflow :: values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(value.factory.name),
@@ -279,5 +283,4 @@ package histogrammar {
     }
     override def hashCode() = (quantity, entries, bins, min, max, nanflow).hashCode
   }
-
 }

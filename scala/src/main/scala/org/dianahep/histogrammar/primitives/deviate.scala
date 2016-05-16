@@ -119,6 +119,8 @@ package histogrammar {
         new Deviated(newentries, this.quantityName, newmean, newvariance)
       }
 
+    def children = Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "mean" -> JsonFloat(mean),
@@ -144,7 +146,7 @@ package histogrammar {
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviating[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData {
+  class Deviating[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Deviating[DATUM]
     type Datum = DATUM
     def factory = Deviate
@@ -187,6 +189,8 @@ package histogrammar {
         varianceTimesEntries += weight * delta * (q - mean)   // old delta times new delta
       }
     }
+
+    def children = Nil
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),

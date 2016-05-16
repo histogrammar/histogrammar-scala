@@ -107,6 +107,8 @@ package histogrammar {
       else
         new Minimized(this.entries + that.entries, quantityName, Minimize.plus(this.min, that.min))
 
+    def children = Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "min" -> JsonFloat(min)).
@@ -128,7 +130,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param min Lowest observed value.
     */
-  class Minimizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData {
+  class Minimizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Minimizing[DATUM]
     type Datum = DATUM
     def factory = Minimize
@@ -150,6 +152,8 @@ package histogrammar {
           min = q
       }
     }
+
+    def children = Nil
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
@@ -250,6 +254,8 @@ package histogrammar {
     else
       new Maximized(this.entries + that.entries, this.quantityName, Maximize.plus(this.max, that.max))
 
+    def children = Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "max" -> JsonFloat(max)).
@@ -271,7 +277,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param max Highest observed value.
     */
-  class Maximizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData {
+  class Maximizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Maximizing[DATUM]
     type Datum = DATUM
     def factory = Maximize
@@ -293,6 +299,8 @@ package histogrammar {
           max = q
       }
     }
+
+    def children = Nil
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),

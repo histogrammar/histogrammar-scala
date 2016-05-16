@@ -210,6 +210,8 @@ package histogrammar {
     def range(index: Long) = (index * binWidth + origin, (index + 1) * binWidth + origin)
     def values = bins.map(_._2)
 
+    def children = nanflow :: values.toList
+
     def toJsonFragment = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
       "entries" -> JsonFloat(entries),
@@ -247,7 +249,7 @@ package histogrammar {
      value: => V,
      val bins: mutable.Map[Long, V],
      val nanflow: N,
-     val origin: Double) extends Container[SparselyBinning[DATUM, V, N]] with AggregationOnData with SparselyBin.Methods {
+     val origin: Double) extends Container[SparselyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with SparselyBin.Methods {
 
     type Type = SparselyBinning[DATUM, V, N]
     type Datum = DATUM
@@ -309,6 +311,8 @@ package histogrammar {
     def indexes = bins.map(_._1).toSeq
     def range(index: Long) = (index * binWidth + origin, (index + 1) * binWidth + origin)
     def values = bins.map(_._2)
+
+    def children = value :: nanflow :: values.toList
 
     def toJsonFragment = JsonObject(
       "binWidth" -> JsonFloat(binWidth),

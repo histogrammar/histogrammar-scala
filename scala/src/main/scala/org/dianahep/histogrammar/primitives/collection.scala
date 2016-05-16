@@ -32,34 +32,34 @@ package histogrammar {
 
   /** Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting).
     * 
-    * Factory produces mutable [[org.dianahep.histogrammar.Cutting]] and immutable [[org.dianahep.histogrammar.Cutted]] (sic) objects.
+    * Factory produces mutable [[org.dianahep.histogrammar.Selecting]] and immutable [[org.dianahep.histogrammar.Selected]] (sic) objects.
     */
-  object Cut extends Factory {
-    val name = "Cut"
+  object Select extends Factory {
+    val name = "Select"
     val help = "Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting)."
-    val detailedHelp = """Cut(selection: UserFcn[DATUM, Double], value: V)"""
+    val detailedHelp = """Select(quantity: UserFcn[DATUM, Double], value: V)"""
 
-    /** Create an immutable [[org.dianahep.histogrammar.Cutted]] from arguments (instead of JSON).
+    /** Create an immutable [[org.dianahep.histogrammar.Selected]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
       * @param value Aggregator that accumulated values that passed the cut.
       */
-    def ed[V <: Container[V]](entries: Double, value: V) = new Cutted[V](entries, None, value)
+    def ed[V <: Container[V]](entries: Double, value: V) = new Selected[V](entries, None, value)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
       * 
-      * @param selection Boolean or non-negative function that cuts or weights entries.
-      * @param value Aggregator to accumulate for values that pass `selection`.
+      * @param quantity Boolean or non-negative function that cuts or weights entries.
+      * @param value Aggregator to accumulate for values that pass the selection (`quantity`).
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: UserFcn[DATUM, Double], value: V) = new Cutting[DATUM, V](0.0, selection, value)
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: V) = new Selecting[DATUM, V](0.0, quantity, value)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](selection: UserFcn[DATUM, Double], value: V) = apply(selection, value)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: V) = apply(quantity, value)
 
-    /** Use [[org.dianahep.histogrammar.Cutted]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Cutted[V]) = Some(x.value)
-    /** Use [[org.dianahep.histogrammar.Cutting]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Cutting[DATUM, V]) = Some(x.value)
+    /** Use [[org.dianahep.histogrammar.Selected]] in Scala pattern-matching. */
+    def unapply[V <: Container[V]](x: Selected[V]) = Some(x.value)
+    /** Use [[org.dianahep.histogrammar.Selecting]] in Scala pattern-matching. */
+    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Selecting[DATUM, V]) = Some(x.value)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -71,7 +71,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
-        val selectionName = get.getOrElse("name", JsonNull) match {
+        val quantityName = get.getOrElse("name", JsonNull) match {
           case JsonString(x) => Some(x)
           case JsonNull => None
           case x => throw new JsonFormatException(x, name + ".name")
@@ -84,13 +84,13 @@ package histogrammar {
 
         val value = factory.fromJsonFragment(get("data"))
 
-        new Cutted[Container[_]](entries, selectionName, value)
+        new Selected[Container[_]](entries, quantityName, value)
 
       case _ => throw new JsonFormatException(json, name)
     }
 
     trait Methods {
-      /** Fraction of weights that pass the selection. */
+      /** Fraction of weights that pass the quantity. */
       def fractionPassing
     }
   }
@@ -98,64 +98,66 @@ package histogrammar {
   /** An accumulated aggregator of data that passed the cut.
     * 
     * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
-    * @param selectionName Optional name given to the selection function, passed for bookkeeping.
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param value Aggregator that accumulated values that passed the cut.
     */
-  class Cutted[V <: Container[V]] private[histogrammar](val entries: Double, val selectionName: Option[String], val value: V) extends Container[Cutted[V]] with Cut.Methods {
-    type Type = Cutted[V]
-    def factory = Cut
+  class Selected[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val value: V) extends Container[Selected[V]] with Select.Methods {
+    type Type = Selected[V]
+    def factory = Select
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
     def fractionPassing = value.entries / entries
 
-    def zero = new Cutted[V](0.0, selectionName, value.zero)
-    def +(that: Cutted[V]) =
-      if (this.selectionName != that.selectionName)
-        throw new ContainerException(s"cannot add ${getClass.getName} because selectionName differs (${this.selectionName} vs ${that.selectionName})")
+    def zero = new Selected[V](0.0, quantityName, value.zero)
+    def +(that: Selected[V]) =
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
-        new Cutted[V](this.entries + that.entries, this.selectionName, this.value + that.value)
+        new Selected[V](this.entries + that.entries, this.quantityName, this.value + that.value)
+
+    def children = value :: Nil
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
       "data" -> value.toJsonFragment).
-      maybe(JsonString("name") -> selectionName.map(JsonString(_)))
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
-    override def toString() = s"""Cutted[$value]"""
+    override def toString() = s"""Selected[$value]"""
     override def equals(that: Any) = that match {
-      case that: Cutted[V] => this.entries === that.entries  &&  this.selectionName == that.selectionName  &&  this.value == that.value
+      case that: Selected[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.value == that.value
       case _ => false
     }
-    override def hashCode() = (entries, selectionName, value).hashCode
+    override def hashCode() = (entries, quantityName, value).hashCode
   }
 
   /** Accumulating an aggregator of data that passes a cut.
     * 
     * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
-    * @param selection Boolean or non-negative function that cuts or weights entries.
+    * @param quantity Boolean or non-negative function that cuts or weights entries.
     * @param value Aggregator to accumulate values that pass the cut.
     */
-  class Cutting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val selection: UserFcn[DATUM, Double], val value: V) extends Container[Cutting[DATUM, V]] with AggregationOnData with Cut.Methods {
-    type Type = Cutting[DATUM, V]
+  class Selecting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val quantity: UserFcn[DATUM, Double], val value: V) extends Container[Selecting[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] with Select.Methods {
+    type Type = Selecting[DATUM, V]
     type Datum = DATUM
-    def factory = Cut
+    def factory = Select
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
     def fractionPassing = value.entries / entries
 
-    def zero = new Cutting[DATUM, V](0.0, selection, value.zero)
-    def +(that: Cutting[DATUM, V]) =
-      if (this.selection.name != that.selection.name)
-        throw new ContainerException(s"cannot add ${getClass.getName} because selection name differs (${this.selection.name} vs ${that.selection.name})")
+    def zero = new Selecting[DATUM, V](0.0, quantity, value.zero)
+    def +(that: Selecting[DATUM, V]) =
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
-        new Cutting[DATUM, V](this.entries + that.entries, this.selection, this.value + that.value)
+        new Selecting[DATUM, V](this.entries + that.entries, this.quantity, this.value + that.value)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * selection(datum)
+      val w = weight * quantity(datum)
       if (w > 0.0)
         value.fill(datum, w)
 
@@ -163,18 +165,20 @@ package histogrammar {
       entries += weight
     }
 
+    def children = value :: Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
       "data" -> value.toJsonFragment).
-      maybe(JsonString("name") -> selection.name.map(JsonString(_)))
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
-    override def toString() = s"""Cutting[$value]"""
+    override def toString() = s"""Selecting[$value]"""
     override def equals(that: Any) = that match {
-      case that: Cutting[DATUM, V] => this.entries === that.entries  &&  this.selection == that.selection  &&  this.value == that.value
+      case that: Selecting[DATUM, V] => this.entries === that.entries  &&  this.quantity == that.quantity  &&  this.value == that.value
       case _ => false
     }
-    override def hashCode() = (entries, selection, value).hashCode
+    override def hashCode() = (entries, quantity, value).hashCode
   }
 
   //////////////////////////////////////////////////////////////// Limit/Limited/Limiting
@@ -277,6 +281,8 @@ package histogrammar {
         new Limited[V](newentries, limit, contentType, newvalue)
       }
 
+    def children = value.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "limit" -> JsonFloat(limit),
@@ -338,6 +344,8 @@ package histogrammar {
       // no possibility of exception from here on out (for rollback)
       entries += weight
     }
+
+    def children = value.toList
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
@@ -454,6 +462,8 @@ package histogrammar {
             label -> (mysub + yoursub)
           }: _*)
 
+    def children = values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(pairs.head._2.factory.name),
@@ -523,6 +533,8 @@ package histogrammar {
       // no possibility of exception from here on out (for rollback)
       entries += weight
     }
+
+    def children = values.toList
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
@@ -645,6 +657,8 @@ package histogrammar {
             (key, UntypedLabel.combine(mysub, yoursub))
           }): _*)
 
+    def children = values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "data" -> JsonObject(pairs map {case (key, sub) =>
@@ -720,6 +734,8 @@ package histogrammar {
       // no possibility of exception from here on out (for rollback)
       entries += weight
     }
+
+    def children = values.toList
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
@@ -829,6 +845,8 @@ package histogrammar {
       else
         new Indexed[V](this.entries + that.entries, this.values zip that.values map {case(me, you) => me + you}: _*)
 
+    def children = values.toList
+
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
 
     override def toString() = s"Indexed[[${values.head.toString}..., size=${size}]]"
@@ -890,6 +908,8 @@ package histogrammar {
       // no possibility of exception from here on out (for rollback)
       entries += weight
     }
+
+    def children = values.toList
 
     def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
 
@@ -1038,6 +1058,8 @@ package histogrammar {
     def zero = new Branched[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
     def +(that: Branched[HEAD, TAIL]) = new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)
 
+    def children = values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*))
@@ -1111,6 +1133,8 @@ package histogrammar {
       entries += weight
     }
 
+    def children = values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*))
@@ -1123,5 +1147,4 @@ package histogrammar {
     }
     override def hashCode() = (entries, values).hashCode
   }
-
 }

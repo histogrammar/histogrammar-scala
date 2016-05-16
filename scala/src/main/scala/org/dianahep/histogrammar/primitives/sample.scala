@@ -141,6 +141,8 @@ package histogrammar {
       new Sampled[RANGE](this.entries + that.entries, this.quantityName, this.limit, reservoir.values: _*)
     }
 
+    def children = Nil
+
     def toJsonFragment = {
       implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
       JsonObject(
@@ -170,7 +172,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param reservoir Data structure to perform weighted reservoir sampling.
     */
-  class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, reservoir: mutable.Reservoir[RANGE]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData {
+  class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, reservoir: mutable.Reservoir[RANGE]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
     type Type = Sampling[DATUM, RANGE]
     type Datum = DATUM
     def factory = Sample
@@ -210,6 +212,8 @@ package histogrammar {
         entries += weight
       }
     }
+
+    def children = Nil
 
     def toJsonFragment = {
       implicit val rangeOrdering = Bag.rangeOrdering[RANGE]

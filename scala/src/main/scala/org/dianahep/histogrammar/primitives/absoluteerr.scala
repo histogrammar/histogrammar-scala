@@ -109,6 +109,8 @@ package histogrammar {
       "mae" -> JsonFloat(mae)).
       maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
+    def children = Nil
+
     override def toString() = s"AbsoluteErred[$mae]"
     override def equals(that: Any) = that match {
       case that: AbsoluteErred => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.mae === that.mae
@@ -125,7 +127,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param _mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
-  class AbsoluteErring[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData {
+  class AbsoluteErring[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = AbsoluteErring[DATUM]
     type Datum = DATUM
     def factory = AbsoluteErr
@@ -163,6 +165,8 @@ package histogrammar {
         absoluteSum += weight * Math.abs(q)
       }
     }
+
+    def children = Nil
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),

@@ -22,14 +22,14 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
 
-  /** Accumulate a suite containers, filling the one that is between a pair of given cuts on a given expression.
+  /** Accumulate a suite containers, filling the one that is between a pair of given cuts on a given quantity.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Partitioning]] and immutable [[org.dianahep.histogrammar.Partitioned]] objects.
     */
   object Partition extends Factory {
     val name = "Partition"
-    val help = "Accumulate a suite containers, filling the one that is between a pair of given cuts on a given expression."
-    val detailedHelp = """Partition(value: => V, expression: UserFcn[DATUM, Double], cuts: Double*)"""
+    val help = "Accumulate a suite containers, filling the one that is between a pair of given cuts on a given quantity."
+    val detailedHelp = """Partition(value: => V, quantity: UserFcn[DATUM, Double], cuts: Double*)"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Partitioned]] from arguments (instead of JSON).
       * 
@@ -41,15 +41,15 @@ package histogrammar {
     /** Create an empty, mutable [[org.dianahep.histogrammar.Partitioning]].
       * 
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
-      * @param expression Numerical expression whose value is compared with the given thresholds.
+      * @param quantity Numerical quantity whose value is compared with the given thresholds.
       * @param cuts Thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](expression: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
-      new Partitioning(expression, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value.zero)): _*)
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
+      new Partitioning(quantity, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value.zero)): _*)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](expression: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
-      apply(expression, value, cuts: _*)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
+      apply(quantity, value, cuts: _*)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json): Container[_] = json match {
@@ -61,7 +61,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
-        val expressionName = get.getOrElse("name", JsonNull) match {
+        val quantityName = get.getOrElse("name", JsonNull) match {
           case JsonString(x) => Some(x)
           case JsonNull => None
           case x => throw new JsonFormatException(x, name + ".name")
@@ -74,7 +74,7 @@ package histogrammar {
 
         get("data") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
-            new Partitioned[Container[_]](entries, expressionName, elements.zipWithIndex map {case (element, i) =>
+            new Partitioned[Container[_]](entries, quantityName, elements.zipWithIndex map {case (element, i) =>
               element match {
                 case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
                   val elementGet = elementPairs.toMap
@@ -95,15 +95,15 @@ package histogrammar {
     }
   }
 
-  /** An accumulated suite of containers, each collecting data between a pair of given cuts on a given expression.
+  /** An accumulated suite of containers, each collecting data between a pair of given cuts on a given quantity.
     * 
     * Use the factory [[org.dianahep.histogrammar.Partition]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
-    * @param expressionName Optional name given to the expression function, passed for bookkeeping.
+    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Partitioned[V <: Container[V]] private[histogrammar](val entries: Double, val expressionName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] {
+  class Partitioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] {
     type Type = Partitioned[V]
     def factory = Partition
 
@@ -115,41 +115,43 @@ package histogrammar {
     def thresholds = cuts.map(_._1)
     def values = cuts.map(_._2)
 
-    def zero = new Partitioned[V](0.0, expressionName, cuts map {case (c, v) => (c, v.zero)}: _*)
+    def zero = new Partitioned[V](0.0, quantityName, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioned[V]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
-      if (this.expressionName != that.expressionName)
-        throw new ContainerException(s"cannot add ${getClass.getName} because expressionName differs (${this.expressionName} vs ${that.expressionName})")
+      if (this.quantityName != that.quantityName)
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       new Partitioned(
         this.entries + that.entries,
-        this.expressionName,
+        this.quantityName,
         this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
     }
+
+    def children = values.toList
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*)).
-      maybe(JsonString("name") -> expressionName.map(JsonString(_)))
+      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
 
     override def toString() = s"""Partitioned[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
-      case that: Partitioned[V] => this.entries === that.entries  &&  this.expressionName == that.expressionName  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
+      case that: Partitioned[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
-    override def hashCode() = (entries, expressionName, cuts).hashCode()
+    override def hashCode() = (entries, quantityName, cuts).hashCode()
   }
 
-  /** Accumulating a suite of containers, each collecting data between a pair of given cuts on a given expression.
+  /** Accumulating a suite of containers, each collecting data between a pair of given cuts on a given quantity.
     * 
     * Use the factory [[org.dianahep.histogrammar.Partition]] to construct an instance.
     * 
-    * @param expression Numerical expression whose value is compared with the given thresholds.
+    * @param quantity Numerical quantity whose value is compared with the given thresholds.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val expression: UserFcn[DATUM, Double], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData {
+  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Partitioning[DATUM, V]
     type Datum = DATUM
     def factory = Partition
@@ -164,21 +166,21 @@ package histogrammar {
     def thresholds = cuts.map(_._1)
     def values = cuts.map(_._2)
 
-    def zero = new Partitioning[DATUM, V](expression, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
+    def zero = new Partitioning[DATUM, V](quantity, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
     def +(that: Partitioning[DATUM, V]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
-      if (this.expression.name != that.expression.name)
-        throw new ContainerException(s"cannot add ${getClass.getName} because expression name differs (${this.expression.name} vs ${that.expression.name})")
+      if (this.quantity.name != that.quantity.name)
+        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
         new Partitioning(
-          this.expression,
+          this.quantity,
           this.entries + that.entries,
           this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       if (weight > 0.0) {
-        val value = expression(datum)
+        val value = quantity(datum)
         // !(value >= high) is true when high == NaN (even if value == +inf)
         range find {case ((low, sub), (high, _)) => value >= low  &&  !(value >= high)} foreach {case ((_, sub), (_, _)) =>
           sub.fill(datum, weight)
@@ -189,17 +191,19 @@ package histogrammar {
       }
     }
 
+    def children = values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
       "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*)).
-      maybe(JsonString("name") -> expression.name.map(JsonString(_)))
+      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
 
     override def toString() = s"""Partitioning[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
-      case that: Partitioning[DATUM, V] => this.expression == that.expression  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
+      case that: Partitioning[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
     }
-    override def hashCode() = (expression, entries, cuts).hashCode()
+    override def hashCode() = (quantity, entries, cuts).hashCode()
   }
 }

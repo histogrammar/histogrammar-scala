@@ -22,51 +22,51 @@ import org.dianahep.histogrammar._
 /** Specialty methods for container combinations that look like histograms. */
 package object histogram {
   /** Type alias for conventional histograms (filled). */
-  type Histogrammed = Cutted[Binned[Counted, Counted, Counted, Counted]]
+  type Histogrammed = Selected[Binned[Counted, Counted, Counted, Counted]]
   /** Type alias for conventional histograms (filling). */
-  type Histogramming[DATUM] = Cutting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]
+  type Histogramming[DATUM] = Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]
   /** Convenience function for creating a conventional histogram. */
   def Histogram[DATUM]
     (num: Int,
-      low: Double,
-      high: Double,
-      quantity: UserFcn[DATUM, Double],
-      selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
-    Cut(selection, Bin(num, low, high, quantity))
+    low: Double,
+    high: Double,
+    quantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
+    Select(selection, Bin(num, low, high, quantity))
 
   /** Type alias for sparsely binned histograms (filled). */
-  type SparselyHistogrammed = Cutted[SparselyBinned[Counted, Counted]]
+  type SparselyHistogrammed = Selected[SparselyBinned[Counted, Counted]]
   /** Type alias for sparsely binned histograms (filling). */
-  type SparselyHistogramming[DATUM] = Cutting[DATUM, SparselyBinning[DATUM, Counting, Counting]]
+  type SparselyHistogramming[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]
   /** Convenience function for creating a sparsely binned histogram. */
   def SparselyHistogram[DATUM]
     (binWidth: Double,
-      quantity: UserFcn[DATUM, Double],
-      selection: UserFcn[DATUM, Double] = unweighted[DATUM],
-      origin: Double = 0.0) =
-    Cut(selection, SparselyBin(binWidth, quantity, origin = origin))
+    quantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM],
+    origin: Double = 0.0) =
+    Select(selection, SparselyBin(binWidth, quantity, origin = origin))
 
-  implicit def binnedToHistogramMethods(hist: Cutted[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
+  implicit def binnedToHistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
     new HistogramMethods(hist)
 
-  implicit def binningToHistogramMethods[DATUM](hist: Cutting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethods =
-    new HistogramMethods(Factory.fromJson(hist.toJson).as[Cutted[Binned[Counted, Counted, Counted, Counted]]])
+  implicit def binningToHistogramMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethods =
+    new HistogramMethods(Factory.fromJson(hist.toJson).as[Selected[Binned[Counted, Counted, Counted, Counted]]])
 
-  implicit def sparselyBinnedToHistogramMethods(hist: Cutted[SparselyBinned[Counted, Counted]]): HistogramMethods =
+  implicit def sparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
     if (hist.value.numFilled > 0)
       new HistogramMethods(
-        new Cutted(hist.entries, hist.selectionName, new Binned(hist.value.low.get, hist.value.high.get, 0.0, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => new Counted(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.value.nanflow))
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, 0.0, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => new Counted(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.value.nanflow))
       )
     else
       throw new RuntimeException("sparsely binned histogram has no entries")
 
-  implicit def sparselyBinningToHistogramMethods[DATUM](hist: Cutting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
-    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Cutted[SparselyBinned[Counted, Counted]]])
+  implicit def sparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
+    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
 }
 
 package histogram {
   /** Methods that are implicitly added to container combinations that look like histograms. */
-  class HistogramMethods(hist: Cutted[Binned[Counted, Counted, Counted, Counted]]) {
+  class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
     def binned = hist.value
 
     /** Bin values as numbers, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */

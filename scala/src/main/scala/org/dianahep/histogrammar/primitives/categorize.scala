@@ -137,6 +137,8 @@ package histogrammar {
               (key, that.pairsMap(key))
           }: _*)
 
+    def children = values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(contentType),
@@ -160,7 +162,7 @@ package histogrammar {
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param pairs Map of string category and the associated container of values associated with it.
     */
-  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, String], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData {
+  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, String], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData with CategoricalQuantity[DATUM] {
     type Type = Categorizing[DATUM, V]
     type Datum = DATUM
     def factory = Categorize
@@ -215,6 +217,8 @@ package histogrammar {
         entries += weight
       }
     }
+
+    def children = value :: values.toList
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),

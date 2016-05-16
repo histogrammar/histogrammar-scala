@@ -104,6 +104,8 @@ package histogrammar {
         new Averaged(newentries, this.quantityName, newmean)
       }
 
+    def children = Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "mean" -> JsonFloat(mean)).
@@ -125,7 +127,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all weights).
     * @param mean Cumulative weighted mean (accrued with a numerically stable algorithm).
     */
-  class Averaging[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData {
+  class Averaging[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Averaging[DATUM]
     type FixedType = Averaged
     type Datum = DATUM
@@ -154,6 +156,8 @@ package histogrammar {
         mean += shift
       }
     }
+
+    def children = Nil
 
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),

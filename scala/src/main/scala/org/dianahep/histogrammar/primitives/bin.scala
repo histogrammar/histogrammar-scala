@@ -229,6 +229,8 @@ package histogrammar {
         this.nanflow + that.nanflow)
     }
 
+    def children = underflow :: overflow :: nanflow :: values.toList
+
     def toJsonFragment = JsonObject(
       "low" -> JsonFloat(low),
       "high" -> JsonFloat(high),
@@ -272,7 +274,7 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with Bin.Methods {
+    val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with NumericalQuantity[DATUM] with Bin.Methods {
 
     type Type = Binning[DATUM, V, U, O, N]
     type Datum = DATUM
@@ -328,6 +330,8 @@ package histogrammar {
         entries += weight
       }
     }
+
+    def children = underflow :: overflow :: nanflow :: values.toList
 
     def toJsonFragment = JsonObject(
       "low" -> JsonFloat(low),

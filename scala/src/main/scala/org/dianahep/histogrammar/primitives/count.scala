@@ -72,6 +72,8 @@ package histogrammar {
     def zero = new Counted(0.0)
     def +(that: Counted): Counted = new Counted(this.entries + that.entries)
 
+    def children = Nil
+
     def toJsonFragment = JsonFloat(entries)
 
     override def toString() = s"Counted[$entries]"
@@ -106,6 +108,8 @@ package histogrammar {
       if (weight > 0.0)
         entries += weight
     }
+
+    def children = Nil
 
     def toJsonFragment = JsonFloat(entries)
 

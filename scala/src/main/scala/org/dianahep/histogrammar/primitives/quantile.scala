@@ -155,6 +155,9 @@ package histogrammar {
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       new Quantiled(this.entries + that.entries, this.quantityName, target, Quantile.estimateCombination(this.estimate, this.entries, that.estimate, that.entries))
     }
+
+    def children = Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "target" -> JsonFloat(target),
@@ -176,7 +179,7 @@ package histogrammar {
     * @param quantity Numerical function to track.
     */
   class Quantiling[DATUM] private[histogrammar](val target: Double, val quantity: UserFcn[DATUM, Double], var entries: Double, var estimate: Double, var cumulativeDeviation: Double)
-      extends Container[Quantiling[DATUM]] with AggregationOnData {
+      extends Container[Quantiling[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
 
     type Type = Quantiling[DATUM]
     type Datum = DATUM
@@ -217,6 +220,8 @@ package histogrammar {
       }
     }
 
+    def children = Nil
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "target" -> JsonFloat(target),
@@ -230,5 +235,4 @@ package histogrammar {
     }
     override def hashCode() = (entries, target, estimate, cumulativeDeviation, quantity).hashCode()
   }
-
 }

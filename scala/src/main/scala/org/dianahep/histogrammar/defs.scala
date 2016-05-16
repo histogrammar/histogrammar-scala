@@ -83,7 +83,7 @@ package histogrammar {
     register(Stack)
     register(Partition)
 
-    register(Cut)
+    register(Select)
     register(Limit)
     register(Label)
     register(UntypedLabel)
@@ -174,6 +174,9 @@ package histogrammar {
     def toJsonFragment: Json
     /** Cast the container to a given type. Especially useful for containers reconstructed from JSON or stored in [[org.dianahep.histogrammar.UntypedLabeling]]/[[org.dianahep.histogrammar.UntypedLabeled]]. */
     def as[OTHER <: Container[OTHER]] = this.asInstanceOf[OTHER]
+
+    /** List of sub-aggregators, to make it possible to walk the tree. */
+    def children: Seq[Container[_]]
   }
 
   /** Mix-in to add mutability to a [[org.dianahep.histogrammar.Container]].
@@ -206,6 +209,17 @@ package histogrammar {
     * `AggregationOnData` containers actually depend on their `Datum` type; `Counting` is the only one that ignores it.
     */
   trait AggregationOnData extends Aggregation
+
+  /** Trait for aggregations that use a fill rule of any type. */
+  trait AnyQuantity[DATUM, RANGE] {
+    def quantity: UserFcn[DATUM, RANGE]
+  }
+
+  /** Trait for aggregations that use a numerical (double-valued) fill rule. */
+  trait NumericalQuantity[DATUM] extends AnyQuantity[DATUM, Double]
+
+  /** Trait for aggregations that use a categorical (string-valued) fill rule. */
+  trait CategoricalQuantity[DATUM] extends AnyQuantity[DATUM, String]
 
   /** Increment function for Apache Spark's `aggregate` method.
     * 

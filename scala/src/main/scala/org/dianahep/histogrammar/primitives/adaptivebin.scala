@@ -176,6 +176,8 @@ package histogrammar {
       new AdaptivelyBinned[V, N](contentType, clustering.merge(that.getClustering), this.quantityName, this.nanflow + that.nanflow)
     }
 
+    def children = nanflow :: values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "num" -> JsonInt(num),
@@ -207,7 +209,7 @@ package histogrammar {
     */
   class AdaptivelyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
     (val quantity: UserFcn[DATUM, Double], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
-      extends Container[AdaptivelyBinning[DATUM, V, N]] with AggregationOnData with CentrallyBin.Methods[V] {
+      extends Container[AdaptivelyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with CentrallyBin.Methods[V] {
 
     type Type = AdaptivelyBinning[DATUM, V, N]
     type Datum = DATUM
@@ -252,6 +254,8 @@ package histogrammar {
       }
     }
 
+    def children = value :: nanflow :: values.toList
+
     def toJsonFragment = JsonObject(
       "entries" -> JsonFloat(entries),
       "num" -> JsonInt(num),
@@ -271,5 +275,4 @@ package histogrammar {
     }
     override def hashCode() = (quantity, clustering, nanflow).hashCode()
   }
-
 }

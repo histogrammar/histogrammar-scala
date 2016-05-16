@@ -94,7 +94,7 @@
                 <arg>${project.build.directory}/.scala_dependencies</arg>
               </args>
               <recompileMode>incremental</recompileMode>
-              <useZincServer>true</useZincServer>
+              <!-- <useZincServer>true</useZincServer> -->
             </configuration>
           </execution>
         </executions>

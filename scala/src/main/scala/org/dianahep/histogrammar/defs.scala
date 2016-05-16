@@ -236,8 +236,8 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// define implicits
 
-  /** (Sealed) base trait for user functions. */
-  sealed trait UserFcn[-DOMAIN, +RANGE] extends Serializable {
+  /** Base trait for user functions. */
+  trait UserFcn[-DOMAIN, +RANGE] extends Serializable {
     /** Optional name for the function; added to JSON for bookkeeping if present. */
     def name: Option[String]
     /** Tracks whether this function has a cache to ensure that a function doesn't get double-cached. */

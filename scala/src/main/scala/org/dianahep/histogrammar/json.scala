@@ -88,6 +88,23 @@ package json {
   sealed trait Json {
     /** Convert this object into a serialized JSON string. The `toString` method is ''not'' a synonym: `toString` shows structure and `stringify` serializes. */
     def stringify: String
+
+    /** Write this object to a UTF-8 encoded file using `stringify`. */
+    def write(fileName: String) {
+      write(new java.io.File(fileName))
+    }
+
+    /** Write this object to a UTF-8 encoded file using `stringify`. */
+    def write(file: java.io.File) {
+      val f = new java.io.FileOutputStream(file)
+      write(f)
+      f.close()
+    }
+
+    /** Write this object on an OutputStream as UTF-8 using `stringify`. */
+    def write(outputStream: java.io.OutputStream) {
+      outputStream.write(stringify.getBytes("UTF-8"))
+    }
   }
   /** Entry point for parsing JSON. */
   object Json {

@@ -99,13 +99,19 @@ package histogrammar {
       case None => throw new ContainerException(s"unrecognized container (is it a custom container that hasn't been registered?): $name")
     }
 
-    /** User's entry point for reconstructing a container from JSON text. The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`). */
+    /** User's entry point for reconstructing a container from JSON text.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
     def fromJson(str: String): Container[_] = Json.parse(str) match {
       case Some(json) => fromJson(json)
       case None => throw new InvalidJsonException(str)
     }
 
-    /** User's entry point for reconstructing a container from a JSON object. The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`). */
+    /** User's entry point for reconstructing a container from a JSON object.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
     def fromJson(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
         val get = pairs.toMap
@@ -119,6 +125,27 @@ package histogrammar {
 
       case _ => throw new JsonFormatException(json, "Factory")
     }
+
+    /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
+    def fromJsonFile(fileName: String): Container[_] = fromJsonFile(new java.io.File(fileName))
+
+    /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
+    def fromJsonFile(file: java.io.File): Container[_] = fromJsonStream(new java.io.FileInputStream(file))
+
+    /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
+      * 
+      * Note: fully consumes the `inputStream`.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
+    def fromJsonStream(inputStream: java.io.InputStream): Container[_] =
+      fromJson(new java.util.Scanner(inputStream).useDelimiter("\\A").next)
   }
 
   /** Interface for classes that contain aggregated data, such as "Counted" or "Binned" (immutable) or "Counting" or "Binning" (mutable).

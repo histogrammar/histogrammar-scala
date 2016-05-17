@@ -16,7 +16,7 @@ package object sparksql {
     def apply[SUB <: Row](row: SUB): RANGE = row.get(index).asInstanceOf[RANGE]
   }
 
-  class DataFrameHistogrammarMethods(df: DataFrame) {
+  implicit class DataFrameHistogrammarMethods(df: DataFrame) {
     def histogrammar[CONTAINER <: Container[CONTAINER] with Aggregation{type Datum = Row} : ClassTag](container: CONTAINER) = {
       var index = 0
       val columns = List.newBuilder[Column]

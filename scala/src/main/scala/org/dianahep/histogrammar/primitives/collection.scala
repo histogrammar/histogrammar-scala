@@ -91,7 +91,7 @@ package histogrammar {
 
     trait Methods {
       /** Fraction of weights that pass the quantity. */
-      def fractionPassing
+      def fractionPassing: Double
     }
   }
 

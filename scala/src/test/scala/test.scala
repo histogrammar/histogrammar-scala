@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.Matchers
 
 import org.dianahep.histogrammar._
-import org.dianahep.histogrammar.histogram._
+import org.dianahep.histogrammar.specialized._
 
 class DefaultSuite extends FlatSpec with Matchers {
   val simple = List(3.4, 2.2, -1.8, 0.0, 7.3, -4.7, 1.6, 0.0, -3.0, -1.7)
@@ -923,8 +923,8 @@ class DefaultSuite extends FlatSpec with Matchers {
       val (left, right) = simple.splitAt(i)
 
       val partialHists = Seq(
-        left.foldLeft(Select(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x})))({(hist, x) => hist.fill(x); hist}),
-        right.foldLeft(Select(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x})))({(hist, x) => hist.fill(x); hist}))
+        left.foldLeft(Bin(5, -3.0, 7.0, {x: Double => x}))({(hist, x) => hist.fill(x); hist}),
+        right.foldLeft(Bin(5, -3.0, 7.0, {x: Double => x}))({(hist, x) => hist.fill(x); hist}))
 
       val finalHist = partialHists.reduce(_ + _)
 
@@ -939,8 +939,8 @@ class DefaultSuite extends FlatSpec with Matchers {
     for (i <- 0 to 10) {
       val (left, right) = simple.splitAt(i)
 
-      val hist1 = Select(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x}))
-      val hist2 = Select(unweighted[Double], Bin(5, -3.0, 7.0, {x: Double => x}))
+      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
 
       val partialHists = Seq(
         left.foldLeft(hist1)(new Increment[Double, hist1.Type]),

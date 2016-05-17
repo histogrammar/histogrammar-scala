@@ -19,8 +19,8 @@ import scala.language.implicitConversions
 
 import org.dianahep.histogrammar._
 
-/** Specialty methods for container combinations that look like histograms. */
-package object histogram {
+/** Specialty methods for familiar combinations of containers, such as histograms. */
+package object specialized {
   /** Type alias for conventional histograms (filled). */
   type Histogrammed = Selected[Binned[Counted, Counted, Counted, Counted]]
   /** Type alias for conventional histograms (filling). */
@@ -46,25 +46,42 @@ package object histogram {
     origin: Double = 0.0) =
     Select(selection, SparselyBin(binWidth, quantity, origin = origin))
 
-  implicit def binnedToHistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
+  implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
+    new HistogramMethods(new Selected(hist.entries, None, hist))
+
+  implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counting, Counting, Counting, Counting]): HistogramMethods =
+    new HistogramMethods(new Selected(hist.entries, None, Factory.fromJson(hist.toJson).as[Binned[Counted, Counted, Counted, Counted]]))
+
+  implicit def selectedBinnedToHistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
     new HistogramMethods(hist)
 
-  implicit def binningToHistogramMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethods =
+  implicit def selectingBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethods =
     new HistogramMethods(Factory.fromJson(hist.toJson).as[Selected[Binned[Counted, Counted, Counted, Counted]]])
 
-  implicit def sparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
-    if (hist.value.numFilled > 0)
+  implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
+    if (hist.numFilled > 0)
       new HistogramMethods(
-        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, 0.0, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => new Counted(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.value.nanflow))
+        new Selected(hist.entries, None, new Binned(hist.low.get, hist.high.get, hist.entries, hist.quantityName, hist.minBin.get to hist.maxBin.get map {i => new Counted(hist.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.nanflow))
       )
     else
       throw new RuntimeException("sparsely binned histogram has no entries")
 
   implicit def sparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
-    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
+    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[SparselyBinned[Counted, Counted]])
+
+  implicit def selectedSparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
+    if (hist.value.numFilled > 0)
+      new HistogramMethods(
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, hist.value.entries, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => new Counted(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.value.nanflow))
+      )
+    else
+      throw new RuntimeException("sparsely binned histogram has no entries")
+
+  implicit def selectedSparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
+    selectedSparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
 }
 
-package histogram {
+package specialized {
   /** Methods that are implicitly added to container combinations that look like histograms. */
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
     def binned = hist.value

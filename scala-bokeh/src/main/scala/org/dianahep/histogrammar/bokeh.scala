@@ -27,7 +27,7 @@ package object bokeh {
 package bokeh {
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
     //This is 1D plot
-    def plot(markerSize: Int = 1, fillColor: Color = Color.White, lineColor: Color = Color.Black, xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
+    def plot(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.White, lineColor: Color = Color.Black, xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
 
       //Prepare histogram contents for plotting
       val h = hist.value.high
@@ -47,7 +47,6 @@ package bokeh {
       //tools are interacrtive tools in the web browser: add later
       val plot = new Plot().x_range(xdr).y_range(ydr) //.tools(Pan|WheelZoom)
 
-      //FIXME axes options: not configurable for now
       val xaxis = new LinearAxis().plot(plot).location(xaxisLocation)
       val yaxis = new LinearAxis().plot(plot).location(yaxisLocation)
       plot.below <<= (xaxis :: _)
@@ -56,7 +55,7 @@ package bokeh {
       //Set marker color, fill color, line color
       //Note: here, line is an exterior of the marker
       //FIXME plotting options should be configrable!
-      val glyph = new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
 
       //FIXME renderer: not configurable for now
       val circle = new GlyphRenderer().data_source(source).glyph(glyph)
@@ -66,7 +65,7 @@ package bokeh {
       new Document(plot)
     }
 
-    def save(plot: Document, fname: String) {
+    def save(plot: Document, fname: String) : Any = {
       val html = plot.save(fname)
       println(s"Wrote ${html.file}. Open ${html.url} in a web browser.")
       html.view()

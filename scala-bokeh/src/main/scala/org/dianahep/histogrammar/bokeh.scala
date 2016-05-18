@@ -27,7 +27,7 @@ package object bokeh extends App with Tools {
 package bokeh {
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
 
-    def colorSelector(c: String) : Color = {
+    private def colorSelector(c: String) : Color = {
         val color: Color = c match {
            case "white" => Color.White
            case "black" => Color.Black

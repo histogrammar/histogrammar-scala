@@ -601,7 +601,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
   "Bin/Binning/Binned" must "work with Count/Counting/Counted" in {
-    val one = Bin(5, -3.0, 7.0, {x: Double => x} named "something")
+    val one = Bin(5, -3.0, 7.0, {x: Double => x} named "xaxis")
     simple.foreach(one.fill(_))
     one.values.map(_.entries).toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
     one.underflow.entries should be (1.0)
@@ -620,7 +620,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   "Binning/Binned" must "work with Sum/Summing/Summed" in {
-    val one = Bin(5, -3.0, 7.0, {x: Double => x}, Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
+    val one = Bin(5, -3.0, 7.0, {x: Double => x} named "xaxis", Sum({x: Double => 10.0} named "yaxis"), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}), Sum({x: Double => 10.0}))
     simple.foreach(one.fill(_))
     one.values.map(_.sum).toList should be (List(30.0, 20.0, 20.0, 10.0, 0.0))
     one.underflow.sum should be (10.0)
@@ -651,6 +651,11 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.high.get should be (8.0)
 
     checkJson(one)
+
+    val two = SparselyBin(1.0, {x: Double => x} named "something", Sum({x: Double => x} named "else"))
+    simple.foreach(two.fill(_))
+
+    checkJson(two)
   }
 
   //////////////////////////////////////////////////////////////// CentrallyBin/CentrallyBinned/CentrallyBinning
@@ -673,18 +678,22 @@ class DefaultSuite extends FlatSpec with Matchers {
     one.qfTimesEntries(-1.0 to 11.0 by 1.0: _*).toList should be (List(-4.7, -4.7, -3.35, -2.0, -1.25, -0.5, 0.0, 0.5, 2.0, 4.25, 6.5, 7.3, 7.3))
 
     checkJson(one)
+
+    val two = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
+    checkJson(two)
   }
 
   //////////////////////////////////////////////////////////////// AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning
 
   "AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning" must "work with Count/Counting/Counted" in {
     val one = AdaptivelyBin({x: Double => x} named "something", num = 5)
-
     simple.foreach(one.fill(_))
-
     one.bins.toList map {case (k, v) => (k, v.entries)} should be (List(-3.85 -> 2.0, -1.1666666666666667 -> 3.0, 0.8 -> 2.0, 2.8 -> 2.0, 7.3 -> 1.0))
-
     checkJson(one)
+
+    val two = AdaptivelyBin({x: Double => x} named "something", num = 5, value = Sum({x: Double => x} named "else"))
+    simple.foreach(two.fill(_))
+    checkJson(two)
   }
 
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
@@ -700,12 +709,14 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val fracking = Fraction({x: Double => x > 0.0}, Sum({x: Double => x}))
+    val fracking = Fraction({x: Double => x > 0.0} named "something", Sum({x: Double => x} named "else"))
     simple.foreach(fracking.fill(_))
 
     fracking.numerator.sum should be (14.5 +- 1e-12)
     fracking.denominator.sum should be (3.3 +- 1e-12)
 
+    println(fracking.toJson.stringify)
+    println(Factory.fromJson(fracking.toJson).toJson.stringify)
     checkJson(fracking)
   }
 
@@ -731,7 +742,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val stacking = Stack({x: Double => x}, Sum({x: Double => x}), 0.0, 2.0, 4.0, 6.0, 8.0)
+    val stacking = Stack({x: Double => x} named "something", Sum({x: Double => x} named "else"), 0.0, 2.0, 4.0, 6.0, 8.0)
     simple.foreach(stacking.fill(_))
 
     stacking.cuts(1)._2.sum should be (14.5 +- 1e-12)
@@ -751,7 +762,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val partitioning = Partition({x: Double => x}, Sum({x: Double => x}), 0.0, 2.0, 4.0, 6.0, 8.0)
+    val partitioning = Partition({x: Double => x} named "something", Sum({x: Double => x} named "else"), 0.0, 2.0, 4.0, 6.0, 8.0)
     simple.foreach(partitioning.fill(_))
 
     partitioning.cuts(0)._2.sum should be (-11.2 +- 1e-12)
@@ -765,10 +776,12 @@ class DefaultSuite extends FlatSpec with Matchers {
   "Categorize/Categorized/Categorizing" must "work" in {
     val categorizing = Categorize({x: Struct => x.string.substring(0, 1)} named "something")
     struct.foreach(categorizing.fill(_))
-
     categorizing.pairsMap map {case (k, v) => (k, v.entries)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
-
     checkJson(categorizing)
+
+    val categorizing2 = Categorize({x: Struct => x.string.substring(0, 1)} named "something", Sum({x: Struct => x.double} named "else"))
+    struct.foreach(categorizing2.fill(_))
+    checkJson(categorizing2)
   }
 
   //////////////////////////////////////////////////////////////// Label/Labeled/Labeling

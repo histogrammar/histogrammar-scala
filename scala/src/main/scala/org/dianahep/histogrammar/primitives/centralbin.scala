@@ -92,8 +92,8 @@ package histogrammar {
     }
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow").maybe("name")) =>
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -111,6 +111,11 @@ package histogrammar {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".bins:type")
         }
+        val binsName = get.getOrElse("bins:name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".bins:name")
+        }
         val bins = get("bins") match {
           case JsonArray(bins @ _*) if (bins.size >= 2) =>
             immutable.MetricSortedMap(bins.zipWithIndex map {
@@ -122,7 +127,7 @@ package histogrammar {
                   case x => throw new JsonFormatException(x, name + s".bins $i center")
                 }
 
-                val value = binsFactory.fromJsonFragment(binget("value"))
+                val value = binsFactory.fromJsonFragment(binget("value"), binsName)
                 (center, value)
 
               case (x, i) => throw new JsonFormatException(x, name + s".bins $i")
@@ -145,9 +150,9 @@ package histogrammar {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".nanflow:type")
         }
-        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
+        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        new CentrallyBinned[Container[_], Container[_]](entries, quantityName, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], min, max, nanflow)
+        new CentrallyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], min, max, nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -165,7 +170,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     */
   class CentrallyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
-    extends Container[CentrallyBinned[V, N]] with CentrallyBin.Methods[V] {
+    extends Container[CentrallyBinned[V, N]] with QuantityName with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinned[V, N]
     def factory = CentrallyBin
@@ -189,15 +194,16 @@ package histogrammar {
 
     def children = nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(bins.head._2.factory.name),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      "nanflow" -> nanflow.toJsonFragment(false)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("bins:name") -> (bins.head match {case (c, v: QuantityName) => v.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""CentrallyBinned[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
@@ -266,15 +272,16 @@ package histogrammar {
 
     def children = nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(value.factory.name),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      "nanflow" -> nanflow.toJsonFragment(false)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+      maybe(JsonString("bins:name") -> (bins.head match {case (c, v: AnyQuantity[_, _]) => v.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""CentrallyBinning[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {

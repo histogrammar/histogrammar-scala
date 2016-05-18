@@ -54,7 +54,7 @@ package histogrammar {
     def unapply[DATUM](x: Deviating[DATUM]) = Some(x.variance)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean", "variance").maybe("name")) =>
         val get = pairs.toMap
 
@@ -79,7 +79,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".variance")
         }
 
-        new Deviated(entries, quantityName, mean, variance)
+        new Deviated(entries, (nameFromParent ++ quantityName).lastOption, mean, variance)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -102,7 +102,7 @@ package histogrammar {
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviated private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double, val variance: Double) extends Container[Deviated] {
+  class Deviated private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double, val variance: Double) extends Container[Deviated] with QuantityName {
     type Type = Deviated
     def factory = Deviate
 
@@ -121,11 +121,11 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "mean" -> JsonFloat(mean),
       "variance" -> JsonFloat(variance)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     override def toString() = s"Deviated[$mean, $variance]"
     override def equals(that: Any) = that match {
@@ -192,11 +192,11 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "mean" -> JsonFloat(mean),
       "variance" -> JsonFloat(variance)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"Deviating[$mean, $variance]"
     override def equals(that: Any) = that match {

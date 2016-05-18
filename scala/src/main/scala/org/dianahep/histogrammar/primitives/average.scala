@@ -51,7 +51,7 @@ package histogrammar {
     def unapply[DATUM](x: Averaging[DATUM]) = Some(x.mean)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean").maybe("name")) =>
         val get = pairs.toMap
 
@@ -71,7 +71,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".mean")
         }
 
-        new Averaged(entries, quantityName, mean)
+        new Averaged(entries, (nameFromParent ++ quantityName).lastOption, mean)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -88,7 +88,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param mean Weighted mean of the quantity.
     */
-  class Averaged private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double) extends Container[Averaged] {
+  class Averaged private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double) extends Container[Averaged] with QuantityName {
     type Type = Averaged
     def factory = Average
 
@@ -106,10 +106,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "mean" -> JsonFloat(mean)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     override def toString() = s"Averaged[$mean]"
     override def equals(that: Any) = that match {
@@ -159,10 +159,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "mean" -> JsonFloat(mean)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"Averaging[$mean]"
     override def equals(that: Any) = that match {

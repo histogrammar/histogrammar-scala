@@ -52,8 +52,8 @@ package histogrammar {
       apply(quantity, value)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name").maybe("data:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -72,11 +72,17 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".type")
         }
 
+        val dataName = get.getOrElse("data:name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".data:name")
+        }
+
         get("data") match {
           case JsonObject(categoryPairs @ _*) =>
-            new Categorized[Container[_]](entries, quantityName, contentType, categoryPairs map {
+            new Categorized[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, contentType, categoryPairs map {
               case (JsonString(category), value) =>
-                category -> factory.fromJsonFragment(value)
+                category -> factory.fromJsonFragment(value, dataName)
             }: _*)
 
           case x => throw new JsonFormatException(x, name + ".data")
@@ -95,7 +101,7 @@ package histogrammar {
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param pairs String category and the associated container of values associated with it.
     */
-  class Categorized[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] {
+  class Categorized[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] with QuantityName {
     type Type = Categorized[V]
     def factory = Categorize
 
@@ -139,11 +145,12 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(contentType),
-      "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("data:name") -> (pairs.headOption match {case Some((k, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""Categorized[[${if (pairs.isEmpty) contentType else pairs.head._2.toString}..., size=${pairs.size}]]"""
     override def equals(that: Any) = that match {
@@ -220,11 +227,12 @@ package histogrammar {
 
     def children = value :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
-      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment)}: _*)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+      maybe(JsonString("data:name") -> (pairs.headOption match {case Some((k, v: AnyQuantity[_, _])) => v.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"Categorizing[[${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {

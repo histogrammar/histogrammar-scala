@@ -63,8 +63,8 @@ package histogrammar {
       apply(quantity, num, tailDetail, value, nanflow)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "num", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow", "tailDetail").maybe("name")) =>
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "num", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow", "tailDetail").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -87,6 +87,11 @@ package histogrammar {
           case JsonString(name) => (name, Factory(name))
           case x => throw new JsonFormatException(x, name + ".bins:type")
         }
+        val binsName = get.getOrElse("bins:name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".bins:name")
+        }
         val bins = get("bins") match {
           case JsonArray(bins @ _*) =>
             mutable.MetricSortedMap[Double, Container[_]](bins.zipWithIndex map {
@@ -98,7 +103,7 @@ package histogrammar {
                   case x => throw new JsonFormatException(x, name + s".bins $i center")
                 }
 
-                val value = binsFactory.fromJsonFragment(binget("value"))
+                val value = binsFactory.fromJsonFragment(binget("value"), binsName)
                 (center, value.asInstanceOf[Container[_]])
 
               case (x, i) => throw new JsonFormatException(x, name + s".bins $i")
@@ -121,14 +126,16 @@ package histogrammar {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".nanflow:type")
         }
-        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
+        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
         val tailDetail = get("tailDetail") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".tailDetail")
         }
 
-        new AdaptivelyBinned[Container[_], Container[_]](contentType, new mutable.Clustering1D[Container[_]](num.toInt, tailDetail, null.asInstanceOf[Container[_]], bins.asInstanceOf[mutable.MetricSortedMap[Double, Container[_]]], min, max, entries), quantityName, nanflow)
+        new AdaptivelyBinned[Container[_], Container[_]](contentType, new mutable.Clustering1D[Container[_]](num.toInt, tailDetail, null.asInstanceOf[Container[_]], bins.asInstanceOf[mutable.MetricSortedMap[Double, Container[_]]], min, max, entries), (nameFromParent ++ quantityName).lastOption, nanflow)
+
+      case _ => throw new JsonFormatException(json, name)
     }
   }
 
@@ -142,7 +149,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     */
   class AdaptivelyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](contentType: String, clustering: mutable.Clustering1D[V], val quantityName: Option[String], val nanflow: N)
-    extends Container[AdaptivelyBinned[V, N]] with CentrallyBin.Methods[V] {
+    extends Container[AdaptivelyBinned[V, N]] with CentrallyBin.Methods[V] with QuantityName {
 
     type Type = AdaptivelyBinned[V, N]
     def factory = AdaptivelyBin
@@ -178,17 +185,18 @@ package histogrammar {
 
     def children = nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "num" -> JsonInt(num),
       "bins:type" -> JsonString(contentType),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment,
+      "nanflow" -> nanflow.toJsonFragment(false),
       "tailDetail" -> JsonFloat(tailDetail)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("bins:name") -> (bins.headOption match {case Some((c, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""AdaptivelyBinned[bins=[${if (bins.isEmpty) contentType else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {
@@ -256,17 +264,18 @@ package histogrammar {
 
     def children = value :: nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "num" -> JsonInt(num),
       "bins:type" -> JsonString(value.factory.name),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment)}: _*),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
       "min" -> JsonFloat(min),
       "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment,
+      "nanflow" -> nanflow.toJsonFragment(false),
       "tailDetail" -> JsonFloat(tailDetail)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+      maybe(JsonString("bins:name") -> (bins.headOption match {case Some((c, v: AnyQuantity[_, _])) => v.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""AdaptivelyBinning[bins=[${if (bins.isEmpty) value.factory.name else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {

@@ -105,8 +105,8 @@ package histogrammar {
     }
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("binWidth", "entries", "bins:type", "bins", "nanflow:type", "nanflow", "origin").maybe("name")) =>
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("binWidth", "entries", "bins:type", "bins", "nanflow:type", "nanflow", "origin").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -129,10 +129,15 @@ package histogrammar {
           case JsonString(name) => (name, Factory(name))
           case x => throw new JsonFormatException(x, name + ".bins:type")
         }
+        val binsName = get.getOrElse("bins:name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".bins:name")
+        }
         val bins = get("bins") match {
           case JsonObject(indexBins @ _*) =>
             SortedMap(indexBins map {
-              case (JsonString(i), v) if (integerPattern.pattern.matcher(i).matches) => (i.toLong, binsFactory.fromJsonFragment(v))
+              case (JsonString(i), v) if (integerPattern.pattern.matcher(i).matches) => (i.toLong, binsFactory.fromJsonFragment(v, binsName))
               case (i, _) => throw new JsonFormatException(i, name + s".bins key must be an integer")
             }: _*)
           case x => throw new JsonFormatException(x, name + ".bins")
@@ -142,14 +147,14 @@ package histogrammar {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".nanflow:type")
         }
-        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
+        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
         val origin = get("origin") match {
           case JsonNumber(x) => x
           case x => throw new JsonFormatException(x, name + ".origin")
         }
 
-        new SparselyBinned[Container[_], Container[_]](binWidth, entries, quantityName, contentType, bins.asInstanceOf[SortedMap[Long, Container[_]]], nanflow, origin)
+        new SparselyBinned[Container[_], Container[_]](binWidth, entries, (nameFromParent ++ quantityName).lastOption, contentType, bins.asInstanceOf[SortedMap[Long, Container[_]]], nanflow, origin)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -167,7 +172,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     * @param origin Left edge of the bin whose index is zero.
     */
-  class SparselyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with SparselyBin.Methods {
+  class SparselyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with QuantityName with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
     def factory = SparselyBin
 
@@ -212,15 +217,16 @@ package histogrammar {
 
     def children = nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(if (bins.isEmpty) contentType else bins.head._2.factory.name),
-      "bins" -> JsonObject(bins.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment)}: _*),
+      "bins" -> JsonObject(bins.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment,
+      "nanflow" -> nanflow.toJsonFragment(false),
       "origin" -> JsonFloat(origin)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("bins:name") -> (bins.headOption match {case Some((i, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""SparselyBinned[binWidth=$binWidth, bins=[${if (bins.isEmpty) contentType else bins.head.toString}..., size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {
@@ -314,15 +320,16 @@ package histogrammar {
 
     def children = value :: nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "binWidth" -> JsonFloat(binWidth),
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(value.factory.name),
-      "bins" -> JsonObject(bins.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment)}: _*),
+      "bins" -> JsonObject(bins.toSeq map {case (i, v) => (JsonString(i.toString), v.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment,
+      "nanflow" -> nanflow.toJsonFragment(false),
       "origin" -> JsonFloat(origin)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+      maybe(JsonString("bins:name") -> (bins.headOption match {case Some((i, v: AnyQuantity[_, _])) => v.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""SparselyBinning[binWidth=$binWidth, bins=[${if (bins.isEmpty) value.factory.name else bins.head.toString}, size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {

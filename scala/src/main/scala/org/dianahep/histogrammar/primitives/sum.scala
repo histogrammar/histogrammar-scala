@@ -51,7 +51,7 @@ package histogrammar {
     def unapply(x: Summing[_]) = Some(x.sum)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sum").maybe("name")) =>
         val get = pairs.toMap
 
@@ -71,7 +71,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".sum")
         }
 
-        new Summed(entries, quantityName, sum)
+        new Summed(entries, (nameFromParent ++ quantityName).lastOption, sum)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -85,7 +85,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summed private[histogrammar](val entries: Double, val quantityName: Option[String], val sum: Double) extends Container[Summed] {
+  class Summed private[histogrammar](val entries: Double, val quantityName: Option[String], val sum: Double) extends Container[Summed] with QuantityName {
     type Type = Summed
     def factory = Sum
 
@@ -98,10 +98,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "sum" -> JsonFloat(sum)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     override def toString() = s"Summed[$sum]"
     override def equals(that: Any) = that match {
@@ -143,10 +143,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "sum" -> JsonFloat(sum)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"Summing[$sum]"
     override def equals(that: Any) = that match {

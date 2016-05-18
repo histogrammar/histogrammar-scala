@@ -61,7 +61,7 @@ package json {
   /** Exception type for strings that cannot be parsed because they are not proper JSON. */
   class InvalidJsonException(str: String) extends Exception(s"invalid JSON: $str")
   /** Exception type for unexpected JSON structure, thrown by `fromJson` methods. */
-  class JsonFormatException(json: Json, context: String) extends Exception(s"wrong JSON format for $context: $json")
+  class JsonFormatException(json: Json, context: String) extends Exception(s"wrong JSON format for $context: ${json.stringify}")
 
   /** Status of JSON-parsing an in-memory string. Holds the position (`pos`), allows peeking (`remaining`), and manages a stack of unwind-protection. */
   case class ParseState(str: String, var pos: Int = 0) {

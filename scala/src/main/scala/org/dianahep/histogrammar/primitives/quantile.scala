@@ -89,7 +89,7 @@ package histogrammar {
     def unapply[DATUM](x: Quantiling[DATUM]) = Some(x.estimate)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "target", "estimate").maybe("name")) =>
         val get = pairs.toMap
 
@@ -114,7 +114,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".estimate")
         }
 
-        new Quantiled(entries, quantityName, target, estimate)
+        new Quantiled(entries, (nameFromParent ++ quantityName).lastOption, target, estimate)
     }
 
     private[histogrammar] def estimateCombination(xestimate: Double, xentries: Double, yestimate: Double, yentries: Double) =
@@ -137,7 +137,7 @@ package histogrammar {
     * @param target Intended quantile (e.g. 0.5 for median).
     * @param estimate Estimated value of the quantile.
     */
-  class Quantiled private[histogrammar](val entries: Double, val quantityName: Option[String], val target: Double, val estimate: Double) extends Container[Quantiled] {
+  class Quantiled private[histogrammar](val entries: Double, val quantityName: Option[String], val target: Double, val estimate: Double) extends Container[Quantiled] with QuantityName {
 
     type Type = Quantiled
     def factory = Quantile
@@ -158,11 +158,11 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "target" -> JsonFloat(target),
       "estimate" -> JsonFloat(estimate)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     override def toString() = s"""Quantiled[$target, estimate=$estimate]"""
     override def equals(that: Any) = that match {
@@ -222,11 +222,11 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "target" -> JsonFloat(target),
       "estimate" -> JsonFloat(estimate)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"""Quantiling[$target, estimate=$estimate]"""
     override def equals(that: Any) = that match {

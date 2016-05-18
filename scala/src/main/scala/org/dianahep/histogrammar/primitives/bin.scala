@@ -112,8 +112,8 @@ package histogrammar {
     }
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow").maybe("name")) =>
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow").maybe("name").maybe("values:name")) =>
         val get = pairs.toMap
 
         val low = get("low") match {
@@ -141,8 +141,13 @@ package histogrammar {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".values:type")
         }
+        val valuesName = get.getOrElse("values:name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".values:name")
+        }
         val values = get("values") match {
-          case JsonArray(sub @ _*) => sub.map(valuesFactory.fromJsonFragment(_))
+          case JsonArray(sub @ _*) => sub.map(valuesFactory.fromJsonFragment(_, valuesName))
           case x => throw new JsonFormatException(x, name + ".values")
         }
 
@@ -150,21 +155,21 @@ package histogrammar {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".underflow:type")
         }
-        val underflow = underflowFactory.fromJsonFragment(get("underflow"))
+        val underflow = underflowFactory.fromJsonFragment(get("underflow"), None)
 
         val overflowFactory = get("overflow:type") match {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".overflow:type")
         }
-        val overflow = overflowFactory.fromJsonFragment(get("overflow"))
+        val overflow = overflowFactory.fromJsonFragment(get("overflow"), None)
 
         val nanflowFactory = get("nanflow:type") match {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".nanflow:type")
         }
-        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"))
+        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, entries, quantityName, values, underflow, overflow, nanflow)
+        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, entries, (nameFromParent ++ quantityName).lastOption, values, underflow, overflow, nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -191,7 +196,7 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binned[V, U, O, N]] with Bin.Methods {
+    val nanflow: N) extends Container[Binned[V, U, O, N]] with QuantityName with Bin.Methods {
 
     type Type = Binned[V, U, O, N]
     def factory = Bin
@@ -231,19 +236,20 @@ package histogrammar {
 
     def children = underflow :: overflow :: nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "low" -> JsonFloat(low),
       "high" -> JsonFloat(high),
       "entries" -> JsonFloat(entries),
       "values:type" -> JsonString(values.head.factory.name),
-      "values" -> JsonArray(values.map(_.toJsonFragment): _*),
+      "values" -> JsonArray(values.map(_.toJsonFragment(true)): _*),
       "underflow:type" -> JsonString(underflow.factory.name),
-      "underflow" -> underflow.toJsonFragment,
+      "underflow" -> underflow.toJsonFragment(false),
       "overflow:type" -> JsonString(overflow.factory.name),
-      "overflow" -> overflow.toJsonFragment,
+      "overflow" -> overflow.toJsonFragment(false),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      "nanflow" -> nanflow.toJsonFragment(false)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("values:name") -> (values.head match {case x: QuantityName => x.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {
@@ -333,19 +339,20 @@ package histogrammar {
 
     def children = underflow :: overflow :: nanflow :: values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "low" -> JsonFloat(low),
       "high" -> JsonFloat(high),
       "entries" -> JsonFloat(entries),
       "values:type" -> JsonString(values.head.factory.name),
-      "values" -> JsonArray(values.map(_.toJsonFragment): _*),
+      "values" -> JsonArray(values.map(_.toJsonFragment(true)): _*),
       "underflow:type" -> JsonString(underflow.factory.name),
-      "underflow" -> underflow.toJsonFragment,
+      "underflow" -> underflow.toJsonFragment(false),
       "overflow:type" -> JsonString(overflow.factory.name),
-      "overflow" -> overflow.toJsonFragment,
+      "overflow" -> overflow.toJsonFragment(false),
       "nanflow:type" -> JsonString(nanflow.factory.name),
-      "nanflow" -> nanflow.toJsonFragment).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      "nanflow" -> nanflow.toJsonFragment(false)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+      maybe(JsonString("values:name") -> (values.head match {case x: AnyQuantity[_, _] => x.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
     override def equals(that: Any) = that match {

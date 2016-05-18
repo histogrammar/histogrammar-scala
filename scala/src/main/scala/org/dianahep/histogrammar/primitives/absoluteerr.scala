@@ -51,7 +51,7 @@ package histogrammar {
     def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some(x.mae)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mae").maybe("name")) =>
         val get = pairs.toMap
 
@@ -71,7 +71,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".mae")
         }
 
-        new AbsoluteErred(entries, quantityName, mae)
+        new AbsoluteErred(entries, (nameFromParent ++ quantityName).lastOption, mae)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -88,7 +88,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
-  class AbsoluteErred private[histogrammar](val entries: Double, val quantityName: Option[String], val mae: Double) extends Container[AbsoluteErred] {
+  class AbsoluteErred private[histogrammar](val entries: Double, val quantityName: Option[String], val mae: Double) extends Container[AbsoluteErred] with QuantityName {
     type Type = AbsoluteErred
     def factory = AbsoluteErr
 
@@ -104,10 +104,10 @@ package histogrammar {
         new AbsoluteErred(newentries, this.quantityName, newmae)
       }
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "mae" -> JsonFloat(mae)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     def children = Nil
 
@@ -168,10 +168,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "mae" -> JsonFloat(mae)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"AbsoluteErring[$mae]"
     override def equals(that: Any) = that match {

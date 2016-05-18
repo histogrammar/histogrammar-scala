@@ -58,6 +58,7 @@
       <groupId>io.continuum.bokeh</groupId>
       <artifactId>bokeh_${scala.tools.version}</artifactId>
       <version>0.6</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>

@@ -5,7 +5,7 @@ import scala.language.implicitConversions
 import io.continuum.bokeh._
 
 
-package object bokeh {
+package object bokeh extends App with Tools {
   implicit def binnedToHistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
     new HistogramMethods(hist)
 
@@ -56,8 +56,7 @@ package bokeh {
       val xdr = new DataRange1d()
       val ydr = new DataRange1d()
 
-      //tools are interacrtive tools in the web browser: add later
-      val plot = new Plot().x_range(xdr).y_range(ydr) //.tools(Pan|WheelZoom)
+      val plot = new Plot().x_range(xdr).y_range(ydr).tools(Pan|WheelZoom)
 
       val xaxis = new LinearAxis().plot(plot).location(xaxisLocation)
       val yaxis = new LinearAxis().plot(plot).location(yaxisLocation)

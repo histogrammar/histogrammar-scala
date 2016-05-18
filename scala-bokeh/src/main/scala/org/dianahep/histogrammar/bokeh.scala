@@ -26,8 +26,20 @@ package object bokeh {
 
 package bokeh {
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
+
+    def colorSelector(c: String) : Color = {
+        val color: Color = c match {
+           case "white" => Color.White
+           case "black" => Color.Black
+           case "red"   => Color.Red
+           case other   => throw new IllegalArgumentException(
+              s"Only white, black, red colors are supported but got $other.")
+         }
+         color
+    }
+
     //This is 1D plot
-    def plot(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.White, lineColor: Color = Color.Black, xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
+    def plot(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black", xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
 
       //Prepare histogram contents for plotting
       val h = hist.value.high
@@ -55,7 +67,7 @@ package bokeh {
       //Set marker color, fill color, line color
       //Note: here, line is an exterior of the marker
       //FIXME plotting options should be configrable!
-      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(colorSelector(fillColor)).line_color(colorSelector(lineColor))
 
       //FIXME renderer: not configurable for now
       val circle = new GlyphRenderer().data_source(source).glyph(glyph)

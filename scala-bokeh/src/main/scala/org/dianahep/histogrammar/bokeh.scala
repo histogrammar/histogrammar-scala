@@ -66,16 +66,10 @@ package bokeh {
       new Document(plot)
     }
 
-    //FIXME not sure how that will work
-    def show(html: HTMLFile) {
-      html.view()
-    }
-
-    //Default value for a file name?
-    def save(plot: Document, fname: String = "sample.html") : HTMLFile = {
+    def save(plot: Document, fname: String) {
       val html = plot.save(fname)
       println(s"Wrote ${html.file}. Open ${html.url} in a web browser.")
-      html
+      html.view()
     }
 
   }

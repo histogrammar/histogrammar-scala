@@ -51,7 +51,7 @@ package histogrammar {
     def unapply[DATUM](x: Minimizing[DATUM]) = Some(x.min)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "min").maybe("name")) =>
         val get = pairs.toMap
 
@@ -67,7 +67,7 @@ package histogrammar {
         }
 
         get("min") match {
-          case JsonNumber(x) => new Minimized(entries, quantityName, x)
+          case JsonNumber(x) => new Minimized(entries, (nameFromParent ++ quantityName).lastOption, x)
           case x => throw new JsonFormatException(x, name)
         }
 
@@ -93,7 +93,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param min Lowest observed value.
     */
-  class Minimized private[histogrammar](val entries: Double, val quantityName: Option[String], val min: Double) extends Container[Minimized] {
+  class Minimized private[histogrammar](val entries: Double, val quantityName: Option[String], val min: Double) extends Container[Minimized] with QuantityName {
     type Type = Minimized
     def factory = Minimize
 
@@ -109,10 +109,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "min" -> JsonFloat(min)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     override def toString() = s"Minimized[$min]"
     override def equals(that: Any) = that match {
@@ -155,10 +155,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "min" -> JsonFloat(min)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"Minimizing[$min]"
     override def equals(that: Any) = that match {
@@ -201,7 +201,7 @@ package histogrammar {
     def unapply[DATUM](x: Maximizing[DATUM]) = Some(x.max)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "max").maybe("name")) =>
         val get = pairs.toMap
 
@@ -217,7 +217,7 @@ package histogrammar {
         }
 
         get("max") match {
-          case JsonNumber(x) => new Maximized(entries, quantityName, x)
+          case JsonNumber(x) => new Maximized(entries, (nameFromParent ++ quantityName).lastOption, x)
           case x => throw new JsonFormatException(x, name)
         }
 
@@ -243,7 +243,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param max Highest observed value.
     */
-  class Maximized private[histogrammar](val entries: Double, val quantityName: Option[String], val max: Double) extends Container[Maximized] {
+  class Maximized private[histogrammar](val entries: Double, val quantityName: Option[String], val max: Double) extends Container[Maximized] with QuantityName {
     type Type = Maximized
     def factory = Maximize
 
@@ -256,10 +256,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "max" -> JsonFloat(max)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     override def toString() = s"Maximized[$max]"
     override def equals(that: Any) = that match {
@@ -302,10 +302,10 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "max" -> JsonFloat(max)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"Maximizing[$max]"
     override def equals(that: Any) = that match {

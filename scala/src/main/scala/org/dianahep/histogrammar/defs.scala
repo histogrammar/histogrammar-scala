@@ -44,7 +44,7 @@ package histogrammar {
     /** Help text that can be queried interactively: more detail than `help`. ('''FIXME:''' currently only contains the `apply` signature.) */
     def detailedHelp: String
     /** Reconstructs a container of known type from JSON. General users should call the `Factory` object's `fromJson`, which uses header data to identify the container type. (This is called by `fromJson`.) */
-    def fromJsonFragment(json: Json): Container[_]
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_]
   }
 
   /** Entry point for constructing containers from JSON and centralized registry of container types.
@@ -99,13 +99,19 @@ package histogrammar {
       case None => throw new ContainerException(s"unrecognized container (is it a custom container that hasn't been registered?): $name")
     }
 
-    /** User's entry point for reconstructing a container from JSON text. The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`). */
+    /** User's entry point for reconstructing a container from JSON text.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
     def fromJson(str: String): Container[_] = Json.parse(str) match {
       case Some(json) => fromJson(json)
       case None => throw new InvalidJsonException(str)
     }
 
-    /** User's entry point for reconstructing a container from a JSON object. The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`). */
+    /** User's entry point for reconstructing a container from a JSON object.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
     def fromJson(json: Json): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
         val get = pairs.toMap
@@ -115,10 +121,31 @@ package histogrammar {
           case x => throw new JsonFormatException(x, "Factory.type")
         }
 
-        Factory(name).fromJsonFragment(get("data"))
+        Factory(name).fromJsonFragment(get("data"), None)
 
       case _ => throw new JsonFormatException(json, "Factory")
     }
+
+    /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
+    def fromJsonFile(fileName: String): Container[_] = fromJsonFile(new java.io.File(fileName))
+
+    /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
+    def fromJsonFile(file: java.io.File): Container[_] = fromJsonStream(new java.io.FileInputStream(file))
+
+    /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
+      * 
+      * Note: fully consumes the `inputStream`.
+      * 
+      * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
+      */
+    def fromJsonStream(inputStream: java.io.InputStream): Container[_] =
+      fromJson(new java.util.Scanner(inputStream).useDelimiter("\\A").next)
   }
 
   /** Interface for classes that contain aggregated data, such as "Counted" or "Binned" (immutable) or "Counting" or "Binning" (mutable).
@@ -169,14 +196,19 @@ package histogrammar {
       * 
       * Note that the [[org.dianahep.histogrammar.json.Json]] object has a `stringify` method to serialize.
       */
-    def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment)
+    def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment(false))
     /** Used internally to convert the container to JSON without its `"type"` header. */
-    def toJsonFragment: Json
+    def toJsonFragment(suppressName: Boolean): Json
     /** Cast the container to a given type. Especially useful for containers reconstructed from JSON or stored in [[org.dianahep.histogrammar.UntypedLabeling]]/[[org.dianahep.histogrammar.UntypedLabeled]]. */
     def as[OTHER <: Container[OTHER]] = this.asInstanceOf[OTHER]
 
     /** List of sub-aggregators, to make it possible to walk the tree. */
     def children: Seq[Container[_]]
+  }
+
+  /** Mix-in to provide a quantity name for immutable Containers (analogous to [[org.dianahep.histogrammar.AnyQuantity]] for mutable Containers). */
+  trait QuantityName {
+    def quantityName: Option[String]
   }
 
   /** Mix-in to add mutability to a [[org.dianahep.histogrammar.Container]].

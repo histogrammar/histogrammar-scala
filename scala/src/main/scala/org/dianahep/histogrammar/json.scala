@@ -61,7 +61,7 @@ package json {
   /** Exception type for strings that cannot be parsed because they are not proper JSON. */
   class InvalidJsonException(str: String) extends Exception(s"invalid JSON: $str")
   /** Exception type for unexpected JSON structure, thrown by `fromJson` methods. */
-  class JsonFormatException(json: Json, context: String) extends Exception(s"wrong JSON format for $context: $json")
+  class JsonFormatException(json: Json, context: String) extends Exception(s"wrong JSON format for $context: ${json.stringify}")
 
   /** Status of JSON-parsing an in-memory string. Holds the position (`pos`), allows peeking (`remaining`), and manages a stack of unwind-protection. */
   case class ParseState(str: String, var pos: Int = 0) {
@@ -88,6 +88,23 @@ package json {
   sealed trait Json {
     /** Convert this object into a serialized JSON string. The `toString` method is ''not'' a synonym: `toString` shows structure and `stringify` serializes. */
     def stringify: String
+
+    /** Write this object to a UTF-8 encoded file using `stringify`. */
+    def write(fileName: String) {
+      write(new java.io.File(fileName))
+    }
+
+    /** Write this object to a UTF-8 encoded file using `stringify`. */
+    def write(file: java.io.File) {
+      val f = new java.io.FileOutputStream(file)
+      write(f)
+      f.close()
+    }
+
+    /** Write this object on an OutputStream as UTF-8 using `stringify`. */
+    def write(outputStream: java.io.OutputStream) {
+      outputStream.write(stringify.getBytes("UTF-8"))
+    }
   }
   /** Entry point for parsing JSON. */
   object Json {

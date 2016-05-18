@@ -52,8 +52,8 @@ package histogrammar {
       apply(quantity, value, cuts: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name").maybe("data:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -72,9 +72,15 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".type")
         }
 
+        val dataName = get.getOrElse("data:name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".data:name")
+        }
+
         get("data") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
-            new Partitioned[Container[_]](entries, quantityName, elements.zipWithIndex map {case (element, i) =>
+            new Partitioned[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
               element match {
                 case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
                   val elementGet = elementPairs.toMap
@@ -82,7 +88,7 @@ package histogrammar {
                     case JsonNumber(x) => x
                     case x => throw new JsonFormatException(x, name + s".data element $i atleast")
                   }
-                  (atleast, factory.fromJsonFragment(elementGet("data")))
+                  (atleast, factory.fromJsonFragment(elementGet("data"), dataName))
 
                 case x => throw new JsonFormatException(x, name + s".data element $i")
               }
@@ -103,7 +109,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Partitioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] {
+  class Partitioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] with QuantityName {
     type Type = Partitioned[V]
     def factory = Partition
 
@@ -129,11 +135,12 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
-      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("data:name") -> (cuts.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""Partitioned[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {
@@ -193,11 +200,12 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
-      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment)}: _*)).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+      maybe(JsonString("data:name") -> (cuts.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""Partitioning[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
     override def equals(that: Any) = that match {

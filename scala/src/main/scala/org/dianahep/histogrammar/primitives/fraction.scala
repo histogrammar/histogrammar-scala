@@ -50,8 +50,8 @@ package histogrammar {
       apply(quantity, value)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "numerator", "denominator").maybe("name")) =>
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "numerator", "denominator").maybe("name").maybe("sub:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -70,10 +70,16 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".type")
         }
 
-        val numerator = factory.fromJsonFragment(get("numerator"))
-        val denominator = factory.fromJsonFragment(get("denominator"))
+        val subName = get.getOrElse("sub:name", JsonNull) match {
+          case JsonString(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".sub:name")
+        }
 
-        new Fractioned[Container[_]](entries, quantityName, numerator, denominator)
+        val numerator = factory.fromJsonFragment(get("numerator"), subName)
+        val denominator = factory.fromJsonFragment(get("denominator"), subName)
+
+        new Fractioned[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, numerator, denominator)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -88,7 +94,7 @@ package histogrammar {
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with Select.Methods {
+  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with QuantityName with Select.Methods {
     type Type = Fractioned[V]
     def factory = Fraction
 
@@ -106,12 +112,13 @@ package histogrammar {
 
     def children = numerator :: denominator :: Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(numerator.factory.name),
-      "numerator" -> numerator.toJsonFragment,
-      "denominator" -> denominator.toJsonFragment).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      "numerator" -> numerator.toJsonFragment(true),
+      "denominator" -> denominator.toJsonFragment(true)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("sub:name") -> (numerator match {case x: QuantityName => x.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"Fractioned[numerator=$numerator, denominator=$denominator]"
     override def equals(that: Any) = that match {
@@ -161,12 +168,13 @@ package histogrammar {
 
     def children = numerator :: denominator :: Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(numerator.factory.name),
-      "numerator" -> numerator.toJsonFragment,
-      "denominator" -> denominator.toJsonFragment).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      "numerator" -> numerator.toJsonFragment(true),
+      "denominator" -> denominator.toJsonFragment(true)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+      maybe(JsonString("sub:name") -> (numerator match {case x: AnyQuantity[_, _] => x.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"Fractioning[$numerator, $denominator]"
     override def equals(that: Any) = that match {

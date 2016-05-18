@@ -50,7 +50,7 @@ package histogrammar {
     def unapply(x: Counting) = Some(x.entries)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonFloat(entries) => new Counted(entries)
       case _ => throw new JsonFormatException(json, name)
     }
@@ -74,7 +74,7 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonFloat(entries)
+    def toJsonFragment(suppressName: Boolean) = JsonFloat(entries)
 
     override def toString() = s"Counted[$entries]"
     override def equals(that: Any) = that match {
@@ -111,7 +111,7 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = JsonFloat(entries)
+    def toJsonFragment(suppressName: Boolean) = JsonFloat(entries)
 
     override def toString() = s"Counting[$entries]"
     override def equals(that: Any) = that match {

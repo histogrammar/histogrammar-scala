@@ -54,7 +54,7 @@ package histogrammar {
     def unapply[DATUM, RANGE](x: Sampling[DATUM, RANGE]) = x.values
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "values").maybe("name")) =>
         val get = pairs.toMap
 
@@ -101,7 +101,7 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".values")
         }
 
-        new Sampled[Any](entries, quantityName, limit.toInt, values: _*)
+        new Sampled[Any](entries, (nameFromParent ++ quantityName).lastOption, limit.toInt, values: _*)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -116,7 +116,7 @@ package histogrammar {
     * @param limit Maximum number of data points in the sample.
     * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
     */
-  class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] {
+  class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] with QuantityName {
     type Type = Sampled[RANGE]
     def factory = Sample
 
@@ -143,7 +143,7 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = {
+    def toJsonFragment(suppressName: Boolean) = {
       implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
       JsonObject(
         "entries" -> JsonFloat(entries),
@@ -153,7 +153,7 @@ package histogrammar {
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
         }): _*)).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
     }
 
     override def toString() = s"""Sampled[${if (isEmpty) "empty" else values.head.toString + "..."}, size=${size}]"""
@@ -215,7 +215,7 @@ package histogrammar {
 
     def children = Nil
 
-    def toJsonFragment = {
+    def toJsonFragment(suppressName: Boolean) = {
       implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
       JsonObject(
         "entries" -> JsonFloat(entries),
@@ -225,7 +225,7 @@ package histogrammar {
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
         }): _*)).
-        maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+        maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
     }
 
     override def toString() = s"""Sampling[${if (isEmpty) "empty" else reservoir.some.toString + "..."}, size=${size}]"""

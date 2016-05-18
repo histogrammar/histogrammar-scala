@@ -62,7 +62,7 @@ package histogrammar {
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Selecting[DATUM, V]) = Some(x.value)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
         val get = pairs.toMap
 
@@ -82,9 +82,9 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".type")
         }
 
-        val value = factory.fromJsonFragment(get("data"))
+        val value = factory.fromJsonFragment(get("data"), None)
 
-        new Selected[Container[_]](entries, quantityName, value)
+        new Selected[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, value)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -101,7 +101,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param value Aggregator that accumulated values that passed the cut.
     */
-  class Selected[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val value: V) extends Container[Selected[V]] with Select.Methods {
+  class Selected[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val value: V) extends Container[Selected[V]] with QuantityName with Select.Methods {
     type Type = Selected[V]
     def factory = Select
 
@@ -119,11 +119,11 @@ package histogrammar {
 
     def children = value :: Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
-      "data" -> value.toJsonFragment).
-      maybe(JsonString("name") -> quantityName.map(JsonString(_)))
+      "data" -> value.toJsonFragment(false)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
     override def toString() = s"""Selected[$value]"""
     override def equals(that: Any) = that match {
@@ -167,11 +167,11 @@ package histogrammar {
 
     def children = value :: Nil
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(value.factory.name),
-      "data" -> value.toJsonFragment).
-      maybe(JsonString("name") -> quantity.name.map(JsonString(_)))
+      "data" -> value.toJsonFragment(false)).
+      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
     override def toString() = s"""Selecting[$value]"""
     override def equals(that: Any) = that match {
@@ -217,7 +217,7 @@ package histogrammar {
     def unapply[DATUM, V <: Container[V] with Aggregation](x: Limiting[DATUM, V]) = x.value
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "type", "data")) =>
         val get = pairs.toMap
 
@@ -239,7 +239,7 @@ package histogrammar {
 
         get("data") match {
           case JsonNull => new Limited[Container[_]](entries, limit, contentType, None)
-          case x => new Limited[Container[_]](entries, limit, contentType, Some(factory.fromJsonFragment(x)))
+          case x => new Limited[Container[_]](entries, limit, contentType, Some(factory.fromJsonFragment(x, None)))
         }
 
       case _ => throw new JsonFormatException(json, name)
@@ -283,13 +283,13 @@ package histogrammar {
 
     def children = value.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "limit" -> JsonFloat(limit),
       "type" -> JsonString(contentType),
       "data" -> (value match {
         case None => JsonNull
-        case Some(x) => x.toJsonFragment
+        case Some(x) => x.toJsonFragment(false)
       }))
 
     override def toString() = s"""Limited[${if (saturated) "saturated" else value.get}]"""
@@ -347,13 +347,13 @@ package histogrammar {
 
     def children = value.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "limit" -> JsonFloat(limit),
       "type" -> JsonString(contentType),
       "data" -> (value match {
         case None => JsonNull
-        case Some(x) => x.toJsonFragment
+        case Some(x) => x.toJsonFragment(false)
       }))
 
     override def toString() = s"""Limiting[${if (saturated) "saturated" else value.get}]"""
@@ -392,7 +392,7 @@ package histogrammar {
     def ing[V <: Container[V] with Aggregation](pairs: (String, V)*) = apply(pairs: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
@@ -409,7 +409,7 @@ package histogrammar {
 
         get("data") match {
           case JsonObject(labelPairs @ _*) if (labelPairs.size >= 1) =>
-            new Labeled[Container[_]](entries, labelPairs map {case (JsonString(label), sub) => label -> factory.fromJsonFragment(sub)}: _*)
+            new Labeled[Container[_]](entries, labelPairs map {case (JsonString(label), sub) => label -> factory.fromJsonFragment(sub, None)}: _*)
           case x => throw new JsonFormatException(x, name + ".data")
         }
 
@@ -464,10 +464,10 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(pairs.head._2.factory.name),
-      "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
+      "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment(false)}: _*))
 
     override def toString() = s"Labeled[[${pairs.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {
@@ -536,10 +536,10 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(pairs.head._2.factory.name),
-      "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment}: _*))
+      "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment(false)}: _*))
 
     override def toString() = s"Labeling[[${pairs.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {
@@ -579,7 +579,7 @@ package histogrammar {
     def ing[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = apply(pairs: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "data")) =>
         val get = pairs.toMap
 
@@ -594,7 +594,7 @@ package histogrammar {
               case (JsonString(label), JsonObject(typedata @ _*)) if (typedata.keySet has Set("type", "data")) =>
                 val subget = typedata.toMap
                   (subget("type"), subget("data")) match {
-                  case (JsonString(factory), sub) => (label.toString, Factory(factory).fromJsonFragment(sub))
+                  case (JsonString(factory), sub) => (label.toString, Factory(factory).fromJsonFragment(sub, None))
                   case (_, x) => throw new JsonFormatException(x, name + s""".data "$label"""")
                 }
               case (_, x) => throw new JsonFormatException(x, name + s".data")
@@ -659,10 +659,10 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "data" -> JsonObject(pairs map {case (key, sub) =>
-        key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
+        key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment(false))
       }: _*))
 
     override def toString() =
@@ -737,10 +737,10 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "data" -> JsonObject(pairs map {case (key, sub) =>
-        key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment)
+        key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment(false))
       }: _*))
 
     override def toString() = s"UntypedLabeling[[${pairs.head.toString}..., size=${pairs.size}]]"
@@ -779,7 +779,7 @@ package histogrammar {
     def ing[V <: Container[V] with Aggregation](values: V*) = apply(values: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
@@ -796,7 +796,7 @@ package histogrammar {
 
         get("data") match {
           case JsonArray(values @ _*) if (values.size >= 1) =>
-            new Indexed[Container[_]](entries, values.map(factory.fromJsonFragment(_)): _*)
+            new Indexed[Container[_]](entries, values.map(factory.fromJsonFragment(_, None)): _*)
           case x =>
             throw new JsonFormatException(x, name + ".data")
         }
@@ -847,7 +847,7 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
+    def toJsonFragment(suppressName: Boolean) = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
 
     override def toString() = s"Indexed[[${values.head.toString}..., size=${size}]]"
     override def equals(that: Any) = that match {
@@ -911,7 +911,7 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment): _*))
+    def toJsonFragment(suppressName: Boolean) = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
 
     override def toString() = s"Indexing[[${values.head.toString}..., size=${size}]]"
     override def equals(that: Any) = that match {
@@ -972,7 +972,7 @@ package histogrammar {
     def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, C9 <: Container[C9] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8, e09: C0 Compatible C9) = apply(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "data")) =>
         val get = pairs.toMap
 
@@ -987,7 +987,7 @@ package histogrammar {
 
             values.zipWithIndex.toList foreach {
               case (JsonObject((JsonString(factory), sub)), _) =>
-                val item = Factory(factory).fromJsonFragment(sub).asInstanceOf[C forSome {type C <: Container[C]}]
+                val item = Factory(factory).fromJsonFragment(sub, None).asInstanceOf[C forSome {type C <: Container[C]}]
                 backwards = new Branched(entries, item, backwards)
 
               case (x, i) => throw new JsonFormatException(x, name + s".data $i")
@@ -1060,9 +1060,9 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*))
+      "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment(false))): _*))
 
     override def toString() = "Branched[" + values.mkString(", ") + "]"
 
@@ -1135,9 +1135,9 @@ package histogrammar {
 
     def children = values.toList
 
-    def toJsonFragment = JsonObject(
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment)): _*))
+      "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment(false))): _*))
 
     override def toString() = "Branching[" + values.mkString(", ") + "]"
 

@@ -715,8 +715,6 @@ class DefaultSuite extends FlatSpec with Matchers {
     fracking.numerator.sum should be (14.5 +- 1e-12)
     fracking.denominator.sum should be (3.3 +- 1e-12)
 
-    println(fracking.toJson.stringify)
-    println(Factory.fromJson(fracking.toJson).toJson.stringify)
     checkJson(fracking)
   }
 

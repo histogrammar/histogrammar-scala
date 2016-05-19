@@ -26,20 +26,17 @@ package object bokeh extends App with Tools {
 
 package bokeh {
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
-
-    def colorSelector(c: String) : Color = {
-        val color: Color = c match {
-           case "white" => Color.White
-           case "black" => Color.Black
-           case "red"   => Color.Red
-           case other   => throw new IllegalArgumentException(
-              s"Only white, black, red colors are supported but got $other.")
-         }
-         color
+  
+    private def colorSelector(c: String) = c match {
+       case "white" => Color.White
+       case "black" => Color.Black
+       case "red"   => Color.Red
+       case other   => throw new IllegalArgumentException(
+         s"Only white, black, red colors are supported but got $other.")
     }
 
     //This is 1D plot
-    def plot(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black", xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
+    def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black", xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
 
       //Prepare histogram contents for plotting
       val h = hist.value.high
@@ -53,8 +50,8 @@ package bokeh {
 
       import source.{x,y}
 
-      val xdr = new DataRange1d()
-      val ydr = new DataRange1d()
+      val xdr = new DataRange1d
+      val ydr = new DataRange1d
 
       val plot = new Plot().x_range(xdr).y_range(ydr).tools(Pan|WheelZoom)
 

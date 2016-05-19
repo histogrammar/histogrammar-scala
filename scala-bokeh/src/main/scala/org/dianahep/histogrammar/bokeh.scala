@@ -36,7 +36,7 @@ package bokeh {
     }
 
     //This is 1D plot
-    def plot(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black", xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
+    def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black", xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
 
       //Prepare histogram contents for plotting
       val h = hist.value.high

@@ -25,6 +25,7 @@ package object bokeh extends App with Tools {
 }
 
 package bokeh {
+
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
   
     private def colorSelector(c: String) = c match {
@@ -35,8 +36,7 @@ package bokeh {
          s"Only white, black, red colors are supported but got $other.")
     }
 
-    //This is 1D plot
-    def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black", xaxisLocation: Location = Location.Below, yaxisLocation: Location = Location.Left) : Document = {
+    def bokeh_book(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black") : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = hist.value.high
@@ -44,40 +44,64 @@ package bokeh {
       val step = (h-l)/hist.value.values.length
 
       object source extends ColumnDataSource {
-         val x = column(l to h by step)
-         val y = column(hist.value.values.map(_.entries))
+          val x = column(l to h by step)
+          val y = column(hist.value.values.map(_.entries))
       }
-
       import source.{x,y}
+
+      //Set marker color, fill color, line color
+      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(colorSelector(fillColor)).line_color(colorSelector(lineColor))
+
+      new GlyphRenderer().data_source(source).glyph(glyph)
+    }
+
+    def bokeh_plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Document = {
 
       val xdr = new DataRange1d
       val ydr = new DataRange1d
 
       val plot = new Plot().x_range(xdr).y_range(ydr).tools(Pan|WheelZoom)
 
-      val xaxis = new LinearAxis().plot(plot).location(xaxisLocation)
-      val yaxis = new LinearAxis().plot(plot).location(yaxisLocation)
+      val xaxis = new LinearAxis().plot(plot).location(Location.Below).axis_label(xLabel)
+      val yaxis = new LinearAxis().plot(plot).location(Location.Left).axis_label(yLabel)
       plot.below <<= (xaxis :: _)
       plot.left <<= (yaxis :: _)
 
-      //Set marker color, fill color, line color
-      //Note: here, line is an exterior of the marker
-      //FIXME plotting options should be configrable!
-      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(colorSelector(fillColor)).line_color(colorSelector(lineColor))
+      val children = plots.toList
+      plot.renderers := List(xaxis, yaxis):::children
 
-      //FIXME renderer: not configurable for now
-      val circle = new GlyphRenderer().data_source(source).glyph(glyph)
+      val document = new Document(plot)
+      document
+     }
 
-      plot.renderers := List(xaxis, yaxis, circle)
+    //allow for default x and y labels 
+    def bokeh_plot(plots: GlyphRenderer*) : Document = {
 
-      new Document(plot)
+      val xdr = new DataRange1d
+      val ydr = new DataRange1d
+
+      val plot = new Plot().x_range(xdr).y_range(ydr).tools(Pan|WheelZoom)
+
+      val xaxis = new LinearAxis().plot(plot).location(Location.Below).axis_label("x")
+      val yaxis = new LinearAxis().plot(plot).location(Location.Left).axis_label("y")
+      plot.below <<= (xaxis :: _)
+      plot.left <<= (yaxis :: _)
+
+      val children = plots.toList
+      plot.renderers := List(xaxis, yaxis):::children
+
+      val document = new Document(plot)
+      document
+     }
+
+    def bokeh_save(plot: Document, fname: String) {
+       val html = plot.save(fname)
+       println(s"Wrote ${html.file}. Open ${html.url} in a web browser.")
+       //html.view()
     }
 
-    def save(plot: Document, fname: String) : Any = {
-      val html = plot.save(fname)
-      println(s"Wrote ${html.file}. Open ${html.url} in a web browser.")
-      html.view()
-    }
+    //Method that goes to bokeh-server and plots, so that we can do R-style, ROOT-style plotting
+    def bokeh_view(plot: Document)  = ???
 
   }
 }

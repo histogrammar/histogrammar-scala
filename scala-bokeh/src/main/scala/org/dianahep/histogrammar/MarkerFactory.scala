@@ -8,10 +8,11 @@ object MarkerFactory {
    
   // factory method  
   def apply(s: String) = s match {
-       case "circle" => new Circle
-       case "diamond" => new Diamond
-       case other   => throw new IllegalArgumentException(
-         s"Only circle, diamond markers are supported but got $other.")
+       case "square"   => new Square
+       case "diamond"  => new Diamond
+       case "cross"    => new Cross
+       case "triangle" => new Triangle
+       case other      => new Circle  //make circle a default Marker
    }
 
 }

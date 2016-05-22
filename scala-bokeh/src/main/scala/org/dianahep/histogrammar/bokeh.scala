@@ -22,38 +22,6 @@ package object bokeh extends App with Tools {
 
   implicit def sparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
     sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
-}
-
-package bokeh {
-
-  class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
-  
-    private def colorSelector(c: String) = c match {
-       case "white" => Color.White
-       case "black" => Color.Black
-       case "red"   => Color.Red
-       case other   => throw new IllegalArgumentException(
-         s"Only white, black, red colors are supported but got $other.")
-    }
-
-    def bokeh_book(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black") : GlyphRenderer = {
-
-      //Prepare histogram contents for plotting
-      val h = hist.value.high
-      val l = hist.value.low
-      val step = (h-l)/hist.value.values.length
-
-      object source extends ColumnDataSource {
-          val x = column(l to h by step)
-          val y = column(hist.value.values.map(_.entries))
-      }
-      import source.{x,y}
-
-      //Set marker color, fill color, line color
-      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(colorSelector(fillColor)).line_color(colorSelector(lineColor))
-
-      new GlyphRenderer().data_source(source).glyph(glyph)
-    }
 
     def bokeh_plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
 
@@ -101,5 +69,38 @@ package bokeh {
     //Method that goes to bokeh-server and plots, so that we can do R-style, ROOT-style plotting
     def bokeh_view(document: Document)  = ???
 
+}
+
+package bokeh {
+
+  class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
+
+    private def colorSelector(c: String) = c match {
+       case "white" => Color.White
+       case "black" => Color.Black
+       case "red"   => Color.Red
+       case "blue"  => Color.Blue
+       case other   => throw new IllegalArgumentException(
+         s"Only white, black, red colors are supported but got $other.")
+    }
+  
+    def bokeh_book(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black") : GlyphRenderer = {
+
+      //Prepare histogram contents for plotting
+      val h = hist.value.high
+      val l = hist.value.low
+      val step = (h-l)/hist.value.values.length
+
+      object source extends ColumnDataSource {
+          val x = column(l to h by step)
+          val y = column(hist.value.values.map(_.entries))
+      }
+      import source.{x,y}
+
+      //Set marker color, fill color, line color
+      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(colorSelector(fillColor)).line_color(colorSelector(lineColor))
+
+      new GlyphRenderer().data_source(source).glyph(glyph)
+    }
   }
 }

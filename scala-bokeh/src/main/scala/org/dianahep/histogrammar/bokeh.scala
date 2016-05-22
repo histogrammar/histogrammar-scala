@@ -55,7 +55,7 @@ package bokeh {
       new GlyphRenderer().data_source(source).glyph(glyph)
     }
 
-    def bokeh_plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Document = {
+    def bokeh_plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
 
       val xdr = new DataRange1d
       val ydr = new DataRange1d
@@ -69,13 +69,11 @@ package bokeh {
 
       val children = plots.toList
       plot.renderers := List(xaxis, yaxis):::children
-
-      val document = new Document(plot)
-      document
+      plot
      }
 
     //allow for default x and y labels 
-    def bokeh_plot(plots: GlyphRenderer*) : Document = {
+    def bokeh_plot(plots: GlyphRenderer*) : Plot = {
 
       val xdr = new DataRange1d
       val ydr = new DataRange1d
@@ -89,19 +87,19 @@ package bokeh {
 
       val children = plots.toList
       plot.renderers := List(xaxis, yaxis):::children
-
-      val document = new Document(plot)
-      document
+      plot
      }
 
-    def bokeh_save(plot: Document, fname: String) {
-       val html = plot.save(fname)
+    def bokeh_save(plot: Plot, fname: String) {
+       val document = new Document(plot)
+
+       val html = document.save(fname)
        println(s"Wrote ${html.file}. Open ${html.url} in a web browser.")
        //html.view()
     }
 
     //Method that goes to bokeh-server and plots, so that we can do R-style, ROOT-style plotting
-    def bokeh_view(plot: Document)  = ???
+    def bokeh_view(document: Document)  = ???
 
   }
 }

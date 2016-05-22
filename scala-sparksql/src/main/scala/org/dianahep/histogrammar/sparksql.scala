@@ -9,7 +9,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
 
 package object sparksql {
-  implicit class UserFcnFromColumn[+RANGE](var col: Column) extends UserFcn[Row, RANGE] {
+  implicit class UserFcnFromColumn[+RANGE](@scala.transient val col: Column) extends UserFcn[Row, RANGE] {
     var index = -1
     val name = Some(col.toString)
     def hasCache = false
@@ -28,7 +28,6 @@ package object sparksql {
               z.index = index
               index += 1
               columns += z.col.cast(DoubleType)
-              z.col = null  // because Columns are not Serializable
             case _ =>
               throw new IllegalArgumentException("primitives passed to SQLContext.histogrammar must have spark.sql.Columns for fill rules")
           }
@@ -38,7 +37,6 @@ package object sparksql {
               z.index = index
               index += 1
               columns += z.col.cast(StringType)
-              z.col = null  // because Columns are not Serializable
             case _ =>
               throw new IllegalArgumentException("primitives passed to SQLContext.histogrammar must have spark.sql.Columns for fill rules")
           }
@@ -48,7 +46,6 @@ package object sparksql {
               z.index = index
               index += 1
               columns += z.col
-              z.col = null  // because Columns are not Serializable
             case _ =>
               throw new IllegalArgumentException("primitives passed to SQLContext.histogrammar must have spark.sql.Columns for fill rules")
           }

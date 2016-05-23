@@ -5,7 +5,7 @@ import scala.language.implicitConversions
 import io.continuum.bokeh._
 
 
-package object bokeh extends App with Tools {
+package object bokeh extends Tools {
   implicit def binnedToHistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
     new HistogramMethods(hist)
 
@@ -23,7 +23,7 @@ package object bokeh extends App with Tools {
   implicit def sparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
     sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
 
-    def bokeh_plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
+    def plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
 
       val xdr = new DataRange1d
       val ydr = new DataRange1d
@@ -41,7 +41,7 @@ package object bokeh extends App with Tools {
     }
 
     //allow for default x and y labels 
-    def bokeh_plot(plots: GlyphRenderer*) : Plot = {
+    def plot(plots: GlyphRenderer*) : Plot = {
 
       val xdr = new DataRange1d
       val ydr = new DataRange1d
@@ -58,7 +58,7 @@ package object bokeh extends App with Tools {
       plot
     }
 
-    def bokeh_save(plot: Plot, fname: String) {
+    def save(plot: Plot, fname: String) {
        val document = new Document(plot)
 
        val html = document.save(fname)
@@ -67,15 +67,14 @@ package object bokeh extends App with Tools {
     }
 
     //Method that goes to bokeh-server and plots, so that we can do R-style, ROOT-style plotting
-    def bokeh_view(document: Document)  = ???
+    def view(document: Document)  = ???
 
 }
 
 package bokeh {
-
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
 
-    def bokeh_book(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+    def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = hist.value.high

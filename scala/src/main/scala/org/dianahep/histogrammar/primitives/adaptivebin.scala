@@ -275,7 +275,7 @@ package histogrammar {
       "nanflow" -> nanflow.toJsonFragment(false),
       "tailDetail" -> JsonFloat(tailDetail)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
-      maybe(JsonString("bins:name") -> (bins.headOption match {case Some((c, v: AnyQuantity[_, _])) => v.quantity.name.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
     override def toString() = s"""AdaptivelyBinning[bins=[${if (bins.isEmpty) value.factory.name else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
     override def equals(that: Any) = that match {

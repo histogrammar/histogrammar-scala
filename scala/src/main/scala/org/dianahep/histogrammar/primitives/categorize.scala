@@ -232,7 +232,7 @@ package histogrammar {
       "type" -> JsonString(value.factory.name),
       "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
-      maybe(JsonString("data:name") -> (pairs.headOption match {case Some((k, v: AnyQuantity[_, _])) => v.quantity.name.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("data:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
     override def toString() = s"Categorizing[[${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
     override def equals(that: Any) = that match {

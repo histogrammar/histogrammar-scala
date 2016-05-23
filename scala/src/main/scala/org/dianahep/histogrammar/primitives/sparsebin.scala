@@ -329,7 +329,7 @@ package histogrammar {
       "nanflow" -> nanflow.toJsonFragment(false),
       "origin" -> JsonFloat(origin)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
-      maybe(JsonString("bins:name") -> (bins.headOption match {case Some((i, v: AnyQuantity[_, _])) => v.quantity.name.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
     override def toString() = s"""SparselyBinning[binWidth=$binWidth, bins=[${if (bins.isEmpty) value.factory.name else bins.head.toString}, size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
     override def equals(that: Any) = that match {

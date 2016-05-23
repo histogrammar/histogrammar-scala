@@ -38,7 +38,7 @@ package object bokeh extends App with Tools {
       val children = plots.toList
       plot.renderers := List(xaxis, yaxis):::children
       plot
-     }
+    }
 
     //allow for default x and y labels 
     def bokeh_plot(plots: GlyphRenderer*) : Plot = {
@@ -56,7 +56,7 @@ package object bokeh extends App with Tools {
       val children = plots.toList
       plot.renderers := List(xaxis, yaxis):::children
       plot
-     }
+    }
 
     def bokeh_save(plot: Plot, fname: String) {
        val document = new Document(plot)
@@ -75,16 +75,7 @@ package bokeh {
 
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
 
-    private def colorSelector(c: String) = c match {
-       case "white" => Color.White
-       case "black" => Color.Black
-       case "red"   => Color.Red
-       case "blue"  => Color.Blue
-       case other   => throw new IllegalArgumentException(
-         s"Only white, black, red colors are supported but got $other.")
-    }
-  
-    def bokeh_book(markerType: String = "circle", markerSize: Int = 1, fillColor: String = "white", lineColor: String = "black") : GlyphRenderer = {
+    def bokeh_book(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = hist.value.high
@@ -98,7 +89,7 @@ package bokeh {
       import source.{x,y}
 
       //Set marker color, fill color, line color
-      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(colorSelector(fillColor)).line_color(colorSelector(lineColor))
+      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
 
       new GlyphRenderer().data_source(source).glyph(glyph)
     }

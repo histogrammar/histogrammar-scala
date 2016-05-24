@@ -2,6 +2,8 @@ package org.dianahep.histogrammar
 
 import scala.language.implicitConversions
 
+import org.dianahep.histogrammar.specialized._
+
 import io.continuum.bokeh._
 
 package object bokeh extends Tools {

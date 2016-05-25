@@ -44,7 +44,7 @@ package histogrammar {
       */
     def ed[V <: Container[V]](x: V, xs: V*): Stacked[V] = {
       val ys = x +: xs
-      ed(ys.map(_.entries).sum, ys.init.scanRight(ys.last)(_ + _).map((0.0, _)): _*)
+      ed(ys.map(_.entries).sum, ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _)): _*)
     }
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Stacking]].

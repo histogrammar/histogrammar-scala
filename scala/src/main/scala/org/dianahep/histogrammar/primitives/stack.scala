@@ -36,13 +36,13 @@ package histogrammar {
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
       */
-    def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Stacked(entries, None, cuts: _*)
+    def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*): Stacked[V] = new Stacked(entries, None, cuts: _*)
 
     /** Alternate constructor for [[org.dianahep.histogrammar.Stacked]] that builds from N pre-aggregated primitives (N > 0).
       * 
       * The ''first'' result is the one that gets filled with contributions from all others, and should be plotted ''behind'' all others (''first,'' if overlays cover each other in the usual order).
       */
-    def add[V <: Container[V]](x: V, xs: V*) = {
+    def ed[V <: Container[V]](x: V, xs: V*): Stacked[V] = {
       val ys = x +: xs
       ed(ys.map(_.entries).sum, ys.init.scanRight(ys.last)(_ + _).map((0.0, _)): _*)
     }

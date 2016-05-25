@@ -52,7 +52,7 @@ package histogrammar {
     def unapply[DATUM, RANGE](x: Bagging[DATUM, RANGE]) = x.values
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "values").maybe("name")) =>
         val get = pairs.toMap
 
@@ -120,7 +120,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param values Distinct values and the (weighted) number of times they were observed.
     */
-  class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[RANGE, Double]) extends Container[Bagged[RANGE]] with QuantityName {
+  class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[RANGE, Double]) extends Container[Bagged[RANGE]] with NoAggregation with QuantityName {
     type Type = Bagged[RANGE]
     def factory = Bag
 

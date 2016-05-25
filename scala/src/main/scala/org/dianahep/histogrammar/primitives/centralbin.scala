@@ -39,7 +39,7 @@ package histogrammar {
       * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V], N <: Container[N]](entries: Double, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
+    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
       new CentrallyBinned[V, N](entries, None, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.CentrallyBinning]].
@@ -92,7 +92,7 @@ package histogrammar {
     }
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
@@ -169,8 +169,8 @@ package histogrammar {
     * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class CentrallyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
-    extends Container[CentrallyBinned[V, N]] with QuantityName with CentrallyBin.Methods[V] {
+  class CentrallyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
+    extends Container[CentrallyBinned[V, N]] with NoAggregation with QuantityName with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinned[V, N]
     def factory = CentrallyBin

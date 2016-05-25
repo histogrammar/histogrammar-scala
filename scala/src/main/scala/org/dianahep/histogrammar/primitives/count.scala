@@ -50,7 +50,7 @@ package histogrammar {
     def unapply(x: Counting) = Some(x.entries)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonFloat(entries) => new Counted(entries)
       case _ => throw new JsonFormatException(json, name)
     }
@@ -62,7 +62,7 @@ package histogrammar {
     * 
     * @param entries Weighted number of entries (sum of all weights).
     */
-  class Counted private[histogrammar](val entries: Double) extends Container[Counted] {
+  class Counted private[histogrammar](val entries: Double) extends Container[Counted] with NoAggregation {
     type Type = Counted
     def factory = Count
 

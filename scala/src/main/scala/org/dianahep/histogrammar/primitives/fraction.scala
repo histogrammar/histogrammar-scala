@@ -35,7 +35,7 @@ package histogrammar {
       * @param numerator Container for data that passed the given selection.
       * @param denominator Container for all data, regardless of whether it passed the given selection.
       */
-    def ed[V <: Container[V]](entries: Double, numerator: V, denominator: V) = new Fractioned(entries, None, numerator, denominator)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, numerator: V, denominator: V) = new Fractioned(entries, None, numerator, denominator)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Fractioning]].
       * 
@@ -50,7 +50,7 @@ package histogrammar {
       apply(quantity, value)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "numerator", "denominator").maybe("name").maybe("sub:name")) =>
         val get = pairs.toMap
 
@@ -94,7 +94,7 @@ package histogrammar {
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with QuantityName with Select.Methods {
+  class Fractioned[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with NoAggregation with QuantityName with Select.Methods {
     type Type = Fractioned[V]
     def factory = Fraction
 

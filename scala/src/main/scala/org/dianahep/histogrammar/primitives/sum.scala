@@ -51,7 +51,7 @@ package histogrammar {
     def unapply(x: Summing[_]) = Some(x.sum)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sum").maybe("name")) =>
         val get = pairs.toMap
 
@@ -85,7 +85,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param sum The sum of weight times quantity over all entries.
     */
-  class Summed private[histogrammar](val entries: Double, val quantityName: Option[String], val sum: Double) extends Container[Summed] with QuantityName {
+  class Summed private[histogrammar](val entries: Double, val quantityName: Option[String], val sum: Double) extends Container[Summed] with NoAggregation with QuantityName {
     type Type = Summed
     def factory = Sum
 

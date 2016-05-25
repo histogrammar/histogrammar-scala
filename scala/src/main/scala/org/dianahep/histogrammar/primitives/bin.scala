@@ -40,7 +40,7 @@ package histogrammar {
       * @param overflow Container for data above the last bin.
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]]
+    def ed[V <: Container[V] with NoAggregation, U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation]
       (low: Double,
        high: Double,
        entries: Double,
@@ -112,7 +112,7 @@ package histogrammar {
     }
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("low", "high", "entries", "values:type", "values", "underflow:type", "underflow", "overflow:type", "overflow", "nanflow:type", "nanflow").maybe("name").maybe("values:name")) =>
         val get = pairs.toMap
 
@@ -188,7 +188,7 @@ package histogrammar {
     * @param overflow Container for data above the last bin.
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class Binned[V <: Container[V], U <: Container[U], O <: Container[O], N <: Container[N]] private[histogrammar](
+  class Binned[V <: Container[V] with NoAggregation, U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](
     val low: Double,
     val high: Double,
     val entries: Double,
@@ -196,7 +196,7 @@ package histogrammar {
     val values: Seq[V],
     val underflow: U,
     val overflow: O,
-    val nanflow: N) extends Container[Binned[V, U, O, N]] with QuantityName with Bin.Methods {
+    val nanflow: N) extends Container[Binned[V, U, O, N]] with NoAggregation with QuantityName with Bin.Methods {
 
     type Type = Binned[V, U, O, N]
     def factory = Bin

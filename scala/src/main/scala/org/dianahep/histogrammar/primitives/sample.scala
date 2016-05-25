@@ -54,7 +54,7 @@ package histogrammar {
     def unapply[DATUM, RANGE](x: Sampling[DATUM, RANGE]) = x.values
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "values").maybe("name")) =>
         val get = pairs.toMap
 
@@ -116,7 +116,7 @@ package histogrammar {
     * @param limit Maximum number of data points in the sample.
     * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
     */
-  class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] with QuantityName {
+  class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] with NoAggregation with QuantityName {
     type Type = Sampled[RANGE]
     def factory = Sample
 

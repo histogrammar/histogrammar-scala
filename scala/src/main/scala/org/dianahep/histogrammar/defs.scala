@@ -44,7 +44,7 @@ package histogrammar {
     /** Help text that can be queried interactively: more detail than `help`. ('''FIXME:''' currently only contains the `apply` signature.) */
     def detailedHelp: String
     /** Reconstructs a container of known type from JSON. General users should call the `Factory` object's `fromJson`, which uses header data to identify the container type. (This is called by `fromJson`.) */
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_]
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation
   }
 
   /** Entry point for constructing containers from JSON and centralized registry of container types.
@@ -103,7 +103,7 @@ package histogrammar {
       * 
       * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
       */
-    def fromJson(str: String): Container[_] = Json.parse(str) match {
+    def fromJson(str: String): Container[_] with NoAggregation = Json.parse(str) match {
       case Some(json) => fromJson(json)
       case None => throw new InvalidJsonException(str)
     }
@@ -112,7 +112,7 @@ package histogrammar {
       * 
       * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
       */
-    def fromJson(json: Json): Container[_] = json match {
+    def fromJson(json: Json): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
         val get = pairs.toMap
 
@@ -130,13 +130,13 @@ package histogrammar {
       * 
       * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
       */
-    def fromJsonFile(fileName: String): Container[_] = fromJsonFile(new java.io.File(fileName))
+    def fromJsonFile(fileName: String): Container[_] with NoAggregation = fromJsonFile(new java.io.File(fileName))
 
     /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
       * 
       * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
       */
-    def fromJsonFile(file: java.io.File): Container[_] = fromJsonStream(new java.io.FileInputStream(file))
+    def fromJsonFile(file: java.io.File): Container[_] with NoAggregation = fromJsonStream(new java.io.FileInputStream(file))
 
     /** User's entry point for reading a container as JSON from a UTF-8 encoded file.
       * 
@@ -144,7 +144,7 @@ package histogrammar {
       * 
       * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
       */
-    def fromJsonStream(inputStream: java.io.InputStream): Container[_] =
+    def fromJsonStream(inputStream: java.io.InputStream): Container[_] with NoAggregation =
       fromJson(new java.util.Scanner(inputStream).useDelimiter("\\A").next)
   }
 
@@ -210,6 +210,9 @@ package histogrammar {
   trait QuantityName {
     def quantityName: Option[String]
   }
+
+  /** Mix-in to declare that the [[org.dianahep.histogrammar.Container]] is immutable (opposite of [[org.dianahep.histogrammar.Aggregation]]). */
+  trait NoAggregation
 
   /** Mix-in to add mutability to a [[org.dianahep.histogrammar.Container]].
     * 
@@ -411,43 +414,43 @@ package object histogrammar {
   }
 
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched0[C0 <: Container[C0], TAIL <: BranchedList](x: Branched[C0, TAIL]) {
+  implicit class Branched0[C0 <: Container[C0] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, TAIL]) {
     def i0 = x.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched1[C0 <: Container[C0], C1 <: Container[C1], TAIL <: BranchedList](x: Branched[C0, Branched[C1, TAIL]]) {
+  implicit class Branched1[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, TAIL]]) {
     def i1 = x.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched2[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, TAIL]]]) {
+  implicit class Branched2[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, TAIL]]]) {
     def i2 = x.tail.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched3[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, TAIL]]]]) {
+  implicit class Branched3[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, TAIL]]]]) {
     def i3 = x.tail.tail.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched4[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, TAIL]]]]]) {
+  implicit class Branched4[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, TAIL]]]]]) {
     def i4 = x.tail.tail.tail.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched5[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, TAIL]]]]]]) {
+  implicit class Branched5[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, TAIL]]]]]]) {
     def i5 = x.tail.tail.tail.tail.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched6[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, TAIL]]]]]]]) {
+  implicit class Branched6[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, TAIL]]]]]]]) {
     def i6 = x.tail.tail.tail.tail.tail.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched7[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, TAIL]]]]]]]]) {
+  implicit class Branched7[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation, C7 <: Container[C7] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, TAIL]]]]]]]]) {
     def i7 = x.tail.tail.tail.tail.tail.tail.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched8[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, Branched[C8, TAIL]]]]]]]]]) {
+  implicit class Branched8[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation, C7 <: Container[C7] with NoAggregation, C8 <: Container[C8] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, Branched[C8, TAIL]]]]]]]]]) {
     def i8 = x.tail.tail.tail.tail.tail.tail.tail.tail.head
   }
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
-  implicit class Branched9[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9], TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, Branched[C8, Branched[C9, TAIL]]]]]]]]]]) {
+  implicit class Branched9[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation, C7 <: Container[C7] with NoAggregation, C8 <: Container[C8] with NoAggregation, C9 <: Container[C9] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, Branched[C1, Branched[C2, Branched[C3, Branched[C4, Branched[C5, Branched[C6, Branched[C7, Branched[C8, Branched[C9, TAIL]]]]]]]]]]) {
     def i9 = x.tail.tail.tail.tail.tail.tail.tail.tail.tail.head
   }
 

@@ -51,7 +51,7 @@ package histogrammar {
     def unapply[DATUM](x: Averaging[DATUM]) = Some(x.mean)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean").maybe("name")) =>
         val get = pairs.toMap
 
@@ -88,7 +88,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param mean Weighted mean of the quantity.
     */
-  class Averaged private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double) extends Container[Averaged] with QuantityName {
+  class Averaged private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double) extends Container[Averaged] with NoAggregation with QuantityName {
     type Type = Averaged
     def factory = Average
 

@@ -51,7 +51,7 @@ package histogrammar {
     def unapply[DATUM](x: Minimizing[DATUM]) = Some(x.min)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "min").maybe("name")) =>
         val get = pairs.toMap
 
@@ -93,7 +93,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param min Lowest observed value.
     */
-  class Minimized private[histogrammar](val entries: Double, val quantityName: Option[String], val min: Double) extends Container[Minimized] with QuantityName {
+  class Minimized private[histogrammar](val entries: Double, val quantityName: Option[String], val min: Double) extends Container[Minimized] with NoAggregation with QuantityName {
     type Type = Minimized
     def factory = Minimize
 
@@ -201,7 +201,7 @@ package histogrammar {
     def unapply[DATUM](x: Maximizing[DATUM]) = Some(x.max)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "max").maybe("name")) =>
         val get = pairs.toMap
 
@@ -243,7 +243,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param max Highest observed value.
     */
-  class Maximized private[histogrammar](val entries: Double, val quantityName: Option[String], val max: Double) extends Container[Maximized] with QuantityName {
+  class Maximized private[histogrammar](val entries: Double, val quantityName: Option[String], val max: Double) extends Container[Maximized] with NoAggregation with QuantityName {
     type Type = Maximized
     def factory = Maximize
 

@@ -51,7 +51,7 @@ package histogrammar {
     def unapply[DATUM](x: AbsoluteErring[DATUM]) = Some(x.mae)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mae").maybe("name")) =>
         val get = pairs.toMap
 
@@ -88,7 +88,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param mae Sum of absolute differences of the quantity from zero (Mean Absolute Error).
     */
-  class AbsoluteErred private[histogrammar](val entries: Double, val quantityName: Option[String], val mae: Double) extends Container[AbsoluteErred] with QuantityName {
+  class AbsoluteErred private[histogrammar](val entries: Double, val quantityName: Option[String], val mae: Double) extends Container[AbsoluteErred] with NoAggregation with QuantityName {
     type Type = AbsoluteErred
     def factory = AbsoluteErr
 

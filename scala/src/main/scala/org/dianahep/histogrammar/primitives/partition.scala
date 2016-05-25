@@ -36,7 +36,7 @@ package histogrammar {
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
       */
-    def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*) = new Partitioned(entries, None, cuts: _*)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, cuts: (Double, V)*) = new Partitioned(entries, None, cuts: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Partitioning]].
       * 
@@ -52,7 +52,7 @@ package histogrammar {
       apply(quantity, value, cuts: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name").maybe("data:name")) =>
         val get = pairs.toMap
 
@@ -109,7 +109,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Partitioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] with QuantityName {
+  class Partitioned[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] with NoAggregation with QuantityName {
     type Type = Partitioned[V]
     def factory = Partition
 

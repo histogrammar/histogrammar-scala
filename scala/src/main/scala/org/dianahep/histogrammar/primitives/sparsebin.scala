@@ -44,7 +44,7 @@ package histogrammar {
       * @param nanflow Container for data that resulted in `NaN`.
       * @param origin Left edge of the bin whose index is zero.
       */
-    def ed[V <: Container[V], N <: Container[N]](binWidth: Double, entries: Double, contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
+    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](binWidth: Double, entries: Double, contentType: String, bins: SortedMap[Long, V], nanflow: N, origin: Double) =
       new SparselyBinned[V, N](binWidth, entries, None, contentType, bins, nanflow, origin)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.SparselyBinning]].
@@ -105,7 +105,7 @@ package histogrammar {
     }
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("binWidth", "entries", "bins:type", "bins", "nanflow:type", "nanflow", "origin").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
@@ -172,7 +172,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     * @param origin Left edge of the bin whose index is zero.
     */
-  class SparselyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with QuantityName with SparselyBin.Methods {
+  class SparselyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with NoAggregation with QuantityName with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
     def factory = SparselyBin
 

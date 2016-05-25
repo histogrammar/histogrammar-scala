@@ -42,7 +42,7 @@ package histogrammar {
       * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V], N <: Container[N]](entries: Double, num: Int, tailDetail: Double, contentType: String, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
+    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, num: Int, tailDetail: Double, contentType: String, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
       new AdaptivelyBinned[V, N](contentType, new mutable.Clustering1D[V](num, tailDetail, null.asInstanceOf[V], mutable.MetricSortedMap[Double, V](bins.toSeq: _*), min, max, entries), None, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.AdaptivelyBinning]].
@@ -63,7 +63,7 @@ package histogrammar {
       apply(quantity, num, tailDetail, value, nanflow)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "num", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow", "tailDetail").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
@@ -148,8 +148,8 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class AdaptivelyBinned[V <: Container[V], N <: Container[N]] private[histogrammar](contentType: String, clustering: mutable.Clustering1D[V], val quantityName: Option[String], val nanflow: N)
-    extends Container[AdaptivelyBinned[V, N]] with CentrallyBin.Methods[V] with QuantityName {
+  class AdaptivelyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](contentType: String, clustering: mutable.Clustering1D[V], val quantityName: Option[String], val nanflow: N)
+    extends Container[AdaptivelyBinned[V, N]] with NoAggregation with CentrallyBin.Methods[V] with QuantityName {
 
     type Type = AdaptivelyBinned[V, N]
     def factory = AdaptivelyBin

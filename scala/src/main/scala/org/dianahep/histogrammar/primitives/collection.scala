@@ -44,7 +44,7 @@ package histogrammar {
       * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
       * @param value Aggregator that accumulated values that passed the cut.
       */
-    def ed[V <: Container[V]](entries: Double, value: V) = new Selected[V](entries, None, value)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, value: V) = new Selected[V](entries, None, value)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
       * 
@@ -57,12 +57,12 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: V) = apply(quantity, value)
 
     /** Use [[org.dianahep.histogrammar.Selected]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Selected[V]) = Some(x.value)
+    def unapply[V <: Container[V] with NoAggregation](x: Selected[V]) = Some(x.value)
     /** Use [[org.dianahep.histogrammar.Selecting]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Selecting[DATUM, V]) = Some(x.value)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
         val get = pairs.toMap
 
@@ -101,7 +101,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param value Aggregator that accumulated values that passed the cut.
     */
-  class Selected[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val value: V) extends Container[Selected[V]] with QuantityName with Select.Methods {
+  class Selected[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val value: V) extends Container[Selected[V]] with NoAggregation with QuantityName with Select.Methods {
     type Type = Selected[V]
     def factory = Select
 
@@ -199,7 +199,7 @@ package histogrammar {
       * @param contentType Name of the Factory for `value`.
       * @param value Some aggregator or `None`.
       */
-    def ed[V <: Container[V]](entries: Double, limit: Double, contentType: String, value: Option[V]) = new Limited[V](entries, limit, contentType, value)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, limit: Double, contentType: String, value: Option[V]) = new Limited[V](entries, limit, contentType, value)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
       * 
@@ -212,12 +212,12 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation](limit: Double, value: V) = apply[DATUM, V](limit, value)
 
     /** Use [[org.dianahep.histogrammar.Limited]] in Scala pattern-matching. */
-    def unapply[V <: Container[V]](x: Limited[V]) = x.value
+    def unapply[V <: Container[V] with NoAggregation](x: Limited[V]) = x.value
     /** Use [[org.dianahep.histogrammar.Limiting]] in Scala pattern-matching. */
     def unapply[DATUM, V <: Container[V] with Aggregation](x: Limiting[DATUM, V]) = x.value
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "type", "data")) =>
         val get = pairs.toMap
 
@@ -253,7 +253,7 @@ package histogrammar {
     * @param contentType Name of the Factory for `value`.
     * @param value Some aggregator or `None`.
     */
-  class Limited[V <: Container[V]] private[histogrammar](val entries: Double, val limit: Double, val contentType: String, val value: Option[V]) extends Container[Limited[V]] {
+  class Limited[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val limit: Double, val contentType: String, val value: Option[V]) extends Container[Limited[V]] with NoAggregation {
     type Type = Limited[V]
     def factory = Limit
 
@@ -380,7 +380,7 @@ package histogrammar {
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param pairs Names (strings) associated with containers of the SAME type.
       */
-    def ed[V <: Container[V]](entries: Double, pairs: (String, V)*) = new Labeled[V](entries, pairs: _*)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, pairs: (String, V)*) = new Labeled[V](entries, pairs: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Labeling]].
       * 
@@ -392,7 +392,7 @@ package histogrammar {
     def ing[V <: Container[V] with Aggregation](pairs: (String, V)*) = apply(pairs: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
@@ -424,7 +424,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param pairs Names (strings) associated with containers of the SAME type.
     */
-  class Labeled[V <: Container[V]] private[histogrammar](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] {
+  class Labeled[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] with NoAggregation {
     type Type = Labeled[V]
     def factory = Label
 
@@ -579,7 +579,7 @@ package histogrammar {
     def ing[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = apply(pairs: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "data")) =>
         val get = pairs.toMap
 
@@ -619,7 +619,7 @@ package histogrammar {
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
-  class UntypedLabeled private[histogrammar](val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] {
+  class UntypedLabeled private[histogrammar](val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] with NoAggregation {
     type Type = UntypedLabeled
     def factory = UntypedLabel
 
@@ -767,7 +767,7 @@ package histogrammar {
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param values Ordered list of containers that can be retrieved by index number.
       */
-    def ed[V <: Container[V]](entries: Double, values: V*) = new Indexed[V](entries, values: _*)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, values: V*) = new Indexed[V](entries, values: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Indexing]].
       * 
@@ -779,7 +779,7 @@ package histogrammar {
     def ing[V <: Container[V] with Aggregation](values: V*) = apply(values: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
         val get = pairs.toMap
 
@@ -812,7 +812,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Ordered list of containers that can be retrieved by index number.
     */
-  class Indexed[V <: Container[V]] private[histogrammar](val entries: Double, val values: V*) extends Container[Indexed[V]] {
+  class Indexed[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val values: V*) extends Container[Indexed[V]] with NoAggregation {
     type Type = Indexed[V]
     def factory = Index
 
@@ -938,16 +938,16 @@ package histogrammar {
     def help = "Accumulate containers of DIFFERENT types, indexed by i0 through i9. Every one is filled with every input datum."
     def detailedHelp = "Branch(container0, container1, ...)"
 
-    def ed[C0 <: Container[C0]](entries: Double, i0: C0) = new Branched(entries, i0, BranchedNil)
-    def ed[C0 <: Container[C0], C1 <: Container[C1]](entries: Double, i0: C0, i1: C1) = new Branched(entries, i0, new Branched(entries, i1, BranchedNil))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2]](entries: Double, i0: C0, i1: C1, i2: C2) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, BranchedNil)))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, BranchedNil))))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, BranchedNil)))))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, BranchedNil))))))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, BranchedNil)))))))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, BranchedNil))))))))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, BranchedNil)))))))))
-    def ed[C0 <: Container[C0], C1 <: Container[C1], C2 <: Container[C2], C3 <: Container[C3], C4 <: Container[C4], C5 <: Container[C5], C6 <: Container[C6], C7 <: Container[C7], C8 <: Container[C8], C9 <: Container[C9]](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, new Branched(entries, i9, BranchedNil))))))))))
+    def ed[C0 <: Container[C0] with NoAggregation](entries: Double, i0: C0) = new Branched(entries, i0, BranchedNil)
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation](entries: Double, i0: C0, i1: C1) = new Branched(entries, i0, new Branched(entries, i1, BranchedNil))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, BranchedNil)))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, BranchedNil))))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, BranchedNil)))))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, BranchedNil))))))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, BranchedNil)))))))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation, C7 <: Container[C7] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, BranchedNil))))))))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation, C7 <: Container[C7] with NoAggregation, C8 <: Container[C8] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, BranchedNil)))))))))
+    def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation, C2 <: Container[C2] with NoAggregation, C3 <: Container[C3] with NoAggregation, C4 <: Container[C4] with NoAggregation, C5 <: Container[C5] with NoAggregation, C6 <: Container[C6] with NoAggregation, C7 <: Container[C7] with NoAggregation, C8 <: Container[C8] with NoAggregation, C9 <: Container[C9] with NoAggregation](entries: Double, i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9) = new Branched(entries, i0, new Branched(entries, i1, new Branched(entries, i2, new Branched(entries, i3, new Branched(entries, i4, new Branched(entries, i5, new Branched(entries, i6, new Branched(entries, i7, new Branched(entries, i8, new Branched(entries, i9, BranchedNil))))))))))
 
     def apply[C0 <: Container[C0] with Aggregation](i0: C0) = new Branching(0.0, i0, BranchingNil)
     def apply[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation](i0: C0, i1: C1)(implicit e01: C0 Compatible C1) = new Branching(0.0, i0, new Branching(0.0, i1, BranchingNil))
@@ -972,7 +972,7 @@ package histogrammar {
     def ing[C0 <: Container[C0] with Aggregation, C1 <: Container[C1] with Aggregation, C2 <: Container[C2] with Aggregation, C3 <: Container[C3] with Aggregation, C4 <: Container[C4] with Aggregation, C5 <: Container[C5] with Aggregation, C6 <: Container[C6] with Aggregation, C7 <: Container[C7] with Aggregation, C8 <: Container[C8] with Aggregation, C9 <: Container[C9] with Aggregation](i0: C0, i1: C1, i2: C2, i3: C3, i4: C4, i5: C5, i6: C6, i7: C7, i8: C8, i9: C9)(implicit e01: C0 Compatible C1, e02: C0 Compatible C2, e03: C0 Compatible C3, e04: C0 Compatible C4, e05: C0 Compatible C5, e06: C0 Compatible C6, e07: C0 Compatible C7, e08: C0 Compatible C8, e09: C0 Compatible C9) = apply(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "data")) =>
         val get = pairs.toMap
 
@@ -987,7 +987,7 @@ package histogrammar {
 
             values.zipWithIndex.toList foreach {
               case (JsonObject((JsonString(factory), sub)), _) =>
-                val item = Factory(factory).fromJsonFragment(sub, None).asInstanceOf[C forSome {type C <: Container[C]}]
+                val item = Factory(factory).fromJsonFragment(sub, None).asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}]
                 backwards = new Branched(entries, item, backwards)
 
               case (x, i) => throw new JsonFormatException(x, name + s".data $i")
@@ -996,11 +996,11 @@ package histogrammar {
             // we've loaded it backwards, so reverse the order before returning it
             var out: BranchedList = BranchedNil
             while (backwards != BranchedNil) {
-              val list = backwards.asInstanceOf[Branched[C forSome {type C <: Container[C]}, BranchedList]]
+              val list = backwards.asInstanceOf[Branched[C forSome {type C <: Container[C] with NoAggregation}, BranchedList]]
               out = new Branched(list.entries, list.head, out)
               backwards = list.tail
             }
-            out.asInstanceOf[Container[_]]
+            out.asInstanceOf[Container[_] with NoAggregation]
 
           case x => throw new JsonFormatException(x, name + ".data")
         }
@@ -1033,7 +1033,7 @@ package histogrammar {
     * 
     * Note that concrete instances of `Branched` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
     */
-  class Branched[HEAD <: Container[HEAD], TAIL <: BranchedList] private[histogrammar](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with BranchedList {
+  class Branched[HEAD <: Container[HEAD] with NoAggregation, TAIL <: BranchedList] private[histogrammar](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with NoAggregation with BranchedList {
     type Type = Branched[HEAD, TAIL]
     def factory = Branch
 

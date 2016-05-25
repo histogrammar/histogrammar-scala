@@ -54,7 +54,7 @@ package histogrammar {
     def unapply[DATUM](x: Deviating[DATUM]) = Some(x.variance)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "mean", "variance").maybe("name")) =>
         val get = pairs.toMap
 
@@ -102,7 +102,7 @@ package histogrammar {
     * 
     * The implementation of this container uses a numerically stable variance as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
-  class Deviated private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double, val variance: Double) extends Container[Deviated] with QuantityName {
+  class Deviated private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double, val variance: Double) extends Container[Deviated] with NoAggregation with QuantityName {
     type Type = Deviated
     def factory = Deviate
 

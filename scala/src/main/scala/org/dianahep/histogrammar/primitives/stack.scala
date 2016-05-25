@@ -36,13 +36,13 @@ package histogrammar {
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
       */
-    def ed[V <: Container[V]](entries: Double, cuts: (Double, V)*): Stacked[V] = new Stacked(entries, None, cuts: _*)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, cuts: (Double, V)*): Stacked[V] = new Stacked(entries, None, cuts: _*)
 
     /** Alternate constructor for [[org.dianahep.histogrammar.Stacked]] that builds from N pre-aggregated primitives (N > 0).
       * 
       * The ''first'' result is the one that gets filled with contributions from all others, and should be plotted ''behind'' all others (''first,'' if overlays cover each other in the usual order).
       */
-    def ed[V <: Container[V]](x: V, xs: V*): Stacked[V] = {
+    def ed[V <: Container[V] with NoAggregation](x: V, xs: V*): Stacked[V] = {
       val ys = x +: xs
       ed(ys.map(_.entries).sum, ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _)): _*)
     }
@@ -61,7 +61,7 @@ package histogrammar {
       apply(quantity, value, cuts: _*)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name").maybe("data:name")) =>
         val get = pairs.toMap
 
@@ -118,7 +118,7 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Stacked[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Stacked[V]] with QuantityName {
+  class Stacked[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Stacked[V]] with NoAggregation with QuantityName {
     type Type = Stacked[V]
     def factory = Stack
 

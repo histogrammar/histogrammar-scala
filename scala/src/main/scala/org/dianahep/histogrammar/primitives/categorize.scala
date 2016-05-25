@@ -37,7 +37,7 @@ package histogrammar {
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
       * @param pairs String category and the associated container of values associated with it.
       */
-    def ed[V <: Container[V]](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, None, contentType, pairs: _*)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, None, contentType, pairs: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
       * 
@@ -52,7 +52,7 @@ package histogrammar {
       apply(quantity, value)
 
     import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] = json match {
+    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name").maybe("data:name")) =>
         val get = pairs.toMap
 
@@ -101,7 +101,7 @@ package histogrammar {
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param pairs String category and the associated container of values associated with it.
     */
-  class Categorized[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] with QuantityName {
+  class Categorized[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] with NoAggregation with QuantityName {
     type Type = Categorized[V]
     def factory = Categorize
 

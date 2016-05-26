@@ -28,9 +28,6 @@ package object bokeh extends Tools {
     else
       throw new RuntimeException("sparsely binned histogram has no entries")
 
-  implicit def sparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
-    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[SparselyBinned[Counted, Counted]])
-
   implicit def selectedSparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
     if (hist.value.numFilled > 0)
       new HistogramMethods(
@@ -41,7 +38,45 @@ package object bokeh extends Tools {
 
   implicit def selectedSparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
     selectedSparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
-  
+
+   class BokehImplicits(plots: GlyphRenderer) {
+
+     def plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
+
+        val xdr = new DataRange1d
+        val ydr = new DataRange1d
+
+        val plot = new Plot().x_range(xdr).y_range(ydr).tools(Pan|WheelZoom)
+
+        val xaxis = new LinearAxis().plot(plot).location(Location.Below).axis_label(xLabel)
+        val yaxis = new LinearAxis().plot(plot).location(Location.Left).axis_label(yLabel)
+        plot.below <<= (xaxis :: _)
+        plot.left <<= (yaxis :: _)
+
+        val children = plots.toList
+        plot.renderers := List(xaxis, yaxis):::children
+        plot
+      }
+
+     //allow for default x and y labels 
+     def plot(plots: GlyphRenderer*) : Plot = {
+
+        val xdr = new DataRange1d
+        val ydr = new DataRange1d
+
+        val plot = new Plot().x_range(xdr).y_range(ydr).tools(Pan|WheelZoom)
+
+        val xaxis = new LinearAxis().plot(plot).location(Location.Below).axis_label("x")
+        val yaxis = new LinearAxis().plot(plot).location(Location.Left).axis_label("y")
+        plot.below <<= (xaxis :: _)
+        plot.left <<= (yaxis :: _)
+
+        val children = plots.toList
+        plot.renderers := List(xaxis, yaxis):::children
+        plot
+     }
+   }
+   implicit def implicitplot(plots: GlyphRenderer) = new BokehImplicits(plots)
 
 
    def plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {

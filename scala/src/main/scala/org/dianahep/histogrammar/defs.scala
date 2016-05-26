@@ -495,4 +495,167 @@ package object histogrammar {
     def i9 = x.tail.tail.tail.tail.tail.tail.tail.tail.tail.head
   }
 
+  //////////////////////////////////////////////////////////////// type alias for Histogram
+
+  /** Type alias for conventional histograms (filled). */
+  type Histogrammed = Selected[Binned[Counted, Counted, Counted, Counted]]
+  /** Type alias for conventional histograms (filling). */
+  type Histogramming[DATUM] = Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]
+  /** Convenience function for creating a conventional histogram. */
+  def Histogram[DATUM]
+    (num: Int,
+    low: Double,
+    high: Double,
+    quantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
+    Select(selection, Bin(num, low, high, quantity))
+
+  //////////////////////////////////////////////////////////////// type alias for SparselyHistogram
+
+  /** Type alias for sparsely binned histograms (filled). */
+  type SparselyHistogrammed = Selected[SparselyBinned[Counted, Counted]]
+  /** Type alias for sparsely binned histograms (filling). */
+  type SparselyHistogramming[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]
+  /** Convenience function for creating a sparsely binned histogram. */
+  def SparselyHistogram[DATUM]
+    (binWidth: Double,
+    quantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM],
+    origin: Double = 0.0) =
+    Select(selection, SparselyBin(binWidth, quantity, origin = origin))
+
+  //////////////////////////////////////////////////////////////// methods for Histogram and SparselyHistogram
+
+  implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
+    new HistogramMethods(new Selected(hist.entries, None, hist))
+
+  implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counting, Counting, Counting, Counting]): HistogramMethods =
+    new HistogramMethods(new Selected(hist.entries, None, Factory.fromJson(hist.toJson).as[Binned[Counted, Counted, Counted, Counted]]))
+
+  implicit def selectedBinnedToHistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
+    new HistogramMethods(hist)
+
+  implicit def selectingBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethods =
+    new HistogramMethods(Factory.fromJson(hist.toJson).as[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
+  implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
+    if (hist.numFilled > 0)
+      new HistogramMethods(
+        new Selected(hist.entries, None, new Binned(hist.low.get, hist.high.get, hist.entries, hist.quantityName, hist.minBin.get to hist.maxBin.get map {i => new Counted(hist.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.nanflow))
+      )
+    else
+      throw new RuntimeException("sparsely binned histogram has no entries")
+
+  implicit def sparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
+    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[SparselyBinned[Counted, Counted]])
+
+  implicit def selectedSparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
+    if (hist.value.numFilled > 0)
+      new HistogramMethods(
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, hist.value.entries, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => new Counted(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.value.nanflow))
+      )
+    else
+      throw new RuntimeException("sparsely binned histogram has no entries")
+
+  implicit def selectedSparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
+    selectedSparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
+
+  /** Methods that are implicitly added to container combinations that look like histograms. */
+  implicit class HistogramMethods(val selected: Selected[Binned[Counted, Counted, Counted, Counted]]) {
+    /** Access the [[org.dianahep.histogrammar.Binned]] object, rather than the [[org.dianahep.histogrammar.Selected]] wrapper. */
+    def binned = selected.value
+
+    /** Bin values as numbers, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalValues: Seq[Double] = binned.values.map(_.entries)
+    /** Overflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalOverflow: Double = binned.overflow.entries
+    /** Underflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalUnderflow: Double = binned.underflow.entries
+    /** Nanflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalNanflow: Double = binned.nanflow.entries
+  }
+
+  //////////////////////////////////////////////////////////////// type alias for Profile
+
+  /** Type alias for a physicist's "profile plot" (filled). */
+  type Profiled = Selected[Binned[Deviated, Counted, Counted, Counted]]
+  /** Type alias for a physicist's "profile plot" (filling). */
+  type Profiling[DATUM] = Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]
+  /** Convenience function for creating a physicist's "profile plot." */
+  def Profile[DATUM]
+    (num: Int,
+    low: Double,
+    high: Double,
+    binnedQuantity: UserFcn[DATUM, Double],
+    averagedQuantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
+    Select(selection, Bin(num, low, high, binnedQuantity, Deviate(averagedQuantity)))
+
+  //////////////////////////////////////////////////////////////// type alias for SparselyProfile
+
+  /** Type alias for a physicist's sparsely binned "profile plot" (filled). */
+  type SparselyProfiled = Selected[SparselyBinned[Deviated, Counted]]
+  /** Type alias for a physicist's sparsely binned "profile plot" (filling). */
+  type SparselyProfiling[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]
+  /** Convenience function for creating a physicist's sparsely binned "profile plot." */
+  def SparselyProfile[DATUM]
+    (binWidth: Double,
+    binnedQuantity: UserFcn[DATUM, Double],
+    averagedQuantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
+    Select(selection, SparselyBin(binWidth, binnedQuantity, Deviate(averagedQuantity)))
+
+  //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
+
+  implicit def binnedToProfileMethods(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileMethods =
+    new ProfileMethods(new Selected(hist.entries, None, hist))
+
+  implicit def binningToProfileMethods[DATUM](hist: Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]): ProfileMethods =
+    new ProfileMethods(new Selected(hist.entries, None, Factory.fromJson(hist.toJson).as[Binned[Deviated, Counted, Counted, Counted]]))
+
+  implicit def selectedBinnedToProfileMethods(hist: Selected[Binned[Deviated, Counted, Counted, Counted]]): ProfileMethods =
+    new ProfileMethods(hist)
+
+  implicit def selectingBinningToProfileMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]): ProfileMethods =
+    new ProfileMethods(Factory.fromJson(hist.toJson).as[Selected[Binned[Deviated, Counted, Counted, Counted]]])
+
+  implicit def sparselyBinnedToProfileMethods(hist: SparselyBinned[Deviated, Counted]): ProfileMethods =
+    if (hist.numFilled > 0)
+      new ProfileMethods(
+        new Selected(hist.entries, None, new Binned(hist.low.get, hist.high.get, hist.entries, hist.quantityName, hist.minBin.get to hist.maxBin.get map {i => hist.at(i).getOrElse(new Deviated(0.0, None, 0.0, 0.0))}, new Counted(0L), new Counted(0L), hist.nanflow))
+      )
+    else
+      throw new RuntimeException("sparsely binned profile has no entries")
+
+  implicit def sparselyBinningToProfileMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethods =
+    sparselyBinnedToProfileMethods(Factory.fromJson(hist.toJson).as[SparselyBinned[Deviated, Counted]])
+
+  implicit def selectedSparselyBinnedToProfileMethods(hist: Selected[SparselyBinned[Deviated, Counted]]): ProfileMethods =
+    if (hist.value.numFilled > 0)
+      new ProfileMethods(
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, hist.value.entries, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => hist.value.at(i).getOrElse(new Deviated(0.0, None, 0.0, 0.0))}, new Counted(0L), new Counted(0L), hist.value.nanflow))
+      )
+    else
+      throw new RuntimeException("sparsely binned profile has no entries")
+
+  implicit def selectedSparselyBinningToProfileMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethods =
+    selectedSparselyBinnedToProfileMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Deviated, Counted]]])
+
+  /** Methods that are implicitly added to container combinations that look like a physicist's "profile plot." */
+  class ProfileMethods(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
+    def binned = selected.value
+
+    /** Bin means as numbers, rather than [[org.dianahep.histogrammar.Deviated]]/[[org.dianahep.histogrammar.Deviating]]. */
+    def meanValues: Seq[Double] = binned.values.map(_.mean)
+    /** Bin variances as numbers, rather than [[org.dianahep.histogrammar.Deviated]]/[[org.dianahep.histogrammar.Deviating]]. */
+    def varianceValues: Seq[Double] = binned.values.map(_.variance)
+
+    /** Overflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalOverflow: Double = binned.overflow.entries
+    /** Underflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalUnderflow: Double = binned.underflow.entries
+    /** Nanflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalNanflow: Double = binned.nanflow.entries
+  }
+
 }

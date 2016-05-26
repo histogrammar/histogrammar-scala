@@ -8,37 +8,6 @@ import io.continuum.bokeh._
 
 package object bokeh extends Tools {
 
-  implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
-    new HistogramMethods(new Selected(hist.entries, None, hist))
-
-  implicit def binningToHistogramMethods[DATUM](hist: Binning[DATUM, Counting, Counting, Counting, Counting]): HistogramMethods =
-    new HistogramMethods(new Selected(hist.entries, None, Factory.fromJson(hist.toJson).as[Binned[Counted, Counted, Counted, Counted]]))
-
-  implicit def selectedBinnedToHistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethods =
-    new HistogramMethods(hist)
-
-  implicit def selectingBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethods =
-    new HistogramMethods(Factory.fromJson(hist.toJson).as[Selected[Binned[Counted, Counted, Counted, Counted]]])
-
-  implicit def sparselyBinnedToHistogramMethods(hist: SparselyBinned[Counted, Counted]): HistogramMethods =
-    if (hist.numFilled > 0)
-      new HistogramMethods(
-        new Selected(hist.entries, None, new Binned(hist.low.get, hist.high.get, hist.entries, hist.quantityName, hist.minBin.get to hist.maxBin.get map {i => new Counted(hist.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.nanflow))
-      )
-    else
-      throw new RuntimeException("sparsely binned histogram has no entries")
-
-  implicit def selectedSparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
-    if (hist.value.numFilled > 0)
-      new HistogramMethods(
-        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, hist.value.entries, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => new Counted(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0L), new Counted(0L), hist.value.nanflow))
-      )
-    else
-      throw new RuntimeException("sparsely binned histogram has no entries")
-
-  implicit def selectedSparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
-    selectedSparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
-
    class BokehImplicits(plots: GlyphRenderer) {
 
      def plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
@@ -125,10 +94,24 @@ package object bokeh extends Tools {
    //Method that goes to bokeh-server and plots, so that we can do R-style, ROOT-style plotting
    def view(document: Document)  = ???
 
-}
+  implicit def binnedToHistogramMethodsBokeh(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(binnedToHistogramMethods(hist).selected)
+  implicit def binningToHistogramMethodsBokeh[DATUM](hist: Binning[DATUM, Counting, Counting, Counting, Counting]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(binningToHistogramMethods(hist).selected)
+  implicit def selectedBinnedToHistogramMethodsBokeh(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(selectedBinnedToHistogramMethods(hist).selected)
+  implicit def selectingBinningToHistogramMethodsBokeh[DATUM](hist: Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(selectingBinningToHistogramMethods(hist).selected)
+  implicit def sparselyBinnedToHistogramMethodsBokeh(hist: SparselyBinned[Counted, Counted]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(sparselyBinnedToHistogramMethods(hist).selected)
+  implicit def sparselyBinningToHistogramMethodsBokeh[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(sparselyBinningToHistogramMethods(hist).selected)
+  implicit def selectedSparselyBinnedToHistogramMethodsBokeh(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(selectedSparselyBinnedToHistogramMethods(hist).selected)
+  implicit def selectedSparselyBinningToHistogramMethodsBokeh[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(selectedSparselyBinningToHistogramMethods(hist).selected)
 
-package bokeh {
-  class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
+  class HistogramMethodsBokeh(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
 
     def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 

@@ -38,15 +38,6 @@ package histogrammar {
       */
     def ed[V <: Container[V] with NoAggregation](entries: Double, cuts: (Double, V)*): Stacked[V] = new Stacked(entries, None, cuts: _*)
 
-    /** Alternate constructor for [[org.dianahep.histogrammar.Stacked]] that builds from N pre-aggregated primitives (N > 0).
-      * 
-      * The ''first'' result is the one that gets filled with contributions from all others, and should be plotted ''behind'' all others (''first,'' if overlays cover each other in the usual order).
-      */
-    def ed[V <: Container[V] with NoAggregation](x: V, xs: V*): Stacked[V] = {
-      val ys = x +: xs
-      ed(ys.map(_.entries).sum, ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _)): _*)
-    }
-
     /** Create an empty, mutable [[org.dianahep.histogrammar.Stacking]].
       * 
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
@@ -59,6 +50,34 @@ package histogrammar {
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
       apply(quantity, value, cuts: _*)
+
+    /** Alternate constructor for [[org.dianahep.histogrammar.Stacked]] that builds from N pre-aggregated primitives (N > 0).
+      * 
+      * The ''first'' result is the one that gets filled with contributions from all others, and should be plotted ''behind'' all others (''first,'' if overlays cover each other in the usual order).
+      * 
+      * Since this kind of stacked plot is not made from numerical cuts, the numerical values of the `cuts` are all `NaN`.
+      */
+    def apply[V <: Container[V] with NoAggregation](x: V, xs: V*): Stacked[V] = {
+      val ys = x +: xs
+      val entries = ys.map(_.entries).sum
+      val cuts = ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _))
+      ed(entries, cuts: _*)
+    }
+
+    /** Alternate constructor for [[org.dianahep.histogrammar.Stacking]] that builds from N pre-aggregated primitives (N > 0).
+      * 
+      * The ''first'' result is the one that gets filled with contributions from all others, and should be plotted ''behind'' all others (''first,'' if overlays cover each other in the usual order).
+      * 
+      * Since this kind of stacked plot is not made from numerical cuts, the numerical values of the `cuts` are all `NaN`.
+      * 
+      * Attempting to fill this primitive would invalidate all data (turn all subaggregators to `NaN`).
+      */
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: V, xs: V*): Stacking[DATUM, V] = {
+      val ys = x +: xs
+      val entries = ys.map(_.entries).sum
+      val cuts = ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _))
+      new Stacking({d: DATUM => java.lang.Double.NaN}, entries, cuts: _*)
+    }
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {

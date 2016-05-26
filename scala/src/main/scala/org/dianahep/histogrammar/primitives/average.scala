@@ -129,7 +129,6 @@ package histogrammar {
     */
   class Averaging[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Averaging[DATUM]
-    type FixedType = Averaged
     type Datum = DATUM
     def factory = Average
 

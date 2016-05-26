@@ -19,8 +19,8 @@ import scala.language.implicitConversions
 
 import org.dianahep.histogrammar._
 
-/** Specialty methods for familiar combinations of containers, such as histograms. */
-package object specialized {
+/** Methods for drawing familiar combinations of containers, such as histograms, in ASCII art. */
+package object ascii {
   /** Type alias for conventional histograms (filled). */
   type Histogrammed = Selected[Binned[Counted, Counted, Counted, Counted]]
   /** Type alias for conventional histograms (filling). */
@@ -146,9 +146,10 @@ package object specialized {
 
 }
 
-package specialized {
+package ascii {
   /** Methods that are implicitly added to container combinations that look like histograms. */
   class HistogramMethods(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
+    /** Access the [[org.dianahep.histogrammar.Binned]] object, rather than the [[org.dianahep.histogrammar.Selected]] wrapper. */
     def binned = hist.value
 
     /** Bin values as numbers, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
@@ -229,7 +230,86 @@ package specialized {
   }
 
   /** Methods that are implicitly added to container combinations that look like a physicist's "profile plot." */
-  class ProfileMethods(prof: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
-  }
+  class ProfileMethods(hist: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
+    def binned = hist.value
 
+    /** Bin means as numbers, rather than [[org.dianahep.histogrammar.Deviated]]/[[org.dianahep.histogrammar.Deviating]]. */
+    def meanValues: Seq[Double] = binned.values.map(_.mean)
+    /** Bin variances as numbers, rather than [[org.dianahep.histogrammar.Deviated]]/[[org.dianahep.histogrammar.Deviating]]. */
+    def varianceValues: Seq[Double] = binned.values.map(_.variance)
+
+    /** Overflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalOverflow: Double = binned.overflow.entries
+    /** Underflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalUnderflow: Double = binned.underflow.entries
+    /** Nanflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalNanflow: Double = binned.nanflow.entries
+
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def ascii: String = ascii(80)
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def ascii(width: Int): String = {
+      val minValue = binned.values.map(dev => dev.mean - Math.sqrt(dev.variance)).min
+      val maxValue = binned.values.map(dev => dev.mean + Math.sqrt(dev.variance)).max
+      val range = maxValue - minValue
+      val minEdge = minValue - 0.1*range
+      val maxEdge = maxValue + 0.1*range
+
+      val binWidth = (binned.high - binned.low) / binned.values.size
+      def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
+
+      val prefixValues = binned.values.zipWithIndex map {case (v, i) =>
+        (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.mean, Math.sqrt(v.variance))
+      }
+      val prefixValuesStr = prefixValues map {case (binlow, binhigh, mean, stdev) => (sigfigs(Math.abs(binlow), 3), sigfigs(Math.abs(binhigh), 3), sigfigs(Math.abs(mean), 4), sigfigs(Math.abs(stdev), 4))}
+
+      val widestBinlow = Math.max(prefixValuesStr.map(_._1.size).max, 2)
+      val widestBinhigh = Math.max(prefixValuesStr.map(_._2.size).max, 2)
+      val widestMean = Math.max(prefixValuesStr.map(_._3.size).max, 2)
+      val widestStdev = Math.max(prefixValuesStr.map(_._4.size).max, 2)
+      val formatter = s"[ %s%-${widestBinlow}s, %s%-${widestBinhigh}s) %s%-${widestMean}s +- %s%-${widestStdev}s "
+      val prefixWidth = widestBinlow + widestBinhigh + widestMean + widestStdev + 14
+
+      val reducedWidth = width - prefixWidth
+      val zeroIndex = Math.round(reducedWidth * (0.0 - minEdge) / (maxEdge - minEdge)).toInt
+      val zeroLine1 = " " * prefixWidth + " " + f"$minEdge%-10g" + " " + (0 until (reducedWidth - 20)).map({i =>
+        if (i + 10 == zeroIndex)
+          "0"
+        else
+          " "
+      }).mkString + " " + f"$maxEdge%10g"
+      val zeroLine2 = " " * prefixWidth + " " + "+" + (0 until (reducedWidth - 1)).map({i =>
+        if (i == zeroIndex)
+          "+"
+        else
+          "-"
+      }).mkString + "-" + "+"
+
+      val lines = binned.values zip prefixValues zip prefixValuesStr map {case ((v, (binlow, binhigh, mean, stdev)), (binlowAbs, binhighAbs, meanAbs, stdevAbs)) =>
+        val binlowSign = if (binlow < 0) "-" else " "
+        val binhighSign = if (binhigh < 0) "-" else " "
+        val meanSign = if (mean < 0) "-" else " "
+        val stdevSign = if (stdev < 0) "-" else " "
+
+        val botIndex = Math.round(reducedWidth * (v.mean - Math.sqrt(v.variance) - minEdge) / (maxEdge - minEdge)).toInt
+        val midIndex = Math.round(reducedWidth * (v.mean                         - minEdge) / (maxEdge - minEdge)).toInt
+        val topIndex = Math.round(reducedWidth * (v.mean + Math.sqrt(v.variance) - minEdge) / (maxEdge - minEdge)).toInt
+
+        formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs, stdevSign, stdevAbs) + "|" + (0 until reducedWidth).map({i =>
+          if (i == zeroIndex)
+            "|"
+          else if (i < botIndex  ||  i > topIndex)
+            " "
+          else if (i == midIndex)
+            "+"
+          else if (i == botIndex  ||  i == topIndex)
+            "|"
+          else
+            "-"
+        }).mkString + "|"
+      }
+
+      (List(zeroLine1, zeroLine2) ++ lines ++ List(zeroLine2)).mkString("\n")      
+    }
+  }
 }

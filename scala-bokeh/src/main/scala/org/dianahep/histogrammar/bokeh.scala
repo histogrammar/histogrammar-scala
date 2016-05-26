@@ -28,9 +28,6 @@ package object bokeh extends Tools {
     else
       throw new RuntimeException("sparsely binned histogram has no entries")
 
-  implicit def sparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
-    sparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[SparselyBinned[Counted, Counted]])
-
   implicit def selectedSparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
     if (hist.value.numFilled > 0)
       new HistogramMethods(
@@ -41,7 +38,6 @@ package object bokeh extends Tools {
 
   implicit def selectedSparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
     selectedSparselyBinnedToHistogramMethods(Factory.fromJson(hist.toJson).as[Selected[SparselyBinned[Counted, Counted]]])
-  
 
 
    def plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {

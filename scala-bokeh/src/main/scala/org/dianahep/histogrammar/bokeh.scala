@@ -2,7 +2,7 @@ package org.dianahep.histogrammar
 
 import scala.language.implicitConversions
 
-import org.dianahep.histogrammar.specialized._
+import org.dianahep.histogrammar.ascii._
 
 import io.continuum.bokeh._
 

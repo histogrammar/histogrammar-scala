@@ -7,7 +7,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.Matchers
 
 import org.dianahep.histogrammar._
-import org.dianahep.histogrammar.specialized._
+import org.dianahep.histogrammar.ascii._
 
 class DefaultSuite extends FlatSpec with Matchers {
   val simple = List(3.4, 2.2, -1.8, 0.0, 7.3, -4.7, 1.6, 0.0, -3.0, -1.7)

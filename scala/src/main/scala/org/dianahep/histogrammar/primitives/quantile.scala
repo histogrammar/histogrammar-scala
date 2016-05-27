@@ -124,6 +124,8 @@ package histogrammar {
         yestimate
       else if (yestimate.isNaN)
         xestimate
+      else if (xentries + yentries == 0.0)
+        (xestimate + yestimate) / 2.0
       else
         (xestimate*xentries + yestimate*yentries) / (xentries + yentries)
   }

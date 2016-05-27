@@ -77,7 +77,10 @@ package histogrammar {
     }
 
     private[histogrammar] def plus(ca: Double, mua: Double, cb: Double, mub: Double) =
-      (ca + cb, (ca*mua + cb*mub)/(ca + cb))
+      if (ca == 0.0  &&  cb == 0.0)
+        (0.0, (mua + mub)/2.0)
+      else
+        (ca + cb, (ca*mua + cb*mub)/(ca + cb))
   }
 
   /** An accumulated weighted mean of a given quantity.

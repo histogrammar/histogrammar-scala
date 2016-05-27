@@ -142,6 +142,7 @@ package histogrammar {
   class Quantiled private[histogrammar](val entries: Double, val quantityName: Option[String], val target: Double, val estimate: Double) extends Container[Quantiled] with NoAggregation with QuantityName {
 
     type Type = Quantiled
+    type EdType = Quantiled
     def factory = Quantile
 
     if (entries < 0.0)
@@ -184,6 +185,7 @@ package histogrammar {
       extends Container[Quantiling[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
 
     type Type = Quantiling[DATUM]
+    type EdType = Quantiled
     type Datum = DATUM
     def factory = Quantile
 

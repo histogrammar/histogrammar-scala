@@ -162,6 +162,8 @@ package histogrammar {
       * Typical use: `filledHistogram.as[initialHistogram.Type]`
       */
     type Type
+    /** The type of the immutable version of this container. */
+    type EdType <: Container[EdType] with NoAggregation
     /** Reference to the container's factory for runtime reflection. */
     def factory: Factory
 

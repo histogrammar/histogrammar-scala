@@ -93,6 +93,7 @@ package histogrammar {
     */
   class Averaged private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double) extends Container[Averaged] with NoAggregation with QuantityName {
     type Type = Averaged
+    type EdType = Averaged
     def factory = Average
 
     if (entries < 0.0)
@@ -132,6 +133,7 @@ package histogrammar {
     */
   class Averaging[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double) extends Container[Averaging[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Averaging[DATUM]
+    type EdType = Averaged
     type Datum = DATUM
     def factory = Average
 

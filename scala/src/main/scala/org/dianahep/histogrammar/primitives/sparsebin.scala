@@ -174,6 +174,7 @@ package histogrammar {
     */
   class SparselyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with NoAggregation with QuantityName with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
+    type EdType = SparselyBinned[V, N]
     def factory = SparselyBin
 
     if (entries < 0.0)
@@ -257,7 +258,9 @@ package histogrammar {
      val nanflow: N,
      val origin: Double) extends Container[SparselyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with SparselyBin.Methods {
 
+    val v = value
     type Type = SparselyBinning[DATUM, V, N]
+    type EdType = SparselyBinned[v.EdType, nanflow.EdType]
     type Datum = DATUM
     def factory = SparselyBin
 

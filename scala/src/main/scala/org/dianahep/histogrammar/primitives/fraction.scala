@@ -96,6 +96,7 @@ package histogrammar {
     */
   class Fractioned[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with NoAggregation with QuantityName with Select.Methods {
     type Type = Fractioned[V]
+    type EdType = Fractioned[V]
     def factory = Fraction
 
     if (entries < 0.0)
@@ -139,6 +140,7 @@ package histogrammar {
     */
   class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] with Select.Methods {
     type Type = Fractioning[DATUM, V]
+    type EdType = Fractioned[numerator.EdType]
     type Datum = DATUM
     def factory = Fraction
 

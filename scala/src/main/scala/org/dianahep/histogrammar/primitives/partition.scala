@@ -111,6 +111,7 @@ package histogrammar {
     */
   class Partitioned[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] with NoAggregation with QuantityName {
     type Type = Partitioned[V]
+    type EdType = Partitioned[V]
     def factory = Partition
 
     if (entries < 0.0)
@@ -159,7 +160,9 @@ package histogrammar {
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
   class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] {
+    val v = cuts.head._2
     type Type = Partitioning[DATUM, V]
+    type EdType = Partitioned[v.EdType]
     type Datum = DATUM
     def factory = Partition
 

@@ -16,7 +16,7 @@ package object bokeh extends Tools {
 
    class BokehImplicits(plots: GlyphRenderer) {
 
-     def plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
+     def plot(xLabel:String, yLabel: String) : Plot = {
 
         val xdr = new DataRange1d
         val ydr = new DataRange1d
@@ -28,13 +28,12 @@ package object bokeh extends Tools {
         plot.below <<= (xaxis :: _)
         plot.left <<= (yaxis :: _)
 
-        val children = plots.toList
-        plot.renderers := List(xaxis, yaxis):::children
+        plot.renderers := List(xaxis, yaxis, plots)
         plot
       }
 
      //allow for default x and y labels 
-     def plot(plots: GlyphRenderer*) : Plot = {
+     def plot() : Plot = {
 
         val xdr = new DataRange1d
         val ydr = new DataRange1d
@@ -46,8 +45,7 @@ package object bokeh extends Tools {
         plot.below <<= (xaxis :: _)
         plot.left <<= (yaxis :: _)
 
-        val children = plots.toList
-        plot.renderers := List(xaxis, yaxis):::children
+        plot.renderers := List(xaxis, yaxis, plots)
         plot
      }
    }

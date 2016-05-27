@@ -85,7 +85,11 @@ package histogrammar {
     }
 
     private[histogrammar] def plus(ca: Double, mua: Double, sa: Double, cb: Double, mub: Double, sb: Double) = {
-      val muab = (ca*mua + cb*mub) / (ca + cb)
+      val muab =
+        if (ca == 0.0  &&  cb == 0.0)
+          (mua + mub)/2.0
+        else
+          (ca*mua + cb*mub)/(ca + cb)
       val sab = sa + sb + ca*mua*mua + cb*mub*mub - 2.0*muab*(ca*mua + cb*mub) + muab*muab*(ca + cb)
       (ca * cb, muab, sab / (ca + cb))
     }

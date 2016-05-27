@@ -12,6 +12,8 @@ import io.continuum.bokeh.Location
 import io.continuum.bokeh.Plot
 import io.continuum.bokeh.Tools
 
+import scala.collection.mutable.ArrayBuffer
+
 package object bokeh extends Tools {
 
    class BokehImplicits(plots: GlyphRenderer) {
@@ -68,6 +70,8 @@ package object bokeh extends Tools {
       plot.renderers := List(xaxis, yaxis):::children
       plot
     }
+
+   def plot(plots: Array[GlyphRenderer]) : Plot = plot(plots: _*)
 
    //allow for default x and y labels 
    def plot(plots: GlyphRenderer*) : Plot = {
@@ -186,7 +190,27 @@ package object bokeh extends Tools {
   implicit def selectedSparselyBinnedMixedToStackedHistogramMethodsBokeh[DATUM](hist: Stacked[Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]]): StackedHistogramMethodsBokeh =
     new StackedHistogramMethodsBokeh(selectedSparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
 
-  class StackedHistogramMethodsBokeh(val stacked: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]])
+  class StackedHistogramMethodsBokeh(stack: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+    val markerTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
+    val markerSizeDefaults = List(1,1,1,1,1,1,1)
+    val fillColorDefaults = List(Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red)
+    val lineColorDefaults = List(Color.Black,Color.Blue,Color.Red,Color.Green,Color.Brown,Color.Orange,Color.Red)
+
+    def bokeh(markerTypes: List[String] = markerTypeDefaults, markerSizes: List[Int] = markerSizeDefaults, fillColors: List[Color] = fillColorDefaults, lineColors: List[Color] = lineColorDefaults) : Array[GlyphRenderer] = {
+      assert(markerTypes.length == markerSizes.length)
+      assert(markerTypes.length == fillColors.length)
+      assert(markerTypes.length == lineColors.length)
+
+      var stackedGlyphs: ArrayBuffer[GlyphRenderer] = ArrayBuffer.empty[GlyphRenderer]
+      var ichild = 0
+
+      for (p <- stack.children) {
+          stackedGlyphs += p.bokeh(markerTypes(ichild),markerSizes(ichild),fillColors(ichild),lineColors(ichild))
+          ichild += 1
+      }
+      stackedGlyphs.toArray
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for PartitionedHistogram
 

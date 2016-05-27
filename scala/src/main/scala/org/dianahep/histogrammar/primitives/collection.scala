@@ -206,15 +206,15 @@ package histogrammar {
       * @param value Aggregator to apply a limit to.
       * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation](limit: Double, value: V) = new Limiting[DATUM, V](0.0, limit, value.factory.name, Some(value))
+    def apply[V <: Container[V] with Aggregation](limit: Double, value: V) = new Limiting[V](0.0, limit, value.factory.name, Some(value))
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation](limit: Double, value: V) = apply[DATUM, V](limit, value)
+    def ing[V <: Container[V] with Aggregation](limit: Double, value: V) = apply[V](limit, value)
 
     /** Use [[org.dianahep.histogrammar.Limited]] in Scala pattern-matching. */
     def unapply[V <: Container[V] with NoAggregation](x: Limited[V]) = x.value
     /** Use [[org.dianahep.histogrammar.Limiting]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation](x: Limiting[DATUM, V]) = x.value
+    def unapply[V <: Container[V] with Aggregation](x: Limiting[V]) = x.value
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
@@ -307,8 +307,8 @@ package histogrammar {
     * @param contentType Name of the Factory for `value`.
     * @param value Some aggregator or `None`.
     */
-  class Limiting[DATUM, V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val limit: Double, val contentType: String, var value: Option[V]) extends Container[Limiting[DATUM, V]] with AggregationOnData {
-    type Type = Limiting[DATUM, V]
+  class Limiting[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val limit: Double, val contentType: String, var value: Option[V]) extends Container[Limiting[V]] with AggregationOnData {
+    type Type = Limiting[V]
     type Datum = V#Datum
     def factory = Limit
 
@@ -322,8 +322,8 @@ package histogrammar {
     /** Get the value of `value` or return a default if it is `None`. */
     def getOrElse(default: => V) = value.getOrElse(default)
 
-    def zero = new Limiting[DATUM, V](0.0, limit, contentType, value.map(_.zero))
-    def +(that: Limiting[DATUM, V]) =
+    def zero = new Limiting[V](0.0, limit, contentType, value.map(_.zero))
+    def +(that: Limiting[V]) =
       if (this.limit != that.limit)
         throw new ContainerException(s"""cannot add Limiting because they have different limits (${this.limit} vs ${that.limit}))""")
       else {
@@ -333,7 +333,7 @@ package histogrammar {
             None
           else
             Some(this.value.get + that.value.get)
-        new Limiting[DATUM, V](newentries, limit, contentType, newvalue)
+        new Limiting[V](newentries, limit, contentType, newvalue)
       }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {

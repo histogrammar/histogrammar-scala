@@ -29,6 +29,16 @@ package object util {
 }
 
 package util {
+  //////////////////////////////////////////////////////////////// type-level programming to test compatibility of user-defined functions
+
+  private[histogrammar] trait Compatible[-X, -Y]
+  private[histogrammar] object Compatible {
+    implicit object BothAreCounting extends Compatible[Counting, Counting]
+    implicit object XIsCounting extends Compatible[Counting, AggregationOnData]
+    implicit object YIsCounting extends Compatible[AggregationOnData, Counting]
+    implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
+  }
+
   //////////////////////////////////////////////////////////////// handling key set comparisons with optional keys
 
   object KeySetComparisons {
@@ -316,6 +326,7 @@ package util {
       def apply[CONTAINER <: Container[CONTAINER]](num: Int, tailDetail: Double, value: => CONTAINER, values: MetricSortedMap[Double, CONTAINER], min: Double, max: Double, entries: Double) =
         new Clustering1D[CONTAINER](num, tailDetail, value, values, min, max, entries)
     }
+
   }
 
   //////////////////////////////////////////////////////////////// interpretation of central bins as a distribution

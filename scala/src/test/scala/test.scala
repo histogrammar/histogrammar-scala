@@ -1015,4 +1015,117 @@ class DefaultSuite extends FlatSpec with Matchers {
     //   checkJson(finalHist)
     // }
   }
+
+  //////////////////////////////////////////////////////////////// Check all specialized conversions
+
+  "Specialized conversions" must "compile and not raise cast exceptions" in {
+    val binningCounting = Bin(10, 0, 1, {x: Double => x}, Count())
+    val binnedCounted = binningCounting.ed.as[Binned[Counted, Counted, Counted, Counted]]
+    val selectingBinningCounting = Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()))
+    val selectedBinnedCounted = selectingBinningCounting.ed.as[Selected[Binned[Counted, Counted, Counted, Counted]]]
+    val sparselyBinningCounting = SparselyBin(1, {x: Double => x}, Count())
+    val sparselyBinnedCounted = sparselyBinningCounting.ed.as[SparselyBinned[Counted, Counted]]
+    val selectingSparselyBinningCounting = Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count()))
+    val selectedSparselyBinnedCounted = selectingSparselyBinningCounting.ed.as[Selected[SparselyBinned[Counted, Counted]]]
+    def takesHistogramMethods(x: HistogramMethods) { }
+    takesHistogramMethods(binningCounting)
+    takesHistogramMethods(binnedCounted)
+    takesHistogramMethods(selectingBinningCounting)
+    takesHistogramMethods(selectedBinnedCounted)
+    takesHistogramMethods(sparselyBinningCounting)
+    takesHistogramMethods(sparselyBinnedCounted)
+    takesHistogramMethods(selectingSparselyBinningCounting)
+    takesHistogramMethods(selectedSparselyBinnedCounted)
+    
+    val binningDeviating = Bin(10, 0, 1, {x: Double => x}, Deviate({x: Double => x}))
+    val binnedDeviated = binningDeviating.ed.as[Binned[Deviated, Counted, Counted, Counted]]
+    val selectingBinningDeviating = Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Deviate({x: Double => x})))
+    val selectedBinnedDeviated = selectingBinningDeviating.ed.as[Selected[Binned[Deviated, Counted, Counted, Counted]]]
+    val sparselyBinningDeviating = SparselyBin(1, {x: Double => x}, Deviate({x: Double => x}))
+    val sparselyBinnedDeviated = sparselyBinningDeviating.ed.as[SparselyBinned[Deviated, Counted]]
+    val selectingSparselyBinningDeviating = Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Deviate({x: Double => x})))
+    val selectedSparselyBinnedDeviated = selectingSparselyBinningDeviating.ed.as[Selected[SparselyBinned[Deviated, Counted]]]
+    def takesProfileMethods(x: ProfileMethods) { }
+    takesProfileMethods(binningDeviating)
+    takesProfileMethods(binnedDeviated)
+    takesProfileMethods(selectingBinningDeviating)
+    takesProfileMethods(selectedBinnedDeviated)
+    takesProfileMethods(sparselyBinningDeviating)
+    takesProfileMethods(sparselyBinnedDeviated)
+    takesProfileMethods(selectingSparselyBinningDeviating)
+    takesProfileMethods(selectedSparselyBinnedDeviated)
+
+    val stackingBinningCounting = Stack({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()), 1, 2, 3)
+    val stackedBinnedCounted = stackingBinningCounting.ed.as[Stacked[Binned[Counted, Counted, Counted, Counted]]]
+    val stackingSelectingBinningCounting = Stack({x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())), 1, 2, 3)
+    val stackedSelectedBinnedCounted = stackingSelectingBinningCounting.ed.as[Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]]
+    val stackingSparselyBinningCounting = Stack({x: Double => x}, SparselyBin(1, {x: Double => x}, Count()), 1, 2, 3)
+    val stackedSparselyBinnedCounted = stackingSparselyBinningCounting.ed.as[Stacked[SparselyBinned[Counted, Counted]]]
+    val stackingSelectingSparselyBinningCounting = Stack({x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())), 1, 2, 3)
+    val stackedSelectedSparselyBinnedCounted = stackingSelectingSparselyBinningCounting.ed.as[Stacked[Selected[SparselyBinned[Counted, Counted]]]]
+    def takesStackedHistogramMethods(x: StackedHistogramMethods) { }
+    takesStackedHistogramMethods(stackingBinningCounting)
+    takesStackedHistogramMethods(stackedBinnedCounted)
+    takesStackedHistogramMethods(stackingSelectingBinningCounting)
+    takesStackedHistogramMethods(stackedSelectedBinnedCounted)
+    takesStackedHistogramMethods(stackingSparselyBinningCounting)
+    takesStackedHistogramMethods(stackedSparselyBinnedCounted)
+    takesStackedHistogramMethods(stackingSelectingSparselyBinningCounting)
+    takesStackedHistogramMethods(stackedSelectedSparselyBinnedCounted)
+
+    val stackingBinningCounting2 = Stack.build(binningCounting, binningCounting, binningCounting)
+    val stackedBinnedCounted2 = Stack.build(binnedCounted, binnedCounted, binnedCounted)
+    val stackingSelectingBinningCounting2 = Stack.build(selectingBinningCounting, selectingBinningCounting, selectingBinningCounting)
+    val stackedSelectedBinnedCounted2 = Stack.build(selectedBinnedCounted, selectedBinnedCounted, selectedBinnedCounted)
+    val stackingSparselyBinningCounting2 = Stack.build(sparselyBinningCounting, sparselyBinningCounting, sparselyBinningCounting)
+    val stackedSparselyBinnedCounted2 = Stack.build(sparselyBinnedCounted, sparselyBinnedCounted, sparselyBinnedCounted)
+    val stackingSelectingSparselyBinningCounting2 = Stack.build(selectingSparselyBinningCounting, selectingSparselyBinningCounting, selectingSparselyBinningCounting)
+    val stackedSelectedSparselyBinnedCounted2 = Stack.build(selectedSparselyBinnedCounted, selectedSparselyBinnedCounted, selectedSparselyBinnedCounted)
+    takesStackedHistogramMethods(stackingBinningCounting2)
+    takesStackedHistogramMethods(stackedBinnedCounted2)
+    takesStackedHistogramMethods(stackingSelectingBinningCounting2)
+    takesStackedHistogramMethods(stackedSelectedBinnedCounted2)
+    takesStackedHistogramMethods(stackingSparselyBinningCounting2)
+    takesStackedHistogramMethods(stackedSparselyBinnedCounted2)
+    takesStackedHistogramMethods(stackingSelectingSparselyBinningCounting2)
+    takesStackedHistogramMethods(stackedSelectedSparselyBinnedCounted2)
+
+    val partitioningBinningCounting = Partition({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()), 1, 2, 3)
+    val partitionedBinnedCounted = partitioningBinningCounting.ed.as[Partitioned[Binned[Counted, Counted, Counted, Counted]]]
+    val partitioningSelectingBinningCounting = Partition({x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())), 1, 2, 3)
+    val partitionedSelectedBinnedCounted = partitioningSelectingBinningCounting.ed.as[Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]]]]
+    val partitioningSparselyBinningCounting = Partition({x: Double => x}, SparselyBin(1, {x: Double => x}, Count()), 1, 2, 3)
+    val partitionedSparselyBinnedCounted = partitioningSparselyBinningCounting.ed.as[Partitioned[SparselyBinned[Counted, Counted]]]
+    val partitioningSelectingSparselyBinningCounting = Partition({x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())), 1, 2, 3)
+    val partitionedSelectedSparselyBinnedCounted = partitioningSelectingSparselyBinningCounting.ed.as[Partitioned[Selected[SparselyBinned[Counted, Counted]]]]
+    def takesPartitionedHistogramMethods(x: PartitionedHistogramMethods) { }
+    takesPartitionedHistogramMethods(partitioningBinningCounting)
+    takesPartitionedHistogramMethods(partitionedBinnedCounted)
+    takesPartitionedHistogramMethods(partitioningSelectingBinningCounting)
+    takesPartitionedHistogramMethods(partitionedSelectedBinnedCounted)
+    takesPartitionedHistogramMethods(partitioningSparselyBinningCounting)
+    takesPartitionedHistogramMethods(partitionedSparselyBinnedCounted)
+    takesPartitionedHistogramMethods(partitioningSelectingSparselyBinningCounting)
+    takesPartitionedHistogramMethods(partitionedSelectedSparselyBinnedCounted)
+
+    val fractioningBinningCounting = Fraction({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()))
+    val fractionedBinnedCounted = fractioningBinningCounting.ed.as[Fractioned[Binned[Counted, Counted, Counted, Counted]]]
+    val fractioningSelectingBinningCounting = Fraction({x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())))
+    val fractionedSelectedBinnedCounted = fractioningSelectingBinningCounting.ed.as[Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]]
+    val fractioningSparselyBinningCounting = Fraction({x: Double => x}, SparselyBin(1, {x: Double => x}, Count()))
+    val fractionedSparselyBinnedCounted = fractioningSparselyBinningCounting.ed.as[Fractioned[SparselyBinned[Counted, Counted]]]
+    val fractioningSelectingSparselyBinningCounting = Fraction({x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())))
+    val fractionedSelectedSparselyBinnedCounted = fractioningSelectingSparselyBinningCounting.ed.as[Fractioned[Selected[SparselyBinned[Counted, Counted]]]]
+    def takesFractionedHistogramMethods(x: FractionedHistogramMethods) { }
+    takesFractionedHistogramMethods(fractioningBinningCounting)
+    takesFractionedHistogramMethods(fractionedBinnedCounted)
+    takesFractionedHistogramMethods(fractioningSelectingBinningCounting)
+    takesFractionedHistogramMethods(fractionedSelectedBinnedCounted)
+    takesFractionedHistogramMethods(fractioningSparselyBinningCounting)
+    takesFractionedHistogramMethods(fractionedSparselyBinnedCounted)
+    takesFractionedHistogramMethods(fractioningSelectingSparselyBinningCounting)
+    takesFractionedHistogramMethods(fractionedSelectedSparselyBinnedCounted)
+
+  }
+
 }

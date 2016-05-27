@@ -20,14 +20,6 @@ import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
 package histogrammar {
-  private[histogrammar] trait Compatible[-X, -Y]
-  private[histogrammar] object Compatible {
-    implicit object BothAreCounting extends Compatible[Counting, Counting]
-    implicit object XIsCounting extends Compatible[Counting, AggregationOnData]
-    implicit object YIsCounting extends Compatible[AggregationOnData, Counting]
-    implicit def dataAreCompatible[X <: AggregationOnData, Y <: AggregationOnData](implicit evidence: X#Datum =:= Y#Datum) = new Compatible[X, Y] {}
-  }
-
   //////////////////////////////////////////////////////////////// Cut/Cutted/Cutting
 
   /** Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting).

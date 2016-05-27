@@ -57,26 +57,11 @@ package histogrammar {
       * 
       * Since this kind of stacked plot is not made from numerical cuts, the numerical values of the `cuts` are all `NaN`.
       */
-    def apply[V <: Container[V] with NoAggregation](x: V, xs: V*): Stacked[V] = {
-      val ys = x +: xs
+    def build[V <: Container[V]](x: V, xs: Container[_]*): Stacked[V] = {
+      val ys = x +: xs.map(_.asInstanceOf[V])
       val entries = ys.map(_.entries).sum
       val cuts = ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _))
-      ed(entries, cuts: _*)
-    }
-
-    /** Alternate constructor for [[org.dianahep.histogrammar.Stacking]] that builds from N pre-aggregated primitives (N > 0).
-      * 
-      * The ''first'' result is the one that gets filled with contributions from all others, and should be plotted ''behind'' all others (''first,'' if overlays cover each other in the usual order).
-      * 
-      * Since this kind of stacked plot is not made from numerical cuts, the numerical values of the `cuts` are all `NaN`.
-      * 
-      * Attempting to fill this primitive would invalidate all data (turn all subaggregators to `NaN`).
-      */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: V, xs: V*): Stacking[DATUM, V] = {
-      val ys = x +: xs
-      val entries = ys.map(_.entries).sum
-      val cuts = ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _))
-      new Stacking({d: DATUM => java.lang.Double.NaN}, entries, cuts: _*)
+      new Stacked(entries, None, cuts: _*)
     }
 
     import KeySetComparisons._
@@ -137,7 +122,12 @@ package histogrammar {
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
-  class Stacked[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Stacked[V]] with NoAggregation with QuantityName {
+  class Stacked[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Stacked[V]] with NoAggregation with QuantityName {
+    // NOTE: The type bounds ought to be V <: Container[V] with NoAggregation, but this constraint has
+    //       been relaxed to allow the alternate constructor. The standard constructor applies this
+    //       constraint, so normal Stacked objects will have the correct types. HOWEVER, this class
+    //       no longer "knows" that. I am not sure if this lack of knowledge will ever become a problem.
+
     type Type = Stacked[V]
     def factory = Stack
 

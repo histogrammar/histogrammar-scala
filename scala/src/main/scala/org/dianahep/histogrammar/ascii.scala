@@ -21,7 +21,7 @@ import org.dianahep.histogrammar._
 
 /** Methods for drawing familiar combinations of containers, such as histograms, in ASCII art. */
 package object ascii {
-  //////////////////////////////////////////////////////////////// conversions to HistogramMethodsAscii
+  //////////////////////////////////////////////////////////////// methods for Histogram and SparselyHistogram
 
   implicit def binnedToHistogramMethodsAscii(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethodsAscii =
     new HistogramMethodsAscii(binnedToHistogramMethods(hist).selected)
@@ -33,12 +33,12 @@ package object ascii {
     new HistogramMethodsAscii(selectingBinningToHistogramMethods(hist).selected)
   implicit def sparselyBinnedToHistogramMethodsAscii(hist: SparselyBinned[Counted, Counted]): HistogramMethodsAscii =
     new HistogramMethodsAscii(sparselyBinnedToHistogramMethods(hist).selected)
-  implicit def sparselyBinningToHistogramMethodsAscii[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethodsAscii =
+  implicit def sparselyBinningToHistogramMethodsAscii[DATUM](hist: SparselyBinning[DATUM, Counting, Counting]): HistogramMethodsAscii =
     new HistogramMethodsAscii(sparselyBinningToHistogramMethods(hist).selected)
   implicit def selectedSparselyBinnedToHistogramMethodsAscii(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethodsAscii =
     new HistogramMethodsAscii(selectedSparselyBinnedToHistogramMethods(hist).selected)
-  implicit def selectedSparselyBinningToHistogramMethodsAscii[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethodsAscii =
-    new HistogramMethodsAscii(selectedSparselyBinningToHistogramMethods(hist).selected)
+  implicit def selectingSparselyBinningToHistogramMethodsAscii[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethodsAscii =
+    new HistogramMethodsAscii(selectingSparselyBinningToHistogramMethods(hist).selected)
 
   class HistogramMethodsAscii(val selected: Selected[Binned[Counted, Counted, Counted, Counted]]) {
     /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
@@ -111,10 +111,10 @@ package object ascii {
     }
   }
 
-  //////////////////////////////////////////////////////////////// conversions to ProfileMethodsAscii
+  //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
   implicit def binnedToProfileMethodsAscii(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileMethodsAscii =
-    new ProfileMethodsAscii(binnedToProfileMethodsAscii(hist).selected)
+    new ProfileMethodsAscii(binnedToProfileMethods(hist).selected)
   implicit def binningToProfileMethodsAscii[DATUM](hist: Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]): ProfileMethodsAscii =
     new ProfileMethodsAscii(binningToProfileMethods(hist).selected)
   implicit def selectedBinnedToProfileMethodsAscii(hist: Selected[Binned[Deviated, Counted, Counted, Counted]]): ProfileMethodsAscii =
@@ -123,12 +123,12 @@ package object ascii {
     new ProfileMethodsAscii(selectingBinningToProfileMethods(hist).selected)
   implicit def sparselyBinnedToProfileMethodsAscii(hist: SparselyBinned[Deviated, Counted]): ProfileMethodsAscii =
     new ProfileMethodsAscii(sparselyBinnedToProfileMethods(hist).selected)
-  implicit def sparselyBinningToProfileMethodsAscii[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethodsAscii =
+  implicit def sparselyBinningToProfileMethodsAscii[DATUM](hist: SparselyBinning[DATUM, Deviating[DATUM], Counting]): ProfileMethodsAscii =
     new ProfileMethodsAscii(sparselyBinningToProfileMethods(hist).selected)
   implicit def selectedSparselyBinnedToProfileMethodsAscii(hist: Selected[SparselyBinned[Deviated, Counted]]): ProfileMethodsAscii =
     new ProfileMethodsAscii(selectedSparselyBinnedToProfileMethods(hist).selected)
-  implicit def selectedSparselyBinningToProfileMethodsAscii[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethodsAscii =
-    new ProfileMethodsAscii(selectedSparselyBinningToProfileMethods(hist).selected)
+  implicit def selectingSparselyBinningToProfileMethodsAscii[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethodsAscii =
+    new ProfileMethodsAscii(selectingSparselyBinningToProfileMethods(hist).selected)
 
   class ProfileMethodsAscii(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
     /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
@@ -200,4 +200,76 @@ package object ascii {
       (List(zeroLine1, zeroLine2) ++ lines ++ List(zeroLine2)).mkString("\n")      
     }
   }
+
+  //////////////////////////////////////////////////////////////// methods for StackedHistogram, including cases for mixed tenses
+
+  implicit def binnedToStackedHistogramMethodsAscii(hist: Stacked[Binned[Counted, Counted, Counted, Counted]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(binnedToStackedHistogramMethods(hist).stacked)
+  implicit def binningToStackedHistogramMethodsAscii[DATUM](hist: Stacking[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(binningToStackedHistogramMethods(hist).stacked)
+  implicit def selectedBinnedToStackedHistogramMethodsAscii(hist: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(selectedBinnedToStackedHistogramMethods(hist).stacked)
+  implicit def selectingBinningToStackedHistogramMethodsAscii[DATUM](hist: Stacking[DATUM, Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(selectingBinningToStackedHistogramMethods(hist).stacked)
+  implicit def sparselyBinnedToStackedHistogramMethodsAscii(hist: Stacked[SparselyBinned[Counted, Counted]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(sparselyBinnedToStackedHistogramMethods(hist).stacked)
+  implicit def sparselyBinningToStackingHistogramMethodsAscii[DATUM](hist: Stacking[DATUM, SparselyBinning[DATUM, Counting, Counting]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(sparselyBinningToStackingHistogramMethods(hist).stacked)
+  implicit def selectedSparselyBinnedToStackedHistogramMethodsAscii(hist: Stacked[Selected[SparselyBinned[Counted, Counted]]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(selectedSparselyBinnedToStackedHistogramMethods(hist).stacked)
+  implicit def selectingSparselyBinningToStackedHistogramMethodsAscii[DATUM](hist: Stacking[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(selectingSparselyBinningToStackedHistogramMethods(hist).stacked)
+  implicit def binnedMixedToStackedHistogramMethodsAscii[DATUM](hist: Stacked[Binning[DATUM, Counting, Counting, Counting, Counting]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(binnedMixedToStackedHistogramMethods(hist).stacked)
+  implicit def selectedBinnedMixedToStackedHistogramMethodsAscii[DATUM](hist: Stacked[Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(selectedBinnedMixedToStackedHistogramMethods(hist).stacked)
+  implicit def sparselyBinnedMixedToStackedHistogramMethodsAscii[DATUM](hist: Stacked[SparselyBinning[DATUM, Counting, Counting]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(sparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
+  implicit def selectedSparselyBinnedMixedToStackedHistogramMethodsAscii[DATUM](hist: Stacked[Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]]): StackedHistogramMethodsAscii =
+    new StackedHistogramMethodsAscii(selectedSparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
+
+  class StackedHistogramMethodsAscii(val stacked: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
+  //////////////////////////////////////////////////////////////// methods for PartitionedHistogram
+
+  implicit def binnedToPartitionedHistogramMethodsAscii(hist: Partitioned[Binned[Counted, Counted, Counted, Counted]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(binnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def binningToPartitionedHistogramMethodsAscii[DATUM](hist: Partitioning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(binningToPartitionedHistogramMethods(hist).partitioned)
+  implicit def selectedBinnedToPartitionedHistogramMethodsAscii(hist: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(selectedBinnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def selectingBinningToPartitionedHistogramMethodsAscii[DATUM](hist: Partitioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(selectingBinningToPartitionedHistogramMethods(hist).partitioned)
+  implicit def sparselyBinnedToPartitionedHistogramMethodsAscii(hist: Partitioned[SparselyBinned[Counted, Counted]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(sparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def sparselyBinningToPartitioningHistogramMethodsAscii[DATUM](hist: Partitioning[DATUM, SparselyBinning[DATUM, Counting, Counting]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(sparselyBinningToPartitioningHistogramMethods(hist).partitioned)
+  implicit def selectedSparselyBinnedToPartitionedHistogramMethodsAscii(hist: Partitioned[Selected[SparselyBinned[Counted, Counted]]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(selectedSparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def selectingSparselyBinningToPartitionedHistogramMethodsAscii[DATUM](hist: Partitioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]]): PartitionedHistogramMethodsAscii =
+    new PartitionedHistogramMethodsAscii(selectingSparselyBinningToPartitionedHistogramMethods(hist).partitioned)
+
+  class PartitionedHistogramMethodsAscii(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
+  //////////////////////////////////////////////////////////////// methods for FractionedHistogram
+
+  implicit def binnedToFractionedHistogramMethodsAscii(hist: Fractioned[Binned[Counted, Counted, Counted, Counted]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(binnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def binningToFractionedHistogramMethodsAscii[DATUM](hist: Fractioning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(binningToFractionedHistogramMethods(hist).fractioned)
+  implicit def selectedBinnedToFractionedHistogramMethodsAscii(hist: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(selectedBinnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def selectingBinningToFractionedHistogramMethodsAscii[DATUM](hist: Fractioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(selectingBinningToFractionedHistogramMethods(hist).fractioned)
+  implicit def sparselyBinnedToFractionedHistogramMethodsAscii(hist: Fractioned[SparselyBinned[Counted, Counted]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(sparselyBinnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def sparselyBinningToFractioningHistogramMethodsAscii[DATUM](hist: Fractioning[DATUM, SparselyBinning[DATUM, Counting, Counting]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(sparselyBinningToFractioningHistogramMethods(hist).fractioned)
+  implicit def selectedSparselyBinnedToFractionedHistogramMethodsAscii(hist: Fractioned[Selected[SparselyBinned[Counted, Counted]]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(selectedSparselyBinnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def selectingSparselyBinningToFractionedHistogramMethodsAscii[DATUM](hist: Fractioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]]): FractionedHistogramMethodsAscii =
+    new FractionedHistogramMethodsAscii(selectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
+
+  class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
 }

@@ -161,7 +161,26 @@ package object bokeh extends Tools {
   implicit def selectingSparselyBinningToProfileMethodsBokeh[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethodsBokeh =
     new ProfileMethodsBokeh(selectingSparselyBinningToProfileMethods(hist).selected)
 
-  class ProfileMethodsBokeh(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]])
+  class ProfileMethodsBokeh(val profile: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
+    def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+
+      //Prepare histogram contents for plotting
+      val h = profile.value.high
+      val l = profile.value.low
+      val step = (h-l)/profile.value.values.length
+
+      object source extends ColumnDataSource {
+          val x = column(l to h by step)
+          val y = column(profile.value.values.map(_.entries))
+      }
+      import source.{x,y}
+
+      //Set marker color, fill color, line color
+      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+
+      new GlyphRenderer().data_source(source).glyph(glyph)
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for StackedHistogram, including cases for mixed tenses
 

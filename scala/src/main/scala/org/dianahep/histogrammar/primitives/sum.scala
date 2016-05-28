@@ -87,6 +87,7 @@ package histogrammar {
     */
   class Summed private[histogrammar](val entries: Double, val quantityName: Option[String], val sum: Double) extends Container[Summed] with NoAggregation with QuantityName {
     type Type = Summed
+    type EdType = Summed
     def factory = Sum
 
     def zero = new Summed(0.0, quantityName, 0.0)
@@ -121,6 +122,7 @@ package histogrammar {
     */
   class Summing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var sum: Double) extends Container[Summing[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Summing[DATUM]
+    type EdType = Summed
     type Datum = DATUM
     def factory = Sum
 

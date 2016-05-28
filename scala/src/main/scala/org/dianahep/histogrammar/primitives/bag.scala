@@ -122,6 +122,7 @@ package histogrammar {
     */
   class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[RANGE, Double]) extends Container[Bagged[RANGE]] with NoAggregation with QuantityName {
     type Type = Bagged[RANGE]
+    type EdType = Bagged[RANGE]
     def factory = Bag
 
     def zero = new Bagged(0.0, this.quantityName, Map[RANGE, Double]())
@@ -175,6 +176,7 @@ package histogrammar {
     */
   class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double]) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
     type Type = Bagging[DATUM, RANGE]
+    type EdType = Bagged[RANGE]
     type Datum = DATUM
     def factory = Bag
 

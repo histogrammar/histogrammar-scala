@@ -129,6 +129,7 @@ package histogrammar {
     //       no longer "knows" that. I am not sure if this lack of knowledge will ever become a problem.
 
     type Type = Stacked[V]
+    type EdType = Stacked[V]
     def factory = Stack
 
     if (entries < 0.0)
@@ -177,7 +178,9 @@ package histogrammar {
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
   class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, val cuts: (Double, V)*) extends Container[Stacking[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] {
+    protected val v = cuts.head._2
     type Type = Stacking[DATUM, V]
+    type EdType = Stacked[v.EdType]
     type Datum = DATUM
     def factory = Stack
 

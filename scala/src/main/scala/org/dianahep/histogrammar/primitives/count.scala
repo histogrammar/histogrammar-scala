@@ -64,6 +64,7 @@ package histogrammar {
     */
   class Counted private[histogrammar](val entries: Double) extends Container[Counted] with NoAggregation {
     type Type = Counted
+    type EdType = Counted
     def factory = Count
 
     if (entries < 0.0)
@@ -94,6 +95,7 @@ package histogrammar {
     */
   class Counting private[histogrammar](var entries: Double) extends Container[Counting] with Aggregation {
     type Type = Counting
+    type EdType = Counted
     type Datum = Any
     def factory = Count
 

@@ -118,6 +118,7 @@ package histogrammar {
     */
   class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] with NoAggregation with QuantityName {
     type Type = Sampled[RANGE]
+    type EdType = Sampled[RANGE]
     def factory = Sample
 
     if (limit <= 0)
@@ -174,6 +175,7 @@ package histogrammar {
     */
   class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, reservoir: mutable.Reservoir[RANGE]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
     type Type = Sampling[DATUM, RANGE]
+    type EdType = Sampled[RANGE]
     type Datum = DATUM
     def factory = Sample
 

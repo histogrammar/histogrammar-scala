@@ -199,6 +199,7 @@ package histogrammar {
     val nanflow: N) extends Container[Binned[V, U, O, N]] with NoAggregation with QuantityName with Bin.Methods {
 
     type Type = Binned[V, U, O, N]
+    type EdType = Binned[V, U, O, N]
     def factory = Bin
 
     if (low >= high)
@@ -282,10 +283,6 @@ package histogrammar {
     val overflow: O,
     val nanflow: N) extends Container[Binning[DATUM, V, U, O, N]] with AggregationOnData with NumericalQuantity[DATUM] with Bin.Methods {
 
-    type Type = Binning[DATUM, V, U, O, N]
-    type Datum = DATUM
-    def factory = Bin
-
     if (low >= high)
       throw new ContainerException(s"low ($low) must be less than high ($high)")
     if (values.size < 1)
@@ -293,6 +290,12 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
+
+    protected val v = values.head
+    type Type = Binning[DATUM, V, U, O, N]
+    type EdType = Binned[v.EdType, underflow.EdType, overflow.EdType, nanflow.EdType]
+    type Datum = DATUM
+    def factory = Bin
 
     /** Extract the container at a given index. */
     def at(index: Int) = values(index)

@@ -90,6 +90,7 @@ package histogrammar {
     */
   class AbsoluteErred private[histogrammar](val entries: Double, val quantityName: Option[String], val mae: Double) extends Container[AbsoluteErred] with NoAggregation with QuantityName {
     type Type = AbsoluteErred
+    type EdType = AbsoluteErred
     def factory = AbsoluteErr
 
     if (entries < 0.0)
@@ -129,6 +130,7 @@ package histogrammar {
     */
   class AbsoluteErring[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, _mae: Double) extends Container[AbsoluteErring[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = AbsoluteErring[DATUM]
+    type EdType = AbsoluteErred
     type Datum = DATUM
     def factory = AbsoluteErr
 

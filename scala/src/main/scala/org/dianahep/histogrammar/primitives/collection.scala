@@ -95,6 +95,7 @@ package histogrammar {
     */
   class Selected[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val value: V) extends Container[Selected[V]] with NoAggregation with QuantityName with Select.Methods {
     type Type = Selected[V]
+    type EdType = Selected[V]
     def factory = Select
 
     if (entries < 0.0)
@@ -133,6 +134,7 @@ package histogrammar {
     */
   class Selecting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val quantity: UserFcn[DATUM, Double], val value: V) extends Container[Selecting[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] with Select.Methods {
     type Type = Selecting[DATUM, V]
+    type EdType = Selected[value.EdType]
     type Datum = DATUM
     def factory = Select
 
@@ -247,6 +249,7 @@ package histogrammar {
     */
   class Limited[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val limit: Double, val contentType: String, val value: Option[V]) extends Container[Limited[V]] with NoAggregation {
     type Type = Limited[V]
+    type EdType = Limited[V]
     def factory = Limit
 
     if (entries < 0.0)
@@ -300,7 +303,9 @@ package histogrammar {
     * @param value Some aggregator or `None`.
     */
   class Limiting[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val limit: Double, val contentType: String, var value: Option[V]) extends Container[Limiting[V]] with AggregationOnData {
+    protected val v = value.get
     type Type = Limiting[V]
+    type EdType = Limited[v.EdType]
     type Datum = V#Datum
     def factory = Limit
 
@@ -418,6 +423,7 @@ package histogrammar {
     */
   class Labeled[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] with NoAggregation {
     type Type = Labeled[V]
+    type EdType = Labeled[V]
     def factory = Label
 
     if (entries < 0.0)
@@ -477,14 +483,16 @@ package histogrammar {
     * @param pairs Names (strings) associated with containers of the SAME type.
     */
   class Labeling[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
-    type Type = Labeling[V]
-    type Datum = V#Datum
-    def factory = Label
-
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     if (pairs.isEmpty)
       throw new ContainerException("at least one pair required")
+
+    protected val v = pairs.head._2
+    type Type = Labeling[V]
+    type EdType = Labeled[v.EdType]
+    type Datum = V#Datum
+    def factory = Label
 
     /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
@@ -613,6 +621,7 @@ package histogrammar {
     */
   class UntypedLabeled private[histogrammar](val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] with NoAggregation {
     type Type = UntypedLabeled
+    type EdType = UntypedLabeled
     def factory = UntypedLabel
 
     if (entries < 0.0)
@@ -679,6 +688,7 @@ package histogrammar {
     */
   class UntypedLabeling[DATUM] private[histogrammar](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData {
     type Type = UntypedLabeled
+    type EdType = UntypedLabeled
     type Datum = DATUM
     def factory = UntypedLabel
 
@@ -806,6 +816,7 @@ package histogrammar {
     */
   class Indexed[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val values: V*) extends Container[Indexed[V]] with NoAggregation {
     type Type = Indexed[V]
+    type EdType = Indexed[V]
     def factory = Index
 
     if (entries < 0.0)
@@ -857,14 +868,16 @@ package histogrammar {
     * @param values Ordered list of containers that can be retrieved by index number.
     */
   class Indexing[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val values: V*) extends Container[Indexing[V]] with AggregationOnData {
-    type Type = Indexing[V]
-    type Datum = V#Datum
-    def factory = Index
-
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     if (values.isEmpty)
       throw new ContainerException("at least one element required")
+
+    protected val v = values.head
+    type Type = Indexing[V]
+    type EdType = Indexed[v.EdType]
+    type Datum = V#Datum
+    def factory = Index
 
     /** Number of `values`. */
     def size = values.size
@@ -1027,6 +1040,7 @@ package histogrammar {
     */
   class Branched[HEAD <: Container[HEAD] with NoAggregation, TAIL <: BranchedList] private[histogrammar](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with NoAggregation with BranchedList {
     type Type = Branched[HEAD, TAIL]
+    type EdType = Branched[HEAD, TAIL]
     def factory = Branch
 
     if (entries < 0.0)
@@ -1066,6 +1080,7 @@ package histogrammar {
   }
 
   sealed trait BranchingList {
+    type EdType <: BranchedList
     def values: List[Container[_]]
     def size: Int
     def get(i: Int): Option[Container[_]]
@@ -1073,6 +1088,7 @@ package histogrammar {
   }
 
   object BranchingNil extends BranchingList {
+    type EdType = BranchedNil.type
     def values: List[Container[_]] = Nil
     def size: Int = 0
     def get(i: Int) = None
@@ -1091,6 +1107,7 @@ package histogrammar {
     */
   class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList] private[histogrammar](var entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
     type Type = Branching[HEAD, TAIL]
+    type EdType = Branched[head.EdType, tail.EdType]
     type Datum = head.Datum
     def factory = Branch
 

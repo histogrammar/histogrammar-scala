@@ -108,6 +108,7 @@ package histogrammar {
     */
   class Deviated private[histogrammar](val entries: Double, val quantityName: Option[String], val mean: Double, val variance: Double) extends Container[Deviated] with NoAggregation with QuantityName {
     type Type = Deviated
+    type EdType = Deviated
     def factory = Deviate
 
     if (entries < 0.0)
@@ -152,6 +153,7 @@ package histogrammar {
     */
   class Deviating[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var mean: Double, _variance: Double) extends Container[Deviating[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Deviating[DATUM]
+    type EdType = Deviated
     type Datum = DATUM
     def factory = Deviate
 

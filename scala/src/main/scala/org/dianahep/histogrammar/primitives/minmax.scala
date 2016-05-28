@@ -95,6 +95,7 @@ package histogrammar {
     */
   class Minimized private[histogrammar](val entries: Double, val quantityName: Option[String], val min: Double) extends Container[Minimized] with NoAggregation with QuantityName {
     type Type = Minimized
+    type EdType = Minimized
     def factory = Minimize
 
     if (entries < 0.0)
@@ -132,6 +133,7 @@ package histogrammar {
     */
   class Minimizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var min: Double) extends Container[Minimizing[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Minimizing[DATUM]
+    type EdType = Minimized
     type Datum = DATUM
     def factory = Minimize
 
@@ -245,6 +247,7 @@ package histogrammar {
     */
   class Maximized private[histogrammar](val entries: Double, val quantityName: Option[String], val max: Double) extends Container[Maximized] with NoAggregation with QuantityName {
     type Type = Maximized
+    type EdType = Maximized
     def factory = Maximize
 
     def zero = new Maximized(0.0, quantityName, java.lang.Double.NaN)
@@ -279,6 +282,7 @@ package histogrammar {
     */
   class Maximizing[DATUM] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, var max: Double) extends Container[Maximizing[DATUM]] with AggregationOnData with NumericalQuantity[DATUM] {
     type Type = Maximizing[DATUM]
+    type EdType = Maximized
     type Datum = DATUM
     def factory = Maximize
 

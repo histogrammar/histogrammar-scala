@@ -152,6 +152,7 @@ package histogrammar {
     extends Container[AdaptivelyBinned[V, N]] with NoAggregation with CentrallyBin.Methods[V] with QuantityName {
 
     type Type = AdaptivelyBinned[V, N]
+    type EdType = AdaptivelyBinned[V, N]
     def factory = AdaptivelyBin
 
     if (clustering.entries < 0.0)
@@ -219,7 +220,9 @@ package histogrammar {
     (val quantity: UserFcn[DATUM, Double], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
       extends Container[AdaptivelyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with CentrallyBin.Methods[V] {
 
+    protected val v = value
     type Type = AdaptivelyBinning[DATUM, V, N]
+    type EdType = AdaptivelyBinned[v.EdType, nanflow.EdType]
     type Datum = DATUM
     def factory = AdaptivelyBin
 

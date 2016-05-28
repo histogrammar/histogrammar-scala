@@ -258,7 +258,7 @@ package histogrammar {
      val nanflow: N,
      val origin: Double) extends Container[SparselyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with SparselyBin.Methods {
 
-    val v = value
+    protected val v = value
     type Type = SparselyBinning[DATUM, V, N]
     type EdType = SparselyBinned[v.EdType, nanflow.EdType]
     type Datum = DATUM

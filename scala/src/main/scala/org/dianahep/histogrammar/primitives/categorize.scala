@@ -172,7 +172,7 @@ package histogrammar {
     */
   class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, String], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData with CategoricalQuantity[DATUM] {
 
-    val v = value
+    protected val v = value
     type Type = Categorizing[DATUM, V]
     type EdType = Categorized[v.EdType]
     type Datum = DATUM

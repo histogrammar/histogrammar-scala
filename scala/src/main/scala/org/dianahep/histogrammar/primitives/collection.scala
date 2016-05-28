@@ -303,7 +303,7 @@ package histogrammar {
     * @param value Some aggregator or `None`.
     */
   class Limiting[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val limit: Double, val contentType: String, var value: Option[V]) extends Container[Limiting[V]] with AggregationOnData {
-    val v = value.get
+    protected val v = value.get
     type Type = Limiting[V]
     type EdType = Limited[v.EdType]
     type Datum = V#Datum
@@ -488,7 +488,7 @@ package histogrammar {
     if (pairs.isEmpty)
       throw new ContainerException("at least one pair required")
 
-    val v = pairs.head._2
+    protected val v = pairs.head._2
     type Type = Labeling[V]
     type EdType = Labeled[v.EdType]
     type Datum = V#Datum
@@ -873,7 +873,7 @@ package histogrammar {
     if (values.isEmpty)
       throw new ContainerException("at least one element required")
 
-    val v = values.head
+    protected val v = values.head
     type Type = Indexing[V]
     type EdType = Indexed[v.EdType]
     type Datum = V#Datum
@@ -1080,6 +1080,7 @@ package histogrammar {
   }
 
   sealed trait BranchingList {
+    type EdType <: BranchedList
     def values: List[Container[_]]
     def size: Int
     def get(i: Int): Option[Container[_]]
@@ -1087,6 +1088,7 @@ package histogrammar {
   }
 
   object BranchingNil extends BranchingList {
+    type EdType = BranchedNil.type
     def values: List[Container[_]] = Nil
     def size: Int = 0
     def get(i: Int) = None
@@ -1105,7 +1107,7 @@ package histogrammar {
     */
   class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList] private[histogrammar](var entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
     type Type = Branching[HEAD, TAIL]
-    type EdType = Branched[head.EdType, BranchedNil.type]  // FIXME: this tail is wrong
+    type EdType = Branched[head.EdType, tail.EdType]
     type Datum = head.Datum
     def factory = Branch
 

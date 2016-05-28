@@ -230,7 +230,7 @@ package histogrammar {
     (val quantity: UserFcn[DATUM, Double], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
     extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with CentrallyBin.Methods[V] {
 
-    val v = value
+    protected val v = value
     type Type = CentrallyBinning[DATUM, V, N]
     type EdType = CentrallyBinned[v.EdType, nanflow.EdType]
     type Datum = DATUM

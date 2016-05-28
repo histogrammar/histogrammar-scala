@@ -160,7 +160,7 @@ package histogrammar {
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
     */
   class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] {
-    val v = cuts.head._2
+    protected val v = cuts.head._2
     type Type = Partitioning[DATUM, V]
     type EdType = Partitioned[v.EdType]
     type Datum = DATUM

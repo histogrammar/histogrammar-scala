@@ -220,7 +220,7 @@ package histogrammar {
     (val quantity: UserFcn[DATUM, Double], value: => V, clustering: mutable.Clustering1D[V], val nanflow: N)
       extends Container[AdaptivelyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with CentrallyBin.Methods[V] {
 
-    val v = value
+    protected val v = value
     type Type = AdaptivelyBinning[DATUM, V, N]
     type EdType = AdaptivelyBinned[v.EdType, nanflow.EdType]
     type Datum = DATUM

@@ -291,7 +291,7 @@ package histogrammar {
       throw new ContainerException(s"entries ($entries) cannot be negative")
     def num = values.size
 
-    val v = values.head
+    protected val v = values.head
     type Type = Binning[DATUM, V, U, O, N]
     type EdType = Binned[v.EdType, underflow.EdType, overflow.EdType, nanflow.EdType]
     type Datum = DATUM

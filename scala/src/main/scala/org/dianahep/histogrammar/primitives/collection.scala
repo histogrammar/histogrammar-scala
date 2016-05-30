@@ -20,347 +20,6 @@ import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
 package histogrammar {
-  //////////////////////////////////////////////////////////////// Cut/Cutted/Cutting
-
-  /** Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting).
-    * 
-    * Factory produces mutable [[org.dianahep.histogrammar.Selecting]] and immutable [[org.dianahep.histogrammar.Selected]] (sic) objects.
-    */
-  object Select extends Factory {
-    val name = "Select"
-    val help = "Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting)."
-    val detailedHelp = """Select(quantity: UserFcn[DATUM, Double], value: V)"""
-
-    /** Create an immutable [[org.dianahep.histogrammar.Selected]] from arguments (instead of JSON).
-      * 
-      * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
-      * @param value Aggregator that accumulated values that passed the cut.
-      */
-    def ed[V <: Container[V] with NoAggregation](entries: Double, value: V) = new Selected[V](entries, None, value)
-
-    /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
-      * 
-      * @param quantity Boolean or non-negative function that cuts or weights entries.
-      * @param value Aggregator to accumulate for values that pass the selection (`quantity`).
-      */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: V) = new Selecting[DATUM, V](0.0, quantity, value)
-
-    /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: V) = apply(quantity, value)
-
-    /** Use [[org.dianahep.histogrammar.Selected]] in Scala pattern-matching. */
-    def unapply[V <: Container[V] with NoAggregation](x: Selected[V]) = Some(x.value)
-    /** Use [[org.dianahep.histogrammar.Selecting]] in Scala pattern-matching. */
-    def unapply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](x: Selecting[DATUM, V]) = Some(x.value)
-
-    import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
-        val get = pairs.toMap
-
-        val entries = get("entries") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".entries")
-        }
-
-        val quantityName = get.getOrElse("name", JsonNull) match {
-          case JsonString(x) => Some(x)
-          case JsonNull => None
-          case x => throw new JsonFormatException(x, name + ".name")
-        }
-
-        val factory = get("type") match {
-          case JsonString(x) => Factory(x)
-          case x => throw new JsonFormatException(x, name + ".type")
-        }
-
-        val value = factory.fromJsonFragment(get("data"), None)
-
-        new Selected[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, value)
-
-      case _ => throw new JsonFormatException(json, name)
-    }
-
-    trait Methods {
-      /** Fraction of weights that pass the quantity. */
-      def fractionPassing: Double
-    }
-  }
-
-  /** An accumulated aggregator of data that passed the cut.
-    * 
-    * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
-    * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
-    * @param value Aggregator that accumulated values that passed the cut.
-    */
-  class Selected[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val value: V) extends Container[Selected[V]] with NoAggregation with QuantityName with Select.Methods {
-    type Type = Selected[V]
-    type EdType = Selected[V]
-    def factory = Select
-
-    if (entries < 0.0)
-      throw new ContainerException(s"entries ($entries) cannot be negative")
-
-    def fractionPassing = value.entries / entries
-
-    def zero = new Selected[V](0.0, quantityName, value.zero)
-    def +(that: Selected[V]) =
-      if (this.quantityName != that.quantityName)
-        throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
-      else
-        new Selected[V](this.entries + that.entries, this.quantityName, this.value + that.value)
-
-    def children = value :: Nil
-
-    def toJsonFragment(suppressName: Boolean) = JsonObject(
-      "entries" -> JsonFloat(entries),
-      "type" -> JsonString(value.factory.name),
-      "data" -> value.toJsonFragment(false)).
-      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
-
-    override def toString() = s"""Selected[$value]"""
-    override def equals(that: Any) = that match {
-      case that: Selected[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.value == that.value
-      case _ => false
-    }
-    override def hashCode() = (entries, quantityName, value).hashCode
-  }
-
-  /** Accumulating an aggregator of data that passes a cut.
-    * 
-    * @param entries Weighted number of entries (sum of all observed weights without the cut applied).
-    * @param quantity Boolean or non-negative function that cuts or weights entries.
-    * @param value Aggregator to accumulate values that pass the cut.
-    */
-  class Selecting[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](var entries: Double, val quantity: UserFcn[DATUM, Double], val value: V) extends Container[Selecting[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] with Select.Methods {
-    type Type = Selecting[DATUM, V]
-    type EdType = Selected[value.EdType]
-    type Datum = DATUM
-    def factory = Select
-
-    if (entries < 0.0)
-      throw new ContainerException(s"entries ($entries) cannot be negative")
-
-    def fractionPassing = value.entries / entries
-
-    def zero = new Selecting[DATUM, V](0.0, quantity, value.zero)
-    def +(that: Selecting[DATUM, V]) =
-      if (this.quantity.name != that.quantity.name)
-        throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
-      else
-        new Selecting[DATUM, V](this.entries + that.entries, this.quantity, this.value + that.value)
-
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      val w = weight * quantity(datum)
-      if (w > 0.0)
-        value.fill(datum, w)
-
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
-    }
-
-    def children = value :: Nil
-
-    def toJsonFragment(suppressName: Boolean) = JsonObject(
-      "entries" -> JsonFloat(entries),
-      "type" -> JsonString(value.factory.name),
-      "data" -> value.toJsonFragment(false)).
-      maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
-
-    override def toString() = s"""Selecting[$value]"""
-    override def equals(that: Any) = that match {
-      case that: Selecting[DATUM, V] => this.entries === that.entries  &&  this.quantity == that.quantity  &&  this.value == that.value
-      case _ => false
-    }
-    override def hashCode() = (entries, quantity, value).hashCode
-  }
-
-  //////////////////////////////////////////////////////////////// Limit/Limited/Limiting
-
-  /** Accumulate an aggregator until its number of entries reaches a predefined limit.
-    * 
-    * Factory produces mutable [[org.dianahep.histogrammar.Limiting]] and immutable [[org.dianahep.histogrammar.Limited]] objects.
-    */
-  object Limit extends Factory {
-    val name = "Limit"
-    val help = "Accumulate an aggregator until its number of entries reaches a predefined limit."
-    val detailedHelp = """Limit(limit: Double, value: V)"""
-
-    /** Create an immutable [[org.dianahep.histogrammar.Limited]] from arguments (instead of JSON).
-      * 
-      * @param entries Weighted number of entries (sum of all observed weights).
-      * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
-      * @param contentType Name of the Factory for `value`.
-      * @param value Some aggregator or `None`.
-      */
-    def ed[V <: Container[V] with NoAggregation](entries: Double, limit: Double, contentType: String, value: Option[V]) = new Limited[V](entries, limit, contentType, value)
-
-    /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
-      * 
-      * @param value Aggregator to apply a limit to.
-      * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
-      */
-    def apply[V <: Container[V] with Aggregation](limit: Double, value: V) = new Limiting[V](0.0, limit, value.factory.name, Some(value))
-
-    /** Synonym for `apply`. */
-    def ing[V <: Container[V] with Aggregation](limit: Double, value: V) = apply[V](limit, value)
-
-    /** Use [[org.dianahep.histogrammar.Limited]] in Scala pattern-matching. */
-    def unapply[V <: Container[V] with NoAggregation](x: Limited[V]) = x.value
-    /** Use [[org.dianahep.histogrammar.Limiting]] in Scala pattern-matching. */
-    def unapply[V <: Container[V] with Aggregation](x: Limiting[V]) = x.value
-
-    import KeySetComparisons._
-    def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "type", "data")) =>
-        val get = pairs.toMap
-
-        val entries = get("entries") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".entries")
-        }
-
-        val limit = get("limit") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".limit")
-        }
-
-        val contentType = get("type") match {
-          case JsonString(x) => x
-          case x => throw new JsonFormatException(x, name + ".type")
-        }
-        val factory = Factory(contentType)
-
-        get("data") match {
-          case JsonNull => new Limited[Container[_]](entries, limit, contentType, None)
-          case x => new Limited[Container[_]](entries, limit, contentType, Some(factory.fromJsonFragment(x, None)))
-        }
-
-      case _ => throw new JsonFormatException(json, name)
-    }
-  }
-
-  /** An accumulated aggregator or `None` if the number of entries exceeded the limit.
-    * 
-    * @param entries Weighted number of entries (sum of all observed weights).
-    * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
-    * @param contentType Name of the Factory for `value`.
-    * @param value Some aggregator or `None`.
-    */
-  class Limited[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val limit: Double, val contentType: String, val value: Option[V]) extends Container[Limited[V]] with NoAggregation {
-    type Type = Limited[V]
-    type EdType = Limited[V]
-    def factory = Limit
-
-    if (entries < 0.0)
-      throw new ContainerException(s"entries ($entries) cannot be negative")
-
-    /** True if `entries` exceeds `limit` and `value` is `None`. */
-    def saturated = value.isEmpty
-    /** Get the value of `value` or raise an error if it is `None`. */
-    def get = value.get
-    /** Get the value of `value` or return a default if it is `None`. */
-    def getOrElse(default: => V) = value.getOrElse(default)
-
-    def zero = new Limited[V](0.0, limit, contentType, value.map(_.zero))
-    def +(that: Limited[V]) =
-      if (this.limit != that.limit)
-        throw new ContainerException(s"""cannot add Limited because they have different limits (${this.limit} vs ${that.limit}))""")
-      else {
-        val newentries = this.entries + that.entries
-        val newvalue =
-          if (newentries > limit)
-            None
-          else
-            Some(this.value.get + that.value.get)
-        new Limited[V](newentries, limit, contentType, newvalue)
-      }
-
-    def children = value.toList
-
-    def toJsonFragment(suppressName: Boolean) = JsonObject(
-      "entries" -> JsonFloat(entries),
-      "limit" -> JsonFloat(limit),
-      "type" -> JsonString(contentType),
-      "data" -> (value match {
-        case None => JsonNull
-        case Some(x) => x.toJsonFragment(false)
-      }))
-
-    override def toString() = s"""Limited[${if (saturated) "saturated" else value.get}]"""
-    override def equals(that: Any) = that match {
-      case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
-      case _ => false
-    }
-    override def hashCode() = (entries, limit, contentType, value).hashCode
-  }
-
-  /** Accumulating an aggregator or `None` if the number of entries exceeds the limit.
-    * 
-    * @param entries Weighted number of entries (sum of all observed weights).
-    * @param limit Maximum sum of weights to keep; above this, `value` goes to `None`.
-    * @param contentType Name of the Factory for `value`.
-    * @param value Some aggregator or `None`.
-    */
-  class Limiting[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val limit: Double, val contentType: String, var value: Option[V]) extends Container[Limiting[V]] with AggregationOnData {
-    protected val v = value.get
-    type Type = Limiting[V]
-    type EdType = Limited[v.EdType]
-    type Datum = V#Datum
-    def factory = Limit
-
-    if (entries < 0.0)
-      throw new ContainerException(s"entries ($entries) cannot be negative")
-
-    /** True if `entries` exceeds `limit` and `value` is `None`. */
-    def saturated = value.isEmpty
-    /** Get the value of `value` or raise an error if it is `None`. */
-    def get = value.get
-    /** Get the value of `value` or return a default if it is `None`. */
-    def getOrElse(default: => V) = value.getOrElse(default)
-
-    def zero = new Limiting[V](0.0, limit, contentType, value.map(_.zero))
-    def +(that: Limiting[V]) =
-      if (this.limit != that.limit)
-        throw new ContainerException(s"""cannot add Limiting because they have different limits (${this.limit} vs ${that.limit}))""")
-      else {
-        val newentries = this.entries + that.entries
-        val newvalue =
-          if (newentries > limit)
-            None
-          else
-            Some(this.value.get + that.value.get)
-        new Limiting[V](newentries, limit, contentType, newvalue)
-      }
-
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
-      if (entries + weight > limit)
-        value = None
-      else
-        value.foreach(v => v.fill(datum.asInstanceOf[v.Datum], weight))
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
-    }
-
-    def children = value.toList
-
-    def toJsonFragment(suppressName: Boolean) = JsonObject(
-      "entries" -> JsonFloat(entries),
-      "limit" -> JsonFloat(limit),
-      "type" -> JsonString(contentType),
-      "data" -> (value match {
-        case None => JsonNull
-        case Some(x) => x.toJsonFragment(false)
-      }))
-
-    override def toString() = s"""Limiting[${if (saturated) "saturated" else value.get}]"""
-    override def equals(that: Any) = that match {
-      case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
-      case _ => false
-    }
-    override def hashCode() = (entries, limit, contentType, value).hashCode
-  }
-
   //////////////////////////////////////////////////////////////// Label/Labeled/Labeling
 
   /** Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum.
@@ -421,7 +80,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param pairs Names (strings) associated with containers of the SAME type.
     */
-  class Labeled[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] with NoAggregation {
+  class Labeled[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val pairs: (String, V)*) extends Container[Labeled[V]] with NoAggregation with Collection {
     type Type = Labeled[V]
     type EdType = Labeled[V]
     def factory = Label
@@ -441,12 +100,25 @@ package histogrammar {
     def values: Iterable[Container[V]] = pairs.toIterable.map(_._2)
     /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
-    /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = pairsMap(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex): V = index match {
+      case StringIndex(i) if (pairsMap contains i) => pairsMap(i)
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Labeled: $index""")
+    }
+    /** Attempt to get keys `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case StringIndex(i) :: Nil if (pairsMap contains i) => pairsMap(i)
+      case StringIndex(i) :: rest if (pairsMap contains i) => pairsMap(i) match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Labeled: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Labeled: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new Labeled[V](0.0, pairs map {case (k, v) => (k, v.zero)}: _*)
     def +(that: Labeled[V]) =
@@ -482,7 +154,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param pairs Names (strings) associated with containers of the SAME type.
     */
-  class Labeling[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData {
+  class Labeling[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val pairs: (String, V)*) extends Container[Labeling[V]] with AggregationOnData with Collection {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     if (pairs.isEmpty)
@@ -504,12 +176,25 @@ package histogrammar {
     def values: Iterable[V] = pairs.toIterable.map(_._2)
     /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
-    /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = pairsMap(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex): V = index match {
+      case StringIndex(i) if (pairsMap contains i) => pairsMap(i)
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Labeling: $index""")
+    }
+    /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case StringIndex(i) :: Nil if (pairsMap contains i) => pairsMap(i)
+      case StringIndex(i) :: rest if (pairsMap contains i) => pairsMap(i) match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Labeling: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Labeling: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new Labeling[V](0.0, pairs map {case (k, v) => (k, v.zero)}: _*)
     def +(that: Labeling[V]) =
@@ -619,7 +304,7 @@ package histogrammar {
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
-  class UntypedLabeled private[histogrammar](val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] with NoAggregation {
+  class UntypedLabeled private[histogrammar](val entries: Double, val pairs: (String, Container[_])*) extends Container[UntypedLabeled] with NoAggregation with Collection {
     type Type = UntypedLabeled
     type EdType = UntypedLabeled
     def factory = UntypedLabel
@@ -637,12 +322,25 @@ package histogrammar {
     def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
     /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
-    /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = pairsMap(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex): Container[_] = index match {
+      case StringIndex(i) if (pairsMap contains i) => pairsMap(i)
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeled: $index""")
+    }
+    /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case StringIndex(i) :: Nil if (pairsMap contains i) => pairsMap(i)
+      case StringIndex(i) :: rest if (pairsMap contains i) => pairsMap(i) match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeled: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeled: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new UntypedLabeled(0.0, pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_]])}: _*)
     def +(that: UntypedLabeled) =
@@ -686,7 +384,7 @@ package histogrammar {
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
-  class UntypedLabeling[DATUM] private[histogrammar](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData {
+  class UntypedLabeling[DATUM] private[histogrammar](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData with Collection {
     type Type = UntypedLabeled
     type EdType = UntypedLabeled
     type Datum = DATUM
@@ -705,12 +403,25 @@ package histogrammar {
     def values: Iterable[Container[_]] = pairs.toIterable.map(_._2)
     /** Set of keys among the `pairs`. */
     def keySet: Set[String] = keys.toSet
-    /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = pairsMap(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
     def get(x: String) = pairsMap.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
     def getOrElse(x: String, default: => Container[_]) = pairsMap.getOrElse(x, default)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex): Container[_] = index match {
+      case StringIndex(i) if (pairsMap contains i) => pairsMap(i)
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeling: $index""")
+    }
+    /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case StringIndex(i) :: Nil if (pairsMap contains i) => pairsMap(i)
+      case StringIndex(i) :: rest if (pairsMap contains i) => pairsMap(i) match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeling: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeling: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new UntypedLabeling[DATUM](0.0, pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_] with AggregationOnData {type Datum = DATUM}])}: _*)
     def +(that: UntypedLabeling[DATUM]) =
@@ -814,7 +525,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Ordered list of containers that can be retrieved by index number.
     */
-  class Indexed[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val values: V*) extends Container[Indexed[V]] with NoAggregation {
+  class Indexed[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val values: V*) extends Container[Indexed[V]] with NoAggregation with Collection {
     type Type = Indexed[V]
     type EdType = Indexed[V]
     def factory = Index
@@ -826,8 +537,6 @@ package histogrammar {
 
     /** Number of `values`. */
     def size = values.size
-    /** Attempt to get index `i`, throwing an exception if it does not exist. */
-    def apply(i: Int) = values(i)
     /** Attempt to get index `i`, returning `None` if it does not exist. */
     def get(i: Int) =
       if (i < 0  ||  i >= size)
@@ -840,6 +549,21 @@ package histogrammar {
         default
       else
         apply(i)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex): V = index match {
+      case IntegerIndex(i) if (i >= 0  &&  i < size) => values(i)
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Indexed: $index""")
+    }
+    /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case IntegerIndex(i) :: Nil if (i >= 0  &&  i < size) => values(i)
+      case IntegerIndex(i) :: rest if (i >= 0  &&  i < size) => values(i) match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Indexed: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Indexed: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new Indexed[V](0.0, values.map(_.zero): _*)
     def +(that: Indexed[V]) =
@@ -867,7 +591,7 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Ordered list of containers that can be retrieved by index number.
     */
-  class Indexing[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val values: V*) extends Container[Indexing[V]] with AggregationOnData {
+  class Indexing[V <: Container[V] with Aggregation] private[histogrammar](var entries: Double, val values: V*) extends Container[Indexing[V]] with AggregationOnData with Collection {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     if (values.isEmpty)
@@ -881,8 +605,6 @@ package histogrammar {
 
     /** Number of `values`. */
     def size = values.size
-    /** Attempt to get index `i`, throwing an exception if it does not exist. */
-    def apply(i: Int) = values(i)
     /** Attempt to get index `i`, returning `None` if it does not exist. */
     def get(i: Int) =
       if (i < 0  ||  i >= size)
@@ -895,6 +617,21 @@ package histogrammar {
         default
       else
         apply(i)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex): V = index match {
+      case IntegerIndex(i) if (i >= 0  &&  i < size) => values(i)
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Indexing: $index""")
+    }
+    /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case IntegerIndex(i) :: Nil if (i >= 0  &&  i < size) => values(i)
+      case IntegerIndex(i) :: rest if (i >= 0  &&  i < size) => values(i) match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Indexing: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Indexing: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new Indexing[V](0.0, values.map(_.zero): _*)
     def +(that: Indexing[V]) =
@@ -1038,7 +775,7 @@ package histogrammar {
     * 
     * Note that concrete instances of `Branched` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
     */
-  class Branched[HEAD <: Container[HEAD] with NoAggregation, TAIL <: BranchedList] private[histogrammar](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with NoAggregation with BranchedList {
+  class Branched[HEAD <: Container[HEAD] with NoAggregation, TAIL <: BranchedList] private[histogrammar](val entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branched[HEAD, TAIL]] with NoAggregation with Collection with BranchedList {
     type Type = Branched[HEAD, TAIL]
     type EdType = Branched[HEAD, TAIL]
     def factory = Branch
@@ -1050,8 +787,6 @@ package histogrammar {
     def values: List[Container[_]] = head :: tail.values
     /** Return the number of containers. */
     def size: Int = 1 + tail.size
-    /** Attempt to get index `i`, throwing an exception if it does not exist. */
-    def apply(i: Int) = get(i).get
     /** Attempt to get index `i`, returning `None` if it does not exist. */
     def get(i: Int) =
       if (i == 0)
@@ -1060,6 +795,21 @@ package histogrammar {
         tail.get(i - 1)
     /** Attempt to get index `i`, returning an alternative if it does not exist. */
     def getOrElse(i: Int, default: => Container[_]) = get(i).getOrElse(default)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex) = index match {
+      case IntegerIndex(i) if (i >= 0  &&  i < size) => get(i).get
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branched: $index""")
+    }
+    /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case IntegerIndex(i) :: Nil if (i >= 0  &&  i < size) => get(i).get
+      case IntegerIndex(i) :: rest if (i >= 0  &&  i < size) => get(i).get match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branched: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branched: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new Branched[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
     def +(that: Branched[HEAD, TAIL]) = new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)
@@ -1105,7 +855,7 @@ package histogrammar {
     * 
     * Note that concrete instances of `Branching` implicitly have fields `i0` through `i9`, which are shortcuts to the first ten items.
     */
-  class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList] private[histogrammar](var entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with BranchingList {
+  class Branching[HEAD <: Container[HEAD] with Aggregation, TAIL <: BranchingList] private[histogrammar](var entries: Double, val head: HEAD, val tail: TAIL) extends Container[Branching[HEAD, TAIL]] with AggregationOnData with Collection with BranchingList {
     type Type = Branching[HEAD, TAIL]
     type EdType = Branched[head.EdType, tail.EdType]
     type Datum = head.Datum
@@ -1118,8 +868,6 @@ package histogrammar {
     def values: List[Container[_]] = head :: tail.values
     /** Return the number of containers. */
     def size: Int = 1 + tail.size
-    /** Attempt to get index `i`, throwing an exception if it does not exist. */
-    def apply(i: Int) = get(i).get
     /** Attempt to get index `i`, returning `None` if it does not exist. */
     def get(i: Int) =
       if (i == 0)
@@ -1128,6 +876,22 @@ package histogrammar {
         tail.get(i - 1)
     /** Attempt to get index `i`, returning an alternative if it does not exist. */
     def getOrElse(i: Int, default: => Container[_]) = get(i).getOrElse(default)
+
+    /** Attempt to get key `index`, throwing an exception if it does not exist. */
+    def apply(index: CollectionIndex) = index match {
+      case IntegerIndex(i) if (i >= 0  &&  i < size) => get(i).get
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: $index""")
+    }
+
+    /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
+    def apply(indexes: CollectionIndex*) = indexes.toList match {
+      case IntegerIndex(i) :: Nil if (i >= 0  &&  i < size) => get(i).get
+      case IntegerIndex(i) :: rest if (i >= 0  &&  i < size) => get(i).get match {
+        case sub: Collection => sub(rest: _*)
+        case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
+      }
+      case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
+    }
 
     def zero = new Branching[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
     def +(that: Branching[HEAD, TAIL]) = new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)

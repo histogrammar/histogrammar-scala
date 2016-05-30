@@ -41,6 +41,11 @@ package object ascii {
     new HistogramMethodsAscii(selectingSparselyBinningToHistogramMethods(hist).selected)
 
   class HistogramMethodsAscii(val selected: Selected[Binned[Counted, Counted, Counted, Counted]]) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def println(width: Int = 80) {
+      System.out.println(ascii(width))
+    }
+
     /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
     def ascii: String = ascii(80)
     /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
@@ -131,6 +136,11 @@ package object ascii {
     new ProfileMethodsAscii(selectingSparselyBinningToProfileMethods(hist).selected)
 
   class ProfileMethodsAscii(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def println(width: Int = 80) {
+      System.out.println(ascii(width))
+    }
+
     /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
     def ascii: String = ascii(80)
     /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
@@ -271,5 +281,13 @@ package object ascii {
     new FractionedHistogramMethodsAscii(selectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
 
   class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
+  //////////////////////////////////////////////////////////////// methods for collections
+
+
+
+
+  class CollectionMethodsAscii
+
 
 }

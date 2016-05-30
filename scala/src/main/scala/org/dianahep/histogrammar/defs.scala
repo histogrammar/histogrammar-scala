@@ -417,6 +417,28 @@ package object histogrammar {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
 
+  //////////////////////////////////////////////////////////////// indexes for collections
+
+  sealed trait CollectionIndex
+
+  implicit class IntegerIndex(val int: Int) extends CollectionIndex {
+    override def toString() = int.toString
+  }
+  object IntegerIndex {
+    def unapply(x: IntegerIndex) = Some(x.int)
+  }
+
+  implicit class StringIndex(val string: String) extends CollectionIndex {
+    override def toString() = string.toString
+  }
+  object StringIndex {
+    def unapply(x: StringIndex) = Some(x.string)
+  }
+
+  trait Collection {
+    def apply(indexes: CollectionIndex*): Container[_]
+  }
+
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
   implicit class Branched0[C0 <: Container[C0] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, TAIL]) {
     def i0 = x.head
@@ -754,5 +776,19 @@ package object histogrammar {
 
   /** Methods that are implicitly added to container combinations that look like fractioned histograms. */
   class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
+  //////////////////////////////////////////////////////////////// methods for collections
+
+  // class CollectionMethods(val collection: Container[_]) {
+  //   def nested: Map[String, Any] = collection match {
+  //     case x: Labeled => 
+
+
+
+  //   }
+
+
+
+  // }
 
 }

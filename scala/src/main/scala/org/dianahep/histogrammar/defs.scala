@@ -921,52 +921,61 @@ package object histogrammar {
 
     /** Bin fractions as numbers. */
     def numericalValues: Seq[Double] = numeratorBinned.values zip denominatorBinned.values map {case (n, d) => n.entries / d.entries}
-    /** Low-central-high confidence interval triplet for all bins, using a Wilson score interval. */
-    def confidenceIntervalValues: Seq[(Double, Double, Double)] = numeratorBinned.values zip denominatorBinned.values map {case (n, d) =>
-      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
-    }
-    /** Low-central-high confidence interval triplet for all bins, given a confidence interval function. */
+    /** Low-central-high confidence interval triplet for all bins, given a confidence interval function.
+      * 
+      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
+      * 
+      * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
+      * @param absz absolute value of `z` to evaluate.
+      * @return confidence interval evaluated at `(-absz, 0, absz)`.
+      */
     def confidenceIntervalValues(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): Seq[(Double, Double, Double)] = numeratorBinned.values zip denominatorBinned.values map {case (n, d) =>
-      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+      (confidenceInterval(n.entries, d.entries, -absz), confidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
     }
 
     /** Overflow fraction as a number. */
     def numericalOverflow: Double = numeratorBinned.overflow.entries / denominatorBinned.overflow.entries
-    /** Low-central-high confidence interval triplet for the overflow bin, using a Wilson score interval. */
-    def confidenceIntervalOverflow: (Double, Double, Double) = {
-      val (n, d) = (numeratorBinned.overflow, denominatorBinned.overflow)
-      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
-    }
-    /** Low-central-high confidence interval triplet for the overflow bin, given a confidence interval function. */
+    /** Low-central-high confidence interval triplet for the overflow bin, given a confidence interval function.
+      * 
+      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
+      * 
+      * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
+      * @param absz absolute value of `z` to evaluate.
+      * @return confidence interval evaluated at `(-absz, 0, absz)`.
+      */
     def confidenceIntervalOverflow(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): (Double, Double, Double) = {
       val (n, d) = (numeratorBinned.overflow, denominatorBinned.overflow)
-      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+      (confidenceInterval(n.entries, d.entries, -absz), confidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
     }
 
     /** Underflow fraction as a number. */
     def numericalUnderflow: Double = numeratorBinned.underflow.entries / denominatorBinned.underflow.entries
-    /** Low-central-high confidence interval triplet for the underflow bin, using a Wilson score interval. */
-    def confidenceIntervalUnderflow: (Double, Double, Double) = {
-      val (n, d) = (numeratorBinned.underflow, denominatorBinned.underflow)
-      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
-    }
-    /** Low-central-high confidence interval triplet for the underflow bin, given a confidence interval function. */
+    /** Low-central-high confidence interval triplet for the overflow bin, given a confidence interval function.
+      * 
+      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
+      * 
+      * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
+      * @param absz absolute value of `z` to evaluate.
+      * @return confidence interval evaluated at `(-absz, 0, absz)`.
+      */
     def confidenceIntervalUnderflow(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): (Double, Double, Double) = {
       val (n, d) = (numeratorBinned.underflow, denominatorBinned.underflow)
-      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+      (confidenceInterval(n.entries, d.entries, -absz), confidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
     }
 
     /** Nanflow fraction as a number. */
     def numericalNanflow: Double = numeratorBinned.nanflow.entries / denominatorBinned.nanflow.entries
-    /** Low-central-high confidence interval triplet for the nanflow bin, using a Wilson score interval. */
-    def confidenceIntervalNanflow: (Double, Double, Double) = {
-      val (n, d) = (numeratorBinned.nanflow, denominatorBinned.nanflow)
-      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
-    }
-    /** Low-central-high confidence interval triplet for the nanflow bin, given a confidence interval function. */
+    /** Low-central-high confidence interval triplet for the nanflow bin, given a confidence interval function.
+      * 
+      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
+      * 
+      * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
+      * @param absz absolute value of `z` to evaluate.
+      * @return confidence interval evaluated at `(-absz, 0, absz)`.
+      */
     def confidenceIntervalNanflow(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): (Double, Double, Double) = {
       val (n, d) = (numeratorBinned.nanflow, denominatorBinned.nanflow)
-      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+      (confidenceInterval(n.entries, d.entries, -absz), confidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
     }
   }
 

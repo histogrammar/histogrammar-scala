@@ -54,6 +54,48 @@ package histogrammar {
       case JsonFloat(entries) => new Counted(entries)
       case _ => throw new JsonFormatException(json, name)
     }
+
+    // Confidence interval formulas for counting statistics (e.g. bin-by-bin).
+    // For more information, see https://www.ine.pt/revstat/pdf/rs120203.pdf
+
+    /** Compute the normal confidence interval on `number` (where `number` is a count of events in a Poisson process).
+      * 
+      * The normal confidence interval is `number + z * sqrt(number)`. It has good properties for large numbers.
+      * 
+      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+      */
+    def normalConfidenceInterval(number: Double, z: Double): Double = normalConfidenceInterval(number, List(z): _*).head
+
+    /** Compute the normal confidence interval on `number` (where `number` is a count of events in a Poisson process).
+      * 
+      * The normal confidence interval is `number + z * sqrt(number)`. It has good properties for large numbers.
+      * 
+      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+      */
+    def normalConfidenceInterval(number: Double, zs: Double*): Seq[Double] =
+      zs.map(z => number + z * Math.sqrt(number))
+
+    /** Compute the Wilson confidence interval on `number` (where `number` is a count of events in a Poisson process).
+      * 
+      * The Wilson confidence interval is `number * (1 - 1/(9*number) + z / (3 * sqrt(number)))**3`. It has good properties for small integers, but not for numbers below one.
+      * 
+      * To avoid singularities, this function returns zero when `number` is zero, but it is not to be trusted for any `number` less than one.
+      * 
+      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+      */
+    def wilsonConfidenceInterval(number: Double, z: Double): Double = wilsonConfidenceInterval(number, List(z): _*).head
+
+    /** Compute the Wilson confidence interval on `number` (where `number` is a count of events in a Poisson process).
+      * 
+      * The Wilson confidence interval is `number * (1 - 1/(9*number) + z / (3 * sqrt(number)))**3`. It has good properties for small integers, but not for numbers below one.
+      * 
+      * To avoid singularities, this function returns zero when `number` is zero, but it is not to be trusted for any `number` less than one.
+      * 
+      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+      */
+    def wilsonConfidenceInterval(number: Double, zs: Double*): Seq[Double] =
+      zs.map(z => number * Math.pow(1.0 - 1.0/(9.0*number) + z / (3.0 * Math.sqrt(number)), 3))
+
   }
 
   /** An accumulated count (sum of weights) of data, ignoring its content.

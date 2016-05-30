@@ -289,19 +289,23 @@ package object ascii {
     new FractionedHistogramMethodsAscii(selectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
 
   class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
-    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
-    def println {
-      System.out.println(ascii(Fraction.wilsonConfidenceInterval, 80))
-    }
-    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns.
+      * 
+      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
+      * 
+      * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
+      */
     def println(confidenceInterval: (Double, Double, Double) => Double, width: Int = 80) {
       System.out.println(ascii(confidenceInterval, width))
     }
 
-    /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
-    def ascii: String = ascii(Fraction.wilsonConfidenceInterval, 80)
-    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def ascii(confidenceInterval: (Double, Double, Double) => Double, width: Int): String = {
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns.
+      * 
+      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
+      * 
+      * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
+      */
+    def ascii(confidenceInterval: (Double, Double, Double) => Double, width: Int = 80): String = {
       val methods = new FractionedHistogramMethods(fractioned)
       val numer = methods.numeratorBinned
       val denom = methods.denominatorBinned

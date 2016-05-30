@@ -41,6 +41,10 @@ package object ascii {
     new HistogramMethodsAscii(selectingSparselyBinningToHistogramMethods(hist).selected)
 
   class HistogramMethodsAscii(val selected: Selected[Binned[Counted, Counted, Counted, Counted]]) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def println {
+      System.out.println(ascii(80))
+    }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
     def println(width: Int = 80) {
       System.out.println(ascii(width))
@@ -136,6 +140,10 @@ package object ascii {
     new ProfileMethodsAscii(selectingSparselyBinningToProfileMethods(hist).selected)
 
   class ProfileMethodsAscii(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def println {
+      System.out.println(ascii(80))
+    }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
     def println(width: Int = 80) {
       System.out.println(ascii(width))
@@ -282,12 +290,61 @@ package object ascii {
 
   class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
 
-  //////////////////////////////////////////////////////////////// methods for collections
+  //////////////////////////////////////////////////////////////// methods for (nested) collections
 
+  implicit def labeledToCollectionMethodsAscii(labeled: Labeled[_]) = new CollectionMethodsAscii(labeled)
+  implicit def labelingToCollectionMethodsAscii(labeling: Labeling[_]) = new CollectionMethodsAscii(labeling)
+  implicit def untypedLabeledToCollectionMethodsAscii(untypedLabeled: UntypedLabeled) = new CollectionMethodsAscii(untypedLabeled)
+  implicit def untypedLabelingToCollectionMethodsAscii(untypedLabeling: UntypedLabeling[_]) = new CollectionMethodsAscii(untypedLabeling)
+  implicit def indexedToCollectionMethodsAscii(indexed: Indexed[_]) = new CollectionMethodsAscii(indexed)
+  implicit def indexingToCollectionMethodsAscii(indexing: Indexing[_]) = new CollectionMethodsAscii(indexing)
+  implicit def branchedToCollectionMethodsAscii(branched: Branched[_, _]) = new CollectionMethodsAscii(branched)
+  implicit def branchingToCollectionMethodsAscii(branching: Branching[_, _]) = new CollectionMethodsAscii(branching)
 
+  class CollectionMethodsAscii(collection: Collection) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns with 40 reserved for indexes. */
+    def println {
+      System.out.println(ascii(40, 80))
+    }
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns with `indexWidth` reserved for indexes. */
+    def println(indexWidth: Int = 40, width: Int = 80) {
+      System.out.println(ascii(indexWidth, width))
+    }
 
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns with 40 reserved for indexes. */
+    def ascii: String = ascii(40, 80)
 
-  class CollectionMethodsAscii
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns with `indexWidth` reserved for indexes. */
+    def ascii(indexWidth: Int = 40, width: Int = 80): String = collection.walk({index: Seq[CollectionIndex] =>
+      val indexWords = index map {
+        case StringIndex(x) => "\"" + scala.util.parsing.json.JSONFormat.quoteString(x) + "\""
+        case IntegerIndex(x) => x.toString
+      }
 
+      val indexLines = List.newBuilder[String]
+      indexLines += "("
+      var charCounter = 1
+      indexWords.zipWithIndex foreach {case (word, i) =>
+        if (charCounter + word.size + 1 > indexWidth) {
+          indexLines += "\n    "
+          charCounter = 4
+        }
+        indexLines += word
+        charCounter += word.size
+        if (i != indexWords.size - 1) {
+          indexLines += ", "
+          charCounter += 2
+        }
+      }
+      indexLines += ")"
+      val indexLinesResult = indexLines.result.mkString
+
+      val reprWidth = width - indexLinesResult.size - 4
+      val reprString = collection(index: _*).toString
+      val reprStringTruncated = if (reprString.size < reprWidth) reprString else reprString.substring(0, reprWidth - 3) + "..."
+
+      indexLinesResult + " -> " + reprStringTruncated
+    }).mkString("\n")
+  }
 
 }

@@ -417,7 +417,7 @@ package object histogrammar {
     def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
   }
 
-  //////////////////////////////////////////////////////////////// indexes for collections
+  //////////////////////////////////////////////////////////////// indexes for nested collections
 
   sealed trait CollectionIndex
 
@@ -438,45 +438,45 @@ package object histogrammar {
   trait Collection {
     def apply(indexes: CollectionIndex*): Container[_]
 
-    def walk[X](op: Seq[CollectionIndex] => X): Stream[X] = walk(op, Seq[CollectionIndex]())
+    def walk[X](op: Seq[CollectionIndex] => X): Seq[X] = walk(op, Seq[CollectionIndex]())
 
-    private def walk[X](op: Seq[CollectionIndex] => X, base: Seq[CollectionIndex]): Stream[X] = this match {
-      case labeled: Labeled[_] => labeled.pairs.toStream.flatMap {
+    private def walk[X](op: Seq[CollectionIndex] => X, base: Seq[CollectionIndex]): Seq[X] = this match {
+      case labeled: Labeled[_] => labeled.pairs.flatMap {
         case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
         case (k, v) => Seq(op(base :+ StringIndex(k)))
       }
 
-      case labeling: Labeling[_] => labeling.pairs.toStream.flatMap {
+      case labeling: Labeling[_] => labeling.pairs.flatMap {
         case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
         case (k, v) => Seq(op(base :+ StringIndex(k)))
       }
 
-      case untypedLabeled: UntypedLabeled => untypedLabeled.pairs.toStream.flatMap {
+      case untypedLabeled: UntypedLabeled => untypedLabeled.pairs.flatMap {
         case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
         case (k, v) => Seq(op(base :+ StringIndex(k)))
       }
 
-      case untypedLabeling: UntypedLabeling[_] => untypedLabeling.pairs.toStream.flatMap {
+      case untypedLabeling: UntypedLabeling[_] => untypedLabeling.pairs.flatMap {
         case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
         case (k, v) => Seq(op(base :+ StringIndex(k)))
       }
 
-      case indexed: Indexed[_] => indexed.values.zipWithIndex.toStream.flatMap {
+      case indexed: Indexed[_] => indexed.values.zipWithIndex.flatMap {
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
 
-      case indexing: Indexing[_] => indexing.values.zipWithIndex.toStream.flatMap {
+      case indexing: Indexing[_] => indexing.values.zipWithIndex.flatMap {
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
 
-      case branched: Branched[_, _] => branched.values.zipWithIndex.toStream.flatMap {
+      case branched: Branched[_, _] => branched.values.zipWithIndex.flatMap {
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
 
-      case branching: Branching[_, _] => branching.values.zipWithIndex.toStream.flatMap {
+      case branching: Branching[_, _] => branching.values.zipWithIndex.flatMap {
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
@@ -484,6 +484,8 @@ package object histogrammar {
 
     def indexes = walk((x: Seq[CollectionIndex]) => x).toSeq
   }
+
+  //////////////////////////////////////////////////////////////// typesafe extractors for Branched/Branching
 
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
   implicit class Branched0[C0 <: Container[C0] with NoAggregation, TAIL <: BranchedList](x: Branched[C0, TAIL]) {
@@ -822,5 +824,19 @@ package object histogrammar {
 
   /** Methods that are implicitly added to container combinations that look like fractioned histograms. */
   class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
+  //////////////////////////////////////////////////////////////// methods for (nested) collections
+
+  implicit def labeledToCollectionMethods(labeled: Labeled[_]) = new CollectionMethods(labeled)
+  implicit def labelingToCollectionMethods(labeling: Labeling[_]) = new CollectionMethods(labeling)
+  implicit def untypedLabeledToCollectionMethods(untypedLabeled: UntypedLabeled) = new CollectionMethods(untypedLabeled)
+  implicit def untypedLabelingToCollectionMethods(untypedLabeling: UntypedLabeling[_]) = new CollectionMethods(untypedLabeling)
+  implicit def indexedToCollectionMethods(indexed: Indexed[_]) = new CollectionMethods(indexed)
+  implicit def indexingToCollectionMethods(indexing: Indexing[_]) = new CollectionMethods(indexing)
+  implicit def branchedToCollectionMethods(branched: Branched[_, _]) = new CollectionMethods(branched)
+  implicit def branchingToCollectionMethods(branching: Branching[_, _]) = new CollectionMethods(branching)
+
+  /** Methods that are implicitly added to container combinations that look like (nested) collections. */
+  class CollectionMethods(collection: Collection)
 
 }

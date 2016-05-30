@@ -429,10 +429,17 @@ package object histogrammar {
   }
 
   implicit class StringIndex(val string: String) extends CollectionIndex {
-    override def toString() = string.toString
+    override def toString() = "\"" + scala.util.parsing.json.JSONFormat.quoteString(string) + "\""
   }
   object StringIndex {
     def unapply(x: StringIndex) = Some(x.string)
+  }
+
+  implicit class SymbolIndex(val symbol: Symbol) extends CollectionIndex {
+    override def toString() = symbol.toString
+  }
+  object SymbolIndex {
+    def unapply(x: SymbolIndex) = Some(x.symbol)
   }
 
   trait Collection {
@@ -472,12 +479,52 @@ package object histogrammar {
       }
 
       case branched: Branched[_, _] => branched.values.zipWithIndex.flatMap {
+        case (vs: Collection, 0) => vs.walk(op, base :+ SymbolIndex('i0))
+        case (vs: Collection, 1) => vs.walk(op, base :+ SymbolIndex('i1))
+        case (vs: Collection, 2) => vs.walk(op, base :+ SymbolIndex('i2))
+        case (vs: Collection, 3) => vs.walk(op, base :+ SymbolIndex('i3))
+        case (vs: Collection, 4) => vs.walk(op, base :+ SymbolIndex('i4))
+        case (vs: Collection, 5) => vs.walk(op, base :+ SymbolIndex('i5))
+        case (vs: Collection, 6) => vs.walk(op, base :+ SymbolIndex('i6))
+        case (vs: Collection, 7) => vs.walk(op, base :+ SymbolIndex('i7))
+        case (vs: Collection, 8) => vs.walk(op, base :+ SymbolIndex('i8))
+        case (vs: Collection, 9) => vs.walk(op, base :+ SymbolIndex('i9))
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
+        case (v, 0) => Seq(op(base :+ SymbolIndex('i0)))
+        case (v, 1) => Seq(op(base :+ SymbolIndex('i1)))
+        case (v, 2) => Seq(op(base :+ SymbolIndex('i2)))
+        case (v, 3) => Seq(op(base :+ SymbolIndex('i3)))
+        case (v, 4) => Seq(op(base :+ SymbolIndex('i4)))
+        case (v, 5) => Seq(op(base :+ SymbolIndex('i5)))
+        case (v, 6) => Seq(op(base :+ SymbolIndex('i6)))
+        case (v, 7) => Seq(op(base :+ SymbolIndex('i7)))
+        case (v, 8) => Seq(op(base :+ SymbolIndex('i8)))
+        case (v, 9) => Seq(op(base :+ SymbolIndex('i9)))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
 
       case branching: Branching[_, _] => branching.values.zipWithIndex.flatMap {
+        case (vs: Collection, 0) => vs.walk(op, base :+ SymbolIndex('i0))
+        case (vs: Collection, 1) => vs.walk(op, base :+ SymbolIndex('i1))
+        case (vs: Collection, 2) => vs.walk(op, base :+ SymbolIndex('i2))
+        case (vs: Collection, 3) => vs.walk(op, base :+ SymbolIndex('i3))
+        case (vs: Collection, 4) => vs.walk(op, base :+ SymbolIndex('i4))
+        case (vs: Collection, 5) => vs.walk(op, base :+ SymbolIndex('i5))
+        case (vs: Collection, 6) => vs.walk(op, base :+ SymbolIndex('i6))
+        case (vs: Collection, 7) => vs.walk(op, base :+ SymbolIndex('i7))
+        case (vs: Collection, 8) => vs.walk(op, base :+ SymbolIndex('i8))
+        case (vs: Collection, 9) => vs.walk(op, base :+ SymbolIndex('i9))
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
+        case (v, 0) => Seq(op(base :+ SymbolIndex('i0)))
+        case (v, 1) => Seq(op(base :+ SymbolIndex('i1)))
+        case (v, 2) => Seq(op(base :+ SymbolIndex('i2)))
+        case (v, 3) => Seq(op(base :+ SymbolIndex('i3)))
+        case (v, 4) => Seq(op(base :+ SymbolIndex('i4)))
+        case (v, 5) => Seq(op(base :+ SymbolIndex('i5)))
+        case (v, 6) => Seq(op(base :+ SymbolIndex('i6)))
+        case (v, 7) => Seq(op(base :+ SymbolIndex('i7)))
+        case (v, 8) => Seq(op(base :+ SymbolIndex('i8)))
+        case (v, 9) => Seq(op(base :+ SymbolIndex('i9)))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
     }

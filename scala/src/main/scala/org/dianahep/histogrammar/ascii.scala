@@ -316,10 +316,7 @@ package object ascii {
 
     /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns with `indexWidth` reserved for indexes. */
     def ascii(indexWidth: Int = 40, width: Int = 80): String = collection.walk({index: Seq[CollectionIndex] =>
-      val indexWords = index map {
-        case StringIndex(x) => "\"" + scala.util.parsing.json.JSONFormat.quoteString(x) + "\""
-        case IntegerIndex(x) => x.toString
-      }
+      val indexWords = index.map(_.toString)
 
       val indexLines = List.newBuilder[String]
       indexLines += "("

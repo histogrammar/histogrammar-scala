@@ -288,7 +288,147 @@ package object ascii {
   implicit def selectingSparselyBinningToFractionedHistogramMethodsAscii[DATUM](hist: Fractioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(selectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
 
-  class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+  class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def println {
+      System.out.println(ascii(Fraction.wilsonConfidenceInterval, 80))
+    }
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def println(confidenceInterval: (Double, Double, Double) => Double, width: Int = 80) {
+      System.out.println(ascii(confidenceInterval, width))
+    }
+
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def ascii: String = ascii(Fraction.wilsonConfidenceInterval, 80)
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def ascii(confidenceInterval: (Double, Double, Double) => Double, width: Int): String = {
+      val methods = new FractionedHistogramMethods(fractioned)
+      val numer = methods.numeratorBinned
+      val denom = methods.denominatorBinned
+
+      val ciValues = methods.confidenceIntervalValues(confidenceInterval, 1.0)
+      val ciOverflow = methods.confidenceIntervalOverflow(confidenceInterval, 1.0)
+      val ciUnderflow = methods.confidenceIntervalUnderflow(confidenceInterval, 1.0)
+      val ciNanflow = methods.confidenceIntervalNanflow(confidenceInterval, 1.0)
+
+      val minValue = (ciOverflow._1 :: ciUnderflow._1 :: ciNanflow._1 :: ciValues.toList.map(_._1)).filter(x => !x.isNaN  &&  !x.isInfinite).min
+      val maxValue = (ciOverflow._3 :: ciUnderflow._3 :: ciNanflow._3 :: ciValues.toList.map(_._3)).filter(x => !x.isNaN  &&  !x.isInfinite).max
+      val range = maxValue - minValue
+      val minEdge = Math.max(0.0, minValue - 0.1*range)
+      val maxEdge = Math.min(1.0, maxValue + 0.1*range)
+
+      val binWidth = (numer.high - numer.low) / numer.values.size
+      def sigfigs(x: Double, n: Int) =
+        if (x.isNaN)
+          "nan"
+        else if (x.isInfinite)
+          "inf"
+        else
+          new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
+
+      val prefixValues = 0 until ciValues.size map {i =>
+        (i * binWidth + numer.low, (i + 1) * binWidth + numer.low, ciValues(i)._2)
+      }
+      val prefixValuesStr = prefixValues map {case (binlow, binhigh, frac) => (sigfigs(Math.abs(binlow), 3), sigfigs(Math.abs(binhigh), 3), sigfigs(Math.abs(frac), 4))}
+
+      val widestBinlow = Math.max(prefixValuesStr.map(_._1.size).max, 2)
+      val widestBinhigh = Math.max(prefixValuesStr.map(_._2.size).max, 2)
+      val widestValue = Math.max(prefixValuesStr.map(_._3.size).max, 2)
+      val formatter = s"[ %s%-${widestBinlow}s, %s%-${widestBinhigh}s) %s%-${widestValue}s "
+      val prefixWidth = widestBinlow + widestBinhigh + widestValue + 9
+
+      val reducedWidth = width - prefixWidth
+      val zeroLine1 = " " * prefixWidth + " " + f"$minEdge%-10g" + " " + " " * (reducedWidth - 20) + " " + f"$maxEdge%10g"
+      val zeroLine2 = " " * prefixWidth + " " + "+" + "-" * (reducedWidth - 1) + "-" + "+"
+
+      val lines = prefixValues zip prefixValuesStr zip ciValues map {case (((binlow, binhigh, frac), (binlowAbs, binhighAbs, fracAbs)), (ciLow, ciMid, ciHigh)) =>
+        val binlowSign = if (binlow < 0) "-" else " "
+        val binhighSign = if (binhigh < 0) "-" else " "
+        val fracSign = if (frac < 0) "-" else " "
+
+        val (botIndex, midIndex, topIndex) =
+          if (!ciLow.isNaN  &&  !ciLow.isInfinite  &&  !ciMid.isNaN  &&  !ciMid.isInfinite  &&  !ciHigh.isNaN  &&  !ciHigh.isInfinite)
+            (Math.round(reducedWidth * (ciLow  - minEdge) / (maxEdge - minEdge)).toInt,
+             Math.round(reducedWidth * (ciMid  - minEdge) / (maxEdge - minEdge)).toInt,
+             Math.round(reducedWidth * (ciHigh - minEdge) / (maxEdge - minEdge)).toInt)
+          else
+            (-1, -1, -1)
+
+        formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, fracSign, fracAbs) + "|" + (0 until reducedWidth).map({i =>
+          if (i < botIndex  ||  i > topIndex)
+            " "
+          else if (i == midIndex)
+            "+"
+          else if (i == botIndex  ||  i == topIndex)
+            "|"
+          else
+            "-"
+        }).mkString + "|"
+      }
+
+      val (underflowBotIndex, underflowMidIndex, underflowTopIndex) =
+        if (!ciUnderflow._1.isNaN  &&  !ciUnderflow._1.isInfinite  &&  !ciUnderflow._2.isNaN  &&  !ciUnderflow._2.isInfinite  &&  !ciUnderflow._3.isNaN  &&  !ciUnderflow._3.isInfinite)
+          (Math.round(reducedWidth * (ciUnderflow._1 - minEdge) / (maxEdge - minEdge)).toInt,
+           Math.round(reducedWidth * (ciUnderflow._2 - minEdge) / (maxEdge - minEdge)).toInt,
+           Math.round(reducedWidth * (ciUnderflow._3 - minEdge) / (maxEdge - minEdge)).toInt)
+        else
+          (-1, -1, -1)
+      val underflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
+      val underflowLine =
+        underflowFormatter.format("underflow", sigfigs(ciUnderflow._2, 4)) + "|" + (0 until reducedWidth).map({i =>
+          if (i < underflowBotIndex  ||  i > underflowTopIndex)
+            " "
+          else if (i == underflowMidIndex)
+            "+"
+          else if (i == underflowBotIndex  ||  i == underflowTopIndex)
+            "|"
+          else
+            "-"
+        }).mkString + "|"
+
+      val (overflowBotIndex, overflowMidIndex, overflowTopIndex) =
+        if (!ciOverflow._1.isNaN  &&  !ciOverflow._1.isInfinite  &&  !ciOverflow._2.isNaN  &&  !ciOverflow._2.isInfinite  &&  !ciOverflow._3.isNaN  &&  !ciOverflow._3.isInfinite)
+          (Math.round(reducedWidth * (ciOverflow._1 - minEdge) / (maxEdge - minEdge)).toInt,
+           Math.round(reducedWidth * (ciOverflow._2 - minEdge) / (maxEdge - minEdge)).toInt,
+           Math.round(reducedWidth * (ciOverflow._3 - minEdge) / (maxEdge - minEdge)).toInt)
+        else
+          (-1, -1, -1)
+      val overflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
+      val overflowLine =
+        overflowFormatter.format("overflow", sigfigs(ciOverflow._2, 4)) + "|" + (0 until reducedWidth).map({i =>
+          if (i < overflowBotIndex  ||  i > overflowTopIndex)
+            " "
+          else if (i == overflowMidIndex)
+            "+"
+          else if (i == overflowBotIndex  ||  i == overflowTopIndex)
+            "|"
+          else
+            "-"
+        }).mkString + "|"
+
+      val (nanflowBotIndex, nanflowMidIndex, nanflowTopIndex) =
+        if (!ciNanflow._1.isNaN  &&  !ciNanflow._1.isInfinite  &&  !ciNanflow._2.isNaN  &&  !ciNanflow._2.isInfinite  &&  !ciNanflow._3.isNaN  &&  !ciNanflow._3.isInfinite)
+          (Math.round(reducedWidth * (ciNanflow._1 - minEdge) / (maxEdge - minEdge)).toInt,
+           Math.round(reducedWidth * (ciNanflow._2 - minEdge) / (maxEdge - minEdge)).toInt,
+           Math.round(reducedWidth * (ciNanflow._3 - minEdge) / (maxEdge - minEdge)).toInt)
+        else
+          (-1, -1, -1)
+      val nanflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
+      val nanflowLine =
+        nanflowFormatter.format("nanflow", sigfigs(ciNanflow._2, 4)) + "|" + (0 until reducedWidth).map({i =>
+          if (i < nanflowBotIndex  ||  i > nanflowTopIndex)
+            " "
+          else if (i == nanflowMidIndex)
+            "+"
+          else if (i == nanflowBotIndex  ||  i == nanflowTopIndex)
+            "|"
+          else
+            "-"
+        }).mkString + "|"
+
+      (List(zeroLine1, zeroLine2, underflowLine) ++ lines ++ List(overflowLine, nanflowLine, zeroLine2)).mkString("\n")      
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for (nested) collections
 

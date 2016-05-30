@@ -812,7 +812,24 @@ package object histogrammar {
     new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, selectedSparselyBinnedToHistogramMethods(v.ed).selected)}): _*))
 
   /** Methods that are implicitly added to container combinations that look like stacked histograms. */
-  class StackedHistogramMethods(val stacked: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]])
+  class StackedHistogramMethods(val stacked: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+    def low = stacked.cuts.head._2.value.low
+    def high = stacked.cuts.head._2.value.high
+    def num = stacked.cuts.head._2.value.num
+
+    stacked.values foreach {selected =>
+      if (selected.value.low != low)
+        throw new ContainerException(s"Stack invalid because low values differ (${low} vs ${selected.value.low})")
+    }
+    stacked.values foreach {selected =>
+      if (selected.value.high != high)
+        throw new ContainerException(s"Stack invalid because high values differ (${high} vs ${selected.value.high})")
+    }
+    stacked.values foreach {selected =>
+      if (selected.value.num != num)
+        throw new ContainerException(s"Stack invalid because num values differ (${num} vs ${selected.value.num})")
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for PartitionedHistogram
 
@@ -841,7 +858,24 @@ package object histogrammar {
     selectedSparselyBinnedToPartitionedHistogramMethods(hist.ed)
 
   /** Methods that are implicitly added to container combinations that look like partitioned histograms. */
-  class PartitionedHistogramMethods(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+  class PartitionedHistogramMethods(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+    def low = partitioned.cuts.head._2.value.low
+    def high = partitioned.cuts.head._2.value.high
+    def num = partitioned.cuts.head._2.value.num
+
+    partitioned.values foreach {selected =>
+      if (selected.value.low != low)
+        throw new ContainerException(s"Partition invalid because low values differ (${low} vs ${selected.value.low})")
+    }
+    partitioned.values foreach {selected =>
+      if (selected.value.high != high)
+        throw new ContainerException(s"Partition invalid because high values differ (${high} vs ${selected.value.high})")
+    }
+    partitioned.values foreach {selected =>
+      if (selected.value.num != num)
+        throw new ContainerException(s"Partition invalid because num values differ (${num} vs ${selected.value.num})")
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for FractionedHistogram
 
@@ -870,7 +904,71 @@ package object histogrammar {
     selectedSparselyBinnedToFractionedHistogramMethods(hist.ed)
 
   /** Methods that are implicitly added to container combinations that look like fractioned histograms. */
-  class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+  class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+    def numeratorBinned = fractioned.numerator.value
+    def denominatorBinned = fractioned.denominator.value
+
+    if (numeratorBinned.low != denominatorBinned.low)
+      throw new ContainerException(s"Fraction invalid because low differs between numerator and denominator (${numeratorBinned.low} vs ${denominatorBinned.low})")
+    if (numeratorBinned.high != denominatorBinned.high)
+      throw new ContainerException(s"Fraction invalid because high differs between numerator and denominator (${numeratorBinned.high} vs ${denominatorBinned.high})")
+    if (numeratorBinned.values.size != denominatorBinned.values.size)
+      throw new ContainerException(s"Fraction invalid because number of values differs between numerator and denominator (${numeratorBinned.values.size} vs ${denominatorBinned.values.size})")
+
+    def low = numeratorBinned.low
+    def high = numeratorBinned.high
+    def num = numeratorBinned.num
+
+    /** Bin fractions as numbers. */
+    def numericalValues: Seq[Double] = numeratorBinned.values zip denominatorBinned.values map {case (n, d) => n.entries / d.entries}
+    /** Low-central-high confidence interval triplet for all bins, using a Wilson score interval. */
+    def confidenceIntervalValues: Seq[(Double, Double, Double)] = numeratorBinned.values zip denominatorBinned.values map {case (n, d) =>
+      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
+    }
+    /** Low-central-high confidence interval triplet for all bins, given a confidence interval function. */
+    def confidenceIntervalValues(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): Seq[(Double, Double, Double)] = numeratorBinned.values zip denominatorBinned.values map {case (n, d) =>
+      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+    }
+
+    /** Overflow fraction as a number. */
+    def numericalOverflow: Double = numeratorBinned.overflow.entries / denominatorBinned.overflow.entries
+    /** Low-central-high confidence interval triplet for the overflow bin, using a Wilson score interval. */
+    def confidenceIntervalOverflow: (Double, Double, Double) = {
+      val (n, d) = (numeratorBinned.overflow, denominatorBinned.overflow)
+      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
+    }
+    /** Low-central-high confidence interval triplet for the overflow bin, given a confidence interval function. */
+    def confidenceIntervalOverflow(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): (Double, Double, Double) = {
+      val (n, d) = (numeratorBinned.overflow, denominatorBinned.overflow)
+      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+    }
+
+    /** Underflow fraction as a number. */
+    def numericalUnderflow: Double = numeratorBinned.underflow.entries / denominatorBinned.underflow.entries
+    /** Low-central-high confidence interval triplet for the underflow bin, using a Wilson score interval. */
+    def confidenceIntervalUnderflow: (Double, Double, Double) = {
+      val (n, d) = (numeratorBinned.underflow, denominatorBinned.underflow)
+      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
+    }
+    /** Low-central-high confidence interval triplet for the underflow bin, given a confidence interval function. */
+    def confidenceIntervalUnderflow(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): (Double, Double, Double) = {
+      val (n, d) = (numeratorBinned.underflow, denominatorBinned.underflow)
+      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+    }
+
+    /** Nanflow fraction as a number. */
+    def numericalNanflow: Double = numeratorBinned.nanflow.entries / denominatorBinned.nanflow.entries
+    /** Low-central-high confidence interval triplet for the nanflow bin, using a Wilson score interval. */
+    def confidenceIntervalNanflow: (Double, Double, Double) = {
+      val (n, d) = (numeratorBinned.nanflow, denominatorBinned.nanflow)
+      (Fraction.wilsonConfidenceInterval(n.entries, d.entries, -1.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 1.0))
+    }
+    /** Low-central-high confidence interval triplet for the nanflow bin, given a confidence interval function. */
+    def confidenceIntervalNanflow(confidenceInterval: (Double, Double, Double) => Double, absz: Double = 1.0): (Double, Double, Double) = {
+      val (n, d) = (numeratorBinned.nanflow, denominatorBinned.nanflow)
+      (confidenceInterval(n.entries, d.entries, -absz), Fraction.wilsonConfidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for (nested) collections
 

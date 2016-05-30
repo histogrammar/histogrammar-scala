@@ -168,7 +168,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("sub:name") -> (numerator match {case x: QuantityName => x.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"Fractioned[numerator=$numerator, denominator=$denominator]"
+    override def toString() = s"""<Fractioned values=${numerator.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Fractioned[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false
@@ -225,7 +225,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("sub:name") -> (numerator match {case x: AnyQuantity[_, _] => x.quantity.name.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"Fractioning[$numerator, $denominator]"
+    override def toString() = s"""<Fractioning values=${numerator.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Fractioning[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false

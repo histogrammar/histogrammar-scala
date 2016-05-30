@@ -77,7 +77,7 @@ package histogrammar {
 
     def toJsonFragment(suppressName: Boolean) = JsonFloat(entries)
 
-    override def toString() = s"Counted[$entries]"
+    override def toString() = s"<Counted $entries>"
     override def equals(that: Any) = that match {
       case that: Counted => this.entries == that.entries
       case _ => false
@@ -115,7 +115,7 @@ package histogrammar {
 
     def toJsonFragment(suppressName: Boolean) = JsonFloat(entries)
 
-    override def toString() = s"Counting[$entries]"
+    override def toString() = s"<Counting $entries>"
     override def equals(that: Any) = that match {
       case that: Counting => this.entries == that.entries
       case _ => false

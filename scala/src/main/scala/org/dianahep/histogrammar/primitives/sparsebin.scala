@@ -229,7 +229,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> (bins.headOption match {case Some((i, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""SparselyBinned[binWidth=$binWidth, bins=[${if (bins.isEmpty) contentType else bins.head.toString}..., size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
+    override def toString() = s"""<SparselyBinned binWidth=$binWidth bins=$contentType nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: SparselyBinned[V, N] => this.binWidth === that.binWidth  &&  this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false
@@ -334,7 +334,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
-    override def toString() = s"""SparselyBinning[binWidth=$binWidth, bins=[${if (bins.isEmpty) value.factory.name else bins.head.toString}, size=${bins.size}], nanflow=$nanflow, origin=$origin]"""
+    override def toString() = s"""<SparselyBinning binWidth=$binWidth bins=${value.factory.name} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: SparselyBinning[DATUM, V, N] => this.binWidth === that.binWidth  &&  this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow  &&  this.origin === that.origin
       case _ => false

@@ -167,7 +167,7 @@ package histogrammar {
       "estimate" -> JsonFloat(estimate)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
-    override def toString() = s"""Quantiled[$target, estimate=$estimate]"""
+    override def toString() = s"""<Quantiled target=$target estimate=$estimate>"""
     override def equals(that: Any) = that match {
       case that: Quantiled => this.entries == that.entries  &&  this.quantityName == that.quantityName  &&  this.target == that.target  &&  this.estimate == that.estimate
       case _ => false
@@ -232,7 +232,7 @@ package histogrammar {
       "estimate" -> JsonFloat(estimate)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
-    override def toString() = s"""Quantiling[$target, estimate=$estimate]"""
+    override def toString() = s"""<Quantiling target=$target estimate=$estimate>"""
     override def equals(that: Any) = that match {
       case that: Quantiling[DATUM] => this.entries == that.entries  &&  this.target == that.target  &&  this.estimate == that.estimate  &&  this.cumulativeDeviation == that.cumulativeDeviation  &&  this.quantity == that.quantity
       case _ => false

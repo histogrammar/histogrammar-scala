@@ -104,7 +104,7 @@ package histogrammar {
       "sum" -> JsonFloat(sum)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
-    override def toString() = s"Summed[$sum]"
+    override def toString() = s"<Summed sum=$sum>"
     override def equals(that: Any) = that match {
       case that: Summed => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.sum === that.sum
       case _ => false
@@ -150,7 +150,7 @@ package histogrammar {
       "sum" -> JsonFloat(sum)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
-    override def toString() = s"Summing[$sum]"
+    override def toString() = s"<Summing sum=$sum>"
     override def equals(that: Any) = that match {
       case that: Summing[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.sum === that.sum
       case _ => false

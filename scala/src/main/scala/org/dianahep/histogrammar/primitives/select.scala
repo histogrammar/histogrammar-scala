@@ -118,7 +118,7 @@ package histogrammar {
       "data" -> value.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
-    override def toString() = s"""Selected[$value]"""
+    override def toString() = s"""<Selected value=${value.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Selected[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.value == that.value
       case _ => false
@@ -167,7 +167,7 @@ package histogrammar {
       "data" -> value.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
-    override def toString() = s"""Selecting[$value]"""
+    override def toString() = s"""<Selecting value=${value.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Selecting[DATUM, V] => this.entries === that.entries  &&  this.quantity == that.quantity  &&  this.value == that.value
       case _ => false

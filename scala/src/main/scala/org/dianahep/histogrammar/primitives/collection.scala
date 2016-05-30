@@ -139,7 +139,7 @@ package histogrammar {
       "type" -> JsonString(pairs.head._2.factory.name),
       "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment(false)}: _*))
 
-    override def toString() = s"Labeled[[${pairs.head.toString}..., size=${pairs.size}]]"
+    override def toString() = s"""<Labeled values=${pairs.head._2.factory.name} size=${pairs.size}>"""
     override def equals(that: Any) = that match {
       case that: Labeled[V] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
@@ -226,7 +226,7 @@ package histogrammar {
       "type" -> JsonString(pairs.head._2.factory.name),
       "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment(false)}: _*))
 
-    override def toString() = s"Labeling[[${pairs.head.toString}..., size=${pairs.size}]]"
+    override def toString() = s"""<Labeling values=${pairs.head._2.factory.name} size=${pairs.size}>"""
     override def equals(that: Any) = that match {
       case that: Labeled[V] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
@@ -364,11 +364,7 @@ package histogrammar {
         key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment(false))
       }: _*))
 
-    override def toString() =
-      if (pairs.isEmpty)
-        s"UntypedLabeled[[size=${pairs.size}]]"
-      else
-        s"UntypedLabeled[[${pairs.head.toString}..., size=${pairs.size}]]"
+    override def toString() = s"""<UntypedLabeled size=${pairs.size}>"""
     override def equals(that: Any) = that match {
       case that: UntypedLabeled => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
@@ -456,7 +452,7 @@ package histogrammar {
         key -> JsonObject("type" -> JsonString(sub.factory.name), "data" -> sub.toJsonFragment(false))
       }: _*))
 
-    override def toString() = s"UntypedLabeling[[${pairs.head.toString}..., size=${pairs.size}]]"
+    override def toString() = s"""<UntypedLabeling size=${pairs.size}>"""
     override def equals(that: Any) = that match {
       case that: UntypedLabeling[DATUM] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
@@ -576,7 +572,7 @@ package histogrammar {
 
     def toJsonFragment(suppressName: Boolean) = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
 
-    override def toString() = s"Indexed[[${values.head.toString}..., size=${size}]]"
+    override def toString() = s"""<Indexed values=${values.head.factory.name} size=${size}>"""
     override def equals(that: Any) = that match {
       case that: Indexed[V] => this.entries === that.entries  &&  this.values == that.values
       case _ => false
@@ -655,7 +651,7 @@ package histogrammar {
 
     def toJsonFragment(suppressName: Boolean) = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
 
-    override def toString() = s"Indexing[[${values.head.toString}..., size=${size}]]"
+    override def toString() = s"""<Indexing values=${values.head.factory.name} size=${size}>"""
     override def equals(that: Any) = that match {
       case that: Indexing[V] => this.entries === that.entries  &&  this.values == that.values
       case _ => false
@@ -820,8 +816,7 @@ package histogrammar {
       "entries" -> JsonFloat(entries),
       "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment(false))): _*))
 
-    override def toString() = "Branched[" + values.mkString(", ") + "]"
-
+    override def toString() = s"""<Branched ${values.zipWithIndex.map({case (v, i) => "i" + i.toString + "=" + v.factory.name}).mkString(" ")}>"""
     override def equals(that: Any) = that match {
       case that: Branched[_, _] => this.entries === that.entries  &&  this.head == that.head  &&  this.tail == that.tail
       case _ => false
@@ -974,8 +969,7 @@ package histogrammar {
       "entries" -> JsonFloat(entries),
       "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment(false))): _*))
 
-    override def toString() = "Branching[" + values.mkString(", ") + "]"
-
+    override def toString() = s"""<Branching ${values.zipWithIndex.map({case (v, i) => "i" + i.toString + "=" + v.factory.name}).mkString(" ")}>"""
     override def equals(that: Any) = that match {
       case that: Branching[_, _] => this.entries === that.entries  &&  this.head == that.head  &&  this.tail == that.tail
       case _ => false

@@ -199,7 +199,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> (bins.headOption match {case Some((c, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""AdaptivelyBinned[bins=[${if (bins.isEmpty) contentType else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
+    override def toString() = s"""<AdaptivelyBinned bins=$contentType size=${bins.size} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: AdaptivelyBinned[V, N] => this.clustering == that.getClustering  &&  this.quantityName == that.quantityName  &&  this.nanflow == that.nanflow
       case _ => false
@@ -280,7 +280,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
-    override def toString() = s"""AdaptivelyBinning[bins=[${if (bins.isEmpty) value.factory.name else bins.head._2.toString}..., size=${bins.size}, num=$num], nanflow=$nanflow]"""
+    override def toString() = s"""<AdaptivelyBinning bins=${value.factory.name} size=${bins.size} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: AdaptivelyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.clustering == that.getClustering  &&  this.nanflow == that.nanflow
       case _ => false

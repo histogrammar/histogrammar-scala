@@ -115,7 +115,7 @@ package histogrammar {
       "mean" -> JsonFloat(mean)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
-    override def toString() = s"Averaged[$mean]"
+    override def toString() = s"""<Averaged mean=$mean>"""
     override def equals(that: Any) = that match {
       case that: Averaged => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.mean === that.mean
       case _ => false
@@ -168,7 +168,7 @@ package histogrammar {
       "mean" -> JsonFloat(mean)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
-    override def toString() = s"Averaging[$mean]"
+    override def toString() = s"""<Averaging mean=$mean>"""
     override def equals(that: Any) = that match {
       case that: Averaging[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.mean === that.mean
       case _ => false

@@ -161,7 +161,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("data:name") -> (cuts.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""Stacked[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""<Stacked bins=${cuts.head._2.factory.name} thresholds=(${cuts.map(_._1).mkString(", ")})>"""
     override def equals(that: Any) = that match {
       case that: Stacked[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false
@@ -226,7 +226,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("data:name") -> (cuts.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""Stacking[${cuts.head._2}, thresholds=[${cuts.map(_._1).mkString(", ")}]]"""
+    override def toString() = s"""<Stacking bins=${cuts.head._2.factory.name} thresholds=(${cuts.map(_._1).mkString(", ")})>"""
     override def equals(that: Any) = that match {
       case that: Stacking[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
       case _ => false

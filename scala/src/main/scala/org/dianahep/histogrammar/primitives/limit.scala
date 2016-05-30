@@ -132,7 +132,7 @@ package histogrammar {
         case Some(x) => x.toJsonFragment(false)
       }))
 
-    override def toString() = s"""Limited[${if (saturated) "saturated" else value.get}]"""
+    override def toString() = s"""<Limited value=${if (saturated) "saturated" else value.get.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
       case _ => false
@@ -198,7 +198,7 @@ package histogrammar {
         case Some(x) => x.toJsonFragment(false)
       }))
 
-    override def toString() = s"""Limiting[${if (saturated) "saturated" else value.get}]"""
+    override def toString() = s"""<Limiting value=${if (saturated) "saturated" else value.get.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Limited[V] => this.entries === that.entries  &&  this.limit === that.limit  &&  this.contentType == that.contentType  &&  this.value == that.value
       case _ => false

@@ -158,7 +158,7 @@ package histogrammar {
         }): _*)).maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
     }
 
-    override def toString() = s"""Bagged[${if (values.isEmpty) "size=0" else values.head.toString + "..., size=" + values.size.toString}]"""
+    override def toString() = s"""<Bagged size=${values.size}>"""
     override def equals(that: Any) = that match {
       case that: Bagged[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values
       case _ => false
@@ -226,7 +226,7 @@ package histogrammar {
         }): _*)).maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
     }
 
-    override def toString() = s"""Bagging[${if (values.isEmpty) "size=0" else values.head.toString + "..., size=" + values.size.toString}]"""
+    override def toString() = s"""<Bagging values=${values.size}>"""
     override def equals(that: Any) = that match {
       case that: Bagging[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values
       case _ => false

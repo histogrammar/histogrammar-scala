@@ -153,7 +153,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("data:name") -> (pairs.headOption match {case Some((k, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""Categorized[[${if (pairs.isEmpty) contentType else pairs.head._2.toString}..., size=${pairs.size}]]"""
+    override def toString() = s"""<Categorized values=$contentType size=${pairs.size}>"""
     override def equals(that: Any) = that match {
       case that: Categorized[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.pairs == that.pairs
       case _ => false
@@ -238,7 +238,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("data:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
-    override def toString() = s"Categorizing[[${if (values.isEmpty) value.factory.name else values.head.toString}..., size=${pairs.size}]]"
+    override def toString() = s"""<Categorizing values=${value.factory.name} size=${pairs.size}>"""
     override def equals(that: Any) = that match {
       case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.pairs == that.pairs
       case _ => false

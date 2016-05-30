@@ -157,7 +157,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
     }
 
-    override def toString() = s"""Sampled[${if (isEmpty) "empty" else values.head.toString + "..."}, size=${size}]"""
+    override def toString() = s"""<Sampled size=$size>"""
     override def equals(that: Any) = that match {
       case that: Sampled[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false
@@ -230,8 +230,7 @@ package histogrammar {
         maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
     }
 
-    override def toString() = s"""Sampling[${if (isEmpty) "empty" else reservoir.some.toString + "..."}, size=${size}]"""
-
+    override def toString() = s"""<Sampling size=$size>"""
     override def equals(that: Any) = that match {
       case that: Sampling[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
       case _ => false

@@ -252,7 +252,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("values:name") -> (values.head match {case x: QuantityName => x.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"Binned[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def toString() = s"""<Binned num=${values.size} low=$low high=$high values=${values.head.factory.name} underflow=${underflow.factory.name} overflow=${overflow.factory.name} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Binned[V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false
@@ -357,7 +357,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("values:name") -> (values.head match {case x: AnyQuantity[_, _] => x.quantity.name.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"Binning[low=$low, high=$high, values=[${values.head.toString}..., size=${values.size}], underflow=$underflow, overflow=$overflow, nanflow=$nanflow]"
+    override def toString() = s"""<Binning num=${values.size} low=$low high=$high values=${values.head.factory.name} underflow=${underflow.factory.name} overflow=${overflow.factory.name} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: Binning[DATUM, V, U, O, N] => this.low === that.low  &&  this.high === that.high  &&  this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.underflow == that.underflow  &&  this.overflow == that.overflow  &&  this.nanflow == that.nanflow
       case _ => false

@@ -206,7 +206,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> (bins.head match {case (c, v: QuantityName) => v.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""CentrallyBinned[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
+    override def toString() = s"""<CentrallyBinned bins=${bins.head._2.factory.name} size=${bins.size} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: CentrallyBinned[V, N] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
       case _ => false
@@ -286,7 +286,7 @@ package histogrammar {
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> (bins.head match {case (c, v: AnyQuantity[_, _]) => v.quantity.name.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""CentrallyBinning[bins=[${bins.head._2.toString}..., size=${bins.size}], nanflow=$nanflow]"""
+    override def toString() = s"""<CentrallyBinning bins=${bins.head._2.factory.name} size=${bins.size} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
       case that: CentrallyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
       case _ => false

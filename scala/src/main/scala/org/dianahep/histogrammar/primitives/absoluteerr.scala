@@ -112,7 +112,7 @@ package histogrammar {
 
     def children = Nil
 
-    override def toString() = s"AbsoluteErred[$mae]"
+    override def toString() = s"""<AbsoluteErred mae=$mae>"""
     override def equals(that: Any) = that match {
       case that: AbsoluteErred => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.mae === that.mae
       case _ => false
@@ -175,7 +175,7 @@ package histogrammar {
       "mae" -> JsonFloat(mae)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
-    override def toString() = s"AbsoluteErring[$mae]"
+    override def toString() = s"""<AbsoluteErring mae=$mae>"""
     override def equals(that: Any) = that match {
       case that: AbsoluteErring[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.mae === that.mae
       case _ => false

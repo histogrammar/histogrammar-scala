@@ -115,7 +115,7 @@ package histogrammar {
       "min" -> JsonFloat(min)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
-    override def toString() = s"Minimized[$min]"
+    override def toString() = s"""<Minimized min=$min>"""
     override def equals(that: Any) = that match {
       case that: Minimized => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.min === that.min
       case _ => false
@@ -162,7 +162,7 @@ package histogrammar {
       "min" -> JsonFloat(min)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
-    override def toString() = s"Minimizing[$min]"
+    override def toString() = s"""<Minimizing min=$min>"""
     override def equals(that: Any) = that match {
       case that: Minimizing[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.min === that.min
       case _ => false
@@ -264,7 +264,7 @@ package histogrammar {
       "max" -> JsonFloat(max)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 
-    override def toString() = s"Maximized[$max]"
+    override def toString() = s"""<Maximized max=$max>"""
     override def equals(that: Any) = that match {
       case that: Maximized => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.max === that.max
       case _ => false
@@ -311,7 +311,7 @@ package histogrammar {
       "max" -> JsonFloat(max)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 
-    override def toString() = s"Maximizing[$max]"
+    override def toString() = s"""<Maximizing max=$max>"""
     override def equals(that: Any) = that match {
       case that: Maximizing[DATUM] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.max === that.max
       case _ => false

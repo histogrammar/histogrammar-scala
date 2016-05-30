@@ -437,6 +437,52 @@ package object histogrammar {
 
   trait Collection {
     def apply(indexes: CollectionIndex*): Container[_]
+
+    def walk[X](op: Seq[CollectionIndex] => X): Stream[X] = walk(op, Seq[CollectionIndex]())
+
+    private def walk[X](op: Seq[CollectionIndex] => X, base: Seq[CollectionIndex]): Stream[X] = this match {
+      case labeled: Labeled[_] => labeled.pairs.toStream.flatMap {
+        case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
+        case (k, v) => Seq(op(base :+ StringIndex(k)))
+      }
+
+      case labeling: Labeling[_] => labeling.pairs.toStream.flatMap {
+        case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
+        case (k, v) => Seq(op(base :+ StringIndex(k)))
+      }
+
+      case untypedLabeled: UntypedLabeled => untypedLabeled.pairs.toStream.flatMap {
+        case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
+        case (k, v) => Seq(op(base :+ StringIndex(k)))
+      }
+
+      case untypedLabeling: UntypedLabeling[_] => untypedLabeling.pairs.toStream.flatMap {
+        case (k, vs: Collection) => vs.walk(op, base :+ StringIndex(k))
+        case (k, v) => Seq(op(base :+ StringIndex(k)))
+      }
+
+      case indexed: Indexed[_] => indexed.values.zipWithIndex.toStream.flatMap {
+        case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
+        case (v, i) => Seq(op(base :+ IntegerIndex(i)))
+      }
+
+      case indexing: Indexing[_] => indexing.values.zipWithIndex.toStream.flatMap {
+        case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
+        case (v, i) => Seq(op(base :+ IntegerIndex(i)))
+      }
+
+      case branched: Branched[_, _] => branched.values.zipWithIndex.toStream.flatMap {
+        case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
+        case (v, i) => Seq(op(base :+ IntegerIndex(i)))
+      }
+
+      case branching: Branching[_, _] => branching.values.zipWithIndex.toStream.flatMap {
+        case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
+        case (v, i) => Seq(op(base :+ IntegerIndex(i)))
+      }
+    }
+
+    def indexes = walk((x: Seq[CollectionIndex]) => x).toSeq
   }
 
   /** Add `i0`, `i1`, etc. methods to `Branched` containers. */
@@ -776,19 +822,5 @@ package object histogrammar {
 
   /** Methods that are implicitly added to container combinations that look like fractioned histograms. */
   class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
-
-  //////////////////////////////////////////////////////////////// methods for collections
-
-  // class CollectionMethods(val collection: Container[_]) {
-  //   def nested: Map[String, Any] = collection match {
-  //     case x: Labeled => 
-
-
-
-  //   }
-
-
-
-  // }
 
 }

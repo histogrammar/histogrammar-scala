@@ -161,3 +161,167 @@ package histogrammar {
     override def hashCode() = entries.hashCode
   }
 }
+
+
+
+
+// Note on statistics:
+
+// Could follow http://statpages.info/confint.html to provide exact Clopper-Pearson bounds for Poisson (Count) and Binomial (Fraction) confidence levels.
+
+// Inefficient calculation (JavaScript) that assumes the number of entries is an integer (and scales with it!):
+
+// var vTL=2.5; var vTU=2.5; var vCL=95
+
+// function CalcCL(form) {
+//     vTL = eval(form.TL.value)
+//     vTU = eval(form.TU.value)
+//     vCL = 100-(vTL+vTU)
+//     form.CL.value = ''+vCL
+// }
+
+// function CalcTails(form) {
+//     vCL = eval(form.CL.value)
+//     vTU = (100-vCL)/2
+//     vTL = vTU
+//     form.TL.value = ''+vTL
+//     form.TU.value = ''+vTU
+// }
+
+// function CalcBin(form) {
+//     var vx = eval(form.x.value)
+//     var vN = eval(form.N.value)
+//     var vP = vx/vN
+//     form.P.value = Fmt(vP)
+//     if(vx==0) {
+//         form.DL.value = "0.0000"
+//     }
+//     else {
+//         var v=vP/2;
+//         vsL=0;
+//         vsH=vP;
+//         var p=vTL/100;
+//         while ((vsH-vsL)>1e-5) {
+//             if(BinP(vN,v,vx,vN)>p) {
+//                 vsH=v;
+//                 v=(vsL+v)/2
+//             }
+//             else {
+//                 vsL=v;
+//                 v=(v+vsH)/2
+//             }
+//         }
+//         form.DL.value = Fmt(v)
+//     }
+//     if(vx==vN) {
+//         form.DU.value = "1.0000"
+//     }
+//     else {
+//         var v=(1+vP)/2;
+//         vsL=vP;
+//         vsH=1;
+//         var p=vTU/100
+//         while ((vsH-vsL)>1e-5) {
+//             if (BinP(vN,v,0,vx)<p) {
+//                 vsH=v;
+//                 v=(vsL+v)/2
+//             }
+//             else {
+//                 vsL=v;
+//                 v=(v+vsH)/2
+//             }
+//         }
+//         form.DU.value = Fmt(v)
+//     }
+// }
+
+// function BinP(N,p,x1,x2) {
+//     var q=p/(1-p);
+//     var k=0;
+//     var v = 1;
+//     var s=0;
+//     var tot=0
+//     while (k<=N) {
+//         tot=tot+v
+//         if (k>=x1 & k<=x2) {
+//             s=s+v
+//         }
+//         if (tot>1e30) {
+//             s=s/1e30;
+//             tot=tot/1e30;
+//             v=v/1e30
+//         }
+//         k=k+1;
+//         v=v*q*(N+1-k)/k
+//     }
+//     return s/tot
+// }
+
+// function CalcPois(form) {
+//     var vZ = eval(form.Z.value)
+//     if(vZ==0) {
+//         form.QL.value = "0.0000"
+//     }
+//     else {
+//         var v=0.5;
+//         var dv=0.5;
+//         var p=vTL/100
+//         while (dv>1e-7) {
+//             dv=dv/2;
+//             if (PoisP((1+vZ)*v/(1-v),vZ,1e10)>p) {
+//                 v=v-dv
+//             }
+//             else {
+//                 v=v+dv
+//             }
+//         }
+//         form.QL.value = Fmt((1+vZ)*v/(1-v))
+//     }
+//     if(vTU==0) {
+//         form.QU.value = "Infinity"
+//     }
+//     else {
+//         var v=0.5;
+//         var dv=0.5;
+//         var p=vTU/100
+//         while (dv>1e-7) {
+//             dv=dv/2;
+//             if (PoisP((1+vZ)*v/(1-v),0,vZ)<p) {
+//                 v=v-dv
+//             }
+//             else {
+//                 v=v+dv
+//             }
+//         }
+//         form.QU.value = Fmt((1+vZ)*v/(1-v))
+//     }
+// }
+
+// function PoisP(Z,x1,x2) {
+//     var q=1; var tot=0; var s=0; var k=0
+//     while(k<Z || q>(tot*1e-10)) {
+//         tot=tot+q
+//         if(k>=x1 & k<=x2) {
+//             s=s+q
+//         }
+//         if (tot>1e30) {
+//             s=s/1e30;
+//             tot=tot/1e30;
+//             q=q/1e30
+//         }
+//         k=k+1;
+//         q=q*Z/k
+//     }
+//     return s/tot
+// }
+
+// function Fmt(x) { 
+//     var v
+//     if (x>=0) {
+//         v=''+(x+0.00005)
+//     }
+//     else {
+//         v=''+(x-0.00005)
+//     }
+//     return v.substring(0,v.indexOf('.')+5)
+// }

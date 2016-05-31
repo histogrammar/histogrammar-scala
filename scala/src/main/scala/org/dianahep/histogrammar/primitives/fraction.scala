@@ -84,52 +84,56 @@ package histogrammar {
       case _ => throw new JsonFormatException(json, name)
     }
 
-    // Confidence interval formulas for fractions (e.g. bin-by-bin).
-    // For more information, see https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval
-    // and maybe R's binom package.
+    // // Confidence interval formulas for fractions (e.g. bin-by-bin).
+    // // For more information, see https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval
+    // // and maybe R's binom package.
+    // // http://www.sigmazone.com/binomial_confidence_interval.htm
+    // // http://www.mwsug.org/proceedings/2008/pharma/MWSUG-2008-P08.pdf
+    // // "Clopper-Pearson" == "exact"
+    // // ATLAS http://www.pp.rhul.ac.uk/~cowan/atlas/ErrorBars.pdf
 
-    /** Compute the normal confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
-      * 
-      * The normal confidence interval is `p + z * sqrt(p * (1.0 - p) / denominator)` where `p = numerator / denominator`. It is symmetric in `z` and (unfortunately) limits to zero as `p` approaches zero or one. See `wilsonConfidenceInterval` for a better estimate at the extremes.
-      * 
-      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
-      */
-    def normalConfidenceInterval(numerator: Double, denominator: Double, z: Double): Double = normalConfidenceInterval(numerator, denominator, List(z): _*).head
+    // /** Compute the Wald (normal) confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
+    //   * 
+    //   * The Wald confidence interval is `p + z * sqrt(p * (1.0 - p) / denominator)` where `p = numerator / denominator`. It is symmetric in `z` and (unfortunately) limits to zero as `p` approaches zero or one. See `wilsonConfidenceInterval` for a better estimate at the extremes.
+    //   * 
+    //   * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+    //   */
+    // def normalConfidenceInterval(numerator: Double, denominator: Double, z: Double): Double = normalConfidenceInterval(numerator, denominator, List(z): _*).head
 
-    /** Compute the normal confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
-      * 
-      * The normal confidence interval is `p + z * sqrt(p * (1.0 - p) / denominator)` where `p = numerator / denominator`. It is symmetric in `z` and (unfortunately) limits to zero as `p` approaches zero or one. See `wilsonConfidenceInterval` for a better estimate at the extremes.
-      * 
-      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
-      */
-    def normalConfidenceInterval(numerator: Double, denominator: Double, zs: Double*): Seq[Double] = {
-      val p = numerator / denominator
-      zs.map(p + _ * Math.sqrt(p * (1.0 - p) / denominator))
-    }
+    // /** Compute the normal confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
+    //   * 
+    //   * The normal confidence interval is `p + z * sqrt(p * (1.0 - p) / denominator)` where `p = numerator / denominator`. It is symmetric in `z` and (unfortunately) limits to zero as `p` approaches zero or one. See `wilsonConfidenceInterval` for a better estimate at the extremes.
+    //   * 
+    //   * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+    //   */
+    // def normalConfidenceInterval(numerator: Double, denominator: Double, zs: Double*): Seq[Double] = {
+    //   val p = numerator / denominator
+    //   zs.map(p + _ * Math.sqrt(p * (1.0 - p) / denominator))
+    // }
 
-    /** Compute the Wilson confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
-      * 
-      * The Wilson confidence interval is `(p + z**2/(2*n) + z*sqrt(p * (1.0 - p) / n + z**2/(4*n**2))) / (1.0 + z**2/n)` where `p = numerator / denominator` and `n = denominator`. It has good properties even for a small denominator and/or an extreme probability.
-      * 
-      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
-      */
-    def wilsonConfidenceInterval(numerator: Double, denominator: Double, z: Double): Double = wilsonConfidenceInterval(numerator, denominator, List(z): _*).head
+    // /** Compute the Wilson confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
+    //   * 
+    //   * The Wilson confidence interval is `(p + z**2/(2*n) + z*sqrt(p * (1.0 - p) / n + z**2/(4*n**2))) / (1.0 + z**2/n)` where `p = numerator / denominator` and `n = denominator`. It has good properties even for a small denominator and/or an extreme probability.
+    //   * 
+    //   * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+    //   */
+    // def wilsonConfidenceInterval(numerator: Double, denominator: Double, z: Double): Double = wilsonConfidenceInterval(numerator, denominator, List(z): _*).head
 
-    /** Compute the Wilson confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
-      * 
-      * The Wilson confidence interval is `(p + z**2/(2*n) + z*sqrt(p * (1.0 - p) / n + z**2/(4*n**2))) / (1.0 + z**2/n)` where `p = numerator / denominator` and `n = denominator`. It has good properties even for a small denominator and/or an extreme probability.
-      * 
-      * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
-      */
-    def wilsonConfidenceInterval(numerator: Double, denominator: Double, zs: Double*): Seq[Double] = {
-      val p = numerator / denominator
-      val n = denominator
-      zs.map(z => (p + z*z/(2.0*n) + z*Math.sqrt(p * (1.0 - p) / n + z*z/(4.0*n*n))) / (1.0 + z*z/n))
-    }
+    // /** Compute the Wilson confidence interval on the ratio of `numerator` over `denominator` (where `numerator` is a subset of `denominator`.
+    //   * 
+    //   * The Wilson confidence interval is `(p + z**2/(2*n) + z*sqrt(p * (1.0 - p) / n + z**2/(4*n**2))) / (1.0 + z**2/n)` where `p = numerator / denominator` and `n = denominator`. It has good properties even for a small denominator and/or an extreme probability.
+    //   * 
+    //   * @param z Informally, the "number of sigmas." Formally, `z` is the `1 - alpha/2` quantile of the standard normal distribution, where `alpha` is the error quantile. For example, for a 95% confidence level, the error (`alpha`) is 5%, so z = 1.96. Note that `z` is signed. `z = 0` yields the central value, `z = -1` yields "one sigma" below the central value, and `z = 1` yields "one sigma" above the central value.
+    //   */
+    // def wilsonConfidenceInterval(numerator: Double, denominator: Double, zs: Double*): Seq[Double] = {
+    //   val p = numerator / denominator
+    //   val n = denominator
+    //   zs.map(z => (p + z*z/(2.0*n) + z*Math.sqrt(p * (1.0 - p) / n + z*z/(4.0*n*n))) / (1.0 + z*z/n))
+    // }
 
-    def jeffreysConfidenceInterval = ???
-    def clopperPearsonConfidenceInterval = ???
-    def agrestiCoullConfidenceInterval = ???
+    // def jeffreysConfidenceInterval = ???
+    // def clopperPearsonConfidenceInterval = ???
+    // def agrestiCoullConfidenceInterval = ???
   }
 
   /** An accumulated pair of containers, one with all data (denominator), and one with data that passed a given selection (numerator).

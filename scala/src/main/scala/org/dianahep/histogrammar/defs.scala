@@ -666,13 +666,13 @@ package object histogrammar {
     sparselyBinnedToHistogramMethods(hist.ed)
 
   implicit def selectedSparselyBinnedToHistogramMethods(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethods =
-    if (hist.value.numFilled > 0)
+    if (hist.cut.numFilled > 0)
       new HistogramMethods(
-        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, hist.value.entries, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => new Counted(hist.value.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0.0), new Counted(0.0), hist.value.nanflow))
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low.get, hist.cut.high.get, hist.cut.entries, hist.cut.quantityName, hist.cut.minBin.get to hist.cut.maxBin.get map {i => new Counted(hist.cut.at(i).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
     else
       new HistogramMethods(
-        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.origin, hist.value.origin + 1.0, hist.value.entries, hist.value.quantityName, Seq(new Counted(0.0)), new Counted(0.0), new Counted(0.0), hist.value.nanflow))
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.origin, hist.cut.origin + 1.0, hist.cut.entries, hist.cut.quantityName, Seq(new Counted(0.0)), new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
 
   implicit def selectingSparselyBinningToHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethods =
@@ -681,7 +681,7 @@ package object histogrammar {
   /** Methods that are implicitly added to container combinations that look like histograms. */
   class HistogramMethods(val selected: Selected[Binned[Counted, Counted, Counted, Counted]]) {
     /** Access the [[org.dianahep.histogrammar.Binned]] object, rather than the [[org.dianahep.histogrammar.Selected]] wrapper. */
-    def binned = selected.value
+    def binned = selected.cut
 
     /** Bin values as numbers, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalValues: Seq[Double] = binned.values.map(_.entries)
@@ -744,13 +744,13 @@ package object histogrammar {
     sparselyBinnedToProfileMethods(hist.ed)
 
   implicit def selectedSparselyBinnedToProfileMethods(hist: Selected[SparselyBinned[Deviated, Counted]]): ProfileMethods =
-    if (hist.value.numFilled > 0)
+    if (hist.cut.numFilled > 0)
       new ProfileMethods(
-        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.low.get, hist.value.high.get, hist.value.entries, hist.value.quantityName, hist.value.minBin.get to hist.value.maxBin.get map {i => hist.value.at(i).getOrElse(new Deviated(0.0, None, 0.0, 0.0))}, new Counted(0.0), new Counted(0.0), hist.value.nanflow))
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low.get, hist.cut.high.get, hist.cut.entries, hist.cut.quantityName, hist.cut.minBin.get to hist.cut.maxBin.get map {i => hist.cut.at(i).getOrElse(new Deviated(0.0, None, 0.0, 0.0))}, new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
     else
       new ProfileMethods(
-        new Selected(hist.entries, hist.quantityName, new Binned(hist.value.origin, hist.value.origin + 1.0, hist.value.entries, hist.value.quantityName, Seq(new Deviated(0.0, None, 0.0, 0.0)), new Counted(0.0), new Counted(0.0), hist.value.nanflow))
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.origin, hist.cut.origin + 1.0, hist.cut.entries, hist.cut.quantityName, Seq(new Deviated(0.0, None, 0.0, 0.0)), new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
 
   implicit def selectingSparselyBinningToProfileMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethods =
@@ -758,7 +758,7 @@ package object histogrammar {
 
   /** Methods that are implicitly added to container combinations that look like a physicist's "profile plot." */
   class ProfileMethods(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
-    def binned = selected.value
+    def binned = selected.cut
 
     /** Bin means as numbers, rather than [[org.dianahep.histogrammar.Deviated]]/[[org.dianahep.histogrammar.Deviating]]. */
     def meanValues: Seq[Double] = binned.values.map(_.mean)
@@ -813,21 +813,21 @@ package object histogrammar {
 
   /** Methods that are implicitly added to container combinations that look like stacked histograms. */
   class StackedHistogramMethods(val stacked: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
-    def low = stacked.cuts.head._2.value.low
-    def high = stacked.cuts.head._2.value.high
-    def num = stacked.cuts.head._2.value.num
+    def low = stacked.cuts.head._2.cut.low
+    def high = stacked.cuts.head._2.cut.high
+    def num = stacked.cuts.head._2.cut.num
 
     stacked.values foreach {selected =>
-      if (selected.value.low != low)
-        throw new ContainerException(s"Stack invalid because low values differ (${low} vs ${selected.value.low})")
+      if (selected.cut.low != low)
+        throw new ContainerException(s"Stack invalid because low values differ (${low} vs ${selected.cut.low})")
     }
     stacked.values foreach {selected =>
-      if (selected.value.high != high)
-        throw new ContainerException(s"Stack invalid because high values differ (${high} vs ${selected.value.high})")
+      if (selected.cut.high != high)
+        throw new ContainerException(s"Stack invalid because high values differ (${high} vs ${selected.cut.high})")
     }
     stacked.values foreach {selected =>
-      if (selected.value.num != num)
-        throw new ContainerException(s"Stack invalid because num values differ (${num} vs ${selected.value.num})")
+      if (selected.cut.num != num)
+        throw new ContainerException(s"Stack invalid because num values differ (${num} vs ${selected.cut.num})")
     }
   }
 
@@ -859,21 +859,21 @@ package object histogrammar {
 
   /** Methods that are implicitly added to container combinations that look like partitioned histograms. */
   class PartitionedHistogramMethods(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
-    def low = partitioned.cuts.head._2.value.low
-    def high = partitioned.cuts.head._2.value.high
-    def num = partitioned.cuts.head._2.value.num
+    def low = partitioned.cuts.head._2.cut.low
+    def high = partitioned.cuts.head._2.cut.high
+    def num = partitioned.cuts.head._2.cut.num
 
     partitioned.values foreach {selected =>
-      if (selected.value.low != low)
-        throw new ContainerException(s"Partition invalid because low values differ (${low} vs ${selected.value.low})")
+      if (selected.cut.low != low)
+        throw new ContainerException(s"Partition invalid because low values differ (${low} vs ${selected.cut.low})")
     }
     partitioned.values foreach {selected =>
-      if (selected.value.high != high)
-        throw new ContainerException(s"Partition invalid because high values differ (${high} vs ${selected.value.high})")
+      if (selected.cut.high != high)
+        throw new ContainerException(s"Partition invalid because high values differ (${high} vs ${selected.cut.high})")
     }
     partitioned.values foreach {selected =>
-      if (selected.value.num != num)
-        throw new ContainerException(s"Partition invalid because num values differ (${num} vs ${selected.value.num})")
+      if (selected.cut.num != num)
+        throw new ContainerException(s"Partition invalid because num values differ (${num} vs ${selected.cut.num})")
     }
   }
 
@@ -905,8 +905,8 @@ package object histogrammar {
 
   /** Methods that are implicitly added to container combinations that look like fractioned histograms. */
   class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
-    def numeratorBinned = fractioned.numerator.value
-    def denominatorBinned = fractioned.denominator.value
+    def numeratorBinned = fractioned.numerator.cut
+    def denominatorBinned = fractioned.denominator.cut
 
     if (numeratorBinned.low != denominatorBinned.low)
       throw new ContainerException(s"Fraction invalid because low differs between numerator and denominator (${numeratorBinned.low} vs ${denominatorBinned.low})")
@@ -923,8 +923,6 @@ package object histogrammar {
     def numericalValues: Seq[Double] = numeratorBinned.values zip denominatorBinned.values map {case (n, d) => n.entries / d.entries}
     /** Low-central-high confidence interval triplet for all bins, given a confidence interval function.
       * 
-      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
-      * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
       * @param absz absolute value of `z` to evaluate.
       * @return confidence interval evaluated at `(-absz, 0, absz)`.
@@ -936,8 +934,6 @@ package object histogrammar {
     /** Overflow fraction as a number. */
     def numericalOverflow: Double = numeratorBinned.overflow.entries / denominatorBinned.overflow.entries
     /** Low-central-high confidence interval triplet for the overflow bin, given a confidence interval function.
-      * 
-      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
       * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
       * @param absz absolute value of `z` to evaluate.
@@ -952,8 +948,6 @@ package object histogrammar {
     def numericalUnderflow: Double = numeratorBinned.underflow.entries / denominatorBinned.underflow.entries
     /** Low-central-high confidence interval triplet for the overflow bin, given a confidence interval function.
       * 
-      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
-      * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
       * @param absz absolute value of `z` to evaluate.
       * @return confidence interval evaluated at `(-absz, 0, absz)`.
@@ -966,8 +960,6 @@ package object histogrammar {
     /** Nanflow fraction as a number. */
     def numericalNanflow: Double = numeratorBinned.nanflow.entries / denominatorBinned.nanflow.entries
     /** Low-central-high confidence interval triplet for the nanflow bin, given a confidence interval function.
-      * 
-      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
       * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
       * @param absz absolute value of `z` to evaluate.

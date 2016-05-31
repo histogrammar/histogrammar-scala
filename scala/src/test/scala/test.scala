@@ -609,10 +609,10 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     val two = Select({x: Struct => x.bool}, Bin(5, -3.0, 7.0, {x: Struct => x.double}))
     struct.foreach(two.fill(_))
-    two.value.values.map(_.entries).toList should be (List(2.0, 1.0, 1.0, 1.0, 0.0))
-    two.value.underflow.entries should be (0.0)
-    two.value.overflow.entries should be (0.0)
-    two.value.nanflow.entries should be (0.0)
+    two.cut.values.map(_.entries).toList should be (List(2.0, 1.0, 1.0, 1.0, 0.0))
+    two.cut.underflow.entries should be (0.0)
+    two.cut.overflow.entries should be (0.0)
+    two.cut.nanflow.entries should be (0.0)
 
     checkJson(one)
     checkJson(two)
@@ -628,10 +628,10 @@ class DefaultSuite extends FlatSpec with Matchers {
 
     val two = Select({x: Struct => x.bool}, Bin(5, -3.0, 7.0, {x: Struct => x.double}, Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0}), Sum({x: Struct => 10.0})))
     struct.foreach(two.fill(_))
-    two.value.values.map(_.sum).toList should be (List(20.0, 10.0, 10.0, 10.0, 0.0))
-    two.value.underflow.sum should be (0.0)
-    two.value.overflow.sum should be (0.0)
-    two.value.nanflow.sum should be (0.0)
+    two.cut.values.map(_.sum).toList should be (List(20.0, 10.0, 10.0, 10.0, 0.0))
+    two.cut.underflow.sum should be (0.0)
+    two.cut.overflow.sum should be (0.0)
+    two.cut.nanflow.sum should be (0.0)
 
     checkJson(one)
     checkJson(two)

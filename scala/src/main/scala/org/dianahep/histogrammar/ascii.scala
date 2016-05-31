@@ -54,7 +54,7 @@ package object ascii {
     def ascii: String = ascii(80)
     /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
     def ascii(width: Int): String = {
-      val binned = selected.value
+      val binned = selected.cut
 
       val minCount = Math.min(Math.min(Math.min(binned.values.map(_.entries).min, binned.overflow.entries), binned.underflow.entries), binned.nanflow.entries)
       val maxCount = Math.max(Math.max(Math.max(binned.values.map(_.entries).max, binned.overflow.entries), binned.underflow.entries), binned.nanflow.entries)
@@ -291,8 +291,6 @@ package object ascii {
   class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns.
       * 
-      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
-      * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
       */
     def println(confidenceInterval: (Double, Double, Double) => Double, width: Int = 80) {
@@ -300,8 +298,6 @@ package object ascii {
     }
 
     /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns.
-      * 
-      * Note: `Fraction.wilsonConfidenceInterval` is a good choice for `confidenceInterval`, with non-vanishing asymmetric values at the extremes of zero and one.
       * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
       */

@@ -125,13 +125,13 @@ package object bokeh extends Tools {
     def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
-      val h = hist.value.high
-      val l = hist.value.low
-      val step = (h-l)/hist.value.values.length
+      val h = hist.cut.high
+      val l = hist.cut.low
+      val step = (h-l)/hist.cut.values.length
 
       object source extends ColumnDataSource {
           val x = column(l to h by step)
-          val y = column(hist.value.values.map(_.entries))
+          val y = column(hist.cut.values.map(_.entries))
       }
       import source.{x,y}
 
@@ -165,13 +165,13 @@ package object bokeh extends Tools {
     def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
-      val h = profile.value.high
-      val l = profile.value.low
-      val step = (h-l)/profile.value.values.length
+      val h = profile.cut.high
+      val l = profile.cut.low
+      val step = (h-l)/profile.cut.values.length
 
       object source extends ColumnDataSource {
           val x = column(l to h by step)
-          val y = column(profile.value.values.map(_.entries))
+          val y = column(profile.cut.values.map(_.entries))
       }
       import source.{x,y}
 

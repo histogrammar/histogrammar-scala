@@ -730,7 +730,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
 
   "Stack/Stacked/Stacking" must "work with Count/Counting/Counted" in {
-    val stacking = Stack({x: Double => x} named "something", Count(), 0.0, 2.0, 4.0, 6.0, 8.0)
+    val stacking = Stack(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Count())
     simple.foreach(stacking.fill(_))
 
     stacking.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 10.0, 0.0 -> 6.0, 2.0 -> 3.0, 4.0 -> 1.0, 6.0 -> 1.0, 8.0 -> 0.0))
@@ -739,7 +739,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val stacking = Stack({x: Double => x} named "something", Sum({x: Double => x} named "else"), 0.0, 2.0, 4.0, 6.0, 8.0)
+    val stacking = Stack(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
     simple.foreach(stacking.fill(_))
 
     stacking.cuts(1)._2.sum should be (14.5 +- 1e-12)
@@ -750,7 +750,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
 
   "Partition/Partitioned/Partitioning" must "work with Count/Counting/Counted" in {
-    val partitioning = Partition({x: Double => x} named "something", Count(), 0.0, 2.0, 4.0, 6.0, 8.0)
+    val partitioning = Partition(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Count())
     simple.foreach(partitioning.fill(_))
     
     partitioning.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 4.0, 0.0 -> 3.0, 2.0 -> 2.0, 4.0 -> 0.0, 6.0 -> 1.0, 8.0 -> 0.0))
@@ -759,7 +759,7 @@ class DefaultSuite extends FlatSpec with Matchers {
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val partitioning = Partition({x: Double => x} named "something", Sum({x: Double => x} named "else"), 0.0, 2.0, 4.0, 6.0, 8.0)
+    val partitioning = Partition(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
     simple.foreach(partitioning.fill(_))
 
     partitioning.cuts(0)._2.sum should be (-11.2 +- 1e-12)
@@ -1055,14 +1055,14 @@ class DefaultSuite extends FlatSpec with Matchers {
     takesProfileMethods(selectingSparselyBinningDeviating)
     takesProfileMethods(selectedSparselyBinnedDeviated)
 
-    val stackingBinningCounting = Stack({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()), 1, 2, 3)
-    val stackedBinnedCounted = stackingBinningCounting.ed.as[Stacked[Binned[Counted, Counted, Counted, Counted]]]
-    val stackingSelectingBinningCounting = Stack({x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())), 1, 2, 3)
-    val stackedSelectedBinnedCounted = stackingSelectingBinningCounting.ed.as[Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]]
-    val stackingSparselyBinningCounting = Stack({x: Double => x}, SparselyBin(1, {x: Double => x}, Count()), 1, 2, 3)
-    val stackedSparselyBinnedCounted = stackingSparselyBinningCounting.ed.as[Stacked[SparselyBinned[Counted, Counted]]]
-    val stackingSelectingSparselyBinningCounting = Stack({x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())), 1, 2, 3)
-    val stackedSelectedSparselyBinnedCounted = stackingSelectingSparselyBinningCounting.ed.as[Stacked[Selected[SparselyBinned[Counted, Counted]]]]
+    val stackingBinningCounting = Stack(List(1.0, 2.0, 3.0), {x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()))
+    val stackedBinnedCounted = stackingBinningCounting.ed.as[Stacked[Binned[Counted, Counted, Counted, Counted], Counted]]
+    val stackingSelectingBinningCounting = Stack(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())))
+    val stackedSelectedBinnedCounted = stackingSelectingBinningCounting.ed.as[Stacked[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]]
+    val stackingSparselyBinningCounting = Stack(List(1.0, 2.0, 3.0), {x: Double => x}, SparselyBin(1, {x: Double => x}, Count()))
+    val stackedSparselyBinnedCounted = stackingSparselyBinningCounting.ed.as[Stacked[SparselyBinned[Counted, Counted], Counted]]
+    val stackingSelectingSparselyBinningCounting = Stack(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())))
+    val stackedSelectedSparselyBinnedCounted = stackingSelectingSparselyBinningCounting.ed.as[Stacked[Selected[SparselyBinned[Counted, Counted]], Counted]]
     def takesStackedHistogramMethods(x: StackedHistogramMethods) { }
     takesStackedHistogramMethods(stackingBinningCounting)
     takesStackedHistogramMethods(stackedBinnedCounted)
@@ -1090,14 +1090,14 @@ class DefaultSuite extends FlatSpec with Matchers {
     takesStackedHistogramMethods(stackingSelectingSparselyBinningCounting2)
     takesStackedHistogramMethods(stackedSelectedSparselyBinnedCounted2)
 
-    val partitioningBinningCounting = Partition({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()), 1, 2, 3)
-    val partitionedBinnedCounted = partitioningBinningCounting.ed.as[Partitioned[Binned[Counted, Counted, Counted, Counted]]]
-    val partitioningSelectingBinningCounting = Partition({x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())), 1, 2, 3)
-    val partitionedSelectedBinnedCounted = partitioningSelectingBinningCounting.ed.as[Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]]]]
-    val partitioningSparselyBinningCounting = Partition({x: Double => x}, SparselyBin(1, {x: Double => x}, Count()), 1, 2, 3)
-    val partitionedSparselyBinnedCounted = partitioningSparselyBinningCounting.ed.as[Partitioned[SparselyBinned[Counted, Counted]]]
-    val partitioningSelectingSparselyBinningCounting = Partition({x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())), 1, 2, 3)
-    val partitionedSelectedSparselyBinnedCounted = partitioningSelectingSparselyBinningCounting.ed.as[Partitioned[Selected[SparselyBinned[Counted, Counted]]]]
+    val partitioningBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()))
+    val partitionedBinnedCounted = partitioningBinningCounting.ed.as[Partitioned[Binned[Counted, Counted, Counted, Counted], Counted]]
+    val partitioningSelectingBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())))
+    val partitionedSelectedBinnedCounted = partitioningSelectingBinningCounting.ed.as[Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]]
+    val partitioningSparselyBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, SparselyBin(1, {x: Double => x}, Count()))
+    val partitionedSparselyBinnedCounted = partitioningSparselyBinningCounting.ed.as[Partitioned[SparselyBinned[Counted, Counted], Counted]]
+    val partitioningSelectingSparselyBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())))
+    val partitionedSelectedSparselyBinnedCounted = partitioningSelectingSparselyBinningCounting.ed.as[Partitioned[Selected[SparselyBinned[Counted, Counted]], Counted]]
     def takesPartitionedHistogramMethods(x: PartitionedHistogramMethods) { }
     takesPartitionedHistogramMethods(partitioningBinningCounting)
     takesPartitionedHistogramMethods(partitionedBinnedCounted)

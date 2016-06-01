@@ -26,6 +26,11 @@ package object util {
   implicit val doubleOrdering: MetricOrdering[Double] = new MetricOrdering[Double] {
     def difference(x: Double, y: Double) = x - y
   }
+
+  /** Relative tolerance for numerical equality. Only affects `equals` checks, not `fill` or `+`. */
+  var relativeTolerance: Double = 0.0
+  /** Absolute tolerance for numerical equality. Only affects `equals` checks, not `fill` or `+`. */
+  var absoluteTolerance: Double = 0.0
 }
 
 package util {

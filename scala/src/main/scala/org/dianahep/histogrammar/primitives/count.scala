@@ -117,7 +117,7 @@ package histogrammar {
 
     override def toString() = s"<Counted $entries>"
     override def equals(that: Any) = that match {
-      case that: Counted => this.entries == that.entries
+      case that: Counted => this.entries === that.entries
       case _ => false
     }
     override def hashCode() = entries.hashCode
@@ -155,7 +155,7 @@ package histogrammar {
 
     override def toString() = s"<Counting $entries>"
     override def equals(that: Any) = that match {
-      case that: Counting => this.entries == that.entries
+      case that: Counting => this.entries === that.entries
       case _ => false
     }
     override def hashCode() = entries.hashCode

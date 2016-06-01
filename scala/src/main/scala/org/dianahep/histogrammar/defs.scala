@@ -412,9 +412,30 @@ package object histogrammar {
     def apply[SUB <: DATUM](x: SUB) = 1.0
   }
 
-  /** Introduces a `===` operator for `Double` precision numbers in which `NaN === NaN`. */
-  implicit class nanEquality(val x: Double) extends AnyVal {
-    def ===(that: Double) = (this.x.isNaN  &&  that.isNaN)  ||  this.x == that
+  /** Introduces a `===` operator for all `Double` tolerance comparisons.
+    * 
+    * Custom equality rules:
+    * 
+    *   - NaN == NaN (NaNs are used by some primitives to indicate missing data).
+    *   - if `org.dianahep.histogrammar.util.relativeTolerance` is greater than zero, numbers may differ by this small ratio.
+    *   - if `org.dianahep.histogrammar.util.absoluteTolerance` is greater than zero, numbers may differ by this small difference.
+    * 
+    * Python's math.isclose algorithm is applied for non-NaNs:
+    * 
+    *     `abs(x - y) <= max(relativeTolerance * max(abs(x), abs(y)), absoluteTolerance)`
+    */
+  implicit class Numeq(val x: Double) extends AnyVal {
+    def ===(that: Double) =
+      if (this.x.isNaN  &&  that.isNaN)
+        true
+      else if (util.relativeTolerance > 0.0  &&  util.absoluteTolerance > 0.0)
+        Math.abs(this.x - that) <= Math.max(util.relativeTolerance * Math.max(Math.abs(this.x), Math.abs(that)), util.absoluteTolerance)
+      else if (util.relativeTolerance > 0.0)
+        Math.abs(this.x - that) <= util.relativeTolerance * Math.max(Math.abs(this.x), Math.abs(that))
+      else if (util.absoluteTolerance > 0.0)
+        Math.abs(this.x - that) <= util.absoluteTolerance
+      else
+        this.x == that
   }
 
   //////////////////////////////////////////////////////////////// indexes for nested collections

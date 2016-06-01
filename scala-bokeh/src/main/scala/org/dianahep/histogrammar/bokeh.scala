@@ -22,7 +22,7 @@ import scala.collection.mutable.ArrayBuffer
 
 package object bokeh extends Tools {
 
-   class BokehImplicits(plots: GlyphRenderer) {
+   class BokehImplicits(glyphs: GlyphRenderer) {
 
      def plot(xLabel:String, yLabel: String) : Plot = {
 
@@ -36,7 +36,7 @@ package object bokeh extends Tools {
         plot.below <<= (xaxis :: _)
         plot.left <<= (yaxis :: _)
 
-        plot.renderers := List(xaxis, yaxis, plots)
+        plot.renderers := List(xaxis, yaxis, glyphs)
         plot
       }
 
@@ -53,14 +53,14 @@ package object bokeh extends Tools {
         plot.below <<= (xaxis :: _)
         plot.left <<= (yaxis :: _)
 
-        plot.renderers := List(xaxis, yaxis, plots)
+        plot.renderers := List(xaxis, yaxis, glyphs)
         plot
      }
    }
-   implicit def implicitplot(plots: GlyphRenderer) = new BokehImplicits(plots)
+   implicit def implicitplot(glyphs: GlyphRenderer) = new BokehImplicits(glyphs)
 
 
-   def plot(xLabel:String, yLabel: String, plots: GlyphRenderer*) : Plot = {
+   def plot(xLabel:String, yLabel: String, glyphs: GlyphRenderer*) : Plot = {
 
       val xdr = new DataRange1d
       val ydr = new DataRange1d
@@ -72,15 +72,15 @@ package object bokeh extends Tools {
       plot.below <<= (xaxis :: _)
       plot.left <<= (yaxis :: _)
 
-      val children = plots.toList
+      val children = glyphs.toList
       plot.renderers := List(xaxis, yaxis):::children
       plot
     }
 
-   def plot(plots: Array[GlyphRenderer]) : Plot = plot(plots: _*)
+   def plot(glyphs: Array[GlyphRenderer]) : Plot = plot(glyphs: _*)
 
    //allow for default x and y labels 
-   def plot(plots: GlyphRenderer*) : Plot = {
+   def plot(glyphs: GlyphRenderer*) : Plot = {
 
       val xdr = new DataRange1d
       val ydr = new DataRange1d
@@ -92,7 +92,7 @@ package object bokeh extends Tools {
       plot.below <<= (xaxis :: _)
       plot.left <<= (yaxis :: _)
 
-      val children = plots.toList
+      val children = glyphs.toList
       plot.renderers := List(xaxis, yaxis):::children
       plot
    }

@@ -11,6 +11,12 @@ import io.continuum.bokeh.LinearAxis
 import io.continuum.bokeh.Location
 import io.continuum.bokeh.Plot
 import io.continuum.bokeh.Tools
+import io.continuum.bokeh.Line
+import io.continuum.bokeh.Circle
+import io.continuum.bokeh.Diamond
+import io.continuum.bokeh.Square
+import io.continuum.bokeh.Cross
+import io.continuum.bokeh.Triangle
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -122,7 +128,7 @@ package object bokeh extends Tools {
     new HistogramMethodsBokeh(selectingSparselyBinningToHistogramMethods(hist).selected)
 
   class HistogramMethodsBokeh(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
-    def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+    def bokeh(markerType: String = "line", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = hist.cut.high
@@ -136,7 +142,14 @@ package object bokeh extends Tools {
       import source.{x,y}
 
       //Set marker color, fill color, line color
-      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+      val glyph = markerType match {
+       case "square"   => new Square().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(markerSize)
+      }
 
       new GlyphRenderer().data_source(source).glyph(glyph)
     }
@@ -162,7 +175,7 @@ package object bokeh extends Tools {
     new ProfileMethodsBokeh(selectingSparselyBinningToProfileMethods(hist).selected)
 
   class ProfileMethodsBokeh(val profile: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
-    def bokeh(markerType: String = "circle", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+    def bokeh(markerType: String = "line", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = profile.cut.high
@@ -176,7 +189,14 @@ package object bokeh extends Tools {
       import source.{x,y}
 
       //Set marker color, fill color, line color
-      val glyph = MarkerFactory(markerType).x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+      val glyph = markerType match {
+       case "square"   => new Square().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(markerSize)
+      }
 
       new GlyphRenderer().data_source(source).glyph(glyph)
     }

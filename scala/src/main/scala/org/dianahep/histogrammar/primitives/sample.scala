@@ -20,7 +20,7 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Sample
 
-  /** Accumulate raw numbers, vectors of numbers, or strings, merging identical values.
+  /** Accumulate raw numbers, vectors of numbers, or strings, randomly replacing them with Reservoir Sampling when the number of values exceeds a limit.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Sampling]] and immutable [[org.dianahep.histogrammar.Sampled]] objects.
     */

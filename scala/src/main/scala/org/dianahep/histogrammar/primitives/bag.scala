@@ -69,10 +69,10 @@ package histogrammar {
 
         val values = get("values") match {
           case JsonArray(elems @ _*) => Map[Any, Double](elems.zipWithIndex map {
-            case (JsonObject(nv @ _*), i) if (nv.keySet has Set("n", "v")) =>
+            case (JsonObject(nv @ _*), i) if (nv.keySet has Set("w", "v")) =>
               val nvget = nv.toMap
 
-              val n = nvget("n") match {
+              val n = nvget("w") match {
                 case JsonNumber(x) => x
                 case x => throw new JsonFormatException(x, name + s".values $i n")
               }
@@ -152,9 +152,9 @@ package histogrammar {
       JsonObject(
         "entries" -> JsonFloat(entries),
         "values" -> JsonArray(values.toSeq.sortBy(_._1).map({
-          case (v: String, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonString(v))
-          case (v: Double, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonFloat(v))
-          case (v: Vector[_], n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
+          case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
+          case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
+          case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
         }): _*)).maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
     }
 
@@ -220,9 +220,9 @@ package histogrammar {
       JsonObject(
         "entries" -> JsonFloat(entries),
         "values" -> JsonArray(values.toSeq.sortBy(_._1).map({
-          case (v: String, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonString(v))
-          case (v: Double, n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonFloat(v))
-          case (v: Vector[_], n) => JsonObject("n" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
+          case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
+          case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
+          case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
         }): _*)).maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
     }
 

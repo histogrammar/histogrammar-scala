@@ -420,6 +420,7 @@ package json {
     override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
     def stringify = "[" + elements.map(_.stringify).mkString(", ") + "]"
     def to[T <: Json] = elements.map(_.asInstanceOf[T])
+    def apply(index: Int) = elements(index)
   }
   object JsonArray {
     def apply[V](elements: V*)(implicit fv: V => Json) = new JsonArray(elements.map(fv): _*)
@@ -475,6 +476,8 @@ package json {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
     def stringify = "{" + pairs.map({case (k, v) => k.stringify + ": " + v.stringify}).mkString(", ") + "}"
     def to[T <: Json] = pairs.map({case (k, v) => (k.value, v.asInstanceOf[T])})
+
+    def apply(key: JsonString) = pairs.find(_._1 == key).get._2
 
     def maybe(kv: (JsonString, Option[Json])): JsonObject = kv match {
       case (_, None) => this

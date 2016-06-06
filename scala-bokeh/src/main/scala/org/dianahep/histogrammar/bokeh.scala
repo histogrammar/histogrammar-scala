@@ -77,8 +77,6 @@ package object bokeh extends Tools {
       plot
     }
 
-   def plot(glyphs: Array[GlyphRenderer]) : Plot = plot(glyphs: _*)
-
    //allow for default x and y labels 
    def plot(glyphs: GlyphRenderer*) : Plot = {
 
@@ -96,6 +94,8 @@ package object bokeh extends Tools {
       plot.renderers := List(xaxis, yaxis):::children
       plot
    }
+
+   def plot(glyphs: Array[GlyphRenderer]) : Plot = plot(glyphs: _*)
 
    def save(plot: Plot, fname: String) {
        val document = new Document(plot)
@@ -128,7 +128,7 @@ package object bokeh extends Tools {
     new HistogramMethodsBokeh(selectingSparselyBinningToHistogramMethods(hist).selected)
 
   class HistogramMethodsBokeh(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
-    def bokeh(markerType: String = "line", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+    def bokeh(glyphType: String = "line", glyphSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = hist.cut.high
@@ -142,13 +142,13 @@ package object bokeh extends Tools {
       import source.{x,y}
 
       //Set marker color, fill color, line color
-      val glyph = markerType match {
-       case "square"   => new Square().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(markerSize)
+      val glyph = glyphType match {
+       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
       new GlyphRenderer().data_source(source).glyph(glyph)
@@ -175,7 +175,7 @@ package object bokeh extends Tools {
     new ProfileMethodsBokeh(selectingSparselyBinningToProfileMethods(hist).selected)
 
   class ProfileMethodsBokeh(val profile: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
-    def bokeh(markerType: String = "line", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+    def bokeh(glyphType: String = "line", glyphSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = profile.cut.high
@@ -189,13 +189,13 @@ package object bokeh extends Tools {
       import source.{x,y}
 
       //Set marker color, fill color, line color
-      val glyph = markerType match {
-       case "square"   => new Square().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(markerSize)
+      val glyph = glyphType match {
+       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
       new GlyphRenderer().data_source(source).glyph(glyph)
@@ -230,21 +230,21 @@ package object bokeh extends Tools {
     new StackedHistogramMethodsBokeh(selectedSparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
 
   class StackedHistogramMethodsBokeh(stack: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
-    val markerTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
-    val markerSizeDefaults = List(1,1,1,1,1,1,1)
+    val glyphTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
+    val glyphSizeDefaults = List(1,1,1,1,1,1,1)
     val fillColorDefaults = List(Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red)
     val lineColorDefaults = List(Color.Black,Color.Blue,Color.Red,Color.Green,Color.Brown,Color.Orange,Color.Red)
 
-    def bokeh(markerTypes: List[String] = markerTypeDefaults, markerSizes: List[Int] = markerSizeDefaults, fillColors: List[Color] = fillColorDefaults, lineColors: List[Color] = lineColorDefaults) : Array[GlyphRenderer] = {
-      assert(markerTypes.length == markerSizes.length)
-      assert(markerTypes.length == fillColors.length)
-      assert(markerTypes.length == lineColors.length)
+    def bokeh(glyphTypes: List[String] = glyphTypeDefaults, glyphSizes: List[Int] = glyphSizeDefaults, fillColors: List[Color] = fillColorDefaults, lineColors: List[Color] = lineColorDefaults) : Array[GlyphRenderer] = {
+      assert(glyphTypes.length == glyphSizes.length)
+      assert(glyphTypes.length == fillColors.length)
+      assert(glyphTypes.length == lineColors.length)
 
       var stackedGlyphs: ArrayBuffer[GlyphRenderer] = ArrayBuffer.empty[GlyphRenderer]
       var ichild = 0
 
       for (p <- stack.children) {
-          stackedGlyphs += p.bokeh(markerTypes(ichild),markerSizes(ichild),fillColors(ichild),lineColors(ichild))
+          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),fillColors(ichild),lineColors(ichild))
           ichild += 1
       }
       stackedGlyphs.toArray

@@ -229,15 +229,9 @@ package object bokeh extends Tools {
   implicit def selectedSparselyBinnedMixedToStackedHistogramMethodsBokeh[DATUM](hist: Stacked[Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]], Counted]): StackedHistogramMethodsBokeh =
     new StackedHistogramMethodsBokeh(selectedSparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
 
-<<<<<<< HEAD
-  class StackedHistogramMethodsBokeh(stack: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+  class StackedHistogramMethodsBokeh(stack: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]) {
     val glyphTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
     val glyphSizeDefaults = List(1,1,1,1,1,1,1)
-=======
-  class StackedHistogramMethodsBokeh(stack: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]) {
-    val markerTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
-    val markerSizeDefaults = List(1,1,1,1,1,1,1)
->>>>>>> 2eaf408db33f75cfee19b28215b9b8e2f6cdee5a
     val fillColorDefaults = List(Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red)
     val lineColorDefaults = List(Color.Black,Color.Blue,Color.Red,Color.Green,Color.Brown,Color.Orange,Color.Red)
 

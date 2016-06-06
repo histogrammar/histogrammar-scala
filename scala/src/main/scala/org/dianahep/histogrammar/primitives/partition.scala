@@ -35,25 +35,26 @@ package histogrammar {
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
+      * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V] with NoAggregation](entries: Double, cuts: (Double, V)*) = new Partitioned(entries, None, cuts: _*)
+    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, cuts: Iterable[(Double, V)], nanflow: N) = new Partitioned(entries, None, cuts.toSeq, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Partitioning]].
       * 
-      * @param value Template used to create zero values (by calling this `value`'s `zero` method).
-      * @param quantity Numerical quantity whose value is compared with the given thresholds.
       * @param cuts Thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element.
+      * @param quantity Numerical quantity whose value is compared with the given thresholds.
+      * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
-      new Partitioning(quantity, 0.0, (java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts: _*).toList).map((_, value.zero)): _*)
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](cuts: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
+      new Partitioning((java.lang.Double.NEGATIVE_INFINITY +: SortedSet(cuts.toSeq: _*).toSeq).map((_, value.zero)), quantity, nanflow, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: => V, cuts: Double*) =
-      apply(quantity, value, cuts: _*)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](cuts: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
+      apply(cuts, quantity, value, nanflow)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name").maybe("data:name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data", "nanflow:type", "nanflow").maybe("name").maybe("data:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -78,9 +79,15 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".data:name")
         }
 
+        val nanflowFactory = get("nanflow:type") match {
+          case JsonString(name) => Factory(name)
+          case x => throw new JsonFormatException(x, name + ".nanflow:type")
+        }
+        val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
+
         get("data") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
-            new Partitioned[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
+            new Partitioned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
               element match {
                 case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
                   val elementGet = elementPairs.toMap
@@ -92,7 +99,7 @@ package histogrammar {
 
                 case x => throw new JsonFormatException(x, name + s".data element $i")
               }
-            }: _*)
+            }, nanflow)
 
           case x => throw new JsonFormatException(x, name + ".data")
         }
@@ -108,10 +115,11 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
+    * @param nanflow Container for data that resulted in `NaN`.
     */
-  class Partitioned[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: (Double, V)*) extends Container[Partitioned[V]] with NoAggregation with QuantityName {
-    type Type = Partitioned[V]
-    type EdType = Partitioned[V]
+  class Partitioned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val cuts: Seq[(Double, V)], val nanflow: N) extends Container[Partitioned[V, N]] with NoAggregation with QuantityName {
+    type Type = Partitioned[V, N]
+    type EdType = Partitioned[V, N]
     def factory = Partition
 
     if (entries < 0.0)
@@ -122,8 +130,8 @@ package histogrammar {
     def thresholds = cuts.map(_._1)
     def values = cuts.map(_._2)
 
-    def zero = new Partitioned[V](0.0, quantityName, cuts map {case (c, v) => (c, v.zero)}: _*)
-    def +(that: Partitioned[V]) = {
+    def zero = new Partitioned[V, N](0.0, quantityName, cuts map {case (c, v) => (c, v.zero)}, nanflow.zero)
+    def +(that: Partitioned[V, N]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.quantityName != that.quantityName)
@@ -131,7 +139,8 @@ package histogrammar {
       new Partitioned(
         this.entries + that.entries,
         this.quantityName,
-        this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
+        this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)},
+        this.nanflow + that.nanflow)
     }
 
     def children = values.toList
@@ -139,30 +148,33 @@ package histogrammar {
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
-      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*)).
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
+      "nanflow:type" -> JsonString(nanflow.factory.name),
+      "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("data:name") -> (cuts.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""<Partitioned bins=${cuts.head._2.factory.name} thresholds=(${cuts.map(_._1).mkString(", ")})>"""
+    override def toString() = s"""<Partitioned bins=${cuts.head._2.factory.name} thresholds=(${cuts.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
-      case that: Partitioned[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
+      case that: Partitioned[V, N] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (entries, quantityName, cuts).hashCode()
+    override def hashCode() = (entries, quantityName, cuts, nanflow).hashCode()
   }
 
   /** Accumulating a suite of containers, each collecting data between a pair of given cuts on a given quantity.
     * 
     * Use the factory [[org.dianahep.histogrammar.Partition]] to construct an instance.
     * 
-    * @param quantity Numerical quantity whose value is compared with the given thresholds.
-    * @param entries Weighted number of entries (sum of all observed weights).
     * @param cuts Lower thresholds and their associated containers, starting with negative infinity.
+    * @param quantity Numerical quantity whose value is compared with the given thresholds.
+    * @param nanflow Container for data that resulted in `NaN`.
+    * @param entries Weighted number of entries (sum of all observed weights).
     */
-  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, val cuts: (Double, V)*) extends Container[Partitioning[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] {
+  class Partitioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar](val cuts: Seq[(Double, V)], val quantity: UserFcn[DATUM, Double], val nanflow: N, var entries: Double) extends Container[Partitioning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] {
     protected val v = cuts.head._2
-    type Type = Partitioning[DATUM, V]
-    type EdType = Partitioned[v.EdType]
+    type Type = Partitioning[DATUM, V, N]
+    type EdType = Partitioned[v.EdType, nanflow.EdType]
     type Datum = DATUM
     def factory = Partition
 
@@ -176,45 +188,51 @@ package histogrammar {
     def thresholds = cuts.map(_._1)
     def values = cuts.map(_._2)
 
-    def zero = new Partitioning[DATUM, V](quantity, 0.0, cuts map {case (c, v) => (c, v.zero)}: _*)
-    def +(that: Partitioning[DATUM, V]) = {
+    def zero = new Partitioning[DATUM, V, N](cuts map {case (c, v) => (c, v.zero)}, quantity, nanflow.zero, 0.0)
+    def +(that: Partitioning[DATUM, V, N]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
         new Partitioning(
+          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)},
           this.quantity,
-          this.entries + that.entries,
-          this.cuts zip that.cuts map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)}: _*)
+          this.nanflow + that.nanflow,
+          this.entries + that.entries)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       if (weight > 0.0) {
-        val value = quantity(datum)
-        // !(value >= high) is true when high == NaN (even if value == +inf)
-        range find {case ((low, sub), (high, _)) => value >= low  &&  !(value >= high)} foreach {case ((_, sub), (_, _)) =>
-          sub.fill(datum, weight)
-        }
+        val q = quantity(datum)
+        if (q.isNaN)
+          nanflow.fill(datum, weight)
+        else
+          // !(q >= high) is true when high == NaN (even if q == +inf)
+          range find {case ((low, sub), (high, _)) => q >= low  &&  !(q >= high)} foreach {case ((_, sub), (_, _)) =>
+            sub.fill(datum, weight)
+          }
 
         // no possibility of exception from here on out (for rollback)
         entries += weight
       }
     }
 
-    def children = values.toList
+    def children = nanflow :: values.toList
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "type" -> JsonString(cuts.head._2.factory.name),
-      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*)).
+      "data" -> JsonArray(cuts map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
+      "nanflow:type" -> JsonString(nanflow.factory.name),
+      "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("data:name") -> (cuts.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""<Partitioning bins=${cuts.head._2.factory.name} thresholds=(${cuts.map(_._1).mkString(", ")})"""
+    override def toString() = s"""<Partitioning bins=${cuts.head._2.factory.name} thresholds=(${cuts.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
-      case that: Partitioning[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})
+      case that: Partitioning[DATUM, V, N] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  (this.cuts zip that.cuts forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (quantity, entries, cuts).hashCode()
+    override def hashCode() = (quantity, entries, cuts, nanflow).hashCode()
   }
 }

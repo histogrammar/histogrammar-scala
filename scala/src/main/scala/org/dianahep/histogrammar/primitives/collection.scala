@@ -278,7 +278,8 @@ package histogrammar {
             new UntypedLabeled(entries, subpairs map {
               case (JsonString(label), JsonObject(typedata @ _*)) if (typedata.keySet has Set("type", "data")) =>
                 val subget = typedata.toMap
-                  (subget("type"), subget("data")) match {
+
+                (subget("type"), subget("data")) match {
                   case (JsonString(factory), sub) => (label.toString, Factory(factory).fromJsonFragment(sub, None))
                   case (_, x) => throw new JsonFormatException(x, name + s""".data "$label"""")
                 }
@@ -724,9 +725,15 @@ package histogrammar {
             var backwards: BranchedList = BranchedNil
 
             values.zipWithIndex.toList foreach {
-              case (JsonObject((JsonString(factory), sub)), _) =>
-                val item = Factory(factory).fromJsonFragment(sub, None).asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}]
-                backwards = new Branched(entries, item, backwards)
+              case (JsonObject(typedata @ _*), i) if (typedata.keySet has Set("type", "data")) =>
+                val subget = typedata.toMap
+
+                (subget("type"), subget("data")) match {
+                  case (JsonString(factory), sub) =>
+                    val item = Factory(factory).fromJsonFragment(sub, None).asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}]
+                    backwards = new Branched(entries, item, backwards)
+                  case (_, x) => throw new JsonFormatException(x, name + s".data")
+                }
 
               case (x, i) => throw new JsonFormatException(x, name + s".data $i")
             }
@@ -814,7 +821,7 @@ package histogrammar {
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment(false))): _*))
+      "data" -> JsonArray(values.map(x => JsonObject("type" -> JsonString(x.factory.name), "data" -> x.toJsonFragment(false))): _*))
 
     override def toString() = s"""<Branched ${values.zipWithIndex.map({case (v, i) => "i" + i.toString + "=" + v.factory.name}).mkString(" ")}>"""
     override def equals(that: Any) = that match {
@@ -967,7 +974,7 @@ package histogrammar {
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "data" -> JsonArray(values.map(x => JsonObject(JsonString(x.factory.name) -> x.toJsonFragment(false))): _*))
+      "data" -> JsonArray(values.map(x => JsonObject("type" -> JsonString(x.factory.name), "data" -> x.toJsonFragment(false))): _*))
 
     override def toString() = s"""<Branching ${values.zipWithIndex.map({case (v, i) => "i" + i.toString + "=" + v.factory.name}).mkString(" ")}>"""
     override def equals(that: Any) = that match {

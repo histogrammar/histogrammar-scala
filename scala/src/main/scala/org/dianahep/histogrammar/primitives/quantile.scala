@@ -169,7 +169,7 @@ package histogrammar {
 
     override def toString() = s"""<Quantiled target=$target estimate=$estimate>"""
     override def equals(that: Any) = that match {
-      case that: Quantiled => this.entries == that.entries  &&  this.quantityName == that.quantityName  &&  this.target == that.target  &&  this.estimate == that.estimate
+      case that: Quantiled => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.target === that.target  &&  this.estimate === that.estimate
       case _ => false
     }
     override def hashCode() = (entries, quantityName, target, estimate).hashCode()
@@ -234,7 +234,7 @@ package histogrammar {
 
     override def toString() = s"""<Quantiling target=$target estimate=$estimate>"""
     override def equals(that: Any) = that match {
-      case that: Quantiling[DATUM] => this.entries == that.entries  &&  this.target == that.target  &&  this.estimate == that.estimate  &&  this.cumulativeDeviation == that.cumulativeDeviation  &&  this.quantity == that.quantity
+      case that: Quantiling[DATUM] => this.entries === that.entries  &&  this.target === that.target  &&  this.estimate === that.estimate  &&  this.cumulativeDeviation === that.cumulativeDeviation  &&  this.quantity == that.quantity
       case _ => false
     }
     override def hashCode() = (entries, target, estimate, cumulativeDeviation, quantity).hashCode()

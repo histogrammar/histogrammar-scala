@@ -355,62 +355,65 @@ package object histogrammar {
       }
   }
 
-  implicit class NumericalFcnFromBoolean[-DATUM](f: DATUM => Boolean) extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromBoolean[-DATUM](val original: DATUM => Boolean) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = if (f(x)) 1.0 else 0.0
+    def apply[SUB <: DATUM](x: SUB): Double = if (original(x)) 1.0 else 0.0
   }
-  implicit class NumericalFcnFromByte[-DATUM](f: DATUM => Byte) extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromByte[-DATUM](val original: DATUM => Byte) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+    def apply[SUB <: DATUM](x: SUB): Double = original(x).toDouble
   }
-  implicit class NumericalFcnFromShort[-DATUM](f: DATUM => Short) extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromShort[-DATUM](val original: DATUM => Short) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+    def apply[SUB <: DATUM](x: SUB): Double = original(x).toDouble
   }
-  implicit class NumericalFcnFromInt[-DATUM](f: DATUM => Int) extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromInt[-DATUM](val original: DATUM => Int) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+    def apply[SUB <: DATUM](x: SUB): Double = original(x).toDouble
   }
-  implicit class NumericalFcnFromLong[-DATUM](f: DATUM => Long) extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromLong[-DATUM](val original: DATUM => Long) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+    def apply[SUB <: DATUM](x: SUB): Double = original(x).toDouble
   }
-  implicit class NumericalFcnFromFloat[-DATUM](f: DATUM => Float) extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromFloat[-DATUM](val original: DATUM => Float) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x).toDouble
+    def apply[SUB <: DATUM](x: SUB): Double = original(x).toDouble
   }
-  implicit class NumericalFcnFromDouble[-DATUM](f: DATUM => Double) extends UserFcn[DATUM, Double] {
+  implicit class NumericalFcnFromDouble[-DATUM](val original: DATUM => Double) extends UserFcn[DATUM, Double] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Double = f(x)
+    def apply[SUB <: DATUM](x: SUB): Double = original(x)
   }
 
   /** Wraps a user's function for extracting strings (categories) from the input data type. */
-  implicit class CategoricalFcn[-DATUM](f: DATUM => String) extends UserFcn[DATUM, String] {
+  implicit class CategoricalFcn[-DATUM](val original: DATUM => String) extends UserFcn[DATUM, String] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): String = f(x)
+    def apply[SUB <: DATUM](x: SUB): String = original(x)
   }
 
   /** Wraps a user's function for extracting multidimensional numeric data from the input data type. */
-  implicit class MultivariateFcn[-DATUM](f: DATUM => Iterable[Double]) extends UserFcn[DATUM, Vector[Double]] {
+  implicit class MultivariateFcn[-DATUM](val original: DATUM => Iterable[Double]) extends UserFcn[DATUM, Vector[Double]] {
     def name = None
     def hasCache = false
-    def apply[SUB <: DATUM](x: SUB): Vector[Double] = f(x).toVector
+    def apply[SUB <: DATUM](x: SUB): Vector[Double] = original(x).toVector
   }
 
   /** Default weighting function that always returns 1.0. */
-  def unweighted[DATUM] = new UserFcn[DATUM, Double] {
+  class Unweighted[DATUM] extends UserFcn[DATUM, Double] {
     def name = Some("unweighted")
     def hasCache = true
     def apply[SUB <: DATUM](x: SUB) = 1.0
   }
+
+  /** Default weighting function that always returns 1.0. */
+  def unweighted[DATUM] = new Unweighted[DATUM]
 
   /** Introduces a `===` operator for all `Double` tolerance comparisons.
     * 

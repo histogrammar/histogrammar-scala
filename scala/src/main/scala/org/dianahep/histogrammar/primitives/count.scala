@@ -144,6 +144,7 @@ package histogrammar {
     def +(that: Counting): Counting = new Counting(this.entries + that.entries)
 
     def fill[SUB <: Any](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       // no possibility of exception from here on out (for rollback)
       if (weight > 0.0)
         entries += weight

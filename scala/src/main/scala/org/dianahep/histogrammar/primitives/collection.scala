@@ -209,6 +209,7 @@ package histogrammar {
           }: _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       var i = 0
       while (i < size) {
         val (_, v) = pairs(i)
@@ -435,6 +436,7 @@ package histogrammar {
           }): _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       var i = 0
       while (i < size) {
         val (_, v) = pairs(i)
@@ -638,6 +640,7 @@ package histogrammar {
         new Indexing[V](this.entries + that.entries, this.values zip that.values map {case (me, you) => me + you}: _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       var i = 0
       while (i < size) {
         val v = values(i)
@@ -961,6 +964,7 @@ package histogrammar {
     def +(that: Branching[HEAD, TAIL]) = new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       head.fill(datum, weight)
       tail match {
         case x: Aggregation => x.fill(datum.asInstanceOf[x.Datum], weight)

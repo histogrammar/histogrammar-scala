@@ -145,6 +145,7 @@ package histogrammar {
         new Minimizing[DATUM](this.quantity, this.entries + that.entries, Minimize.plus(this.min, that.min))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)
 
@@ -294,6 +295,7 @@ package histogrammar {
         new Maximizing[DATUM](this.quantity, this.entries + that.entries, Maximize.plus(this.max, that.max))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)
 

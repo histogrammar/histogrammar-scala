@@ -15,6 +15,7 @@
 package org.dianahep
 
 import scala.collection.immutable.ListMap
+import scala.collection.mutable
 import scala.language.existentials
 import scala.language.implicitConversions
 
@@ -241,6 +242,18 @@ package histogrammar {
       * The container is changed in-place.
       */
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0)
+
+    /** List of sub-aggregators, to make it possible to walk the tree. */
+    protected var checkedForCrossReferences = false
+    protected def checkForCrossReferences(memo: mutable.Set[Aggregation] = mutable.Set[Aggregation]()) {
+      if (!checkedForCrossReferences) {
+        if (memo.exists(_ eq this))
+          throw new ContainerException(s"cannot fill a tree that contains the same aggregator twice: $this")
+        memo += this
+        this.asInstanceOf[Container[_]].children.foreach(_.asInstanceOf[Aggregation].checkForCrossReferences(memo))
+        checkedForCrossReferences = true
+      }
+    }
   }
 
   /** Sub-trait of [[org.dianahep.histogrammar.Aggregation]] for all containers except [[org.dianahep.histogrammar.Counting]].

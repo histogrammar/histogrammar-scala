@@ -134,6 +134,7 @@ package histogrammar {
         new Summing(this.quantity, this.entries + that.entries, this.sum + that.sum)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)
 

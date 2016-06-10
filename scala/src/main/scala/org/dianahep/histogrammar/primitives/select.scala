@@ -151,6 +151,7 @@ package histogrammar {
         new Selecting[DATUM, V](this.entries + that.entries, this.quantity, this.cut + that.cut)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       val w = weight * quantity(datum)
       if (w > 0.0)
         cut.fill(datum, w)

@@ -208,6 +208,7 @@ package histogrammar {
         new Fractioning(this.quantity, this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       val w = weight * quantity(datum)
 
       if (weight > 0.0)

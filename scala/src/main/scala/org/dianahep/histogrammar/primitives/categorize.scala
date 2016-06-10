@@ -217,6 +217,7 @@ package histogrammar {
           }: _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)
 

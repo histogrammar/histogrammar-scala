@@ -179,6 +179,7 @@ package histogrammar {
       }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+      checkForCrossReferences()
       if (entries + weight > limit)
         value = None
       else

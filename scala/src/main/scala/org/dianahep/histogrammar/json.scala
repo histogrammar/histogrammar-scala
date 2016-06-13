@@ -211,7 +211,7 @@ package json {
 
     /** Parses a JSON string into a `JsonNumber` if possible, returns `None` if not.  '''Note:''' the JSON strings `"-inf"`, `"inf"`, and `"nan"` are interpreted as the corresponding floating point numbers. */
     def parse(str: String): Option[JsonNumber] = parseFully(str, parse(_))
-    def parse(p: ParseState): Option[JsonNumber] =
+    def parse(p: ParseState): Option[JsonNumber] = {
       if (p.remaining >= 6  &&  p.get(6) == "\"-inf\"") {
         p.update(6)
         Some(JsonFloat(java.lang.Double.NEGATIVE_INFINITY))
@@ -226,33 +226,59 @@ package json {
       }
       else if (!p.done  &&  (('0' <= p.get  &&  p.get <= '9')  ||  p.get == '-')) {
         p.save()
-        val sb = new java.lang.StringBuilder
-        while (!p.done  &&  (('0' <= p.get  &&  p.get <= '9')  ||  p.get == '-'  ||  p.get == '+'  ||  p.get == 'e'  ||  p.get == 'E'  ||  p.get == '.')) {
-          sb.append(p.get)
+
+        var sign = 1L
+        var integer = 0L
+        var fraction = 0.0
+        var place = 0.1
+        var exponentSign = 1
+        var exponent = 0
+        var isFloat = false
+
+        if (!p.done  &&  p.get == '-') {
+          sign = -1L
           p.update(1)
         }
-        val str = sb.toString
-        try {
-          val out = Some(JsonInt(java.lang.Long.parseLong(str)))
-          p.unsave()
-          out
+        while (!p.done  &&  ('0' <= p.get  &&  p.get <= '9')) {
+          integer = integer * 10L + (p.get - '0').toLong
+          p.update(1)
         }
-        catch {
-          case _: java.lang.NumberFormatException =>
-            try {
-              val out = Some(JsonFloat(java.lang.Double.parseDouble(str)))
-              p.unsave()
-              out
-            }
-            catch {
-              case _: java.lang.NumberFormatException =>
-                p.restore()
-                None
-            }
+        if (!p.done  &&  p.get == '.') {
+          isFloat = true
+          p.update(1)
+          while (!p.done  &&  ('0' <= p.get  &&  p.get <= '9')) {
+            fraction += (p.get - '0').toInt * place
+            place *= 0.1
+            p.update(1)
+          }
         }
+        if (!p.done  &&  (p.get == 'e'  ||  p.get == 'E')) {
+          isFloat = true
+          p.update(1)
+          if (!p.done  &&  p.get == '+') {
+            exponentSign = 1
+            p.update(1)
+          }
+          else if (!p.done  &&  p.get == '-') {
+            exponentSign = -1
+            p.update(1)
+          }
+          while (!p.done  &&  ('0' <= p.get  &&  p.get <= '9')) {
+            exponent = exponent * 10 + (p.get - '0').toInt
+            p.update(1)
+          }
+        }
+
+        if (isFloat  &&  exponent == 0)
+          Some(JsonFloat(sign * (integer + fraction)))
+        else if (isFloat)
+          Some(JsonFloat(sign * (integer + fraction) * Math.pow(10, exponentSign * exponent)))
+        else
+          Some(JsonInt(sign * integer))
       }
       else
         None
+    }
   }
 
   /** Concrete class for JSON integers.

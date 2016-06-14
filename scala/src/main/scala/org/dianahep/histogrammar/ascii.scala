@@ -46,7 +46,7 @@ package object ascii {
       System.out.println(ascii(80))
     }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def println(width: Int = 80) {
+    def println(width: Int) {
       System.out.println(ascii(width))
     }
 
@@ -145,7 +145,7 @@ package object ascii {
       System.out.println(ascii(80))
     }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def println(width: Int = 80) {
+    def println(width: Int) {
       System.out.println(ascii(width))
     }
 
@@ -236,7 +236,7 @@ package object ascii {
       System.out.println(ascii(80))
     }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def println(width: Int = 80) {
+    def println(width: Int) {
       System.out.println(ascii(width))
     }
 
@@ -380,6 +380,16 @@ package object ascii {
     new FractionedHistogramMethodsAscii(selectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
 
   class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def println {
+      println({(n: Double, d: Double, z: Double) => n/d}, 80)
+    }
+
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def println(width: Int) {
+      println({(n: Double, d: Double, z: Double) => n/d}, width)
+    }
+
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns.
       * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
@@ -387,6 +397,12 @@ package object ascii {
     def println(confidenceInterval: (Double, Double, Double) => Double, width: Int = 80) {
       System.out.println(ascii(confidenceInterval, width))
     }
+
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def ascii: String = ascii({(n: Double, d: Double, z: Double) => n/d}, 80)
+
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def ascii(width: Int): String = ascii({(n: Double, d: Double, z: Double) => n/d}, width)
 
     /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns.
       * 

@@ -120,6 +120,97 @@ package object ascii {
     }
   }
 
+  //////////////////////////////////////////////////////////////// methods for HistogramAverage and SparselyHistogramAverage
+
+  implicit def binnedToHistogramAverageMethodsAscii(hist: Binned[Averaged, Counted, Counted, Counted]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(binnedToHistogramAverageMethods(hist).selected)
+  implicit def binningToHistogramAverageMethodsAscii[DATUM](hist: Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(binningToHistogramAverageMethods(hist).selected)
+  implicit def selectedBinnedToHistogramAverageMethodsAscii(hist: Selected[Binned[Averaged, Counted, Counted, Counted]]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(selectedBinnedToHistogramAverageMethods(hist).selected)
+  implicit def selectingBinningToHistogramAverageMethodsAscii[DATUM](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(selectingBinningToHistogramAverageMethods(hist).selected)
+  implicit def sparselyBinnedToHistogramAverageMethodsAscii(hist: SparselyBinned[Averaged, Counted]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(sparselyBinnedToHistogramAverageMethods(hist).selected)
+  implicit def sparselyBinningToHistogramAverageMethodsAscii[DATUM](hist: SparselyBinning[DATUM, Averaging[DATUM], Counting]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(sparselyBinningToHistogramAverageMethods(hist).selected)
+  implicit def selectedSparselyBinnedToHistogramAverageMethodsAscii(hist: Selected[SparselyBinned[Averaged, Counted]]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(selectedSparselyBinnedToHistogramAverageMethods(hist).selected)
+  implicit def selectingSparselyBinningToHistogramAverageMethodsAscii[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]): HistogramAverageMethodsAscii =
+    new HistogramAverageMethodsAscii(selectingSparselyBinningToHistogramAverageMethods(hist).selected)
+
+  class HistogramAverageMethodsAscii(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]]) {
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def println {
+      System.out.println(ascii(80))
+    }
+    /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def println(width: Int = 80) {
+      System.out.println(ascii(width))
+    }
+
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
+    def ascii: String = ascii(80)
+    /** ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
+    def ascii(width: Int): String = {
+      val binned = selected.binned
+
+      val minValue = binned.values.map(dev => dev.mean).min
+      val maxValue = binned.values.map(dev => dev.mean).max
+      val range = maxValue - minValue
+      val minEdge = minValue - 0.1*range
+      val maxEdge = maxValue + 0.1*range
+
+      val binWidth = (binned.high - binned.low) / binned.values.size
+      def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
+
+      val prefixValues = binned.values.zipWithIndex map {case (v, i) =>
+        (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.mean)
+      }
+      val prefixValuesStr = prefixValues map {case (binlow, binhigh, mean) => (sigfigs(Math.abs(binlow), 3), sigfigs(Math.abs(binhigh), 3), sigfigs(Math.abs(mean), 4))}
+
+      val widestBinlow = Math.max(prefixValuesStr.map(_._1.size).max, 2)
+      val widestBinhigh = Math.max(prefixValuesStr.map(_._2.size).max, 2)
+      val widestMean = Math.max(prefixValuesStr.map(_._3.size).max, 2)
+      val formatter = s"[ %s%-${widestBinlow}s, %s%-${widestBinhigh}s) %s%-${widestMean}s "
+      val prefixWidth = widestBinlow + widestBinhigh + widestMean + 9
+
+      val reducedWidth = width - prefixWidth
+      val zeroIndex = Math.round(reducedWidth * (0.0 - minEdge) / (maxEdge - minEdge)).toInt
+      val zeroLine1 = " " * prefixWidth + " " + f"$minEdge%-10g" + " " + (0 until (reducedWidth - 20)).map({i =>
+        if (i + 10 == zeroIndex)
+          "0"
+        else
+          " "
+      }).mkString + " " + f"$maxEdge%10g"
+      val zeroLine2 = " " * prefixWidth + " " + "+" + (0 until (reducedWidth - 1)).map({i =>
+        if (i == zeroIndex)
+          "+"
+        else
+          "-"
+      }).mkString + "-" + "+"
+
+      val lines = binned.values zip prefixValues zip prefixValuesStr map {case ((v, (binlow, binhigh, mean)), (binlowAbs, binhighAbs, meanAbs)) =>
+        val binlowSign = if (binlow < 0) "-" else " "
+        val binhighSign = if (binhigh < 0) "-" else " "
+        val meanSign = if (mean < 0) "-" else " "
+
+        val midIndex = Math.round(reducedWidth * (v.mean                         - minEdge) / (maxEdge - minEdge)).toInt
+
+        formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs) + "|" + (0 until reducedWidth).map({i =>
+          if (i == zeroIndex)
+            "|"
+          else if (i == midIndex)
+            "+"
+          else
+            " "
+        }).mkString + "|"
+      }
+
+      (List(zeroLine1, zeroLine2) ++ lines ++ List(zeroLine2)).mkString("\n")      
+    }
+  }
+
   //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
   implicit def binnedToProfileMethodsAscii(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileMethodsAscii =
@@ -155,18 +246,18 @@ package object ascii {
     def ascii(width: Int): String = {
       val binned = selected.binned
 
-      val minValue = binned.values.map(dev => dev.mean - Math.sqrt(dev.variance)).min
-      val maxValue = binned.values.map(dev => dev.mean + Math.sqrt(dev.variance)).max
+      val binWidth = (binned.high - binned.low) / binned.values.size
+      def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
+      val prefixValues = binned.values.zipWithIndex map {case (v, i) =>
+        (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.mean, if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0)
+      }
+
+      val minValue = prefixValues.map({case (binlow, binhigh, mean, stdev) => mean - 3.0*stdev}).min
+      val maxValue = prefixValues.map({case (binlow, binhigh, mean, stdev) => mean + 3.0*stdev}).max
       val range = maxValue - minValue
       val minEdge = minValue - 0.1*range
       val maxEdge = maxValue + 0.1*range
 
-      val binWidth = (binned.high - binned.low) / binned.values.size
-      def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
-
-      val prefixValues = binned.values.zipWithIndex map {case (v, i) =>
-        (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.mean, Math.sqrt(v.variance))
-      }
       val prefixValuesStr = prefixValues map {case (binlow, binhigh, mean, stdev) => (sigfigs(Math.abs(binlow), 3), sigfigs(Math.abs(binhigh), 3), sigfigs(Math.abs(mean), 4), sigfigs(Math.abs(stdev), 4))}
 
       val widestBinlow = Math.max(prefixValuesStr.map(_._1.size).max, 2)
@@ -197,9 +288,9 @@ package object ascii {
         val meanSign = if (mean < 0) "-" else " "
         val stdevSign = if (stdev < 0) "-" else " "
 
-        val botIndex = Math.round(reducedWidth * (v.mean - Math.sqrt(v.variance) - minEdge) / (maxEdge - minEdge)).toInt
-        val midIndex = Math.round(reducedWidth * (v.mean                         - minEdge) / (maxEdge - minEdge)).toInt
-        val topIndex = Math.round(reducedWidth * (v.mean + Math.sqrt(v.variance) - minEdge) / (maxEdge - minEdge)).toInt
+        val botIndex = Math.round(reducedWidth * (mean - stdev - minEdge) / (maxEdge - minEdge)).toInt
+        val midIndex = Math.round(reducedWidth * (mean         - minEdge) / (maxEdge - minEdge)).toInt
+        val topIndex = Math.round(reducedWidth * (mean + stdev - minEdge) / (maxEdge - minEdge)).toInt
 
         formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs, stdevSign, stdevAbs) + "|" + (0 until reducedWidth).map({i =>
           if (i == zeroIndex)

@@ -760,6 +760,54 @@ package object histogrammar {
     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
     Select(selection, SparselyBin(binWidth, binnedQuantity, Deviate(averagedQuantity)))
 
+  //////////////////////////////////////////////////////////////// methods for HistogramAverage and SparselyHistogramAverage
+
+  implicit def binnedToHistogramAverageMethods(hist: Binned[Averaged, Counted, Counted, Counted]): HistogramAverageMethods =
+    new HistogramAverageMethods(new Selected(hist.entries, unweighted.name, hist))
+
+  implicit def binningToHistogramAverageMethods[DATUM](hist: Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]): HistogramAverageMethods =
+    binnedToHistogramAverageMethods(hist.ed)
+
+  implicit def selectedBinnedToHistogramAverageMethods(hist: Selected[Binned[Averaged, Counted, Counted, Counted]]): HistogramAverageMethods =
+    new HistogramAverageMethods(hist)
+
+  implicit def selectingBinningToHistogramAverageMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]]): HistogramAverageMethods =
+    selectedBinnedToHistogramAverageMethods(hist.ed)
+
+  implicit def sparselyBinnedToHistogramAverageMethods(hist: SparselyBinned[Averaged, Counted]): HistogramAverageMethods =
+    selectedSparselyBinnedToHistogramAverageMethods(new Selected(hist.entries, unweighted.name, hist))
+
+  implicit def sparselyBinningToHistogramAverageMethods[DATUM](hist: SparselyBinning[DATUM, Averaging[DATUM], Counting]): HistogramAverageMethods =
+    sparselyBinnedToHistogramAverageMethods(hist.ed)
+
+  implicit def selectedSparselyBinnedToHistogramAverageMethods(hist: Selected[SparselyBinned[Averaged, Counted]]): HistogramAverageMethods =
+    if (hist.cut.numFilled > 0)
+      new HistogramAverageMethods(
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low.get, hist.cut.high.get, hist.cut.entries, hist.cut.quantityName, hist.cut.minBin.get to hist.cut.maxBin.get map {i => hist.cut.at(i).getOrElse(new Averaged(0.0, None, 0.0))}, new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
+      )
+    else
+      new HistogramAverageMethods(
+        new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.origin, hist.cut.origin + 1.0, hist.cut.entries, hist.cut.quantityName, Seq(new Averaged(0.0, None, 0.0)), new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
+      )
+
+  implicit def selectingSparselyBinningToHistogramAverageMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]): HistogramAverageMethods =
+    selectedSparselyBinnedToHistogramAverageMethods(hist.ed)
+
+  /** Methods that are implicitly added to container combinations that look like a physicist's "profile plot." */
+  class HistogramAverageMethods(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]]) {
+    def binned = selected.cut
+
+    /** Bin means as numbers, rather than [[org.dianahep.histogrammar.Averaged]]/[[org.dianahep.histogrammar.Averaging]]. */
+    def meanValues: Seq[Double] = binned.values.map(_.mean)
+
+    /** Overflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalOverflow: Double = binned.overflow.entries
+    /** Underflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalUnderflow: Double = binned.underflow.entries
+    /** Nanflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalNanflow: Double = binned.nanflow.entries
+  }
+
   //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
   implicit def binnedToProfileMethods(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileMethods =

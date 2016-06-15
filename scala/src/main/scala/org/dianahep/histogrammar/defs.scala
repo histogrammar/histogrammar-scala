@@ -762,6 +762,30 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// methods for HistogramAverage and SparselyHistogramAverage
 
+  implicit def anyBinnedToHistogramAverageMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Averaged, U, O, N]): HistogramAverageMethods =
+    binnedToHistogramAverageMethods(new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values, new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries)))
+
+  implicit def anyBinningToHistogramAverageMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Averaging[DATUM], U, O, N]): HistogramAverageMethods =
+    binningToHistogramAverageMethods(new Binning(hist.low, hist.high, hist.quantity, hist.entries, hist.values, new Counting(hist.underflow.entries), new Counting(hist.overflow.entries), new Counting(hist.nanflow.entries)))
+
+  implicit def anySelectedBinnedToHistogramAverageMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Averaged, U, O, N]]): HistogramAverageMethods =
+    selectedBinnedToHistogramAverageMethods(new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values, new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
+
+  implicit def anySelectingBinningToHistogramAverageMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], U, O, N]]): HistogramAverageMethods =
+    selectingBinningToHistogramAverageMethods(new Selecting(hist.entries, hist.quantity, new Binning(hist.cut.low, hist.cut.high, hist.cut.quantity, hist.cut.entries, hist.cut.values, new Counting(hist.cut.underflow.entries), new Counting(hist.cut.overflow.entries), new Counting(hist.cut.nanflow.entries))))
+
+  implicit def anySparselyBinnedToHistogramAverageMethods[N <: Container[N] with NoAggregation](hist: SparselyBinned[Averaged, N]): HistogramAverageMethods =
+    sparselyBinnedToHistogramAverageMethods(new SparselyBinned(hist.binWidth, hist.entries, hist.quantityName, hist.contentType, hist.bins, new Counted(hist.nanflow.entries), hist.origin))
+
+  implicit def anySparselyBinningToHistogramAverageMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Averaging[DATUM], N]): HistogramAverageMethods =
+    sparselyBinningToHistogramAverageMethods(new SparselyBinning(hist.binWidth, hist.quantity, hist.entries, null, hist.bins, new Counting(hist.nanflow.entries), hist.origin))
+
+  implicit def anySelectedSparselyBinnedToHistogramAverageMethods[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Averaged, N]]): HistogramAverageMethods =
+    selectedSparselyBinnedToHistogramAverageMethods(new Selected(hist.entries, hist.quantityName, new SparselyBinned(hist.cut.binWidth, hist.cut.entries, hist.cut.quantityName, hist.cut.contentType, hist.cut.bins, new Counted(hist.cut.nanflow.entries), hist.cut.origin)))
+
+  implicit def anySelectingSparselyBinningToHistogramAverageMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], N]]): HistogramAverageMethods =
+    selectingSparselyBinningToHistogramAverageMethods(new Selecting(hist.entries, hist.quantity, new SparselyBinning(hist.cut.binWidth, hist.cut.quantity, hist.cut.entries, null, hist.cut.bins, new Counting(hist.cut.nanflow.entries), hist.cut.origin)))
+
   implicit def binnedToHistogramAverageMethods(hist: Binned[Averaged, Counted, Counted, Counted]): HistogramAverageMethods =
     new HistogramAverageMethods(new Selected(hist.entries, unweighted.name, hist))
 

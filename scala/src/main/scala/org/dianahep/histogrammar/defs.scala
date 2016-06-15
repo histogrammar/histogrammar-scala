@@ -758,11 +758,11 @@ package object histogrammar {
   //////////////////////////////////////////////////////////////// type alias for Profile
 
   /** Type alias for binwise averages (filled). */
-  type HistogramAveraged = Selected[Binned[Averaged, Counted, Counted, Counted]]
+  type Profiled = Selected[Binned[Averaged, Counted, Counted, Counted]]
   /** Type alias for binwise averages (filling). */
-  type HistogramAveraging[DATUM] = Selecting[DATUM, Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]]
+  type Profiling[DATUM] = Selecting[DATUM, Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]]
   /** Convenience function for creating binwise averages. */
-  def HistogramAverage[DATUM]
+  def Profile[DATUM]
     (num: Int,
     low: Double,
     high: Double,
@@ -771,12 +771,12 @@ package object histogrammar {
     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
     Select(selection, Bin(num, low, high, binnedQuantity, Average(averagedQuantity)))
 
-  //////////////////////////////////////////////////////////////// type alias for SparselyProfile
+  //////////////////////////////////////////////////////////////// type alias for Profile
 
   /** Type alias for sparsely binned binwise averages. (filled). */
-  type SparselyHistogramAveraged = Selected[SparselyBinned[Averaged, Counted]]
+  type SparselyProfiled = Selected[SparselyBinned[Averaged, Counted]]
   /** Type alias for sparsely binned binwise averages (filling). */
-  type SparselyHistogramAveraging[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]
+  type SparselyProfiling[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]
   /** Convenience function for creating sparsely binned binwise averages. */
   def SparselyHistogram[DATUM]
     (binWidth: Double,
@@ -785,65 +785,65 @@ package object histogrammar {
     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
     Select(selection, SparselyBin(binWidth, binnedQuantity, Average(averagedQuantity)))
 
-  //////////////////////////////////////////////////////////////// methods for HistogramAverage and SparselyHistogramAverage
+  //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
-  implicit def anyBinnedToHistogramAverageMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Averaged, U, O, N]): HistogramAverageMethods =
-    binnedToHistogramAverageMethods(new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values, new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries)))
+  implicit def anyBinnedToProfileMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Averaged, U, O, N]): ProfileMethods =
+    binnedToProfileMethods(new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values, new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries)))
 
-  implicit def anyBinningToHistogramAverageMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Averaging[DATUM], U, O, N]): HistogramAverageMethods =
-    binningToHistogramAverageMethods(new Binning(hist.low, hist.high, hist.quantity, hist.entries, hist.values, new Counting(hist.underflow.entries), new Counting(hist.overflow.entries), new Counting(hist.nanflow.entries)))
+  implicit def anyBinningToProfileMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Averaging[DATUM], U, O, N]): ProfileMethods =
+    binningToProfileMethods(new Binning(hist.low, hist.high, hist.quantity, hist.entries, hist.values, new Counting(hist.underflow.entries), new Counting(hist.overflow.entries), new Counting(hist.nanflow.entries)))
 
-  implicit def anySelectedBinnedToHistogramAverageMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Averaged, U, O, N]]): HistogramAverageMethods =
-    selectedBinnedToHistogramAverageMethods(new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values, new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
+  implicit def anySelectedBinnedToProfileMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Averaged, U, O, N]]): ProfileMethods =
+    selectedBinnedToProfileMethods(new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values, new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
 
-  implicit def anySelectingBinningToHistogramAverageMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], U, O, N]]): HistogramAverageMethods =
-    selectingBinningToHistogramAverageMethods(new Selecting(hist.entries, hist.quantity, new Binning(hist.cut.low, hist.cut.high, hist.cut.quantity, hist.cut.entries, hist.cut.values, new Counting(hist.cut.underflow.entries), new Counting(hist.cut.overflow.entries), new Counting(hist.cut.nanflow.entries))))
+  implicit def anySelectingBinningToProfileMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], U, O, N]]): ProfileMethods =
+    selectingBinningToProfileMethods(new Selecting(hist.entries, hist.quantity, new Binning(hist.cut.low, hist.cut.high, hist.cut.quantity, hist.cut.entries, hist.cut.values, new Counting(hist.cut.underflow.entries), new Counting(hist.cut.overflow.entries), new Counting(hist.cut.nanflow.entries))))
 
-  implicit def anySparselyBinnedToHistogramAverageMethods[N <: Container[N] with NoAggregation](hist: SparselyBinned[Averaged, N]): HistogramAverageMethods =
-    sparselyBinnedToHistogramAverageMethods(new SparselyBinned(hist.binWidth, hist.entries, hist.quantityName, hist.contentType, hist.bins, new Counted(hist.nanflow.entries), hist.origin))
+  implicit def anySparselyBinnedToProfileMethods[N <: Container[N] with NoAggregation](hist: SparselyBinned[Averaged, N]): ProfileMethods =
+    sparselyBinnedToProfileMethods(new SparselyBinned(hist.binWidth, hist.entries, hist.quantityName, hist.contentType, hist.bins, new Counted(hist.nanflow.entries), hist.origin))
 
-  implicit def anySparselyBinningToHistogramAverageMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Averaging[DATUM], N]): HistogramAverageMethods =
-    sparselyBinningToHistogramAverageMethods(new SparselyBinning(hist.binWidth, hist.quantity, hist.entries, null, hist.bins, new Counting(hist.nanflow.entries), hist.origin))
+  implicit def anySparselyBinningToProfileMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Averaging[DATUM], N]): ProfileMethods =
+    sparselyBinningToProfileMethods(new SparselyBinning(hist.binWidth, hist.quantity, hist.entries, null, hist.bins, new Counting(hist.nanflow.entries), hist.origin))
 
-  implicit def anySelectedSparselyBinnedToHistogramAverageMethods[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Averaged, N]]): HistogramAverageMethods =
-    selectedSparselyBinnedToHistogramAverageMethods(new Selected(hist.entries, hist.quantityName, new SparselyBinned(hist.cut.binWidth, hist.cut.entries, hist.cut.quantityName, hist.cut.contentType, hist.cut.bins, new Counted(hist.cut.nanflow.entries), hist.cut.origin)))
+  implicit def anySelectedSparselyBinnedToProfileMethods[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Averaged, N]]): ProfileMethods =
+    selectedSparselyBinnedToProfileMethods(new Selected(hist.entries, hist.quantityName, new SparselyBinned(hist.cut.binWidth, hist.cut.entries, hist.cut.quantityName, hist.cut.contentType, hist.cut.bins, new Counted(hist.cut.nanflow.entries), hist.cut.origin)))
 
-  implicit def anySelectingSparselyBinningToHistogramAverageMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], N]]): HistogramAverageMethods =
-    selectingSparselyBinningToHistogramAverageMethods(new Selecting(hist.entries, hist.quantity, new SparselyBinning(hist.cut.binWidth, hist.cut.quantity, hist.cut.entries, null, hist.cut.bins, new Counting(hist.cut.nanflow.entries), hist.cut.origin)))
+  implicit def anySelectingSparselyBinningToProfileMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], N]]): ProfileMethods =
+    selectingSparselyBinningToProfileMethods(new Selecting(hist.entries, hist.quantity, new SparselyBinning(hist.cut.binWidth, hist.cut.quantity, hist.cut.entries, null, hist.cut.bins, new Counting(hist.cut.nanflow.entries), hist.cut.origin)))
 
-  implicit def binnedToHistogramAverageMethods(hist: Binned[Averaged, Counted, Counted, Counted]): HistogramAverageMethods =
-    new HistogramAverageMethods(new Selected(hist.entries, unweighted.name, hist))
+  implicit def binnedToProfileMethods(hist: Binned[Averaged, Counted, Counted, Counted]): ProfileMethods =
+    new ProfileMethods(new Selected(hist.entries, unweighted.name, hist))
 
-  implicit def binningToHistogramAverageMethods[DATUM](hist: Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]): HistogramAverageMethods =
-    binnedToHistogramAverageMethods(hist.ed)
+  implicit def binningToProfileMethods[DATUM](hist: Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]): ProfileMethods =
+    binnedToProfileMethods(hist.ed)
 
-  implicit def selectedBinnedToHistogramAverageMethods(hist: Selected[Binned[Averaged, Counted, Counted, Counted]]): HistogramAverageMethods =
-    new HistogramAverageMethods(hist)
+  implicit def selectedBinnedToProfileMethods(hist: Selected[Binned[Averaged, Counted, Counted, Counted]]): ProfileMethods =
+    new ProfileMethods(hist)
 
-  implicit def selectingBinningToHistogramAverageMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]]): HistogramAverageMethods =
-    selectedBinnedToHistogramAverageMethods(hist.ed)
+  implicit def selectingBinningToProfileMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]]): ProfileMethods =
+    selectedBinnedToProfileMethods(hist.ed)
 
-  implicit def sparselyBinnedToHistogramAverageMethods(hist: SparselyBinned[Averaged, Counted]): HistogramAverageMethods =
-    selectedSparselyBinnedToHistogramAverageMethods(new Selected(hist.entries, unweighted.name, hist))
+  implicit def sparselyBinnedToProfileMethods(hist: SparselyBinned[Averaged, Counted]): ProfileMethods =
+    selectedSparselyBinnedToProfileMethods(new Selected(hist.entries, unweighted.name, hist))
 
-  implicit def sparselyBinningToHistogramAverageMethods[DATUM](hist: SparselyBinning[DATUM, Averaging[DATUM], Counting]): HistogramAverageMethods =
-    sparselyBinnedToHistogramAverageMethods(hist.ed)
+  implicit def sparselyBinningToProfileMethods[DATUM](hist: SparselyBinning[DATUM, Averaging[DATUM], Counting]): ProfileMethods =
+    sparselyBinnedToProfileMethods(hist.ed)
 
-  implicit def selectedSparselyBinnedToHistogramAverageMethods(hist: Selected[SparselyBinned[Averaged, Counted]]): HistogramAverageMethods =
+  implicit def selectedSparselyBinnedToProfileMethods(hist: Selected[SparselyBinned[Averaged, Counted]]): ProfileMethods =
     if (hist.cut.numFilled > 0)
-      new HistogramAverageMethods(
+      new ProfileMethods(
         new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low.get, hist.cut.high.get, hist.cut.entries, hist.cut.quantityName, hist.cut.minBin.get to hist.cut.maxBin.get map {i => hist.cut.at(i).getOrElse(new Averaged(0.0, None, 0.0))}, new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
     else
-      new HistogramAverageMethods(
+      new ProfileMethods(
         new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.origin, hist.cut.origin + 1.0, hist.cut.entries, hist.cut.quantityName, Seq(new Averaged(0.0, None, 0.0)), new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
 
-  implicit def selectingSparselyBinningToHistogramAverageMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]): HistogramAverageMethods =
-    selectedSparselyBinnedToHistogramAverageMethods(hist.ed)
+  implicit def selectingSparselyBinningToProfileMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]): ProfileMethods =
+    selectedSparselyBinnedToProfileMethods(hist.ed)
 
   /** Methods that are implicitly added to container combinations that look like a physicist's "profile plot." */
-  class HistogramAverageMethods(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]]) {
+  class ProfileMethods(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]]) {
     def binned = selected.cut
 
     /** Bin means as numbers, rather than [[org.dianahep.histogrammar.Averaged]]/[[org.dianahep.histogrammar.Averaging]]. */
@@ -857,14 +857,14 @@ package object histogrammar {
     def numericalNanflow: Double = binned.nanflow.entries
   }
 
-  //////////////////////////////////////////////////////////////// type alias for Profile
+  //////////////////////////////////////////////////////////////// type alias for ProfileErr
 
-  /** Type alias for a physicist's "profile plot," which is a HistogramAverage with variances (filled). */
-  type Profiled = Selected[Binned[Deviated, Counted, Counted, Counted]]
-  /** Type alias for a physicist's "profile plot," which is a HistogramAverage with variances (filling). */
-  type Profiling[DATUM] = Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]
-  /** Convenience function for creating a physicist's "profile plot," which is a HistogramAverage with variances */
-  def Profile[DATUM]
+  /** Type alias for a physicist's "profile plot," which is a Profile with variances (filled). */
+  type ProfileErred = Selected[Binned[Deviated, Counted, Counted, Counted]]
+  /** Type alias for a physicist's "profile plot," which is a Profile with variances (filling). */
+  type ProfileErring[DATUM] = Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]
+  /** Convenience function for creating a physicist's "profile plot," which is a Profile with variances */
+  def ProfileErr[DATUM]
     (num: Int,
     low: Double,
     high: Double,
@@ -873,79 +873,79 @@ package object histogrammar {
     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
     Select(selection, Bin(num, low, high, binnedQuantity, Deviate(averagedQuantity)))
 
-  //////////////////////////////////////////////////////////////// type alias for SparselyProfile
+  //////////////////////////////////////////////////////////////// type alias for SparselyProfileErr
 
-  /** Type alias for a physicist's sparsely binned "profile plot," which is a HistogramAverage with variances (filled). */
-  type SparselyProfiled = Selected[SparselyBinned[Deviated, Counted]]
-  /** Type alias for a physicist's sparsely binned "profile plot," which is a HistogramAverage with variances (filling). */
-  type SparselyProfiling[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]
-  /** Convenience function for creating a physicist's sparsely binned "profile plot," which is a HistogramAverage with variances. */
-  def SparselyProfile[DATUM]
+  /** Type alias for a physicist's sparsely binned "profile plot," which is a Profile with variances (filled). */
+  type SparselyProfileErred = Selected[SparselyBinned[Deviated, Counted]]
+  /** Type alias for a physicist's sparsely binned "profile plot," which is a Profile with variances (filling). */
+  type SparselyProfileErring[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]
+  /** Convenience function for creating a physicist's sparsely binned "profile plot," which is a Profile with variances. */
+  def SparselyProfileErr[DATUM]
     (binWidth: Double,
     binnedQuantity: UserFcn[DATUM, Double],
     averagedQuantity: UserFcn[DATUM, Double],
     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
     Select(selection, SparselyBin(binWidth, binnedQuantity, Deviate(averagedQuantity)))
 
-  //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
+  //////////////////////////////////////////////////////////////// methods for ProfileErr and SparselyProfileErr
 
-  implicit def anyBinnedToProfileMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Deviated, U, O, N]): ProfileMethods =
-    binnedToProfileMethods(new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values, new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries)))
+  implicit def anyBinnedToProfileErrMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Deviated, U, O, N]): ProfileErrMethods =
+    binnedToProfileErrMethods(new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values, new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries)))
 
-  implicit def anyBinningToProfileMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Deviating[DATUM], U, O, N]): ProfileMethods =
-    binningToProfileMethods(new Binning(hist.low, hist.high, hist.quantity, hist.entries, hist.values, new Counting(hist.underflow.entries), new Counting(hist.overflow.entries), new Counting(hist.nanflow.entries)))
+  implicit def anyBinningToProfileErrMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Deviating[DATUM], U, O, N]): ProfileErrMethods =
+    binningToProfileErrMethods(new Binning(hist.low, hist.high, hist.quantity, hist.entries, hist.values, new Counting(hist.underflow.entries), new Counting(hist.overflow.entries), new Counting(hist.nanflow.entries)))
 
-  implicit def anySelectedBinnedToProfileMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Deviated, U, O, N]]): ProfileMethods =
-    selectedBinnedToProfileMethods(new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values, new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
+  implicit def anySelectedBinnedToProfileErrMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Deviated, U, O, N]]): ProfileErrMethods =
+    selectedBinnedToProfileErrMethods(new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values, new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
 
-  implicit def anySelectingBinningToProfileMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], U, O, N]]): ProfileMethods =
-    selectingBinningToProfileMethods(new Selecting(hist.entries, hist.quantity, new Binning(hist.cut.low, hist.cut.high, hist.cut.quantity, hist.cut.entries, hist.cut.values, new Counting(hist.cut.underflow.entries), new Counting(hist.cut.overflow.entries), new Counting(hist.cut.nanflow.entries))))
+  implicit def anySelectingBinningToProfileErrMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], U, O, N]]): ProfileErrMethods =
+    selectingBinningToProfileErrMethods(new Selecting(hist.entries, hist.quantity, new Binning(hist.cut.low, hist.cut.high, hist.cut.quantity, hist.cut.entries, hist.cut.values, new Counting(hist.cut.underflow.entries), new Counting(hist.cut.overflow.entries), new Counting(hist.cut.nanflow.entries))))
 
-  implicit def anySparselyBinnedToProfileMethods[N <: Container[N] with NoAggregation](hist: SparselyBinned[Deviated, N]): ProfileMethods =
-    sparselyBinnedToProfileMethods(new SparselyBinned(hist.binWidth, hist.entries, hist.quantityName, hist.contentType, hist.bins, new Counted(hist.nanflow.entries), hist.origin))
+  implicit def anySparselyBinnedToProfileErrMethods[N <: Container[N] with NoAggregation](hist: SparselyBinned[Deviated, N]): ProfileErrMethods =
+    sparselyBinnedToProfileErrMethods(new SparselyBinned(hist.binWidth, hist.entries, hist.quantityName, hist.contentType, hist.bins, new Counted(hist.nanflow.entries), hist.origin))
 
-  implicit def anySparselyBinningToProfileMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Deviating[DATUM], N]): ProfileMethods =
-    sparselyBinningToProfileMethods(new SparselyBinning(hist.binWidth, hist.quantity, hist.entries, null, hist.bins, new Counting(hist.nanflow.entries), hist.origin))
+  implicit def anySparselyBinningToProfileErrMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Deviating[DATUM], N]): ProfileErrMethods =
+    sparselyBinningToProfileErrMethods(new SparselyBinning(hist.binWidth, hist.quantity, hist.entries, null, hist.bins, new Counting(hist.nanflow.entries), hist.origin))
 
-  implicit def anySelectedSparselyBinnedToProfileMethods[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Deviated, N]]): ProfileMethods =
-    selectedSparselyBinnedToProfileMethods(new Selected(hist.entries, hist.quantityName, new SparselyBinned(hist.cut.binWidth, hist.cut.entries, hist.cut.quantityName, hist.cut.contentType, hist.cut.bins, new Counted(hist.cut.nanflow.entries), hist.cut.origin)))
+  implicit def anySelectedSparselyBinnedToProfileErrMethods[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Deviated, N]]): ProfileErrMethods =
+    selectedSparselyBinnedToProfileErrMethods(new Selected(hist.entries, hist.quantityName, new SparselyBinned(hist.cut.binWidth, hist.cut.entries, hist.cut.quantityName, hist.cut.contentType, hist.cut.bins, new Counted(hist.cut.nanflow.entries), hist.cut.origin)))
 
-  implicit def anySelectingSparselyBinningToProfileMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], N]]): ProfileMethods =
-    selectingSparselyBinningToProfileMethods(new Selecting(hist.entries, hist.quantity, new SparselyBinning(hist.cut.binWidth, hist.cut.quantity, hist.cut.entries, null, hist.cut.bins, new Counting(hist.cut.nanflow.entries), hist.cut.origin)))
+  implicit def anySelectingSparselyBinningToProfileErrMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], N]]): ProfileErrMethods =
+    selectingSparselyBinningToProfileErrMethods(new Selecting(hist.entries, hist.quantity, new SparselyBinning(hist.cut.binWidth, hist.cut.quantity, hist.cut.entries, null, hist.cut.bins, new Counting(hist.cut.nanflow.entries), hist.cut.origin)))
 
-  implicit def binnedToProfileMethods(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileMethods =
-    new ProfileMethods(new Selected(hist.entries, unweighted.name, hist))
+  implicit def binnedToProfileErrMethods(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileErrMethods =
+    new ProfileErrMethods(new Selected(hist.entries, unweighted.name, hist))
 
-  implicit def binningToProfileMethods[DATUM](hist: Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]): ProfileMethods =
-    binnedToProfileMethods(hist.ed)
+  implicit def binningToProfileErrMethods[DATUM](hist: Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]): ProfileErrMethods =
+    binnedToProfileErrMethods(hist.ed)
 
-  implicit def selectedBinnedToProfileMethods(hist: Selected[Binned[Deviated, Counted, Counted, Counted]]): ProfileMethods =
-    new ProfileMethods(hist)
+  implicit def selectedBinnedToProfileErrMethods(hist: Selected[Binned[Deviated, Counted, Counted, Counted]]): ProfileErrMethods =
+    new ProfileErrMethods(hist)
 
-  implicit def selectingBinningToProfileMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]): ProfileMethods =
-    selectedBinnedToProfileMethods(hist.ed)
+  implicit def selectingBinningToProfileErrMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]): ProfileErrMethods =
+    selectedBinnedToProfileErrMethods(hist.ed)
 
-  implicit def sparselyBinnedToProfileMethods(hist: SparselyBinned[Deviated, Counted]): ProfileMethods =
-    selectedSparselyBinnedToProfileMethods(new Selected(hist.entries, unweighted.name, hist))
+  implicit def sparselyBinnedToProfileErrMethods(hist: SparselyBinned[Deviated, Counted]): ProfileErrMethods =
+    selectedSparselyBinnedToProfileErrMethods(new Selected(hist.entries, unweighted.name, hist))
 
-  implicit def sparselyBinningToProfileMethods[DATUM](hist: SparselyBinning[DATUM, Deviating[DATUM], Counting]): ProfileMethods =
-    sparselyBinnedToProfileMethods(hist.ed)
+  implicit def sparselyBinningToProfileErrMethods[DATUM](hist: SparselyBinning[DATUM, Deviating[DATUM], Counting]): ProfileErrMethods =
+    sparselyBinnedToProfileErrMethods(hist.ed)
 
-  implicit def selectedSparselyBinnedToProfileMethods(hist: Selected[SparselyBinned[Deviated, Counted]]): ProfileMethods =
+  implicit def selectedSparselyBinnedToProfileErrMethods(hist: Selected[SparselyBinned[Deviated, Counted]]): ProfileErrMethods =
     if (hist.cut.numFilled > 0)
-      new ProfileMethods(
+      new ProfileErrMethods(
         new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low.get, hist.cut.high.get, hist.cut.entries, hist.cut.quantityName, hist.cut.minBin.get to hist.cut.maxBin.get map {i => hist.cut.at(i).getOrElse(new Deviated(0.0, None, 0.0, 0.0))}, new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
     else
-      new ProfileMethods(
+      new ProfileErrMethods(
         new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.origin, hist.cut.origin + 1.0, hist.cut.entries, hist.cut.quantityName, Seq(new Deviated(0.0, None, 0.0, 0.0)), new Counted(0.0), new Counted(0.0), hist.cut.nanflow))
       )
 
-  implicit def selectingSparselyBinningToProfileMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethods =
-    selectedSparselyBinnedToProfileMethods(hist.ed)
+  implicit def selectingSparselyBinningToProfileErrMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileErrMethods =
+    selectedSparselyBinnedToProfileErrMethods(hist.ed)
 
   /** Methods that are implicitly added to container combinations that look like a physicist's "profile plot." */
-  class ProfileMethods(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
+  class ProfileErrMethods(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
     def binned = selected.cut
 
     /** Bin means as numbers, rather than [[org.dianahep.histogrammar.Deviated]]/[[org.dianahep.histogrammar.Deviating]]. */
@@ -1281,25 +1281,33 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// methods for TwoDimensionallyHistogram and TwoDimensionallySparselyHistogram
 
-  implicit def binnedToTwoDimensionallyHistogramMethods(hist: Binned[Binned[Counted, Counted, Counted, Counted], Counted, Counted, Counted]): TwoDimensionallyHistogramMethods =
-    new TwoDimensionallyHistogramMethods(new Selected(hist.entries, unweighted.name, hist))
+  implicit def binnedToTwoDimensionallyHistogramMethods[UX <: Container[UX] with NoAggregation, OX <: Container[OX] with NoAggregation, NX <: Container[NX] with NoAggregation, UY <: Container[UY] with NoAggregation, OY <: Container[OY] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: Binned[Binned[Counted, UY, OY, NY], UX, OX, NX]): TwoDimensionallyHistogramMethods =
+    new TwoDimensionallyHistogramMethods(
+      new Selected(hist.entries, unweighted.name,
+        new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values map {v =>
+          new Binned(v.low, v.high, v.entries, v.quantityName, v.values, new Counted(v.underflow.entries), new Counted(v.overflow.entries), new Counted(v.nanflow.entries))},
+          new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries))))
 
-  implicit def binningToTwoDimensionallyHistogramMethods[DATUM](hist: Binning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting], Counting, Counting, Counting]): TwoDimensionallyHistogramMethods =
+  implicit def binningToTwoDimensionallyHistogramMethods[DATUM, UX <: Container[UX] with Aggregation{type Datum >: DATUM}, OX <: Container[OX] with Aggregation{type Datum >: DATUM}, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, UY <: Container[UY] with Aggregation{type Datum >: DATUM}, OY <: Container[OY] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Binning[DATUM, Counting, UY, OY, NY], UX, OX, NX]): TwoDimensionallyHistogramMethods =
     binnedToTwoDimensionallyHistogramMethods(hist.ed)
 
-  implicit def selectedBinnedToTwoDimensionallyHistogramMethods(hist: Selected[Binned[Binned[Counted, Counted, Counted, Counted], Counted, Counted, Counted]]): TwoDimensionallyHistogramMethods =
-    new TwoDimensionallyHistogramMethods(hist)
+  implicit def selectedBinnedToTwoDimensionallyHistogramMethods[UX <: Container[UX] with NoAggregation, OX <: Container[OX] with NoAggregation, NX <: Container[NX] with NoAggregation, UY <: Container[UY] with NoAggregation, OY <: Container[OY] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: Selected[Binned[Binned[Counted, UY, OY, NY], UX, OX, NX]]): TwoDimensionallyHistogramMethods =
+    new TwoDimensionallyHistogramMethods(
+      new Selected(hist.entries, hist.quantityName,
+        new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values map {v =>
+          new Binned(v.low, v.high, v.entries, v.quantityName, v.values, new Counted(v.underflow.entries), new Counted(v.overflow.entries), new Counted(v.nanflow.entries))},
+          new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
 
-  implicit def selectingBinningToTwoDimensionallyHistogramMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting], Counting, Counting, Counting]]): TwoDimensionallyHistogramMethods =
+  implicit def selectingBinningToTwoDimensionallyHistogramMethods[DATUM, UX <: Container[UX] with Aggregation{type Datum >: DATUM}, OX <: Container[OX] with Aggregation{type Datum >: DATUM}, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, UY <: Container[UY] with Aggregation{type Datum >: DATUM}, OY <: Container[OY] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Binning[DATUM, Counting, UY, OY, NY], UX, OX, NX]]): TwoDimensionallyHistogramMethods =
     selectedBinnedToTwoDimensionallyHistogramMethods(hist.ed)
 
-  implicit def sparselyBinnedToTwoDimensionallyHistogramMethods(hist: SparselyBinned[SparselyBinned[Counted, Counted], Counted]): TwoDimensionallyHistogramMethods =
+  implicit def sparselyBinnedToTwoDimensionallyHistogramMethods[NX <: Container[NX] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: SparselyBinned[SparselyBinned[Counted, NY], NX]): TwoDimensionallyHistogramMethods =
     selectedSparselyBinnedToTwoDimensionallyHistogramMethods(new Selected(hist.entries, unweighted.name, hist))
 
-  implicit def sparselyBinningToTwoDimensionallyHistogramMethods[DATUM](hist: SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, Counting], Counting]): TwoDimensionallyHistogramMethods =
+  implicit def sparselyBinningToTwoDimensionallyHistogramMethods[DATUM, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, NY], NX]): TwoDimensionallyHistogramMethods =
     sparselyBinnedToTwoDimensionallyHistogramMethods(hist.ed)
 
-  implicit def selectedSparselyBinnedToTwoDimensionallyHistogramMethods(hist: Selected[SparselyBinned[SparselyBinned[Counted, Counted], Counted]]): TwoDimensionallyHistogramMethods = {
+  implicit def selectedSparselyBinnedToTwoDimensionallyHistogramMethods[NX <: Container[NX] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: Selected[SparselyBinned[SparselyBinned[Counted, NY], NX]]): TwoDimensionallyHistogramMethods = {
     val (xlow, xhigh, xminBin, xmaxBin) = (hist.cut.low, hist.cut.high, hist.cut.minBin, hist.cut.maxBin) match {
       case (Some(low), Some(high), Some(minBin), Some(maxBin)) =>
         (low, high, minBin, maxBin)
@@ -1323,12 +1331,12 @@ package object histogrammar {
     new TwoDimensionallyHistogramMethods(
       new Selected(hist.entries, hist.quantityName,
         new Binned(xlow, xhigh, hist.cut.entries, hist.cut.quantityName, xminBin to xmaxBin map {i => hist.cut.at(i) match {
-            case Some(sparse) => new Binned(ylow, yhigh, sparse.entries, sample.quantityName, yminBin to ymaxBin map {j => new Counted(sparse.at(j).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0.0), new Counted(0.0), sparse.nanflow)
+            case Some(sparse) => new Binned(ylow, yhigh, sparse.entries, sample.quantityName, yminBin to ymaxBin map {j => new Counted(sparse.at(j).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0.0), new Counted(0.0), new Counted(sparse.nanflow.entries))
             case None => new Binned(ylow, yhigh, 0.0, sample.quantityName, yminBin to ymaxBin map {j => new Counted(0.0)}, new Counted(0.0), new Counted(0.0), new Counted(0.0))
-          }}, new Counted(0.0), new Counted(0.0), hist.cut.nanflow)))
+          }}, new Counted(0.0), new Counted(0.0), new Counted(hist.cut.nanflow.entries))))
   }
 
-  implicit def selectingSparselyBinningToTwoDimensionallyHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, Counting], Counting]]): TwoDimensionallyHistogramMethods =
+  implicit def selectingSparselyBinningToTwoDimensionallyHistogramMethods[DATUM, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, NY], NX]]): TwoDimensionallyHistogramMethods =
     selectedSparselyBinnedToTwoDimensionallyHistogramMethods(hist.ed)
 
   /** Methods that are implicitly added to container combinations that look like two-dimensional histograms. */

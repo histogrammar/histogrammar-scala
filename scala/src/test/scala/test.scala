@@ -1045,7 +1045,7 @@ class DefaultSuite extends FlatSpec with Matchers {
     val sparselyBinnedDeviated = sparselyBinningDeviating.ed.as[SparselyBinned[Deviated, Counted]]
     val selectingSparselyBinningDeviating = Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Deviate({x: Double => x})))
     val selectedSparselyBinnedDeviated = selectingSparselyBinningDeviating.ed.as[Selected[SparselyBinned[Deviated, Counted]]]
-    def takesProfileMethods(x: ProfileMethods) { }
+    def takesProfileMethods(x: ProfileErrMethods) { }
     takesProfileMethods(binningDeviating)
     takesProfileMethods(binnedDeviated)
     takesProfileMethods(selectingBinningDeviating)

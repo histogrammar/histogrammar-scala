@@ -754,7 +754,7 @@ package object histogrammar {
   /** Type alias for sparsely binned binwise averages (filling). */
   type SparselyProfiling[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]
   /** Convenience function for creating sparsely binned binwise averages. */
-  def SparselyHistogram[DATUM]
+  def SparselyProfile[DATUM]
     (binWidth: Double,
     binnedQuantity: UserFcn[DATUM, Double],
     averagedQuantity: UserFcn[DATUM, Double],

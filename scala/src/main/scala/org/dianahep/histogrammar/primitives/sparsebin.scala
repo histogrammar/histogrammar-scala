@@ -172,7 +172,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     * @param origin Left edge of the bin whose index is zero.
     */
-  class SparselyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with NoAggregation with QuantityName with SparselyBin.Methods {
+  class SparselyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val binWidth: Double, val entries: Double, val quantityName: Option[String], val contentType: String, val bins: SortedMap[Long, V], val nanflow: N, val origin: Double) extends Container[SparselyBinned[V, N]] with NoAggregation with QuantityName with SparselyBin.Methods {
     type Type = SparselyBinned[V, N]
     type EdType = SparselyBinned[V, N]
     def factory = SparselyBin

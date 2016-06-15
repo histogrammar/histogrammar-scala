@@ -810,6 +810,30 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
+  implicit def anyBinnedToProfileMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Deviated, U, O, N]): ProfileMethods =
+    binnedToProfileMethods(new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values, new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries)))
+
+  implicit def anyBinningToProfileMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Deviating[DATUM], U, O, N]): ProfileMethods =
+    binningToProfileMethods(new Binning(hist.low, hist.high, hist.quantity, hist.entries, hist.values, new Counting(hist.underflow.entries), new Counting(hist.overflow.entries), new Counting(hist.nanflow.entries)))
+
+  implicit def anySelectedBinnedToProfileMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Deviated, U, O, N]]): ProfileMethods =
+    selectedBinnedToProfileMethods(new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values, new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
+
+  implicit def anySelectingBinningToProfileMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], U, O, N]]): ProfileMethods =
+    selectingBinningToProfileMethods(new Selecting(hist.entries, hist.quantity, new Binning(hist.cut.low, hist.cut.high, hist.cut.quantity, hist.cut.entries, hist.cut.values, new Counting(hist.cut.underflow.entries), new Counting(hist.cut.overflow.entries), new Counting(hist.cut.nanflow.entries))))
+
+  implicit def anySparselyBinnedToProfileMethods[N <: Container[N] with NoAggregation](hist: SparselyBinned[Deviated, N]): ProfileMethods =
+    sparselyBinnedToProfileMethods(new SparselyBinned(hist.binWidth, hist.entries, hist.quantityName, hist.contentType, hist.bins, new Counted(hist.nanflow.entries), hist.origin))
+
+  implicit def anySparselyBinningToProfileMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Deviating[DATUM], N]): ProfileMethods =
+    sparselyBinningToProfileMethods(new SparselyBinning(hist.binWidth, hist.quantity, hist.entries, null, hist.bins, new Counting(hist.nanflow.entries), hist.origin))
+
+  implicit def anySelectedSparselyBinnedToProfileMethods[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Deviated, N]]): ProfileMethods =
+    selectedSparselyBinnedToProfileMethods(new Selected(hist.entries, hist.quantityName, new SparselyBinned(hist.cut.binWidth, hist.cut.entries, hist.cut.quantityName, hist.cut.contentType, hist.cut.bins, new Counted(hist.cut.nanflow.entries), hist.cut.origin)))
+
+  implicit def anySelectingSparselyBinningToProfileMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], N]]): ProfileMethods =
+    selectingSparselyBinningToProfileMethods(new Selecting(hist.entries, hist.quantity, new SparselyBinning(hist.cut.binWidth, hist.cut.quantity, hist.cut.entries, null, hist.cut.bins, new Counting(hist.cut.nanflow.entries), hist.cut.origin)))
+
   implicit def binnedToProfileMethods(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileMethods =
     new ProfileMethods(new Selected(hist.entries, unweighted.name, hist))
 

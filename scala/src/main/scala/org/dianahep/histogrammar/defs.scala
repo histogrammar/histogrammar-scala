@@ -685,6 +685,30 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// methods for Histogram and SparselyHistogram
 
+  implicit def anyBinnedToHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Counted, U, O, N]): HistogramMethods =
+    binnedToHistogramMethods(new Binned(hist.low, hist.high, hist.entries, hist.quantityName, hist.values, new Counted(hist.underflow.entries), new Counted(hist.overflow.entries), new Counted(hist.nanflow.entries)))
+
+  implicit def anyBinningToHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Counting, U, O, N]): HistogramMethods =
+    binningToHistogramMethods(new Binning(hist.low, hist.high, hist.quantity, hist.entries, hist.values, new Counting(hist.underflow.entries), new Counting(hist.overflow.entries), new Counting(hist.nanflow.entries)))
+
+  implicit def anySelectedBinnedToHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Counted, U, O, N]]): HistogramMethods =
+    selectedBinnedToHistogramMethods(new Selected(hist.entries, hist.quantityName, new Binned(hist.cut.low, hist.cut.high, hist.cut.entries, hist.cut.quantityName, hist.cut.values, new Counted(hist.cut.underflow.entries), new Counted(hist.cut.overflow.entries), new Counted(hist.cut.nanflow.entries))))
+
+  implicit def anySelectingBinningToHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Counting, U, O, N]]): HistogramMethods =
+    selectingBinningToHistogramMethods(new Selecting(hist.entries, hist.quantity, new Binning(hist.cut.low, hist.cut.high, hist.cut.quantity, hist.cut.entries, hist.cut.values, new Counting(hist.cut.underflow.entries), new Counting(hist.cut.overflow.entries), new Counting(hist.cut.nanflow.entries))))
+
+  implicit def anySparselyBinnedToHistogramMethods[N <: Container[N] with NoAggregation](hist: SparselyBinned[Counted, N]): HistogramMethods =
+    sparselyBinnedToHistogramMethods(new SparselyBinned(hist.binWidth, hist.entries, hist.quantityName, hist.contentType, hist.bins, new Counted(hist.nanflow.entries), hist.origin))
+
+  implicit def anySparselyBinningToHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Counting, N]): HistogramMethods =
+    sparselyBinningToHistogramMethods(new SparselyBinning(hist.binWidth, hist.quantity, hist.entries, null, hist.bins, new Counting(hist.nanflow.entries), hist.origin))
+
+  implicit def anySelectedSparselyBinnedToHistogramMethods[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Counted, N]]): HistogramMethods =
+    selectedSparselyBinnedToHistogramMethods(new Selected(hist.entries, hist.quantityName, new SparselyBinned(hist.cut.binWidth, hist.cut.entries, hist.cut.quantityName, hist.cut.contentType, hist.cut.bins, new Counted(hist.cut.nanflow.entries), hist.cut.origin)))
+
+  implicit def anySelectingSparselyBinningToHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, N]]): HistogramMethods =
+    selectingSparselyBinningToHistogramMethods(new Selecting(hist.entries, hist.quantity, new SparselyBinning(hist.cut.binWidth, hist.cut.quantity, hist.cut.entries, null, hist.cut.bins, new Counting(hist.cut.nanflow.entries), hist.cut.origin)))
+
   implicit def binnedToHistogramMethods(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethods =
     new HistogramMethods(new Selected(hist.entries, unweighted.name, hist))
 
@@ -733,33 +757,33 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// type alias for Profile
 
-  /** Type alias for a physicist's "profile plot" (filled). */
-  type Profiled = Selected[Binned[Deviated, Counted, Counted, Counted]]
-  /** Type alias for a physicist's "profile plot" (filling). */
-  type Profiling[DATUM] = Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]
-  /** Convenience function for creating a physicist's "profile plot." */
-  def Profile[DATUM]
+  /** Type alias for binwise averages (filled). */
+  type HistogramAveraged = Selected[Binned[Averaged, Counted, Counted, Counted]]
+  /** Type alias for binwise averages (filling). */
+  type HistogramAveraging[DATUM] = Selecting[DATUM, Binning[DATUM, Averaging[DATUM], Counting, Counting, Counting]]
+  /** Convenience function for creating binwise averages. */
+  def HistogramAverage[DATUM]
     (num: Int,
     low: Double,
     high: Double,
     binnedQuantity: UserFcn[DATUM, Double],
     averagedQuantity: UserFcn[DATUM, Double],
     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
-    Select(selection, Bin(num, low, high, binnedQuantity, Deviate(averagedQuantity)))
+    Select(selection, Bin(num, low, high, binnedQuantity, Average(averagedQuantity)))
 
   //////////////////////////////////////////////////////////////// type alias for SparselyProfile
 
-  /** Type alias for a physicist's sparsely binned "profile plot" (filled). */
-  type SparselyProfiled = Selected[SparselyBinned[Deviated, Counted]]
-  /** Type alias for a physicist's sparsely binned "profile plot" (filling). */
-  type SparselyProfiling[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]
-  /** Convenience function for creating a physicist's sparsely binned "profile plot." */
-  def SparselyProfile[DATUM]
+  /** Type alias for sparsely binned binwise averages. (filled). */
+  type SparselyHistogramAveraged = Selected[SparselyBinned[Averaged, Counted]]
+  /** Type alias for sparsely binned binwise averages (filling). */
+  type SparselyHistogramAveraging[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], Counting]]
+  /** Convenience function for creating sparsely binned binwise averages. */
+  def SparselyHistogram[DATUM]
     (binWidth: Double,
     binnedQuantity: UserFcn[DATUM, Double],
     averagedQuantity: UserFcn[DATUM, Double],
     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
-    Select(selection, SparselyBin(binWidth, binnedQuantity, Deviate(averagedQuantity)))
+    Select(selection, SparselyBin(binWidth, binnedQuantity, Average(averagedQuantity)))
 
   //////////////////////////////////////////////////////////////// methods for HistogramAverage and SparselyHistogramAverage
 
@@ -832,6 +856,36 @@ package object histogrammar {
     /** Nanflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalNanflow: Double = binned.nanflow.entries
   }
+
+  //////////////////////////////////////////////////////////////// type alias for Profile
+
+  /** Type alias for a physicist's "profile plot," which is a HistogramAverage with variances (filled). */
+  type Profiled = Selected[Binned[Deviated, Counted, Counted, Counted]]
+  /** Type alias for a physicist's "profile plot," which is a HistogramAverage with variances (filling). */
+  type Profiling[DATUM] = Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]
+  /** Convenience function for creating a physicist's "profile plot," which is a HistogramAverage with variances */
+  def Profile[DATUM]
+    (num: Int,
+    low: Double,
+    high: Double,
+    binnedQuantity: UserFcn[DATUM, Double],
+    averagedQuantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
+    Select(selection, Bin(num, low, high, binnedQuantity, Deviate(averagedQuantity)))
+
+  //////////////////////////////////////////////////////////////// type alias for SparselyProfile
+
+  /** Type alias for a physicist's sparsely binned "profile plot," which is a HistogramAverage with variances (filled). */
+  type SparselyProfiled = Selected[SparselyBinned[Deviated, Counted]]
+  /** Type alias for a physicist's sparsely binned "profile plot," which is a HistogramAverage with variances (filling). */
+  type SparselyProfiling[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]
+  /** Convenience function for creating a physicist's sparsely binned "profile plot," which is a HistogramAverage with variances. */
+  def SparselyProfile[DATUM]
+    (binWidth: Double,
+    binnedQuantity: UserFcn[DATUM, Double],
+    averagedQuantity: UserFcn[DATUM, Double],
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
+    Select(selection, SparselyBin(binWidth, binnedQuantity, Deviate(averagedQuantity)))
 
   //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
@@ -1187,6 +1241,106 @@ package object histogrammar {
       val (n, d) = (numeratorBinned.nanflow, denominatorBinned.nanflow)
       (confidenceInterval(n.entries, d.entries, -absz), confidenceInterval(n.entries, d.entries, 0.0), confidenceInterval(n.entries, d.entries, absz))
     }
+  }
+
+  //////////////////////////////////////////////////////////////// type alias for TwoDimensionallyHistogram
+
+  /** Type alias for conventional, two-dimensional histograms (filled). */
+  type TwoDimensionallyHistogrammed = Selected[Binned[Binned[Counted, Counted, Counted, Counted], Counted, Counted, Counted]]
+  /** Type alias for conventional, two-dimensional histograms (filling). */
+  type TwoDimensionallyHistogramming[DATUM] = Selecting[DATUM, Binning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting], Counting, Counting, Counting]]
+  /** Convenience function for creating a conventional, two-dimensional histogram. */
+  def TwoDimensionallyHistogram[DATUM]
+    (xnum: Int,
+     xlow: Double,
+     xhigh: Double,
+     xquantity: UserFcn[DATUM, Double],
+     ynum: Int,
+     ylow: Double,
+     yhigh: Double,
+     yquantity: UserFcn[DATUM, Double],
+     selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
+    Select(selection, Bin(xnum, xlow, xhigh, xquantity, Bin(ynum, ylow, yhigh, yquantity)))
+
+  //////////////////////////////////////////////////////////////// type alias for TwoDimensionallySparselyHistogram
+
+  /** Type alias for sparsely binned, two-dimensional histograms (filled). */
+  type TwoDimensionallySparselyHistogrammed = Selected[SparselyBinned[Counted, Counted]]
+  /** Type alias for sparsely binned, two-dimensional histograms (filling). */
+  type TwoDimensionallySparselyHistogramming[DATUM] = Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]
+  /** Convenience function for creating a sparsely binned, two-dimensional histogram. */
+  def TwoDimensionallySparselyHistogram[DATUM]
+    (xbinWidth: Double,
+     xquantity: UserFcn[DATUM, Double],
+     ybinWidth: Double,
+     yquantity: UserFcn[DATUM, Double],
+     selection: UserFcn[DATUM, Double] = unweighted[DATUM],
+     xorigin: Double = 0.0,
+     yorigin: Double = 0.0) =
+    Select(selection, SparselyBin(xbinWidth, xquantity, SparselyBin(ybinWidth, yquantity, origin = yorigin), origin = xorigin))
+
+  //////////////////////////////////////////////////////////////// methods for TwoDimensionallyHistogram and TwoDimensionallySparselyHistogram
+
+  implicit def binnedToTwoDimensionallyHistogramMethods(hist: Binned[Binned[Counted, Counted, Counted, Counted], Counted, Counted, Counted]): TwoDimensionallyHistogramMethods =
+    new TwoDimensionallyHistogramMethods(new Selected(hist.entries, unweighted.name, hist))
+
+  implicit def binningToTwoDimensionallyHistogramMethods[DATUM](hist: Binning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting], Counting, Counting, Counting]): TwoDimensionallyHistogramMethods =
+    binnedToTwoDimensionallyHistogramMethods(hist.ed)
+
+  implicit def selectedBinnedToTwoDimensionallyHistogramMethods(hist: Selected[Binned[Binned[Counted, Counted, Counted, Counted], Counted, Counted, Counted]]): TwoDimensionallyHistogramMethods =
+    new TwoDimensionallyHistogramMethods(hist)
+
+  implicit def selectingBinningToTwoDimensionallyHistogramMethods[DATUM](hist: Selecting[DATUM, Binning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting], Counting, Counting, Counting]]): TwoDimensionallyHistogramMethods =
+    selectedBinnedToTwoDimensionallyHistogramMethods(hist.ed)
+
+  implicit def sparselyBinnedToTwoDimensionallyHistogramMethods(hist: SparselyBinned[SparselyBinned[Counted, Counted], Counted]): TwoDimensionallyHistogramMethods =
+    selectedSparselyBinnedToTwoDimensionallyHistogramMethods(new Selected(hist.entries, unweighted.name, hist))
+
+  implicit def sparselyBinningToTwoDimensionallyHistogramMethods[DATUM](hist: SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, Counting], Counting]): TwoDimensionallyHistogramMethods =
+    sparselyBinnedToTwoDimensionallyHistogramMethods(hist.ed)
+
+  implicit def selectedSparselyBinnedToTwoDimensionallyHistogramMethods(hist: Selected[SparselyBinned[SparselyBinned[Counted, Counted], Counted]]): TwoDimensionallyHistogramMethods = {
+    val (xlow, xhigh, xminBin, xmaxBin) = (hist.cut.low, hist.cut.high, hist.cut.minBin, hist.cut.maxBin) match {
+      case (Some(low), Some(high), Some(minBin), Some(maxBin)) =>
+        (low, high, minBin, maxBin)
+      case _ => 
+        (hist.cut.origin, hist.cut.origin + 1.0, 0L, 1L)
+    }
+
+    val sample = hist.cut.values.head
+
+    val (ylow, yhigh, yminBin, ymaxBin) = (hist.cut.values.flatMap(_.minBin), hist.cut.values.flatMap(_.maxBin)) match {
+      case (mins, maxes) if (!mins.isEmpty  &&  !maxes.isEmpty) =>
+        val minBin = mins.min
+        val maxBin = maxes.max
+        val low = minBin * sample.binWidth + sample.origin
+        val high = (maxBin + 1L) * sample.binWidth + sample.origin
+        (low, high, minBin, maxBin)
+      case _ =>
+        (sample.origin, sample.origin + 1.0, 0L, 1L)
+    }
+
+    new TwoDimensionallyHistogramMethods(
+      new Selected(hist.entries, hist.quantityName,
+        new Binned(xlow, xhigh, hist.cut.entries, hist.cut.quantityName, xminBin to xmaxBin map {i => hist.cut.at(i) match {
+            case Some(sparse) => new Binned(ylow, yhigh, sparse.entries, sample.quantityName, yminBin to ymaxBin map {j => new Counted(sparse.at(j).flatMap(x => Some(x.entries)).getOrElse(0L))}, new Counted(0.0), new Counted(0.0), sparse.nanflow)
+            case None => new Binned(ylow, yhigh, 0.0, sample.quantityName, yminBin to ymaxBin map {j => new Counted(0.0)}, new Counted(0.0), new Counted(0.0), new Counted(0.0))
+          }}, new Counted(0.0), new Counted(0.0), hist.cut.nanflow)))
+  }
+
+  implicit def selectingSparselyBinningToTwoDimensionallyHistogramMethods[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, Counting], Counting]]): TwoDimensionallyHistogramMethods =
+    selectedSparselyBinnedToTwoDimensionallyHistogramMethods(hist.ed)
+
+  /** Methods that are implicitly added to container combinations that look like two-dimensional histograms. */
+  class TwoDimensionallyHistogramMethods(val selected: Selected[Binned[Binned[Counted, Counted, Counted, Counted], Counted, Counted, Counted]]) {
+    /** Bin values as numbers, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
+    def numericalValues: Seq[Seq[Double]] = selected.cut.values map {ybinned => ybinned.values.map(_.entries)}
+
+    /** Number of entries that missed the two-dimensional region in any direction. */
+    def numericalOverflow: Double = selected.cut.underflow.entries + selected.cut.overflow.entries + selected.cut.values.map(_.underflow.entries).sum + selected.cut.values.map(_.overflow.entries).sum
+
+    /** Number of entries that yielded NaN in either the xquantity or the yquantity. */
+    def numericalNanflow: Double = selected.cut.nanflow.entries + selected.cut.values.map(_.nanflow.entries).sum
   }
 
   //////////////////////////////////////////////////////////////// methods for (nested) collections

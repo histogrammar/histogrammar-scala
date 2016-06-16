@@ -758,8 +758,9 @@ package object histogrammar {
     (binWidth: Double,
     binnedQuantity: UserFcn[DATUM, Double],
     averagedQuantity: UserFcn[DATUM, Double],
-    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
-    Select(selection, SparselyBin(binWidth, binnedQuantity, Average(averagedQuantity)))
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM],
+    origin: Double = 0.0) =
+    Select(selection, SparselyBin(binWidth, binnedQuantity, Average(averagedQuantity), origin = origin))
 
   //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
@@ -836,8 +837,9 @@ package object histogrammar {
     (binWidth: Double,
     binnedQuantity: UserFcn[DATUM, Double],
     averagedQuantity: UserFcn[DATUM, Double],
-    selection: UserFcn[DATUM, Double] = unweighted[DATUM]) =
-    Select(selection, SparselyBin(binWidth, binnedQuantity, Deviate(averagedQuantity)))
+    selection: UserFcn[DATUM, Double] = unweighted[DATUM],
+    origin: Double = 0.0) =
+    Select(selection, SparselyBin(binWidth, binnedQuantity, Deviate(averagedQuantity), origin = origin))
 
   //////////////////////////////////////////////////////////////// methods for ProfileErr and SparselyProfileErr
   

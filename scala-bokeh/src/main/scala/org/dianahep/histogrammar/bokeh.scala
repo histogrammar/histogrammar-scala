@@ -197,7 +197,7 @@ package object bokeh extends Tools {
        case "cross"    => new Cross().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
        case "triangle" => new Triangle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
        case "circle"   => new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "errors"   => new Rect().x(x).y(y).width(yerr).fill_color(fillColor).line_color(lineColor)  
+       case "errors"   => new Rect().x(x).y(y).width(step).height(yerr).fill_color(fillColor).line_color(lineColor)  
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(markerSize)
       }
 

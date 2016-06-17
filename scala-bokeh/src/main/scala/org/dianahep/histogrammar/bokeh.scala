@@ -78,8 +78,6 @@ package object bokeh extends Tools {
       plot
     }
 
-   def plot(glyphs: Array[GlyphRenderer]) : Plot = plot(glyphs: _*)
-
    //allow for default x and y labels 
    def plot(glyphs: GlyphRenderer*) : Plot = {
 
@@ -98,6 +96,8 @@ package object bokeh extends Tools {
       plot
    }
 
+   def plot(glyphs: Array[GlyphRenderer]) : Plot = plot(glyphs: _*)
+
    def save(plot: Plot, fname: String) {
        val document = new Document(plot)
 
@@ -111,25 +111,25 @@ package object bokeh extends Tools {
 
   //////////////////////////////////////////////////////////////// methods for Histogram and SparselyHistogram
 
-  implicit def binnedToHistogramMethodsBokeh(hist: Binned[Counted, Counted, Counted, Counted]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(binnedToHistogramMethods(hist).selected)
-  implicit def binningToHistogramMethodsBokeh[DATUM](hist: Binning[DATUM, Counting, Counting, Counting, Counting]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(binningToHistogramMethods(hist).selected)
-  implicit def selectedBinnedToHistogramMethodsBokeh(hist: Selected[Binned[Counted, Counted, Counted, Counted]]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(selectedBinnedToHistogramMethods(hist).selected)
-  implicit def selectingBinningToHistogramMethodsBokeh[DATUM](hist: Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(selectingBinningToHistogramMethods(hist).selected)
-  implicit def sparselyBinnedToHistogramMethodsBokeh(hist: SparselyBinned[Counted, Counted]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(sparselyBinnedToHistogramMethods(hist).selected)
-  implicit def sparselyBinningToHistogramMethodsBokeh[DATUM](hist: SparselyBinning[DATUM, Counting, Counting]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(sparselyBinningToHistogramMethods(hist).selected)
-  implicit def selectedSparselyBinnedToHistogramMethodsBokeh(hist: Selected[SparselyBinned[Counted, Counted]]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(selectedSparselyBinnedToHistogramMethods(hist).selected)
-  implicit def selectingSparselyBinningToHistogramMethodsBokeh[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]): HistogramMethodsBokeh =
-    new HistogramMethodsBokeh(selectingSparselyBinningToHistogramMethods(hist).selected)
+  implicit def anyBinnedToHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Counted, U, O, N]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anyBinnedToHistogramMethods(hist).selected)
+  implicit def anyBinningToHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Counting, U, O, N]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anyBinningToHistogramMethods(hist).selected)
+  implicit def anySelectedBinnedToHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Counted, U, O, N]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anySelectedBinnedToHistogramMethods(hist).selected)
+  implicit def anySelectingBinningToHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Counting, U, O, N]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anySelectingBinningToHistogramMethods(hist).selected)
+  implicit def anySparselyBinnedToHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: SparselyBinned[Counted, N]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anySparselyBinnedToHistogramMethods(hist).selected)
+  implicit def anySparselyBinningToHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Counting, N]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anySparselyBinningToHistogramMethods(hist).selected)
+  implicit def anySelectedSparselyBinnedToHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Counted, N]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anySelectedSparselyBinnedToHistogramMethods(hist).selected)
+  implicit def anySelectingSparselyBinningToHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Counting, N]]): HistogramMethodsBokeh =
+    new HistogramMethodsBokeh(anySelectingSparselyBinningToHistogramMethods(hist).selected)
 
   class HistogramMethodsBokeh(hist: Selected[Binned[Counted, Counted, Counted, Counted]]) {
-    def bokeh(markerType: String = "line", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+    def bokeh(glyphType: String = "line", glyphSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = hist.cut.high
@@ -143,13 +143,13 @@ package object bokeh extends Tools {
       import source.{x,y}
 
       //Set marker color, fill color, line color
-      val glyph = markerType match {
-       case "square"   => new Square().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(markerSize)
+      val glyph = glyphType match {
+       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
       new GlyphRenderer().data_source(source).glyph(glyph)
@@ -158,25 +158,46 @@ package object bokeh extends Tools {
 
   //////////////////////////////////////////////////////////////// methods for Profile and SparselyProfile
 
-  implicit def binnedToProfileMethodsBokeh(hist: Binned[Deviated, Counted, Counted, Counted]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(binnedToProfileMethods(hist).selected)
-  implicit def binningToProfileMethodsBokeh[DATUM](hist: Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(binningToProfileMethods(hist).selected)
-  implicit def selectedBinnedToProfileMethodsBokeh(hist: Selected[Binned[Deviated, Counted, Counted, Counted]]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(selectedBinnedToProfileMethods(hist).selected)
-  implicit def selectingBinningToProfileMethodsBokeh[DATUM](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(selectingBinningToProfileMethods(hist).selected)
-  implicit def sparselyBinnedToProfileMethodsBokeh(hist: SparselyBinned[Deviated, Counted]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(sparselyBinnedToProfileMethods(hist).selected)
-  implicit def sparselyBinningToProfileMethodsBokeh[DATUM](hist: SparselyBinning[DATUM, Deviating[DATUM], Counting]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(sparselyBinningToProfileMethods(hist).selected)
-  implicit def selectedSparselyBinnedToProfileMethodsBokeh(hist: Selected[SparselyBinned[Deviated, Counted]]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(selectedSparselyBinnedToProfileMethods(hist).selected)
-  implicit def selectingSparselyBinningToProfileMethodsBokeh[DATUM](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], Counting]]): ProfileMethodsBokeh =
-    new ProfileMethodsBokeh(selectingSparselyBinningToProfileMethods(hist).selected)
+  implicit def anyBinnedToProfileMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Averaged, U, O, N]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anyBinnedToProfileMethods(hist).selected)
+  implicit def anyBinningToProfileMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Averaging[DATUM], U, O, N]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anyBinningToProfileMethods(hist).selected)
+  implicit def anySelectedBinnedToProfileMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Averaged, U, O, N]]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anySelectedBinnedToProfileMethods(hist).selected)
+  implicit def anySelectingBinningToProfileMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Averaging[DATUM], U, O, N]]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anySelectingBinningToProfileMethods(hist).selected)
+  implicit def anySparselyBinnedToProfileMethodsBokeh[N <: Container[N] with NoAggregation](hist: SparselyBinned[Averaged, N]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anySparselyBinnedToProfileMethods(hist).selected)
+  implicit def anySparselyBinningToProfileMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Averaging[DATUM], N]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anySparselyBinningToProfileMethods(hist).selected)
+  implicit def anySelectedSparselyBinnedToProfileMethodsBokeh[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Averaged, N]]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anySelectedSparselyBinnedToProfileMethods(hist).selected)
+  implicit def anySelectingSparselyBinningToProfileMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], N]]): ProfileMethodsBokeh =
+    new ProfileMethodsBokeh(anySelectingSparselyBinningToProfileMethods(hist).selected)
 
-  class ProfileMethodsBokeh(val profile: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
-    def bokeh(markerType: String = "line", markerSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+  class ProfileMethodsBokeh(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]])
+
+  //////////////////////////////////////////////////////////////// methods for ProfileErr and SparselyProfileErr
+
+  implicit def anyBinnedToProfileErrMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Binned[Deviated, U, O, N]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anyBinnedToProfileErrMethods(hist).selected)
+  implicit def anyBinningToProfileErrMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Deviating[DATUM], U, O, N]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anyBinningToProfileErrMethods(hist).selected)
+  implicit def anySelectedBinnedToProfileErrMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Selected[Binned[Deviated, U, O, N]]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anySelectedBinnedToProfileErrMethods(hist).selected)
+  implicit def anySelectingBinningToProfileErrMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Deviating[DATUM], U, O, N]]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anySelectingBinningToProfileErrMethods(hist).selected)
+  implicit def anySparselyBinnedToProfileErrMethodsBokeh[N <: Container[N] with NoAggregation](hist: SparselyBinned[Deviated, N]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anySparselyBinnedToProfileErrMethods(hist).selected)
+  implicit def anySparselyBinningToProfileErrMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, Deviating[DATUM], N]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anySparselyBinningToProfileErrMethods(hist).selected)
+  implicit def anySelectedSparselyBinnedToProfileErrMethodsBokeh[N <: Container[N] with NoAggregation](hist: Selected[SparselyBinned[Deviated, N]]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anySelectedSparselyBinnedToProfileErrMethods(hist).selected)
+  implicit def anySelectingSparselyBinningToProfileErrMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Deviating[DATUM], N]]): ProfileErrMethodsBokeh =
+    new ProfileErrMethodsBokeh(anySelectingSparselyBinningToProfileErrMethods(hist).selected)
+
+  class ProfileErrMethodsBokeh(val profile: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
+    def bokeh(glyphType: String = "line", glyphSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
 
       //Prepare histogram contents for plotting
       val h = profile.cut.high
@@ -191,14 +212,14 @@ package object bokeh extends Tools {
       import source.{x,y,yerr}
 
       //Set marker color, fill color, line color
-      val glyph = markerType match {
-       case "square"   => new Square().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(markerSize).fill_color(fillColor).line_color(lineColor)
+      val glyph = glyphType match {
+       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "errors"   => new Rect().x(x).y(y).width(step).height(yerr).fill_color(fillColor).line_color(lineColor)  
-       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(markerSize)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
       new GlyphRenderer().data_source(source).glyph(glyph)
@@ -207,47 +228,47 @@ package object bokeh extends Tools {
 
   //////////////////////////////////////////////////////////////// methods for StackedHistogram, including cases for mixed tenses
 
-  implicit def binnedToStackedHistogramMethodsBokeh(hist: Stacked[Binned[Counted, Counted, Counted, Counted], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(binnedToStackedHistogramMethods(hist).stacked)
-  implicit def binningToStackedHistogramMethodsBokeh[DATUM](hist: Stacking[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting], Counting]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(binningToStackedHistogramMethods(hist).stacked)
-  implicit def selectedBinnedToStackedHistogramMethodsBokeh(hist: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(selectedBinnedToStackedHistogramMethods(hist).stacked)
-  implicit def selectingBinningToStackedHistogramMethodsBokeh[DATUM](hist: Stacking[DATUM, Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]], Counting]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(selectingBinningToStackedHistogramMethods(hist).stacked)
-  implicit def sparselyBinnedToStackedHistogramMethodsBokeh(hist: Stacked[SparselyBinned[Counted, Counted], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(sparselyBinnedToStackedHistogramMethods(hist).stacked)
-  implicit def sparselyBinningToStackingHistogramMethodsBokeh[DATUM](hist: Stacking[DATUM, SparselyBinning[DATUM, Counting, Counting], Counting]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(sparselyBinningToStackingHistogramMethods(hist).stacked)
-  implicit def selectedSparselyBinnedToStackedHistogramMethodsBokeh(hist: Stacked[Selected[SparselyBinned[Counted, Counted]], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(selectedSparselyBinnedToStackedHistogramMethods(hist).stacked)
-  implicit def selectingSparselyBinningToStackedHistogramMethodsBokeh[DATUM](hist: Stacking[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]], Counting]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(selectingSparselyBinningToStackedHistogramMethods(hist).stacked)
-  implicit def binnedMixedToStackedHistogramMethodsBokeh[DATUM](hist: Stacked[Binning[DATUM, Counting, Counting, Counting, Counting], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(binnedMixedToStackedHistogramMethods(hist).stacked)
-  implicit def selectedBinnedMixedToStackedHistogramMethodsBokeh[DATUM](hist: Stacked[Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(selectedBinnedMixedToStackedHistogramMethods(hist).stacked)
-  implicit def sparselyBinnedMixedToStackedHistogramMethodsBokeh[DATUM](hist: Stacked[SparselyBinning[DATUM, Counting, Counting], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(sparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
-  implicit def selectedSparselyBinnedMixedToStackedHistogramMethodsBokeh[DATUM](hist: Stacked[Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]], Counted]): StackedHistogramMethodsBokeh =
-    new StackedHistogramMethodsBokeh(selectedSparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
+  implicit def anyBinnedToStackedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[Binned[Counted, U, O, N], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anyBinnedToStackedHistogramMethods(hist).stacked)
+  implicit def anyBinningToStackedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, Binning[DATUM, Counting, U, O, N], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anyBinningToStackedHistogramMethods(hist).stacked)
+  implicit def anySelectedBinnedToStackedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[Selected[Binned[Counted, U, O, N]], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySelectedBinnedToStackedHistogramMethods(hist).stacked)
+  implicit def anySelectingBinningToStackedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySelectingBinningToStackedHistogramMethods(hist).stacked)
+  implicit def anySparselyBinnedToStackedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[SparselyBinned[Counted, N], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySparselyBinnedToStackedHistogramMethods(hist).stacked)
+  implicit def anySparselyBinningToStackedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, SparselyBinning[DATUM, Counting, N], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySparselyBinningToStackedHistogramMethods(hist).stacked)
+  implicit def anySelectedSparselyBinnedToStackedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[Selected[SparselyBinned[Counted, N]], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySelectedSparselyBinnedToStackedHistogramMethods(hist).stacked)
+  implicit def anySelectingSparselyBinningToStackedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySelectingSparselyBinningToStackedHistogramMethods(hist).stacked)
+  implicit def anyBinnedMixedToStackedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[Binning[DATUM, Counting, U, O, N], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anyBinnedMixedToStackedHistogramMethods(hist).stacked)
+  implicit def anySelectedBinnedMixedToStackedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySelectedBinnedMixedToStackedHistogramMethods(hist).stacked)
+  implicit def anySparselyBinnedMixedToStackedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[SparselyBinning[DATUM, Counting, N], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
+  implicit def anySelectedSparselyBinnedMixedToStackedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): StackedHistogramMethodsBokeh =
+    new StackedHistogramMethodsBokeh(anySelectedSparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
 
   class StackedHistogramMethodsBokeh(stack: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]) {
-    val markerTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
-    val markerSizeDefaults = List(1,1,1,1,1,1,1)
+    val glyphTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
+    val glyphSizeDefaults = List(1,1,1,1,1,1,1)
     val fillColorDefaults = List(Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red)
     val lineColorDefaults = List(Color.Black,Color.Blue,Color.Red,Color.Green,Color.Brown,Color.Orange,Color.Red)
 
-    def bokeh(markerTypes: List[String] = markerTypeDefaults, markerSizes: List[Int] = markerSizeDefaults, fillColors: List[Color] = fillColorDefaults, lineColors: List[Color] = lineColorDefaults) : Array[GlyphRenderer] = {
-      assert(markerTypes.length == markerSizes.length)
-      assert(markerTypes.length == fillColors.length)
-      assert(markerTypes.length == lineColors.length)
+    def bokeh(glyphTypes: List[String] = glyphTypeDefaults, glyphSizes: List[Int] = glyphSizeDefaults, fillColors: List[Color] = fillColorDefaults, lineColors: List[Color] = lineColorDefaults) : Array[GlyphRenderer] = {
+      assert(glyphTypes.length == glyphSizes.length)
+      assert(glyphTypes.length == fillColors.length)
+      assert(glyphTypes.length == lineColors.length)
 
       var stackedGlyphs: ArrayBuffer[GlyphRenderer] = ArrayBuffer.empty[GlyphRenderer]
       var ichild = 0
 
       for (p <- stack.children) {
-          stackedGlyphs += p.bokeh(markerTypes(ichild),markerSizes(ichild),fillColors(ichild),lineColors(ichild))
+          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),fillColors(ichild),lineColors(ichild))
           ichild += 1
       }
       stackedGlyphs.toArray
@@ -256,44 +277,65 @@ package object bokeh extends Tools {
 
   //////////////////////////////////////////////////////////////// methods for PartitionedHistogram
 
-  implicit def binnedToPartitionedHistogramMethodsBokeh(hist: Partitioned[Binned[Counted, Counted, Counted, Counted], Counted]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(binnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def binningToPartitionedHistogramMethodsBokeh[DATUM](hist: Partitioning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting], Counting]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(binningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def selectedBinnedToPartitionedHistogramMethodsBokeh(hist: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(selectedBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def selectingBinningToPartitionedHistogramMethodsBokeh[DATUM](hist: Partitioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]], Counting]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(selectingBinningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def sparselyBinnedToPartitionedHistogramMethodsBokeh(hist: Partitioned[SparselyBinned[Counted, Counted], Counted]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(sparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def sparselyBinningToPartitioningHistogramMethodsBokeh[DATUM](hist: Partitioning[DATUM, SparselyBinning[DATUM, Counting, Counting], Counting]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(sparselyBinningToPartitioningHistogramMethods(hist).partitioned)
-  implicit def selectedSparselyBinnedToPartitionedHistogramMethodsBokeh(hist: Partitioned[Selected[SparselyBinned[Counted, Counted]], Counted]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(selectedSparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def selectingSparselyBinningToPartitionedHistogramMethodsBokeh[DATUM](hist: Partitioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]], Counting]): PartitionedHistogramMethodsBokeh =
-    new PartitionedHistogramMethodsBokeh(selectingSparselyBinningToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anyBinnedToPartitionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Binned[Counted, U, O, N], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anyBinnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anyBinningToPartitionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Binning[DATUM, Counting, U, O, N], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anyBinningToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anySelectedBinnedToPartitionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[Binned[Counted, U, O, N]], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anySelectedBinnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anySelectingBinningToPartitionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anySelectingBinningToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anySparselyBinnedToPartitionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[SparselyBinned[Counted, N], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anySparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anySparselyBinningToPartitionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, SparselyBinning[DATUM, Counting, N], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anySparselyBinningToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anySelectedSparselyBinnedToPartitionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[SparselyBinned[Counted, N]], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anySelectedSparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
+  implicit def anySelectingSparselyBinningToPartitionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): PartitionedHistogramMethodsBokeh =
+    new PartitionedHistogramMethodsBokeh(anySelectingSparselyBinningToPartitionedHistogramMethods(hist).partitioned)
 
   class PartitionedHistogramMethodsBokeh(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted])
 
   //////////////////////////////////////////////////////////////// methods for FractionedHistogram
 
-  implicit def binnedToFractionedHistogramMethodsBokeh(hist: Fractioned[Binned[Counted, Counted, Counted, Counted]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(binnedToFractionedHistogramMethods(hist).fractioned)
-  implicit def binningToFractionedHistogramMethodsBokeh[DATUM](hist: Fractioning[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(binningToFractionedHistogramMethods(hist).fractioned)
-  implicit def selectedBinnedToFractionedHistogramMethodsBokeh(hist: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(selectedBinnedToFractionedHistogramMethods(hist).fractioned)
-  implicit def selectingBinningToFractionedHistogramMethodsBokeh[DATUM](hist: Fractioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, Counting, Counting, Counting]]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(selectingBinningToFractionedHistogramMethods(hist).fractioned)
-  implicit def sparselyBinnedToFractionedHistogramMethodsBokeh(hist: Fractioned[SparselyBinned[Counted, Counted]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(sparselyBinnedToFractionedHistogramMethods(hist).fractioned)
-  implicit def sparselyBinningToFractioningHistogramMethodsBokeh[DATUM](hist: Fractioning[DATUM, SparselyBinning[DATUM, Counting, Counting]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(sparselyBinningToFractioningHistogramMethods(hist).fractioned)
-  implicit def selectedSparselyBinnedToFractionedHistogramMethodsBokeh(hist: Fractioned[Selected[SparselyBinned[Counted, Counted]]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(selectedSparselyBinnedToFractionedHistogramMethods(hist).fractioned)
-  implicit def selectingSparselyBinningToFractionedHistogramMethodsBokeh[DATUM](hist: Fractioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, Counting]]]): FractionedHistogramMethodsBokeh =
-    new FractionedHistogramMethodsBokeh(selectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
+  implicit def anyBinnedToFractionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Binned[Counted, U, O, N]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anyBinnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def anyBinningToFractionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Binning[DATUM, Counting, U, O, N]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anyBinningToFractionedHistogramMethods(hist).fractioned)
+  implicit def anySelectedBinnedToFractionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Selected[Binned[Counted, U, O, N]]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anySelectedBinnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def anySelectingBinningToFractionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anySelectingBinningToFractionedHistogramMethods(hist).fractioned)
+  implicit def anySparselyBinnedToFractionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: Fractioned[SparselyBinned[Counted, N]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anySparselyBinnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def anySparselyBinningToFractionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, SparselyBinning[DATUM, Counting, N]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anySparselyBinningToFractionedHistogramMethods(hist).fractioned)
+  implicit def anySelectedSparselyBinnedToFractionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: Fractioned[Selected[SparselyBinned[Counted, N]]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anySelectedSparselyBinnedToFractionedHistogramMethods(hist).fractioned)
+  implicit def anySelectingSparselyBinningToFractionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]]]): FractionedHistogramMethodsBokeh =
+    new FractionedHistogramMethodsBokeh(anySelectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
 
   class FractionedHistogramMethodsBokeh(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+
+  //////////////////////////////////////////////////////////////// methods for TwoDimensionallyHistogram and TwoDimensionallySparselyHistogram
+
+  implicit def binnedToTwoDimensionallyHistogramMethodsBokeh[UX <: Container[UX] with NoAggregation, OX <: Container[OX] with NoAggregation, NX <: Container[NX] with NoAggregation, UY <: Container[UY] with NoAggregation, OY <: Container[OY] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: Binned[Binned[Counted, UY, OY, NY], UX, OX, NX]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(binnedToTwoDimensionallyHistogramMethods(hist).selected)
+  implicit def binningToTwoDimensionallyHistogramMethodsBokeh[DATUM, UX <: Container[UX] with Aggregation{type Datum >: DATUM}, OX <: Container[OX] with Aggregation{type Datum >: DATUM}, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, UY <: Container[UY] with Aggregation{type Datum >: DATUM}, OY <: Container[OY] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: Binning[DATUM, Binning[DATUM, Counting, UY, OY, NY], UX, OX, NX]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(binningToTwoDimensionallyHistogramMethods(hist).selected)
+  implicit def selectedBinnedToTwoDimensionallyHistogramMethodsBokeh[UX <: Container[UX] with NoAggregation, OX <: Container[OX] with NoAggregation, NX <: Container[NX] with NoAggregation, UY <: Container[UY] with NoAggregation, OY <: Container[OY] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: Selected[Binned[Binned[Counted, UY, OY, NY], UX, OX, NX]]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(selectedBinnedToTwoDimensionallyHistogramMethods(hist).selected)
+  implicit def selectingBinningToTwoDimensionallyHistogramMethodsBokeh[DATUM, UX <: Container[UX] with Aggregation{type Datum >: DATUM}, OX <: Container[OX] with Aggregation{type Datum >: DATUM}, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, UY <: Container[UY] with Aggregation{type Datum >: DATUM}, OY <: Container[OY] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, Binning[DATUM, Binning[DATUM, Counting, UY, OY, NY], UX, OX, NX]]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(selectingBinningToTwoDimensionallyHistogramMethods(hist).selected)
+  implicit def sparselyBinnedToTwoDimensionallyHistogramMethodsBokeh[NX <: Container[NX] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: SparselyBinned[SparselyBinned[Counted, NY], NX]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(sparselyBinnedToTwoDimensionallyHistogramMethods(hist).selected)
+  implicit def sparselyBinningToTwoDimensionallyHistogramMethodsBokeh[DATUM, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, NY], NX]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(sparselyBinningToTwoDimensionallyHistogramMethods(hist).selected)
+  implicit def selectedSparselyBinnedToTwoDimensionallyHistogramMethodsBokeh[NX <: Container[NX] with NoAggregation, NY <: Container[NY] with NoAggregation](hist: Selected[SparselyBinned[SparselyBinned[Counted, NY], NX]]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(selectedSparselyBinnedToTwoDimensionallyHistogramMethods(hist).selected)
+  implicit def selectingSparselyBinningToTwoDimensionallyHistogramMethodsBokeh[DATUM, NX <: Container[NX] with Aggregation{type Datum >: DATUM}, NY <: Container[NY] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, SparselyBinning[DATUM, Counting, NY], NX]]): TwoDimensionallyHistogramMethodsBokeh =
+    new TwoDimensionallyHistogramMethodsBokeh(selectingSparselyBinningToTwoDimensionallyHistogramMethods(hist).selected)
+
+  class TwoDimensionallyHistogramMethodsBokeh(val selected: Selected[Binned[Binned[Counted, Counted, Counted, Counted], Counted, Counted, Counted]])
 
 }

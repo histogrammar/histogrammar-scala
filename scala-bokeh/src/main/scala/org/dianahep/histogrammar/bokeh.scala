@@ -186,7 +186,7 @@ package object bokeh extends Tools {
       object source extends ColumnDataSource {
           val x = column(l to h by step)
           val y = column(profile.cut.values.map(v=>v.mean))
-          val yerr = column(profile.cut.values.map(v=>v.variance))
+          val yerr = column(profile.cut.values.map(v => if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0)
       }
       import source.{x,y,yerr}
 

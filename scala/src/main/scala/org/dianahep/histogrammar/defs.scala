@@ -290,8 +290,8 @@ package histogrammar {
     def apply(h1: CONTAINER, h2: CONTAINER): CONTAINER = h1 + h2
   }
 
-  /** Persistent JSON output stream (for use with Histogrammar Watcher (hgwatch)). */
-  class JsonStream(file: java.io.File) {
+  /** Persistent JSON output file or named pipe (for use with Histogrammar Watcher (hgwatch)). */
+  class JsonDump(file: java.io.File) {
     def this(fileName: String) = this(new java.io.File(fileName))
     private val fileOutputStream = new java.io.FileOutputStream(file, true)
     def append[C <: Container[C]](container: C) {
@@ -303,6 +303,9 @@ package histogrammar {
       fileOutputStream.write(json.stringify.getBytes("UTF-8"))
       fileOutputStream.write("\n".getBytes("UTF-8"))
       fileOutputStream.flush()
+    }
+    def close() {
+      fileOutputStream.close()
     }
   }
 }

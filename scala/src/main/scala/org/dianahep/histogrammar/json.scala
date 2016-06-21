@@ -96,15 +96,29 @@ package json {
 
     /** Write this object to a UTF-8 encoded file using `stringify`. */
     def write(file: java.io.File) {
-      val f = new java.io.FileOutputStream(file)
-      write(f)
+      val f = new java.io.FileOutputStream(file, false)
+      append(f)
       f.close()
     }
 
-    /** Write this object on an OutputStream as UTF-8 using `stringify`. */
-    def write(outputStream: java.io.OutputStream) {
-      outputStream.write(stringify.getBytes("UTF-8"))
+    /** Append this object to a UTF-8 encoded file using `stringify`. */
+    def append(fileName: String) {
+      append(new java.io.File(fileName))
     }
+
+    /** Append this object to a UTF-8 encoded file using `stringify`. */
+    def append(file: java.io.File) {
+      val f = new java.io.FileOutputStream(file, true)
+      append(f)
+      f.close()
+    }
+
+    /** Append this object on an OutputStream as UTF-8 using `stringify`. */
+    def append(outputStream: java.io.OutputStream) {
+      outputStream.write(stringify.getBytes("UTF-8"))
+      outputStream.write("\n".getBytes("UTF-8"))
+    }
+
   }
   /** Entry point for parsing JSON. */
   object Json {

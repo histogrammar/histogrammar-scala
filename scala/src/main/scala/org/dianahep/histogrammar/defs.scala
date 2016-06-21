@@ -289,6 +289,22 @@ package histogrammar {
   class Combine[CONTAINER <: Container[CONTAINER]] extends Function2[CONTAINER, CONTAINER, CONTAINER] with Serializable {
     def apply(h1: CONTAINER, h2: CONTAINER): CONTAINER = h1 + h2
   }
+
+  /** Persistent JSON output stream (for use with Histogrammar Watcher (hgwatch)). */
+  class JsonStream(file: java.io.File) {
+    def this(fileName: String) = this(new java.io.File(fileName))
+    private val fileOutputStream = new java.io.FileOutputStream(file, true)
+    def append[C <: Container[C]](container: C) {
+      fileOutputStream.write(container.toJson.stringify.getBytes("UTF-8"))
+      fileOutputStream.write("\n".getBytes("UTF-8"))
+      fileOutputStream.flush()
+    }
+    def append(json: Json) {
+      fileOutputStream.write(json.stringify.getBytes("UTF-8"))
+      fileOutputStream.write("\n".getBytes("UTF-8"))
+      fileOutputStream.flush()
+    }
+  }
 }
 
 /** Main library for Histogrammar.

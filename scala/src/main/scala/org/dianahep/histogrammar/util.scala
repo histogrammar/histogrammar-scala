@@ -14,9 +14,10 @@
 
 package org.dianahep.histogrammar
 
+import scala.util.Random
+
 import scala.collection.SortedMap
 import scala.collection.SortedSet
-import scala.util.Random
 
 import org.dianahep.histogrammar._
 
@@ -85,11 +86,12 @@ package util {
         * 
         * @param y data point to insert or possibly insert in the sample
         * @param weight weight of the point; data in the final sample are represented in proportion to these weights (probability of a point with weight `w` to be in the final sample: `w/W` where `W` is the sum of all weights)
+        * @param randomGenerator optional random generator state, for deterministic tests with a given random seed
         */
-      def update(y: RANGE, weight: Double = 1.0) {
+      def update(y: RANGE, weight: Double = 1.0, randomGenerator: Option[Random] = None) {
         numObserved += 1
 
-        val r = Math.pow(Random.nextDouble, 1.0/weight)
+        val r = Math.pow(randomGenerator.getOrElse(Random).nextDouble, 1.0/weight)
 
         // exception in updated WILL leave old sortedMap in previous state, since it's immutable (for rollback)
         if (numObserved <= limit)

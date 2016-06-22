@@ -14,6 +14,8 @@
 
 package org.dianahep
 
+import scala.util.Random
+
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
@@ -34,19 +36,21 @@ package histogrammar {
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param limit Maximum number of data points in the sample.
       * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
+      * @param randomSeed Provide a fixed seed for deterministic operation; None for random.
       */
-    def ed[RANGE](entries: Double, limit: Int, values: (RANGE, Double)*) = new Sampled(entries, None, limit, values: _*)
+    def ed[RANGE](entries: Double, limit: Int, values: Seq[(RANGE, Double)], randomSeed: Option[Long]) = new Sampled(entries, None, limit, values, randomSeed.map(new Random(_)))
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Sampling]].
       * 
       * @param limit Maximum number of data points in the sample.
       * @param quantity Function that produces numbers, vectors of numbers, or strings.
+      * @param randomSeed Provide a fixed seed for deterministic operation; None for random.
       */
-    def apply[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE]) =
-      new Sampling[DATUM, RANGE](quantity, 0.0, new mutable.Reservoir[RANGE](limit))
+    def apply[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE], randomSeed: Option[Long] = None) =
+      new Sampling[DATUM, RANGE](quantity, 0.0, new mutable.Reservoir[RANGE](limit), randomSeed.map(new Random(_)))
 
     /** Synonym for `apply`. */
-    def ing[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE]) = apply(limit, quantity)
+    def ing[DATUM, RANGE](limit: Int, quantity: UserFcn[DATUM, RANGE], randomSeed: Option[Long] = None) = apply(limit, quantity, randomSeed)
 
     /** Use [[org.dianahep.histogrammar.Sampled]] in Scala pattern-matching. */
     def unapply[RANGE](x: Sampled[RANGE]) = x.values
@@ -55,7 +59,7 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "values").maybe("name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "limit", "values").maybe("name").maybe("seed")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -101,7 +105,13 @@ package histogrammar {
           case x => throw new JsonFormatException(x, name + ".values")
         }
 
-        new Sampled[Any](entries, (nameFromParent ++ quantityName).lastOption, limit.toInt, values: _*)
+        val seed = get.getOrElse("seed", JsonNull) match {
+          case JsonInt(x) => Some(x)
+          case JsonNull => None
+          case x => throw new JsonFormatException(x, name + ".seed")
+        }
+
+        new Sampled[Any](entries, (nameFromParent ++ quantityName).lastOption, limit.toInt, values, seed.map(new Random(_)))
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -114,32 +124,40 @@ package histogrammar {
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param limit Maximum number of data points in the sample.
+    * @param randomGenerator Provide a generator for deterministic operation; None for random.
     * @param values Distinct multidimensional vectors and their weights, sampled from the observed distribution.
     */
-  class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: (RANGE, Double)*) extends Container[Sampled[RANGE]] with NoAggregation with QuantityName {
+  class Sampled[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val limit: Int, val values: Seq[(RANGE, Double)], val randomGenerator: Option[Random]) extends Container[Sampled[RANGE]] with NoAggregation with QuantityName {
     type Type = Sampled[RANGE]
     type EdType = Sampled[RANGE]
     def factory = Sample
 
     if (limit <= 0)
       throw new ContainerException(s"limit ($limit) must be positive")
-
+    
     /** Number of data points in the sample (saturates at `limit`). */
     def size = values.size
     /** Determine if the sample is empty. */
     def isEmpty = values.isEmpty
 
-    def zero = new Sampled(0.0, quantityName, limit)
+    def zero = new Sampled(0.0, quantityName, limit, Seq[(RANGE, Double)](), randomGenerator.map(x => new Random(x.nextLong)))
     def +(that: Sampled[RANGE]) = {
       if (this.limit != that.limit)
         throw new ContainerException(s"cannot add ${getClass.getName} because limit differs (${this.limit} vs ${that.limit})")
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
 
-      val reservoir = new mutable.Reservoir[RANGE](limit, values: _*)
-      that.values foreach {case (y, weight) => reservoir.update(y, weight)}
+      val newGenerator = (this.randomGenerator, that.randomGenerator) match {
+        case (Some(x), Some(y)) => Some(new Random(x.nextLong + y.nextLong))
+        case (Some(x), None) => Some(new Random(x.nextLong))
+        case (None, Some(y)) => Some(new Random(y.nextLong))
+        case (None, None) => None
+      }
 
-      new Sampled[RANGE](this.entries + that.entries, this.quantityName, this.limit, reservoir.values: _*)
+      val reservoir = new mutable.Reservoir[RANGE](limit, values: _*)
+      that.values foreach {case (y, weight) => reservoir.update(y, weight, newGenerator)}
+
+      new Sampled[RANGE](this.entries + that.entries, this.quantityName, this.limit, reservoir.values, newGenerator)
     }
 
     def children = Nil
@@ -154,15 +172,16 @@ package histogrammar {
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
         }): _*)).
-      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
+      maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
+      maybe(JsonString("seed") -> randomGenerator.map(_.nextLong))
     }
 
     override def toString() = s"""<Sampled size=$size>"""
     override def equals(that: Any) = that match {
-      case that: Sampled[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.limit == that.limit  &&  this.values == that.values
+      case that: Sampled[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.limit == that.limit  &&  this.values == that.values  &&  this.randomGenerator.isEmpty == that.randomGenerator.isEmpty
       case _ => false
     }
-    override def hashCode() = (entries, quantityName, limit, values).hashCode()
+    override def hashCode() = (entries, quantityName, limit, values, randomGenerator.isEmpty).hashCode()
   }
 
   /** An accumulated sample of numbers, vectors of numbers, or strings.
@@ -172,8 +191,9 @@ package histogrammar {
     * @param quantity Function that produces numbers, vectors of numbers, or strings.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param reservoir Data structure to perform weighted reservoir sampling.
+    * @param randomGenerator Provide a generator for deterministic operation; None for random.
     */
-  class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, reservoir: mutable.Reservoir[RANGE]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
+  class Sampling[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, reservoir: mutable.Reservoir[RANGE], val randomGenerator: Option[Random]) extends Container[Sampling[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
     type Type = Sampling[DATUM, RANGE]
     type EdType = Sampled[RANGE]
     type Datum = DATUM
@@ -191,17 +211,24 @@ package histogrammar {
     /** Determine if the sample is empty. */
     def isEmpty = reservoir.isEmpty
 
-    def zero = new Sampling(quantity, 0.0, new mutable.Reservoir[RANGE](limit))
+    def zero = new Sampling(quantity, 0.0, new mutable.Reservoir[RANGE](limit), randomGenerator.map(x => new Random(x.nextLong)))
     def +(that: Sampling[DATUM, RANGE]) = {
       if (this.limit != that.limit)
         throw new ContainerException(s"cannot add ${getClass.getName} because limit differs (${this.limit} vs ${that.limit})")
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
 
-      val newreservoir = new mutable.Reservoir[RANGE](this.limit, this.values: _*)
-      that.values foreach {case (y, weight) => newreservoir.update(y, weight)}
+      val newGenerator = (this.randomGenerator, that.randomGenerator) match {
+        case (Some(x), Some(y)) => Some(new Random(x.nextLong + y.nextLong))
+        case (Some(x), None) => Some(new Random(x.nextLong))
+        case (None, Some(y)) => Some(new Random(y.nextLong))
+        case (None, None) => None
+      }
 
-      new Sampling[DATUM, RANGE](quantity, this.entries + that.entries, newreservoir)
+      val newreservoir = new mutable.Reservoir[RANGE](this.limit, this.values: _*)
+      that.values foreach {case (y, weight) => newreservoir.update(y, weight, newGenerator)}
+
+      new Sampling[DATUM, RANGE](quantity, this.entries + that.entries, newreservoir, newGenerator)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
@@ -209,7 +236,7 @@ package histogrammar {
       if (weight > 0.0) {
         val q = quantity(datum)
 
-        reservoir.update(q, weight)
+        reservoir.update(q, weight, randomGenerator)
 
         // no possibility of exception from here on out (for rollback)
         entries += weight
@@ -228,14 +255,15 @@ package histogrammar {
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
         }): _*)).
-        maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
+        maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
+        maybe(JsonString("seed") -> randomGenerator.map(_.nextLong))
     }
 
     override def toString() = s"""<Sampling size=$size>"""
     override def equals(that: Any) = that match {
-      case that: Sampling[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values
+      case that: Sampling[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.limit == that.limit  &&  this.values == that.values  &&  this.randomGenerator.isEmpty == that.randomGenerator.isEmpty
       case _ => false
     }
-    override def hashCode() = (quantity, entries, limit, values).hashCode()
+    override def hashCode() = (quantity, entries, limit, values, randomGenerator.isEmpty).hashCode()
   }
 }

@@ -49,6 +49,18 @@ package histogrammar {
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], value: => V = Count()) =
       apply(quantity, value)
 
+    /** Alternate constructor for [[org.dianahep.histogrammar.Fractioned]] that builds from a pre-aggregated numerator and denominator.
+      * 
+      * This could be used for any bin-by-bin ratio (or even a difference or other reduction), such as a data/Monte Caro ratio. The purpose of binding the histograms together like this is to verify that they have compatible bins and to provide access to existing methods for creating ratio plots from Fractioned objects.
+      */
+    def build[N <: Container[N], D <: Container[D]](numerator: N, denominator: D): Fractioned[N] = {
+      // check for compatibility
+      val d2 = denominator.asInstanceOf[N]
+      numerator + d2
+      // return object
+      new Fractioned(d2.entries, None, numerator, d2)
+    }
+
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
       case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "numerator", "denominator").maybe("name").maybe("sub:name")) =>
@@ -145,7 +157,12 @@ package histogrammar {
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioned[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with NoAggregation with QuantityName with Select.Methods {
+  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with NoAggregation with QuantityName with Select.Methods {
+    // NOTE: The type bounds ought to be V <: Container[V] with NoAggregation, but this constraint has
+    //       been relaxed to allow the alternate constructor. The standard constructor applies this
+    //       constraint, so normal Fractioned objects will have the correct types. HOWEVER, this class
+    //       no longer "knows" that. I am not sure if this lack of knowledge will ever become a problem.
+
     type Type = Fractioned[V]
     type EdType = Fractioned[V]
     def factory = Fraction

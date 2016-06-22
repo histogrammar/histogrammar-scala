@@ -30,7 +30,7 @@ package histogrammar {
     val help = "Count data, ignoring their content. (A sum of weights or transformed weights.)"
     val detailedHelp = """Count(transform: UserFcn[Double, Double])"""
 
-    val untransformed = new UserFcn[Double, Double] {
+    val identity = new UserFcn[Double, Double] {
       def name = None
       def hasCache = false
       def apply[SUB <: Double](x: SUB) = x
@@ -46,10 +46,10 @@ package histogrammar {
       * 
       * @param transform Transform each weight before adding. For instance, to collect a sum of squared weights, pass {x: Double: x*x} as `transform`.
       */
-    def apply(transform: UserFcn[Double, Double] = untransformed) = new Counting(0.0, transform)
+    def apply(transform: UserFcn[Double, Double] = identity) = new Counting(0.0, transform)
 
     /** Synonym for `apply`. */
-    def ing(transform: UserFcn[Double, Double] = untransformed) = apply(transform)
+    def ing(transform: UserFcn[Double, Double] = identity) = apply(transform)
 
     /** Use [[org.dianahep.histogrammar.Counted]] in Scala pattern-matching. */
     def unapply(x: Counted) = Some(x.entries)

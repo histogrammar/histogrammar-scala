@@ -14,20 +14,27 @@
 
 package org.dianahep
 
+import org.dianahep.histogrammar._
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
 package histogrammar {
   //////////////////////////////////////////////////////////////// Count/Counted/Counting
 
-  /** Count data, ignoring their content. (Actually a sum of weights.)
+  /** Count data, ignoring their content. (A sum of weights or transformed weights.)
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Counting]] and immutable [[org.dianahep.histogrammar.Counted]] objects.
     */
   object Count extends Factory {
     val name = "Count"
-    val help = "Count data, ignoring their content. (Actually a sum of weights.)"
-    val detailedHelp = """Count()"""
+    val help = "Count data, ignoring their content. (A sum of weights or transformed weights.)"
+    val detailedHelp = """Count(transform: UserFcn[Double, Double])"""
+
+    val untransformed = new UserFcn[Double, Double] {
+      def name = None
+      def hasCache = false
+      def apply[SUB <: Double](x: SUB) = x
+    }
 
     /** Create an immutable [[org.dianahep.histogrammar.Counted]] from arguments (instead of JSON).
       * 
@@ -37,12 +44,12 @@ package histogrammar {
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Counting]].
       * 
-      * @param quantity Numerical function to track.
+      * @param transform Transform each weight before adding. For instance, to collect a sum of squared weights, pass {x: Double: x*x} as `transform`.
       */
-    def apply() = new Counting(0.0)
+    def apply(transform: UserFcn[Double, Double] = untransformed) = new Counting(0.0, transform)
 
     /** Synonym for `apply`. */
-    def ing = apply()
+    def ing(transform: UserFcn[Double, Double] = untransformed) = apply(transform)
 
     /** Use [[org.dianahep.histogrammar.Counted]] in Scala pattern-matching. */
     def unapply(x: Counted) = Some(x.entries)
@@ -131,7 +138,7 @@ package histogrammar {
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
     */
-  class Counting private[histogrammar](var entries: Double) extends Container[Counting] with Aggregation {
+  class Counting private[histogrammar](var entries: Double, val transform: UserFcn[Double, Double]) extends Container[Counting] with Aggregation {
     type Type = Counting
     type EdType = Counted
     type Datum = Any
@@ -140,14 +147,14 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Counting(0.0)
-    def +(that: Counting): Counting = new Counting(this.entries + that.entries)
+    def zero = new Counting(0.0, transform)
+    def +(that: Counting): Counting = new Counting(this.entries + that.entries, transform)
 
     def fill[SUB <: Any](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
       // no possibility of exception from here on out (for rollback)
       if (weight > 0.0)
-        entries += weight
+        entries += transform(weight)
     }
 
     def children = Nil
@@ -156,10 +163,10 @@ package histogrammar {
 
     override def toString() = s"<Counting $entries>"
     override def equals(that: Any) = that match {
-      case that: Counting => this.entries === that.entries
+      case that: Counting => this.entries === that.entries  &&  this.transform == that.transform
       case _ => false
     }
-    override def hashCode() = entries.hashCode
+    override def hashCode() = (entries, transform).hashCode
   }
 }
 

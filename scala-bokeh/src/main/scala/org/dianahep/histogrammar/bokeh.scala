@@ -12,6 +12,7 @@ import io.continuum.bokeh.Location
 import io.continuum.bokeh.Plot
 import io.continuum.bokeh.Tools
 import io.continuum.bokeh.Line
+import io.continuum.bokeh.Rect
 import io.continuum.bokeh.Circle
 import io.continuum.bokeh.Diamond
 import io.continuum.bokeh.Square
@@ -205,9 +206,10 @@ package object bokeh extends Tools {
 
       object source extends ColumnDataSource {
           val x = column(l to h by step)
-          val y = column(profile.cut.values.map(_.entries))
+          val y = column(profile.cut.values.map(v=>v.mean))
+          val yerr = column(profile.cut.values.map(v => if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0))
       }
-      import source.{x,y}
+      import source.{x,y,yerr}
 
       //Set marker color, fill color, line color
       val glyph = glyphType match {
@@ -216,6 +218,7 @@ package object bokeh extends Tools {
        case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "errors"   => new Rect().x(x).y(y).width(step).height(yerr).fill_color(fillColor).line_color(lineColor)  
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 

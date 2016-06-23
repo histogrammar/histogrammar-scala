@@ -464,6 +464,8 @@ package object histogrammar {
     def ===(that: Double) =
       if (this.x.isNaN  &&  that.isNaN)
         true
+      else if (this.x.isInfinite  &&  that.isInfinite)
+        (this.x > 0.0) == (that > 0.0)
       else if (util.relativeTolerance > 0.0  &&  util.absoluteTolerance > 0.0)
         Math.abs(this.x - that) <= Math.max(util.relativeTolerance * Math.max(Math.abs(this.x), Math.abs(that)), util.absoluteTolerance)
       else if (util.relativeTolerance > 0.0)

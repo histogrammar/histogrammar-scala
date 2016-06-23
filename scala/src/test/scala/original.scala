@@ -8,7 +8,7 @@ import org.scalatest.Matchers
 
 import org.dianahep.histogrammar._
 
-class DefaultSuite extends FlatSpec with Matchers {
+class OriginalSuite extends FlatSpec with Matchers {
   val simple = List(3.4, 2.2, -1.8, 0.0, 7.3, -4.7, 1.6, 0.0, -3.0, -1.7)
 
   case class Struct(bool: Boolean, int: Int, double: Double, string: String)

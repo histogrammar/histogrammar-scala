@@ -1,4 +1,4 @@
-// Copyright 2016 Jim Pivarski
+// Copyright 2016 DIANA-HEP
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,14 +22,50 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning
 
-  /** Split a quanity into bins dynamically with a clustering algorithm, filling only one datum per bin with no overflows or underflows.
+  /** Adaptively partition a domain into bins and fill them at the same time using a clustering algorithm. Each input datum contributes to exactly one final bin.
+    * 
+    * The algorithm is based on [[http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf "A streaming parallel decision tree algorithm"]] ''J. Machine Learning Research 11 (2010)'' with a small modification for display histograms.
+    * 
+    * Yael Ben-Haim and Elad Tom-Tov's algorithm adds each new data point as a new bin containing a single value, then merges the closest bins if the total number of bins exceeds a maximum (like hierarchical clustering in one dimension).
+    * 
+    * This tends to provide the most detail on the tails of a distribution (which have the most widely spaced bins), and is therefore a good alternative to [[org.dianahep.histogrammar.Quantile]] for estimating extreme quantiles like 0.01 and 0.99.
+    * 
+    * However, a histogram binned this way is less interesting for visualizing a distribution. Usually, the least interesting bins are the ones with the fewest entries, so one can consider merging the bins with the fewest entries, giving no detail on the tails.
+    * 
+    * As a compromise, we introduce a "tail detail" hyperparameter that strikes a balance between the two extremes: the bins that are merged minimize
+    * 
+    * 
+    * {{{tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1 + v2)/entries}}}
+    * 
+    * where `pos1` and `pos2` are the (ordered) positions of the two bins, `min` and `max` are the minimum and maximum positions of all entries, `entries1` and `entries2` are the number of entries in the two bins, and `entries` is the total number of entries in all bins. The denominators normalize the scales of domain position and number of entries so that `tailDetail` may be unitless and between 0.0 and 1.0 (inclusive).
+    * 
+    * A value of `tailDetail = 0.2` is a good default.
+    * 
+    * This algorithm is deterministic; the same input data yield the same histogram.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.AdaptivelyBinning]] and immutable [[org.dianahep.histogrammar.AdaptivelyBinned]] objects.
     */
   object AdaptivelyBin extends Factory {
     val name = "AdaptivelyBin"
-    val help = "Split a quanity into bins dynamically with a clustering algorithm, filling only one datum per bin with no overflows or underflows."
-    val detailedHelp = """AdaptivelyBin(quantity: UserFcn[DATUM, Double], num: Int = 100, tailDetail: Double = 0.2, value: => V = Count(), nanflow: N = Count())"""
+    val help = "Adaptively partition a domain into bins and fill them at the same time using a clustering algorithm. Each input datum contributes to exactly one final bin."
+    val detailedHelp = """The algorithm is based on [[http://www.jmlr.org/papers/volume11/ben-haim10a/ben-haim10a.pdf "A streaming parallel decision tree algorithm"]] ''J. Machine Learning Research 11 (2010)'' with a small modification for display histograms.
+
+Yael Ben-Haim and Elad Tom-Tov's algorithm adds each new data point as a new bin containing a single value, then merges the closest bins if the total number of bins exceeds a maximum (like hierarchical clustering in one dimension).
+
+This tends to provide the most detail on the tails of a distribution (which have the most widely spaced bins), and is therefore a good alternative to [[org.dianahep.histogrammar.Quantile]] for estimating extreme quantiles like 0.01 and 0.99.
+
+However, a histogram binned this way is less interesting for visualizing a distribution. Usually, the least interesting bins are the ones with the fewest entries, so one can consider merging the bins with the fewest entries, giving no detail on the tails.
+
+As a compromise, we introduce a "tail detail" hyperparameter that strikes a balance between the two extremes: the bins that are merged minimize
+
+
+{{{tailDetail*(x2 - x1)/(max - min) + (1.0 - tailDetail)*(v1 + v2)/entries}}}
+
+where `pos1` and `pos2` are the (ordered) positions of the two bins, `min` and `max` are the minimum and maximum positions of all entries, `entries1` and `entries2` are the number of entries in the two bins, and `entries` is the total number of entries in all bins. The denominators normalize the scales of domain position and number of entries so that `tailDetail` may be unitless and between 0.0 and 1.0 (inclusive).
+
+A value of `tailDetail = 0.2` is a good default.
+
+This algorithm is deterministic; the same input data yield the same histogram."""
 
     /** Create an immutable [[org.dianahep.histogrammar.AdaptivelyBinned]] from arguments (instead of JSON).
       * 

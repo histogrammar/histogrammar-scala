@@ -1,4 +1,4 @@
-// Copyright 2016 Jim Pivarski
+// Copyright 2016 DIANA-HEP
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,14 +24,24 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// SparselyBin/SparselyBinned/SparselyBinning
 
-  /** Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary.
+  /** Split a quantity into equally spaced bins, creating them whenever their `entries` would be non-zero. Exactly one sub-aggregator is filled per datum.
+    * 
+    * Use this when you have a distribution of known scale (bin width) but unknown domain (lowest and highest bin index).
+    * 
+    * Unlike fixed-domain binning, this aggregator has the potential to use unlimited memory. A large number of ''distinct'' outliers can generate many unwanted bins.
+    * 
+    * Like fixed-domain binning, the bins are indexed by integers, though they are 64-bit and may be negative.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.SparselyBinning]] and immutable [[org.dianahep.histogrammar.SparselyBinned]] objects.
     */
   object SparselyBin extends Factory {
     val name = "SparselyBin"
-    val help = "Split a quantity into equally spaced bins, filling only one bin per datum and creating new bins as necessary."
-    val detailedHelp = """SparselyBin(binWidth: Double, quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count(), origin: Double = 0.0)"""
+    val help = "Split a quantity into equally spaced bins, creating them whenever their `entries` would be non-zero. Exactly one sub-aggregator is filled per datum."
+    val detailedHelp = """Use this when you have a distribution of known scale (bin width) but unknown domain (lowest and highest bin index).
+
+Unlike fixed-domain binning, this aggregator has the potential to use unlimited memory. A large number of _distinct_ outliers can generate many unwanted bins.
+
+Like fixed-domain binning, the bins are indexed by integers, though they are 64-bit and may be negative."""
 
     private val integerPattern = "-?[0-9]+".r
 

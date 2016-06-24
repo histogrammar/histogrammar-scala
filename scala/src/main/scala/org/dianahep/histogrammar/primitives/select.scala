@@ -1,4 +1,4 @@
-// Copyright 2016 Jim Pivarski
+// Copyright 2016 DIANA-HEP
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,14 +22,24 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Select/Selected/Selecting
 
-  /** Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting).
+  /** Filter or weight data according to a given selection.
+    * 
+    * This primitive is a basic building block, intended to be used in conjunction with anything that needs a user-defined cut. In particular, a standard histogram often has a custom selection, and this can be built by nesting Select -> Bin -> Count.
+    * 
+    * Select also resembles [[org.dianahep.histogrammar.Fraction]], but without the `denominator`.
+    * 
+    * The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entries / x.entries` (because all aggregators have an `entries` member).
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Selecting]] and immutable [[org.dianahep.histogrammar.Selected]] (sic) objects.
     */
   object Select extends Factory {
     val name = "Select"
-    val help = "Accumulate an aggregator for data that satisfy a cut (or more generally, a weighting)."
-    val detailedHelp = """Select(quantity: UserFcn[DATUM, Double], cut: V)"""
+    val help = "Filter or weight data according to a given selection."
+    val detailedHelp = """This primitive is a basic building block, intended to be used in conjunction with anything that needs a user-defined cut. In particular, a standard histogram often has a custom selection, and this can be built by nesting Select -> Bin -> Count.
+
+Select also resembles [[org.dianahep.histogrammar.Fraction]], but without the `denominator`.
+
+The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entries / x.entries` (because all aggregators have an `entries` member)."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Selected]] from arguments (instead of JSON).
       * 

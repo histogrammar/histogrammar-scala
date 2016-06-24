@@ -1,4 +1,4 @@
-// Copyright 2016 Jim Pivarski
+// Copyright 2016 DIANA-HEP
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,12 +22,14 @@ package histogrammar {
 
   /** Accumulate the weighted mean of a given quantity.
     * 
+    * Uses the numerically stable weighted mean algorithm described in Tony Finch, [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance"]] ''Univeristy of Cambridge Computing Service, 2009''.
+    * 
     * Factory produces mutable [[org.dianahep.histogrammar.Averaging]] and immutable [[org.dianahep.histogrammar.Averaged]] objects.
     */
   object Average extends Factory {
     val name = "Average"
     val help = "Accumulate the weighted mean of a given quantity."
-    val detailedHelp = """Average(quantity: UserFcn[DATUM, Double])"""
+    val detailedHelp = """Uses the numerically stable weighted mean algorithm described in Tony Finch, [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance"]] ''Univeristy of Cambridge Computing Service, 2009''."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Averaged]] from arguments (instead of JSON).
       * 

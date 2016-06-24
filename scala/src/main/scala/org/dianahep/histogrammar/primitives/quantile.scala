@@ -1,4 +1,4 @@
-// Copyright 2016 Jim Pivarski
+// Copyright 2016 DIANA-HEP
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,47 +22,28 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Quantile/Quantiled/Quantiling
 
-  /** Accumulate an approximation to a given quantile, such as 0.5 for the median, (0.25, 0.75) for the first and third quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles.
+  /** Estimate a quantile, such as 0.5 for median, (0.25, 0.75) for quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles, etc.
     * 
-    * Simple methods for computing quantiles sort the entire dataset and select an item by sorted index, but Histogrammar
+    * '''Note:''' this is an inexact heuristic! In general, it is not possible to derive an exact quantile in a single pass over a dataset (without accumulating a large fraction of the dataset in memory). To interpret this statistic, refer to the fill and merge algorithms below.
     * 
-    *   - aggregates in a single pass over the data and
-    *   - does not load the entire dataset into memory as it passes over the data.
+    * The quantile aggregator dynamically minimizes the mean absolute error between the current estimate and the target quantile, with a learning rate that depends on the cumulative deviations. The algorithm is deterministic: the same data always yields the same final estimate.
     * 
-    * Therefore, sorting and selecting is out of the question. Instead, this primitive (in all languages) estimates the quantile with the following heuristic:
+    * This statistic has the best accuracy for quantiles near the middle of the distribution, such as the median (0.5), and the worst accuracy for quantiles near the edges, such as the first or last percentile (0.01 or 0.99). Use the specialized aggregators for the [[org.dianahep.histogrammar.Minimize]] (0.0) or [[org.dianahep.histogrammar.Maximize]] (1.0) of a distribution, since those aggregators are exact.
     * 
-    * {{{
-    * var entries = 0.0
-    * var cumulativeDeviation = 0.0
-    * var estimate = NaN
-    * 
-    * def fill(value: Double, weight: Double) {
-    *   entries += weight
-    * 
-    *   if (datum.isNaN)
-    *     estimate = value
-    * 
-    *   else {
-    *     cumulativeDeviation += abs(value - estimate)
-    *     val learningRate = 1.5 * cumulativeDeviation / entries**2
-    * 
-    *     estimate = weight * learningRate * (cmp(value, estimate) + 2.0*target - 1.0)
-    *   }
-    * }
-    * }}}
-    * 
-    * where `target` is the intended quantile (e.g. 0.5 for median) and `cmp(x, y)` is `-1` for `x < y`, is `+1` for `x > y`, and is `0` for `x == y`. The `cumulativeDeviation` is only used to set a (usually decreasing) `learningRate` and is thread-local to a given aggregator. Only `entries` and `estimate` are persistent (serialized to/from JSON).
-    * 
-    * The combination function (overloaded `+` operator) simply averages the `estimates`, weighted by `entries`.
-    * 
-    * The accuracy of this heuristic is best in the bulk of the distribution, rather than the tails, and accuracy scales with the size of the dataset. '''TODO:''' formal study of the accuracy of this heuristic or a reference to literature.
+    * Another alternative is to use [[org.dianahep.histogrammar.AdaptivelyBin]] to histogram the distribution and then estimate quantiles from the histogram bins. AdaptivelyBin with `tailDetail == 1.0` maximizes detail on the tails of the distribution (Yael Ben-Haim and Elad Tom-Tov's original algorithm), providing the best estimates of extreme quantiles like 0.01 and 0.99.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Quantiling]] and immutable [[org.dianahep.histogrammar.Quantiled]] objects.
     */
   object Quantile extends Factory {
     val name = "Quantile"
-    val help = "Estimate a quantile, such as 0.5 for median, (0.25, 0.75) for quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles."
-    val detailedHelp = """Quantile(target: Double, quantity: UserFcn[DATUM, Double])"""
+    val help = "Estimate a quantile, such as 0.5 for median, (0.25, 0.75) for quartiles, or (0.2, 0.4, 0.6, 0.8) for quintiles, etc."
+    val detailedHelp = """'''Note:''' this is an inexact heuristic! In general, it is not possible to derive an exact quantile in a single pass over a dataset (without accumulating a large fraction of the dataset in memory). To interpret this statistic, refer to the fill and merge algorithms below.
+
+The quantile aggregator dynamically minimizes the mean absolute error between the current estimate and the target quantile, with a learning rate that depends on the cumulative deviations. The algorithm is deterministic: the same data always yields the same final estimate.
+
+This statistic has the best accuracy for quantiles near the middle of the distribution, such as the median (0.5), and the worst accuracy for quantiles near the edges, such as the first or last percentile (0.01 or 0.99). Use the specialized aggregators for the [[org.dianahep.histogrammar.Minimum]] (0.0) or [[org.dianahep.histogrammar.Maximum]] (1.0) of a distribution, since those aggregators are exact.
+
+Another alternative is to use [[org.dianahep.histogrammar.AdaptivelyBin]] to histogram the distribution and then estimate quantiles from the histogram bins. AdaptivelyBin with `tailDetail == 1.0` maximizes detail on the tails of the distribution (Yael Ben-Haim and Elad Tom-Tov's original algorithm), providing the best estimates of extreme quantiles like 0.01 and 0.99."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Quantiled]] from arguments (instead of JSON).
       * 

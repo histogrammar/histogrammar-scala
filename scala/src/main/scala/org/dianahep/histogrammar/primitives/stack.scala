@@ -1,4 +1,4 @@
-// Copyright 2016 Jim Pivarski
+// Copyright 2016 DIANA-HEP
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,14 +22,28 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
 
-  /** Accumulate a suite containers, filling all that are above a given cut on a given quantity.
+  /** Accumulates a suite of aggregators, each filtered with a tighter selection on the same quantity.
+    * 
+    * This is a generalization of [[org.dianahep.histogrammar.Fraction]], which fills two aggregators, one with a cut, the other without. Stack fills `N + 1` aggregators with `N` successively tighter cut thresholds. The first is always filled (like the denominator of Fraction), the second is filled if the computed quantity exceeds its threshold, the next is filled if the computed quantity exceeds a higher threshold, and so on.
+    * 
+    * The thresholds are presented in increasing order and the computed value must be greater than or equal to a threshold to fill the corresponding bin, and therefore the number of entries in each filled bin is greatest in the first and least in the last.
+    * 
+    * Although this aggregation could be visualized as a stack of histograms, stacked histograms usually represent a different thing: data from different sources, rather than different cuts on the same source. For example, it is common to stack Monte Carlo samples from different backgrounds to show that they add up to the observed data. The Stack aggregator does not make plots of this type because aggregation trees in Histogrammar draw data from exactly one source.
+    * 
+    * To make plots from different sources in Histogrammar, one must perform separate aggregation runs. It may then be convenient to stack the results of those runs as though they were created with a Stack aggregation, so that plotting code can treat both cases uniformly. For this reason, Stack has an alternate constructor to build a Stack manually from distinct aggregators, even if those aggregators came from different aggregation runs.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Stacking]] and immutable [[org.dianahep.histogrammar.Stacked]] objects.
     */
   object Stack extends Factory {
     val name = "Stack"
-    val help = "Accumulate a suite containers, filling all that are above a given cut on a given quantity."
-    val detailedHelp = """Stack(value: => V, quantity: UserFcn[DATUM, Double], cuts: Double*)"""
+    val help = "Accumulates a suite of aggregators, each filtered with a tighter selection on the same quantity."
+    val detailedHelp = """This is a generalization of [[org.dianahep.histogrammar.Fraction]], which fills two aggregators, one with a cut, the other without. Stack fills `N + 1` aggregators with `N` successively tighter cut thresholds. The first is always filled (like the denominator of Fraction), the second is filled if the computed quantity exceeds its threshold, the next is filled if the computed quantity exceeds a higher threshold, and so on.
+
+The thresholds are presented in increasing order and the computed value must be greater than or equal to a threshold to fill the corresponding bin, and therefore the number of entries in each filled bin is greatest in the first and least in the last.
+
+Although this aggregation could be visualized as a stack of histograms, stacked histograms usually represent a different thing: data from different sources, rather than different cuts on the same source. For example, it is common to stack Monte Carlo samples from different backgrounds to show that they add up to the observed data. The Stack aggregator does not make plots of this type because aggregation trees in Histogrammar draw data from exactly one source.
+
+To make plots from different sources in Histogrammar, one must perform separate aggregation runs. It may then be convenient to stack the results of those runs as though they were created with a Stack aggregation, so that plotting code can treat both cases uniformly. For this reason, Stack has an alternate constructor to build a Stack manually from distinct aggregators, even if those aggregators came from different aggregation runs."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Stacked]] from arguments (instead of JSON).
       * 

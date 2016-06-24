@@ -1,4 +1,4 @@
-// Copyright 2016 Jim Pivarski
+// Copyright 2016 DIANA-HEP
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,14 +22,20 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
 
-  /** Accumulate a suite containers, filling the one that is between a pair of given cuts on a given quantity.
+  /** Accumulate a suite of aggregators, each between two thresholds, filling exactly one per datum.
+    * 
+    * This is a variation on [[org.dianahep.histogrammar.Stack]], which fills `N + 1` aggregators with `N` successively tighter cut thresholds. Partition fills `N + 1` aggregators in the non-overlapping intervals between `N` thresholds.
+    * 
+    * Partition is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in that they both partition a space into irregular subdomains with no gaps and no overlaps. However, CentrallyBin is defined by bin centers and Partition is defined by bin edges, the first and last of which are at negative and positive infinity.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Partitioning]] and immutable [[org.dianahep.histogrammar.Partitioned]] objects.
     */
   object Partition extends Factory {
     val name = "Partition"
-    val help = "Accumulate a suite containers, filling the one that is between a pair of given cuts on a given quantity."
-    val detailedHelp = """Partition(value: => V, quantity: UserFcn[DATUM, Double], cuts: Double*)"""
+    val help = "Accumulate a suite of aggregators, each between two thresholds, filling exactly one per datum."
+    val detailedHelp = """This is a variation on [[org.dianahep.histogrammar.Stack]], which fills `N + 1` aggregators with `N` successively tighter cut thresholds. Partition fills `N + 1` aggregators in the non-overlapping intervals between `N` thresholds.
+
+Partition is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in that they both partition a space into irregular subdomains with no gaps and no overlaps. However, CentrallyBin is defined by bin centers and Partition is defined by bin edges, the first and last of which are at negative and positive infinity."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Partitioned]] from arguments (instead of JSON).
       * 

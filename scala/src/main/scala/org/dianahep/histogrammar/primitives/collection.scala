@@ -258,7 +258,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
     * 
     * Note that sub-aggregators within an UntypedLabel may have ''different types''. In strongly typed languages, this flexibility poses a problem: nested objects must be type-cast before they can be used. To collect objects of the ''same type'' with string-based look-up keys, use [[org.dianahep.histogrammar.Label]].
     * 
-    * To collect aggregators of the _same type_ without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of _different types_ without naming them, use [[org.dianahep.histogrammar.Branch]].
+    * To collect aggregators of the ''same type'' without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of ''different types'' without naming them, use [[org.dianahep.histogrammar.Branch]].
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.UntypedLabeling]] and immutable [[org.dianahep.histogrammar.UntypedLabeled]] objects.
     * 
@@ -271,7 +271,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
 
 Note that sub-aggregators within an UntypedLabel may have ''different types''. In strongly typed languages, this flexibility poses a problem: nested objects must be type-cast before they can be used. To collect objects of the ''same type'' with string-based look-up keys, use [[org.dianahep.histogrammar.Label]].
 
-To collect aggregators of the _same type_ without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of _different types_ without naming them, use [[org.dianahep.histogrammar.Branch]]."""
+To collect aggregators of the ''same type'' without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of ''different types'' without naming them, use [[org.dianahep.histogrammar.Branch]]."""
 
     /** Create an immutable [[org.dianahep.histogrammar.UntypedLabeled]] from arguments (instead of JSON).
       * 
@@ -702,7 +702,7 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
 
   /** Accumulate aggregators of different types, indexed by i0 through i9. Every sub-aggregator is filled with every input datum.
     * 
-    * This primitive provides an anonymous collection of aggregators of _different types,_ usually for gluing together various statistics. For instance, if the following associates a sum of weights to every bin in a histogram,
+    * This primitive provides an anonymous collection of aggregators of ''different types,'' usually for gluing together various statistics. For instance, if the following associates a sum of weights to every bin in a histogram,
     * 
     * {{{Bin.ing(100, 0, 1, {d: Datum => d.x},
     *   Sum.ing({d: Datum => d.weight}))}}}
@@ -730,7 +730,7 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
   object Branch extends Factory {
     def name = "Branch"
     def help = "Accumulate aggregators of different types, indexed by i0 through i9. Every sub-aggregator is filled with every input datum."
-    def detailedHelp = """This primitive provides an anonymous collection of aggregators of _different types,_ usually for gluing together various statistics. For instance, if the following associates a sum of weights to every bin in a histogram,
+    def detailedHelp = """This primitive provides an anonymous collection of aggregators of ''different types,'' usually for gluing together various statistics. For instance, if the following associates a sum of weights to every bin in a histogram,
 
 {{{Bin.ing(100, 0, 1, {d: Datum => d.x},
   Sum.ing({d: Datum => d.weight}))}}}

@@ -22,14 +22,29 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Label/Labeled/Labeling
 
-  /** Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum.
+  /** Accumulate any number of aggregators of the same type and label them with strings. Every sub-aggregator is filled with every input datum.
+    * 
+    * This primitive simulates a directory of aggregators. For sub-directories, nest collections within the Label collection.
+    * 
+    * Note that all sub-aggregators within a Label must have the ''same type'' (e.g. histograms of different binnings, but all histograms). To collect objects of ''different types'' with string-based look-up keys, use [[org.dianahep.histogrammar.UntypedLabel]].
+    * 
+    * To collect aggregators of the ''same type'' without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of ''different types'' without naming them, use [[org.dianahep.histogrammar.Branch]].
+    * 
+    * In strongly typed languages, the restriction to a single type allows nested objects to be extracted without casting.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Labeling]] and immutable [[org.dianahep.histogrammar.Labeled]] objects.
     */
   object Label extends Factory {
     val name = "Label"
-    val help = "Accumulate any number of containers of the SAME type and label them with strings. Every one is filled with every input datum."
-    val detailedHelp = """Label(pairs: (String, V)*)"""
+    val help = "Accumulate any number of aggregators of the same type and label them with strings. Every sub-aggregator is filled with every input datum."
+    val detailedHelp = """This primitive simulates a directory of aggregators. For sub-directories, nest collections within the Label collection.
+
+Note that all sub-aggregators within a Label must have the ''same type'' (e.g. histograms of different binnings, but all histograms). To collect objects of ''different types'' with string-based look-up keys, use [[org.dianahep.histogrammar.UntypedLabel]].
+
+To collect aggregators of the ''same type'' without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of ''different types'' without naming them, use [[org.dianahep.histogrammar.Branch]].
+
+In strongly typed languages, the restriction to a single type allows nested objects to be extracted without casting.
+"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Labeled]] from arguments (instead of JSON).
       * 
@@ -237,7 +252,13 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// UntypedLabel/UntypedLabeled/UntypedLabeling
 
-  /** Accumulate containers of any type except [[org.dianahep.histogrammar.Count]] and label them with strings. Every one is filled with every input datum.
+  /** Accumulate any number of aggregators of any type and label them with strings. Every sub-aggregator is filled with every input datum.
+    * 
+    * This primitive simulates a directory of aggregators. For sub-directories, nest collections within the UntypedLabel.
+    * 
+    * Note that sub-aggregators within an UntypedLabel may have ''different types''. In strongly typed languages, this flexibility poses a problem: nested objects must be type-cast before they can be used. To collect objects of the ''same type'' with string-based look-up keys, use [[org.dianahep.histogrammar.Label]].
+    * 
+    * To collect aggregators of the _same type_ without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of _different types_ without naming them, use [[org.dianahep.histogrammar.Branch]].
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.UntypedLabeling]] and immutable [[org.dianahep.histogrammar.UntypedLabeled]] objects.
     * 
@@ -245,8 +266,12 @@ package histogrammar {
     */
   object UntypedLabel extends Factory {
     val name = "UntypedLabel"
-    val help = "Accumulate containers of any type except Count and label them with strings. Every one is filled with every input datum."
-    val detailedHelp = """UntypedLabel(pairs: (String -> Container)*)"""
+    val help = "Accumulate any number of aggregators of any type and label them with strings. Every sub-aggregator is filled with every input datum."
+    val detailedHelp = """This primitive simulates a directory of aggregators. For sub-directories, nest collections within the UntypedLabel.
+
+Note that sub-aggregators within an UntypedLabel may have ''different types''. In strongly typed languages, this flexibility poses a problem: nested objects must be type-cast before they can be used. To collect objects of the ''same type'' with string-based look-up keys, use [[org.dianahep.histogrammar.Label]].
+
+To collect aggregators of the _same type_ without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of _different types_ without naming them, use [[org.dianahep.histogrammar.Branch]]."""
 
     /** Create an immutable [[org.dianahep.histogrammar.UntypedLabeled]] from arguments (instead of JSON).
       * 
@@ -465,14 +490,24 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Index/Indexed/Indexing
 
-  /** Accumulate any number of containers of the SAME type anonymously in a list. Every one is filled with every input datum.
+  /** Accumulate any number of aggregators of the same type in a list. Every sub-aggregator is filled with every input datum.
+    * 
+    * This primitive provides an anonymous collection of aggregators (unless the integer index is taken to have special meaning, but generally such bookkeeping should be encoded in strings). Indexes can be nested to create two-dimensional ordinal grids of aggregators. (Use [[org.dianahep.histogrammar.Bin]] if the space is to have a metric interpretation.)
+    * 
+    * Note that all sub-aggregators within an Index must have the ''same type'' (e.g. histograms of different binnings, but all histograms). To collect objects of ''different types,'' still indexed by integer, use [[org.dianahep.histogrammar.Branch]].
+    * 
+    * To collect aggregators of the ''same type'' with string-based labels, use [[org.dianahep.histogrammar.Label]]. To collect aggregators of ''different types'' with string-based labels, use [[org.dianahep.histogrammar.UntypedLabel]].
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Indexing]] and immutable [[org.dianahep.histogrammar.Indexed]] objects.
     */
   object Index extends Factory {
     val name = "Index"
-    val help = "Accumulate any number of containers of the SAME type anonymously in a list. Every one is filled with every input datum."
-    val detailedHelp = """"""
+    val help = "Accumulate any number of aggregators of the same type in a list. Every sub-aggregator is filled with every input datum."
+    val detailedHelp = """This primitive provides an anonymous collection of aggregators (unless the integer index is taken to have special meaning, but generally such bookkeeping should be encoded in strings). Indexes can be nested to create two-dimensional ordinal grids of aggregators. (Use [[org.dianahep.histogrammar.Bin]] if the space is to have a metric interpretation.)
+
+Note that all sub-aggregators within an Index must have the ''same type'' (e.g. histograms of different binnings, but all histograms). To collect objects of ''different types,'' still indexed by integer, use [[org.dianahep.histogrammar.Branch]].
+
+To collect aggregators of the ''same type'' with string-based labels, use [[org.dianahep.histogrammar.Label]]. To collect aggregators of ''different types'' with string-based labels, use [[org.dianahep.histogrammar.UntypedLabel]]."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Indexed]] from arguments (instead of JSON).
       * 
@@ -665,7 +700,24 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Branch/Branched/Branching
 
-  /** Accumulate containers of DIFFERENT types, indexed by `i0` through `i9`. Every one is filled with every input datum.
+  /** Accumulate aggregators of different types, indexed by i0 through i9. Every sub-aggregator is filled with every input datum.
+    * 
+    * This primitive provides an anonymous collection of aggregators of _different types,_ usually for gluing together various statistics. For instance, if the following associates a sum of weights to every bin in a histogram,
+    * 
+    * {{{Bin.ing(100, 0, 1, {d: Datum => d.x},
+    *   Sum.ing({d: Datum => d.weight}))}}}
+    * 
+    * the following would associate the sum of weights and the sum of squared weights to every bin:
+    * 
+    * {{{Bin.ing(100, 0, 1, {d: Datum => d.x},
+    *   Branch.ing(Sum.ing({d: Datum => d.weight}),
+    *              Sum.ing({d: Datum => d.weight*d.weight})))}}}
+    * 
+    * Branch is a basic building block for complex aggregators. The limitation to ten branches, indexed from i0 to i9, is a concession to type inference in statically typed languages. It is not a fundamental limit, but the type-metaprogramming becomes increasingly complex as branches are added. Error messages may be convoluted as the compiler presents internals of the type-metaprogramming in response to a user's simple mistake.
+    * 
+    * Therefore, individual implementations may allow more than ten branches, but the Histogrammar standard only requires ten.
+    * 
+    * To collect an unlimited number of aggregators of the ''same type'' without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of the ''same type'' with string-based labels, use [[org.dianahep.histogrammar.Label]]. To collect aggregators of ''different types'' with string-based labels, use [[org.dianahep.histogrammar.UntypedLabel]].
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Branching]] and immutable [[org.dianahep.histogrammar.Branched]] objects.
     * 
@@ -677,8 +729,23 @@ package histogrammar {
     */
   object Branch extends Factory {
     def name = "Branch"
-    def help = "Accumulate containers of DIFFERENT types, indexed by i0 through i9. Every one is filled with every input datum."
-    def detailedHelp = "Branch(container0, container1, ...)"
+    def help = "Accumulate aggregators of different types, indexed by i0 through i9. Every sub-aggregator is filled with every input datum."
+    def detailedHelp = """This primitive provides an anonymous collection of aggregators of _different types,_ usually for gluing together various statistics. For instance, if the following associates a sum of weights to every bin in a histogram,
+
+{{{Bin.ing(100, 0, 1, {d: Datum => d.x},
+  Sum.ing({d: Datum => d.weight}))}}}
+
+the following would associate the sum of weights and the sum of squared weights to every bin:
+
+{{{Bin.ing(100, 0, 1, {d: Datum => d.x},
+  Branch.ing(Sum.ing({d: Datum => d.weight}),
+             Sum.ing({d: Datum => d.weight*d.weight})))}}}
+
+Branch is a basic building block for complex aggregators. The limitation to ten branches, indexed from i0 to i9, is a concession to type inference in statically typed languages. It is not a fundamental limit, but the type-metaprogramming becomes increasingly complex as branches are added. Error messages may be convoluted as the compiler presents internals of the type-metaprogramming in response to a user's simple mistake.
+
+Therefore, individual implementations may allow more than ten branches, but the Histogrammar standard only requires ten.
+
+To collect an unlimited number of aggregators of the ''same type'' without naming them, use [[org.dianahep.histogrammar.Index]]. To collect aggregators of the ''same type'' with string-based labels, use [[org.dianahep.histogrammar.Label]]. To collect aggregators of ''different types'' with string-based labels, use [[org.dianahep.histogrammar.UntypedLabel]]."""
 
     def ed[C0 <: Container[C0] with NoAggregation](entries: Double, i0: C0) = new Branched(entries, i0, BranchedNil)
     def ed[C0 <: Container[C0] with NoAggregation, C1 <: Container[C1] with NoAggregation](entries: Double, i0: C0, i1: C1) = new Branched(entries, i0, new Branched(entries, i1, BranchedNil))

@@ -20,14 +20,16 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErred/AbsoluteErring
 
-  /** Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero.
+  /** Accumulate the weighted mean absolute error (MAE) of a quantity around zero.
+    * 
+    * The MAE is sometimes used as a replacement for the standard deviation, associated with medians, rather than means. However, this aggregator makes no attempt to estimate a median. If used as an "error," it should be used on a quantity whose nominal value is zero, such as a residual.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.AbsoluteErring]] and immutable [[org.dianahep.histogrammar.AbsoluteErred]] objects.
     */
   object AbsoluteErr extends Factory {
     val name = "AbsoluteErr"
-    val help = "Accumulate the weighted Mean Absolute Error (MAE) of a quantity whose nominal value is zero."
-    val detailedHelp = """AbsoluteErr(quantity: UserFcn[DATUM, Double])"""
+    val help = "Accumulate the weighted mean absolute error (MAE) of a quantity around zero."
+    val detailedHelp = """The MAE is sometimes used as a replacement for the standard deviation, associated with medians, rather than means. However, this aggregator makes no attempt to estimate a median. If used as an "error," it should be used on a quantity whose nominal value is zero, such as a residual."""
 
     /** Create an immutable [[org.dianahep.histogrammar.AbsoluteErred]] from arguments (instead of JSON).
       * 

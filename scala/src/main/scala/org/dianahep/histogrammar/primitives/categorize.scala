@@ -22,14 +22,20 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Categorize/Categorized/Categorizing
 
-  /** Split a given quantity by its categorical (string-based) value and fill only one category per datum.
+  /** Split a given quantity by its categorical value and fill only one category per datum.
+    * 
+    * A bar chart may be thought of as a histogram with string-valued (categorical) bins, so this is the equivalent of [[org.dianahep.histogrammar.Bin]] for bar charts. The order of the strings is deferred to the visualization stage.
+    * 
+    * Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potential to use unlimited memory. A large number of ''distinct'' categories can generate many unwanted bins.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Categorizing]] and immutable [[org.dianahep.histogrammar.Categorized]] objects.
     */
   object Categorize extends Factory {
     val name = "Categorize"
-    val help = "Split a given quantity by its categorical (string-based) value and fill only one category per datum."
-    val detailedHelp = """Categorize(quantity: UserFcn[DATUM, String], value: => V = Count())"""
+    val help = "Split a given quantity by its categorical value and fill only one category per datum."
+    val detailedHelp = """A bar chart may be thought of as a histogram with string-valued (categorical) bins, so this is the equivalent of [[org.dianahep.histogrammar.Bin]] for bar charts. The order of the strings is deferred to the visualization stage.
+
+Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potential to use unlimited memory. A large number of ''distinct'' categories can generate many unwanted bins."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Categorized]] from arguments (instead of JSON).
       * 

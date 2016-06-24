@@ -20,14 +20,16 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Minimize/Minimized/Minimizing
 
-  /** Find the minimum value of a given quantity. If no data are observed, the result is `NaN`.
+  /** Find the minimum value of a given quantity. If no data are observed, the result is NaN.
+    * 
+    * Unlike [[org.dianahep.histogrammar.Quantile]] with a target of 0, Minimize is exact.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Minimizing]] and immutable [[org.dianahep.histogrammar.Minimized]] objects.
     */
   object Minimize extends Factory {
     val name = "Minimize"
     val help = "Find the minimum value of a given quantity. If no data are observed, the result is NaN."
-    val detailedHelp = """Minimize(quantity: UserFcn[DATUM, Double])"""
+    val detailedHelp = """Unlike [[org.dianahep.histogrammar.Quantile]] with a target of 0, Minimize is exact."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Minimized]] from arguments (instead of JSON).
       * 
@@ -173,14 +175,16 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// Maximize/Maximized/Maximizing
 
-  /** Find the maximum value of a given quantity. If no data are observed, the result is `NaN`.
+  /** Find the maximum value of a given quantity. If no data are observed, the result is NaN.
+    * 
+    * Unlike [[org.dianahep.histogrammar.Quantile]] with a target of 1, Maximize is exact.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Maximizing]] and immutable [[org.dianahep.histogrammar.Maximized]] objects.
     */
   object Maximize extends Factory {
     val name = "Maximize"
     val help = "Find the maximum value of a given quantity. If no data are observed, the result is NaN."
-    val detailedHelp = """Maximize(quantity: UserFcn[DATUM, Double])"""
+    val detailedHelp = """Unlike [[org.dianahep.histogrammar.Quantile]] with a target of 1, Maximize is exact."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Maximized]] from arguments (instead of JSON).
       * 

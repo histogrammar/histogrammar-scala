@@ -276,7 +276,7 @@ package histogrammar {
 
   /** Increment function for Apache Spark's `aggregate` method.
     * 
-    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
+    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(new Increment, new Combine)` where `datasetRDD` is a collection of `initialHistogram`'s `Datum` type.
     */
   class Increment[DATUM, CONTAINER <: Container[CONTAINER] with AggregationOnData {type Datum >: DATUM}] extends Function2[CONTAINER, DATUM, CONTAINER] with Serializable {
     def apply(h: CONTAINER, x: DATUM): CONTAINER = {h.fill(x); h}
@@ -284,7 +284,7 @@ package histogrammar {
 
   /** Combine function for Apache Spark's `aggregate` method.
     * 
-    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(increment[initialHistogram.Type], combine[initialHistogram.Type])` where `datasetRDD` is a collection on `initialHistogram`'s `Datum` type.
+    * Typical use: `filledHistogram = datasetRDD.aggregate(initialHistogram)(new Increment, new Combine)` where `datasetRDD` is a collection of `initialHistogram`'s `Datum` type.
     */
   class Combine[CONTAINER <: Container[CONTAINER]] extends Function2[CONTAINER, CONTAINER, CONTAINER] with Serializable {
     def apply(h1: CONTAINER, h2: CONTAINER): CONTAINER = h1 + h2
@@ -453,8 +453,9 @@ package object histogrammar {
     * Custom equality rules:
     * 
     *   - NaN == NaN (NaNs are used by some primitives to indicate missing data).
-    *   - if `org.dianahep.histogrammar.util.relativeTolerance` is greater than zero, numbers may differ by this small ratio.
-    *   - if `org.dianahep.histogrammar.util.absoluteTolerance` is greater than zero, numbers may differ by this small difference.
+    *   - Infinity == Infinity and -Infinity == -Infinity (naturally, but has to be explicit given the following).
+    *   - if [[org.dianahep.histogrammar.util.relativeTolerance]] is greater than zero, numbers may differ by this small ratio.
+    *   - if [[org.dianahep.histogrammar.util.absoluteTolerance]] is greater than zero, numbers may differ by this small difference.
     * 
     * Python's math.isclose algorithm is applied for non-NaNs:
     * 
@@ -835,7 +836,7 @@ package object histogrammar {
   type ProfileErred = Selected[Binned[Deviated, Counted, Counted, Counted]]
   /** Type alias for a physicist's "profile plot," which is a Profile with variances (filling). */
   type ProfileErring[DATUM] = Selecting[DATUM, Binning[DATUM, Deviating[DATUM], Counting, Counting, Counting]]
-  /** Convenience function for creating a physicist's "profile plot," which is a Profile with variances */
+  /** Convenience function for creating a physicist's "profile plot," which is a Profile with variances. */
   def ProfileErr[DATUM]
     (num: Int,
     low: Double,

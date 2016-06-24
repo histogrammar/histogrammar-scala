@@ -24,12 +24,34 @@ package histogrammar {
 
   /** Accumulate an aggregator until its number of entries reaches a predefined limit.
     * 
+    * Limit is intended to roll high-detail descriptions of small datasets over into low-detail descriptions of large datasets. For instance, a scatter plot is useful for small numbers of data points and heatmaps are useful for large ones. The following construction
+    * 
+    * {{{Bin(xbins, xlow, xhigh, {d: Datum => d.x},
+    *   Bin(ybins, ylow, yhigh, {d: Datum => d.y},
+    *     Limit(10.0, Bag({d: Datum => Vector(d.x, d.y)}))))}}}
+    * 
+    * fills a scatter plot in all x-y bins that have fewer than 10 entries and only a number of entries above that. Postprocessing code would use the bin-by-bin numbers of entries to color a heatmap and the raw data points to show outliers in the nearly empty bins.
+    * 
+    * Limit can effectively swap between two descriptions if it is embedded in a collection, such as [[org.dianahep.histogrammar.Branch]]. All elements of the collection would be filled until the Limit saturates, leaving only the low-detail one. For instance, one could aggregate several [[org.dianahep.histogrammar.SparselyBin]] histograms, each with a different `binWidth`, and progressively eliminate them in order of increasing `binWidth`.
+    * 
+    * Note that Limit saturates when it reaches a specified ''total weight,'' not the number of data points in a [[org.dianahep.histogrammar.Bag]], so it is not certain to control memory use. However, the total weight is of more use to data analysis. ([[org.dianahep.histogrammar.Sample]] puts a strict limit on memory use.)
+    * 
     * Factory produces mutable [[org.dianahep.histogrammar.Limiting]] and immutable [[org.dianahep.histogrammar.Limited]] objects.
     */
   object Limit extends Factory {
     val name = "Limit"
     val help = "Accumulate an aggregator until its number of entries reaches a predefined limit."
-    val detailedHelp = """Limit(limit: Double, value: V)"""
+    val detailedHelp = """Limit is intended to roll high-detail descriptions of small datasets over into low-detail descriptions of large datasets. For instance, a scatter plot is useful for small numbers of data points and heatmaps are useful for large ones. The following construction
+
+{{{Bin(xbins, xlow, xhigh, {d: Datum => d.x},
+  Bin(ybins, ylow, yhigh, {d: Datum => d.y},
+    Limit(10.0, Bag({d: Datum => Vector(d.x, d.y)}))))}}}
+
+fills a scatter plot in all x-y bins that have fewer than 10 entries and only a number of entries above that. Postprocessing code would use the bin-by-bin numbers of entries to color a heatmap and the raw data points to show outliers in the nearly empty bins.
+
+Limit can effectively swap between two descriptions if it is embedded in a collection, such as [[org.dianahep.histogrammar.Branch]]. All elements of the collection would be filled until the Limit saturates, leaving only the low-detail one. For instance, one could aggregate several [[org.dianahep.histogrammar.SparselyBin]] histograms, each with a different `binWidth`, and progressively eliminate them in order of increasing `binWidth`.
+
+Note that Limit saturates when it reaches a specified ''total weight,'' not the number of data points in a [[org.dianahep.histogrammar.Bag]], so it is not certain to control memory use. However, the total weight is of more use to data analysis. ([[org.dianahep.histogrammar.Sample]] puts a strict limit on memory use.)"""
 
     /** Create an immutable [[org.dianahep.histogrammar.Limited]] from arguments (instead of JSON).
       * 

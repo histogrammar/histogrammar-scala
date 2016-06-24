@@ -20,14 +20,24 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
 
-  /** Accumulate raw numbers, vectors of numbers, or strings, merging identical values.
+  /** Accumulate raw numbers, vectors of numbers, or strings, with identical values merged.
+    * 
+    * A bag is the appropriate data type for scatter plots: a container that collects raw values, maintaining multiplicity but not order. (A "bag" is also known as a "multiset.") Conceptually, it is a mapping from distinct raw values to the number of observations: when two instances of the same raw value are observed, one key is stored and their weights add.
+    * 
+    * Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Bag primitives in an analysis tree may collect different types.
+    * 
+    * Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that roll over to a mere count when they exceed a limit, or [[org.dianahep.histogrammar.Sample]] for reservoir sampling.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Bagging]] and immutable [[org.dianahep.histogrammar.Bagged]] objects.
     */
   object Bag extends Factory {
     val name = "Bag"
-    val help = "Accumulate raw numbers, vectors of numbers, or strings, merging identical values."
-    val detailedHelp = """Bag(quantity: UserFcn[DATUM, RANGE])"""
+    val help = "Accumulate raw numbers, vectors of numbers, or strings, with identical values merged."
+    val detailedHelp = """A bag is the appropriate data type for scatter plots: a container that collects raw values, maintaining multiplicity but not order. (A "bag" is also known as a "multiset.") Conceptually, it is a mapping from distinct raw values to the number of observations: when two instances of the same raw value are observed, one key is stored and their weights add.
+
+Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Bag primitives in an analysis tree may collect different types.
+
+Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that roll over to a mere count when they exceed a limit, or [[org.dianahep.histogrammar.Sample]] for reservoir sampling."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).
       * 

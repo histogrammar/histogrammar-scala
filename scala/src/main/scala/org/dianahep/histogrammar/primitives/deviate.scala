@@ -20,16 +20,20 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Deviate/Deviated/Deviating
 
-  /** Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers).
+  /** Accumulate the weighted mean and weighted variance of a given quantity.
+    * 
+    * The variance is computed around the mean, not zero.
+    * 
+    * Uses the numerically stable weighted mean and weighted variance algorithms described in Tony Finch, [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance"]] ''Univeristy of Cambridge Computing Service, 2009''.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Deviating]] and immutable [[org.dianahep.histogrammar.Deviated]] objects.
-    * 
-    * The implementation of these containers use numerically stable variances as described by Tony Finch in [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance,"]] ''Univeristy of Cambridge Computing Service,'' 2009.
     */
   object Deviate extends Factory {
     val name = "Deviate"
-    val help = "Accumulate a weighted variance, mean, and total weight of a given quantity (using an algorithm that is stable for large numbers)."
-    val detailedHelp = """Deviate(quantity: UserFcn[DATUM, Double])"""
+    val help = "Accumulate the weighted mean and weighted variance of a given quantity."
+    val detailedHelp = """The variance is computed around the mean, not zero.
+
+Uses the numerically stable weighted mean and weighted variance algorithms described in Tony Finch, [[http://www-uxsup.csx.cam.ac.uk/~fanf2/hermes/doc/antiforgery/stats.pdf "Incremental calculation of weighted mean and variance"]] ''Univeristy of Cambridge Computing Service, 2009''."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Deviated]] from arguments (instead of JSON).
       * 

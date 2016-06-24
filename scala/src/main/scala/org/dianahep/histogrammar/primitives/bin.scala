@@ -20,15 +20,42 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
-  /** Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum.
+  /** Split a quantity into equally spaced bins between a low and high threshold and fill exactly one bin per datum.
+    * 
+    * When composed with [[org.dianahep.histogrammar.Count]], this produces a standard histogram:
+    * 
+    * {{{Bin.ing(100, 0, 10, fill_x, Count.ing())}}}
+    * 
+    * and when nested, it produces a two-dimensional histogram:
+    * 
+    * {{{Bin.ing(100, 0, 10, fill_x,
+    *   Bin.ing(100, 0, 10, fill_y, Count.ing()))}}}
+    * 
+    * Combining with [[org.dianahep.histogrammar.Deviate]] produces a physicist's "profile plot:"
+    * 
+    * {{{Bin.ing(100, 0, 10, fill_x, Deviate.ing(fill_y))}}}
+    * 
+    * and so on.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Binning]] and immutable [[org.dianahep.histogrammar.Binned]] objects.
     */
   object Bin extends Factory {
     val name = "Bin"
-    val help = "Split a given quantity into equally spaced bins between specified limits and fill only one bin per datum."
-    val detailedHelp ="""Bin(num: Int, low: Double, high: Double, quantity: UserFcn[DATUM, Double],
-           value: => V = Count(), underflow: U = Count(), overflow: O = Count(), nanflow: N = Count())"""
+    val help = "Split a quantity into equally spaced bins between a low and high threshold and fill exactly one bin per datum."
+    val detailedHelp ="""When composed with [[org.dianahep.histogrammar.Count]], this produces a standard histogram:
+
+{{{Bin.ing(100, 0, 10, fill_x, Count.ing())}}}
+
+and when nested, it produces a two-dimensional histogram:
+
+{{{Bin.ing(100, 0, 10, fill_x,
+  Bin.ing(100, 0, 10, fill_y, Count.ing()))}}}
+
+Combining with [[org.dianahep.histogrammar.Deviate]] produces a physicist's "profile plot:"
+
+{{{Bin.ing(100, 0, 10, fill_x, Deviate.ing(fill_y))}}}
+
+and so on."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Binned]] from arguments (instead of JSON).
       * 

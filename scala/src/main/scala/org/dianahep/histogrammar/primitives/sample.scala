@@ -23,13 +23,31 @@ package histogrammar {
   //////////////////////////////////////////////////////////////// Sample
 
   /** Accumulate raw numbers, vectors of numbers, or strings, randomly replacing them with Reservoir Sampling when the number of values exceeds a limit.
+
+Sample collects raw values without attempting to group them by distinct value (as [[org.dianahep.histogrammar.Bag]] does), up to a given maximum ''number'' of entries (unlike [[org.dianahep.histogrammar.Limit]], which rolls over at a given total weight). The reason for the limit on Sample is purely to conserve memory.
+
+The maximum number of entries and the data type together determine the size of the working set. If new values are added after this set is full, individual values will be randomly chosen for replacement. The probability of replacement is proportional to an entry's weight and it decreases with time, such that the final sample is a representative subset of all observed values, without preference for early values or late values.
+
+This algorithm is known as weighted Reservoir Sampling, and it is non-deterministic. Each evaluation will likely result in a different final set.
+
+Specifically, the algorithm implemented here was described in Pavlos S. Efraimidis and Paul G. Spirakis, [[http://www.sciencedirect.com/science/article/pii/S002001900500298X "Weighted random sampling with a reservoir,"]] ''Information Processing Letters 97 (5): 181–185, 2005'' (doi:10.1016/j.ipl.2005.11.003).
+
+Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Sample primitives in an analysis tree may collect different types.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Sampling]] and immutable [[org.dianahep.histogrammar.Sampled]] objects.
     */
   object Sample extends Factory {
     val name = "Sample"
-    val help = "Accumulate raw numbers, vectors of numbers, or strings that are an unbiased sample of the observed distribution."
-    val detailedHelp = "Sample(limit: Int, quantity: UserFcn[DATUM, RANGE])"
+    val help = "Accumulate raw numbers, vectors of numbers, or strings, randomly replacing them with Reservoir Sampling when the number of values exceeds a limit."
+    val detailedHelp = """Sample collects raw values without attempting to group them by distinct value (as [[org.dianahep.histogrammar.Bag]] does), up to a given maximum ''number'' of entries (unlike [[org.dianahep.histogrammar.Limit]], which rolls over at a given total weight). The reason for the limit on Sample is purely to conserve memory.
+
+The maximum number of entries and the data type together determine the size of the working set. If new values are added after this set is full, individual values will be randomly chosen for replacement. The probability of replacement is proportional to an entry's weight and it decreases with time, such that the final sample is a representative subset of all observed values, without preference for early values or late values.
+
+This algorithm is known as weighted Reservoir Sampling, and it is non-deterministic. Each evaluation will likely result in a different final set.
+
+Specifically, the algorithm implemented here was described in Pavlos S. Efraimidis and Paul G. Spirakis, [[http://www.sciencedirect.com/science/article/pii/S002001900500298X "Weighted random sampling with a reservoir,"]] ''Information Processing Letters 97 (5): 181–185, 2005'' (doi:10.1016/j.ipl.2005.11.003).
+
+Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Sample primitives in an analysis tree may collect different types."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Sampled]] from arguments (instead of JSON).
       * 

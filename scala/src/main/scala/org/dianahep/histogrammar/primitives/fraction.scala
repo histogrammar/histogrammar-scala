@@ -20,14 +20,20 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Fraction/Fractioned/Fractioning
 
-  /** Accumulate two containers, one with all data (denominator), and one with data that pass a given selection (numerator).
+  /** Accumulate two aggregators, one containing only entries that pass a given selection (numerator) and another that contains all entries (denominator).
+    * 
+    * The aggregator may be a simple [[org.dianahep.histogrammar.Count]] to measure the efficiency of a cut, a [[org.dianahep.histogrammar.Bin]] to plot a turn-on curve, or anything else to be tested with and without a cut.
+    * 
+    * As a side effect of NaN values returning false for any comparison, a NaN return value from the selection is treated as a failed cut (the denominator is filled but the numerator is not).
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Fractioning]] and immutable [[org.dianahep.histogrammar.Fractioned]] objects.
     */
   object Fraction extends Factory {
     val name = "Fraction"
-    val help = "Accumulate two containers, one with all data (denominator), and one with data that pass a given selection (numerator)."
-    val detailedHelp = """Fraction(quantity: UserFcn[DATUM, Double], value: => V = Count())"""
+    val help = "Accumulate two aggregators, one containing only entries that pass a given selection (numerator) and another that contains all entries (denominator)."
+    val detailedHelp = """The aggregator may be a simple [[org.dianahep.histogrammar.Count]] to measure the efficiency of a cut, a [[org.dianahep.histogrammar.Bin]] to plot a turn-on curve, or anything else to be tested with and without a cut.
+
+As a side effect of NaN values returning false for any comparison, a NaN return value from the selection is treated as a failed cut (the denominator is filled but the numerator is not)."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Fractioned]] from arguments (instead of JSON).
       * 

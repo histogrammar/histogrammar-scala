@@ -21,14 +21,16 @@ import org.dianahep.histogrammar.util._
 package histogrammar {
   //////////////////////////////////////////////////////////////// Count/Counted/Counting
 
-  /** Count data, ignoring their content. (A sum of weights or transformed weights.)
+  /** Count entries by accumulating the sum of all observed weights or a sum of transformed weights (e.g. sum of squares of weights).
+    * 
+    * An optional `transform` function can be applied to the weights before summing. To accumulate the sum of squares of weights, use `{x: Double => x*x}`, for instance. This is unlike any other primitive's `quantity` function in that its domain is the ''weights'' (always double), not ''data'' (any type).
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Counting]] and immutable [[org.dianahep.histogrammar.Counted]] objects.
     */
   object Count extends Factory {
     val name = "Count"
-    val help = "Count data, ignoring their content. (A sum of weights or transformed weights.)"
-    val detailedHelp = """Count(transform: UserFcn[Double, Double])"""
+    val help = "Count entries by accumulating the sum of all observed weights or a sum of transformed weights (e.g. sum of squares of weights)."
+    val detailedHelp = """An optional `transform` function can be applied to the weights before summing. To accumulate the sum of squares of weights, use `{x: Double => x*x}`, for instance. This is unlike any other primitive's `quantity` function in that its domain is the ''weights'' (always double), not ''data'' (any type)."""
 
     val identity = new UserFcn[Double, Double] {
       def name = None

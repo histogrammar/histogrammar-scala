@@ -30,7 +30,7 @@ The maximum number of entries and the data type together determine the size of t
 
 This algorithm is known as weighted Reservoir Sampling, and it is non-deterministic. Each evaluation will likely result in a different final set.
 
-Specifically, the algorithm implemented here was described in Pavlos S. Efraimidis and Paul G. Spirakis, [[http://www.sciencedirect.com/science/article/pii/S002001900500298X "Weighted random sampling with a reservoir,"]] ''Information Processing Letters 97 (5): 181–185, 2005'' (doi:10.1016/j.ipl.2005.11.003).
+Specifically, the algorithm implemented here was described in Pavlos S. Efraimidis and Paul G. Spirakis, [[http://www.sciencedirect.com/science/article/pii/S002001900500298X "Weighted random sampling with a reservoir,"]] ''Information Processing Letters 97 (5): 181-185, 2005'' (doi:10.1016/j.ipl.2005.11.003).
 
 Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Sample primitives in an analysis tree may collect different types.
     * 
@@ -45,7 +45,7 @@ The maximum number of entries and the data type together determine the size of t
 
 This algorithm is known as weighted Reservoir Sampling, and it is non-deterministic. Each evaluation will likely result in a different final set.
 
-Specifically, the algorithm implemented here was described in Pavlos S. Efraimidis and Paul G. Spirakis, [[http://www.sciencedirect.com/science/article/pii/S002001900500298X "Weighted random sampling with a reservoir,"]] ''Information Processing Letters 97 (5): 181–185, 2005'' (doi:10.1016/j.ipl.2005.11.003).
+Specifically, the algorithm implemented here was described in Pavlos S. Efraimidis and Paul G. Spirakis, [[http://www.sciencedirect.com/science/article/pii/S002001900500298X "Weighted random sampling with a reservoir,"]] ''Information Processing Letters 97 (5): 181-185, 2005'' (doi:10.1016/j.ipl.2005.11.003).
 
 Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Sample primitives in an analysis tree may collect different types."""
 

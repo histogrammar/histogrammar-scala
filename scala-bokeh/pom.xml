@@ -21,7 +21,7 @@
 
   <groupId>org.diana-hep</groupId>
   <artifactId>histogrammar-bokeh</artifactId>
-  <version>0.7.1</version>
+  <version>0.8-prerelease</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>org.diana-hep</groupId>
       <artifactId>histogrammar</artifactId>
-      <version>0.7.1</version>
+      <version>0.8-prerelease</version>
     </dependency>
 
     <dependency>

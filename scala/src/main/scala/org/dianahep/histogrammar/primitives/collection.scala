@@ -225,14 +225,16 @@ In strongly typed languages, the restriction to a single type allows nested obje
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
-      var i = 0
-      while (i < size) {
-        val (_, v) = pairs(i)
-        v.fill(datum.asInstanceOf[v.Datum], weight)      // see notes in Indexing[V]
-        i += 1
+      if (weight > 0.0) {
+        var i = 0
+        while (i < size) {
+          val (_, v) = pairs(i)
+          v.fill(datum.asInstanceOf[v.Datum], weight)      // see notes in Indexing[V]
+          i += 1
+        }
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
       }
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
     }
 
     def children = values.toList
@@ -462,14 +464,16 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
-      var i = 0
-      while (i < size) {
-        val (_, v) = pairs(i)
-        v.fill(datum.asInstanceOf[v.Datum], weight)      // see notes in Indexing[V]
-        i += 1
+      if (weight > 0.0) {
+        var i = 0
+        while (i < size) {
+          val (_, v) = pairs(i)
+          v.fill(datum.asInstanceOf[v.Datum], weight)      // see notes in Indexing[V]
+            i += 1
+        }
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
       }
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
     }
 
     def children = values.toList
@@ -676,14 +680,16 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
-      var i = 0
-      while (i < size) {
-        val v = values(i)
-        v.fill(datum.asInstanceOf[v.Datum], weight)   // This type is ensured, but Scala doesn't recognize it.
-        i += 1                                        // Also, Scala undergoes infinite recursion in a
-      }                                               // "foreach" version of this loop--- that's weird!
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
+      if (weight > 0.0) {
+        var i = 0
+        while (i < size) {
+          val v = values(i)
+          v.fill(datum.asInstanceOf[v.Datum], weight)   // This type is ensured, but Scala doesn't recognize it.
+            i += 1                                      // Also, Scala undergoes infinite recursion in a
+        }                                               // "foreach" version of this loop--- that's weird!
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
+      }
     }
 
     def children = values.toList
@@ -1038,13 +1044,15 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
-      head.fill(datum, weight)
-      tail match {
-        case x: Aggregation => x.fill(datum.asInstanceOf[x.Datum], weight)
-        case _ =>
+      if (weight > 0.0) {
+        head.fill(datum, weight)
+        tail match {
+          case x: Aggregation => x.fill(datum.asInstanceOf[x.Datum], weight)
+          case _ =>
+        }
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
       }
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
     }
 
     def children = values.toList

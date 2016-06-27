@@ -202,12 +202,14 @@ Note that Limit saturates when it reaches a specified ''total weight,'' not the 
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
-      if (entries + weight > limit)
-        value = None
-      else
-        value.foreach(v => v.fill(datum.asInstanceOf[v.Datum], weight))
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
+      if (weight > 0.0) {
+        if (entries + weight > limit)
+          value = None
+        else
+          value.foreach(v => v.fill(datum.asInstanceOf[v.Datum], weight))
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
+      }
     }
 
     def children = value.toList

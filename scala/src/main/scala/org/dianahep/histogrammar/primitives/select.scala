@@ -162,12 +162,14 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
-      val w = weight * quantity(datum)
-      if (w > 0.0)
-        cut.fill(datum, w)
+      if (weight > 0.0) {
+        val w = weight * quantity(datum)
+        if (w > 0.0)
+          cut.fill(datum, w)
 
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
+      }
     }
 
     def children = cut :: Nil

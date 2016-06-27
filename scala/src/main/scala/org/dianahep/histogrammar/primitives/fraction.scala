@@ -232,15 +232,16 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
-      val w = weight * quantity(datum)
+      if (weight > 0.0) {
+        val w = weight * quantity(datum)
 
-      if (weight > 0.0)
         denominator.fill(datum, weight)
-      if (w > 0.0)
-        numerator.fill(datum, w)
+        if (w > 0.0)
+          numerator.fill(datum, w)
 
-      // no possibility of exception from here on out (for rollback)
-      entries += weight
+        // no possibility of exception from here on out (for rollback)
+        entries += weight
+      }
     }
 
     def children = numerator :: denominator :: Nil

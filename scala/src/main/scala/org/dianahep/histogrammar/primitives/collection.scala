@@ -831,7 +831,7 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
     def zero: BranchedList
   }
 
-  object BranchedNil extends BranchedList {
+  object BranchedNil extends BranchedList with Serializable {
     def values: List[Container[_]] = Nil
     def size: Int = 0
     def get(i: Int) = None
@@ -885,7 +885,10 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
     }
 
     def zero = new Branched[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
-    def +(that: Branched[HEAD, TAIL]) = new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)
+    def +(that: Branched[HEAD, TAIL]) = tail match {
+      case t: Branched[_, _] => new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, (t + that.tail.asInstanceOf[t.Type]).asInstanceOf[TAIL])
+      case _: BranchedNil.type => new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, BranchedNil.asInstanceOf[TAIL])
+    }
 
     def children = values.toList
 
@@ -909,7 +912,7 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
     def zero: BranchingList
   }
 
-  object BranchingNil extends BranchingList {
+  object BranchingNil extends BranchingList with Serializable {
     type EdType = BranchedNil.type
     def values: List[Container[_]] = Nil
     def size: Int = 0
@@ -1028,7 +1031,10 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
     }
 
     def zero = new Branching[HEAD, TAIL](0.0, head.zero, tail.zero.asInstanceOf[TAIL])
-    def +(that: Branching[HEAD, TAIL]) = new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, this.tail)
+    def +(that: Branching[HEAD, TAIL]) = tail match {
+      case t: Branching[_, _] => new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, (t + that.tail.asInstanceOf[t.Type]).asInstanceOf[TAIL])
+      case _: BranchingNil.type => new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, BranchingNil.asInstanceOf[TAIL])
+    }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

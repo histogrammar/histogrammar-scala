@@ -95,7 +95,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
         else
           (ca*mua + cb*mub)/(ca + cb)
       val sab = sa + sb + ca*mua*mua + cb*mub*mub - 2.0*muab*(ca*mua + cb*mub) + muab*muab*(ca + cb)
-      (ca * cb, muab, sab / (ca + cb))
+      (ca + cb, muab, sab / (ca + cb))
     }
   }
 

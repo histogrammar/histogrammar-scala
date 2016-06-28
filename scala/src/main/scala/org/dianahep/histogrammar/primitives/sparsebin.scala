@@ -30,7 +30,7 @@ package histogrammar {
     * 
     * Unlike fixed-domain binning, this aggregator has the potential to use unlimited memory. A large number of ''distinct'' outliers can generate many unwanted bins.
     * 
-    * Like fixed-domain binning, the bins are indexed by integers, though they are 64-bit and may be negative.
+    * Like fixed-domain binning, the bins are indexed by integers, though they are 64-bit and may be negative. Bin indexes below `-(2**63 - 1)` are put in the `-(2**63 - 1)` are bin and indexes above `(2**63 - 1)` are put in the `(2**63 - 1)` bin.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.SparselyBinning]] and immutable [[org.dianahep.histogrammar.SparselyBinned]] objects.
     */
@@ -41,7 +41,7 @@ package histogrammar {
 
 Unlike fixed-domain binning, this aggregator has the potential to use unlimited memory. A large number of _distinct_ outliers can generate many unwanted bins.
 
-Like fixed-domain binning, the bins are indexed by integers, though they are 64-bit and may be negative."""
+Like fixed-domain binning, the bins are indexed by integers, though they are 64-bit and may be negative. Bin indexes below `-(2**63 - 1)` are put in the `-(2**63 - 1)` are bin and indexes above `(2**63 - 1)` are put in the `(2**63 - 1)` bin."""
 
     private val integerPattern = "-?[0-9]+".r
 
@@ -102,13 +102,20 @@ Like fixed-domain binning, the bins are indexed by integers, though they are 64-
 
       /** Find the bin index associated with numerical value `x`.
         * 
-        * @return `Long.MIN_VALUE` if `x` is `NaN`; the bin index otherwise.
+        * @return `Long.MIN_VALUE` if `x` is `NaN`, the bin index if it is between `Long.MIN_VALUE + 1` and `Long.MAX_VALUE`, otherwise saturate at the endpoints.
         */
       def bin(x: Double): Long =
         if (nan(x))
           java.lang.Long.MIN_VALUE
-        else
-          Math.floor((x - origin) / binWidth).toLong
+        else {
+          val out = Math.floor((x - origin) / binWidth)
+          if (out < java.lang.Long.MIN_VALUE + 1)
+            java.lang.Long.MIN_VALUE + 1
+          else if (out > java.lang.Long.MAX_VALUE)
+            java.lang.Long.MAX_VALUE
+          else
+            out.toLong
+        }
 
       /** Return `true` iff `x` is in the nanflow region (equal to `NaN`). */
       def nan(x: Double): Boolean = x.isNaN

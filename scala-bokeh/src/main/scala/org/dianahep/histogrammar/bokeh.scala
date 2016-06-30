@@ -141,8 +141,9 @@ package object bokeh extends Tools {
           val xh = column(l+step/2 to h+step/2 by step)
           val y = column(hist.cut.values.map(_.entries))
           val yh = column(hist.cut.values.map(v=>v.entries/2))
+          val ci = column(hist.confidenceIntervalValues().map(v => v*2.0)) 
       }
-      import source.{x,xh,y,yh}
+      import source.{x,xh,y,yh,ci}
 
       //Set marker color, fill color, line color
       val glyph = glyphType match {
@@ -152,6 +153,7 @@ package object bokeh extends Tools {
        case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "histogram"=> new Rect().x(xh).y(yh).width(step).height(y).fill_color(fillColor).line_color(lineColor)
+       case "errors"   => new Rect().x(x).y(y).width(step).height(ci).fill_color(fillColor).line_color(lineColor)
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 

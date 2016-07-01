@@ -180,7 +180,32 @@ package object bokeh extends Tools {
   implicit def anySelectingSparselyBinningToProfileMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], N]]): ProfileMethodsBokeh =
     new ProfileMethodsBokeh(anySelectingSparselyBinningToProfileMethods(hist).selected)
 
-  class ProfileMethodsBokeh(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]])
+  class ProfileMethodsBokeh(val profile: Selected[Binned[Averaged, Counted, Counted, Counted]]) {
+    def bokeh(glyphType: String = "line", glyphSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+
+      //Prepare histogram contents for plotting
+      val h = profile.cut.high
+      val l = profile.cut.low
+      val step = (h-l)/profile.cut.values.length
+
+      object source extends ColumnDataSource {
+          val x = column(l to h by step)
+          val y = column(profile.cut.values.map(v=>v.mean))
+      }
+      import source.{x,y}
+
+      val glyph = glyphType match {
+       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
+      }
+
+      new GlyphRenderer().data_source(source).glyph(glyph)
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for ProfileErr and SparselyProfileErr
 

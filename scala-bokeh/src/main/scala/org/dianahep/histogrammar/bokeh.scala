@@ -152,9 +152,12 @@ package object bokeh extends Tools {
 
       object source extends ColumnDataSource {
           val x = column(l to h by step)
+          val xh = column(l+step/2 to h+step/2 by step)
           val y = column(hist.cut.values.map(_.entries))
+          val yh = column(hist.cut.values.map(v=>v.entries/2))
+          val ci = column(hist.confidenceIntervalValues().map(v => v*2.0)) 
       }
-      import source.{x,y}
+      import source.{x,xh,y,yh,ci}
 
       //Set marker color, fill color, line color
       val glyph = glyphType match {
@@ -163,6 +166,8 @@ package object bokeh extends Tools {
        case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "histogram"=> new Rect().x(xh).y(yh).width(step).height(y).fill_color(fillColor).line_color(lineColor)
+       case "errors"   => new Rect().x(x).y(y).width(step).height(ci).fill_color(fillColor).line_color(lineColor)
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
@@ -189,7 +194,32 @@ package object bokeh extends Tools {
   implicit def anySelectingSparselyBinningToProfileMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Selecting[DATUM, SparselyBinning[DATUM, Averaging[DATUM], N]]): ProfileMethodsBokeh =
     new ProfileMethodsBokeh(anySelectingSparselyBinningToProfileMethods(hist).selected)
 
-  class ProfileMethodsBokeh(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]])
+  class ProfileMethodsBokeh(val profile: Selected[Binned[Averaged, Counted, Counted, Counted]]) {
+    def bokeh(glyphType: String = "line", glyphSize: Int = 1, fillColor: Color = Color.Red, lineColor: Color = Color.Black) : GlyphRenderer = {
+
+      //Prepare histogram contents for plotting
+      val h = profile.cut.high
+      val l = profile.cut.low
+      val step = (h-l)/profile.cut.values.length
+
+      object source extends ColumnDataSource {
+          val x = column(l to h by step)
+          val y = column(profile.cut.values.map(v=>v.mean))
+      }
+      import source.{x,y}
+
+      val glyph = glyphType match {
+       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
+      }
+
+      new GlyphRenderer().data_source(source).glyph(glyph)
+    }
+  }
 
   //////////////////////////////////////////////////////////////// methods for ProfileErr and SparselyProfileErr
 

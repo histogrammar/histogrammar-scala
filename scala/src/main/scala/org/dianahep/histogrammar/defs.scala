@@ -751,6 +751,15 @@ package object histogrammar {
     def numericalUnderflow: Double = binned.underflow.entries
     /** Nanflow as a number, rather than [[org.dianahep.histogrammar.Counted]]/[[org.dianahep.histogrammar.Counting]]. */
     def numericalNanflow: Double = binned.nanflow.entries
+
+    /** Low-central-high confidence interval width for all bins,
+      * takes `z` as argument, where `z` is the "number of sigmas:"
+        with `z = 1` is the 68% confidence level above the central value.
+      * @param absz absolute value of `z` to evaluate.
+      */    
+    def confidenceIntervalValues(absz: Double = 1.0): Seq[Double] = { 
+       numericalValues map {v => absz*Math.sqrt(v)}
+    }
   }
 
   //////////////////////////////////////////////////////////////// type alias for Profile

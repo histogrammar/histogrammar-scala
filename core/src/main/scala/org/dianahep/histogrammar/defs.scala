@@ -76,11 +76,11 @@ package histogrammar {
     register(Bin)
     register(SparselyBin)
     register(CentrallyBin)
+    register(IrregularlyBin)
     register(Categorize)
 
     register(Fraction)
     register(Stack)
-    register(Partition)
 
     register(Select)
     register(Limit)
@@ -921,46 +921,46 @@ package object histogrammar {
   //////////////////////////////////////////////////////////////// methods for StackedHistogram, including cases for mixed tenses
 
   implicit def anyBinnedToStackedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[Binned[Counted, U, O, N], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
 
   implicit def anyBinningToStackedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, Binning[DATUM, Counting, U, O, N], SN]): StackedHistogramMethods =
     anyBinnedToStackedHistogramMethods(hist.ed)
 
   implicit def anySelectedBinnedToStackedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[Selected[Binned[Counted, U, O, N]], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySelectedBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySelectedBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
 
   implicit def anySelectingBinningToStackedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): StackedHistogramMethods =
     anySelectedBinnedToStackedHistogramMethods(hist.ed)
 
   implicit def anySparselyBinnedToStackedHistogramMethods[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[SparselyBinned[Counted, N], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
   
   implicit def anySparselyBinningToStackedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, SparselyBinning[DATUM, Counting, N], SN]): StackedHistogramMethods =
     anySparselyBinnedToStackedHistogramMethods(hist.ed)
 
   implicit def anySelectedSparselyBinnedToStackedHistogramMethods[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Stacked[Selected[SparselyBinned[Counted, N]], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySelectedSparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySelectedSparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
 
   implicit def anySelectingSparselyBinningToStackedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Stacking[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): StackedHistogramMethods =
     anySelectedSparselyBinnedToStackedHistogramMethods(hist.ed)
 
   implicit def anyBinnedMixedToStackedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[Binning[DATUM, Counting, U, O, N], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, new Selected(v.entries, unweighted.name, new Binned(v.low, v.high, v.entries, v.quantity.name, v.values map {vi: Counting => new Counted(vi.entries)}, new Counted(v.underflow.entries), new Counted(v.overflow.entries), new Counted(v.nanflow.entries))))}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, new Selected(v.entries, unweighted.name, new Binned(v.low, v.high, v.entries, v.quantity.name, v.values map {vi: Counting => new Counted(vi.entries)}, new Counted(v.underflow.entries), new Counted(v.overflow.entries), new Counted(v.nanflow.entries))))}), new Counted(hist.nanflow.entries)))
 
   implicit def anySelectedBinnedMixedToStackedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, new Selected(v.entries, unweighted.name, new Binned(v.cut.low, v.cut.high, v.cut.entries, v.cut.quantity.name, v.cut.values map {vi: Counting => new Counted(vi.entries)}, new Counted(v.cut.underflow.entries), new Counted(v.cut.overflow.entries), new Counted(v.cut.nanflow.entries))))}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, new Selected(v.entries, unweighted.name, new Binned(v.cut.low, v.cut.high, v.cut.entries, v.cut.quantity.name, v.cut.values map {vi: Counting => new Counted(vi.entries)}, new Counted(v.cut.underflow.entries), new Counted(v.cut.overflow.entries), new Counted(v.cut.nanflow.entries))))}), new Counted(hist.nanflow.entries)))
 
   implicit def anySparselyBinnedMixedToStackedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[SparselyBinning[DATUM, Counting, N], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySparselyBinnedToHistogramMethods(new SparselyBinned(v.binWidth, v.entries, v.quantity.name, "", SortedMap(v.bins.toSeq.map({case (i, vi: Counting) => (i, new Counted(vi.entries))}): _*), new Counted(v.nanflow.entries), v.origin)).selected)}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySparselyBinnedToHistogramMethods(new SparselyBinned(v.binWidth, v.entries, v.quantity.name, "", SortedMap(v.bins.toSeq.map({case (i, vi: Counting) => (i, new Counted(vi.entries))}): _*), new Counted(v.nanflow.entries), v.origin)).selected)}), new Counted(hist.nanflow.entries)))
 
   implicit def anySelectedSparselyBinnedMixedToStackedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with NoAggregation](hist: Stacked[Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): StackedHistogramMethods =
-    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySelectedSparselyBinnedToHistogramMethods(new Selected(v.entries, v.quantity.name, new SparselyBinned(v.cut.binWidth, v.cut.entries, v.cut.quantity.name, "", SortedMap(v.cut.bins.toSeq.map({case (i, vi: Counting) => (i, new Counted(vi.entries))}): _*), new Counted(v.cut.nanflow.entries), v.cut.origin))).selected)}), new Counted(hist.nanflow.entries)))
+    new StackedHistogramMethods(new Stacked(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySelectedSparselyBinnedToHistogramMethods(new Selected(v.entries, v.quantity.name, new SparselyBinned(v.cut.binWidth, v.cut.entries, v.cut.quantity.name, "", SortedMap(v.cut.bins.toSeq.map({case (i, vi: Counting) => (i, new Counted(vi.entries))}): _*), new Counted(v.cut.nanflow.entries), v.cut.origin))).selected)}), new Counted(hist.nanflow.entries)))
 
   /** Methods that are implicitly added to container combinations that look like stacked histograms. */
   class StackedHistogramMethods(val stacked: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]) {
-    def low = stacked.cuts.head._2.cut.low
-    def high = stacked.cuts.head._2.cut.high
-    def num = stacked.cuts.head._2.cut.num
+    def low = stacked.bins.head._2.cut.low
+    def high = stacked.bins.head._2.cut.high
+    def num = stacked.bins.head._2.cut.num
 
     stacked.values foreach {selected =>
       if (selected.cut.low != low)
@@ -978,35 +978,35 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// methods for PartitionedHistogram
 
-  implicit def anyBinnedToPartitionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Binned[Counted, U, O, N], SN]): PartitionedHistogramMethods =
-    new PartitionedHistogramMethods(new Partitioned(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+  implicit def anyBinnedToPartitionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Binned[Counted, U, O, N], SN]): PartitionedHistogramMethods =
+    new PartitionedHistogramMethods(new IrregularlyBinned(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
 
-  implicit def anyBinningToPartitionedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Binning[DATUM, Counting, U, O, N], SN]): PartitionedHistogramMethods =
+  implicit def anyBinningToPartitionedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Binning[DATUM, Counting, U, O, N], SN]): PartitionedHistogramMethods =
     anyBinnedToPartitionedHistogramMethods(hist.ed)
 
-  implicit def anySelectedBinnedToPartitionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[Binned[Counted, U, O, N]], SN]): PartitionedHistogramMethods =
-    new PartitionedHistogramMethods(new Partitioned(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySelectedBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+  implicit def anySelectedBinnedToPartitionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Selected[Binned[Counted, U, O, N]], SN]): PartitionedHistogramMethods =
+    new PartitionedHistogramMethods(new IrregularlyBinned(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySelectedBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
 
-  implicit def anySelectingBinningToPartitionedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): PartitionedHistogramMethods =
+  implicit def anySelectingBinningToPartitionedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): PartitionedHistogramMethods =
     anySelectedBinnedToPartitionedHistogramMethods(hist.ed)
 
-  implicit def anySparselyBinnedToPartitionedHistogramMethods[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[SparselyBinned[Counted, N], SN]): PartitionedHistogramMethods =
-    new PartitionedHistogramMethods(new Partitioned(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+  implicit def anySparselyBinnedToPartitionedHistogramMethods[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[SparselyBinned[Counted, N], SN]): PartitionedHistogramMethods =
+    new PartitionedHistogramMethods(new IrregularlyBinned(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
   
-  implicit def anySparselyBinningToPartitionedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, SparselyBinning[DATUM, Counting, N], SN]): PartitionedHistogramMethods =
+  implicit def anySparselyBinningToPartitionedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, SparselyBinning[DATUM, Counting, N], SN]): PartitionedHistogramMethods =
     anySparselyBinnedToPartitionedHistogramMethods(hist.ed)
 
-  implicit def anySelectedSparselyBinnedToPartitionedHistogramMethods[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[SparselyBinned[Counted, N]], SN]): PartitionedHistogramMethods =
-    new PartitionedHistogramMethods(new Partitioned(hist.entries, hist.quantityName, hist.cuts.map({case (x, v) => (x, anySelectedSparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
+  implicit def anySelectedSparselyBinnedToPartitionedHistogramMethods[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Selected[SparselyBinned[Counted, N]], SN]): PartitionedHistogramMethods =
+    new PartitionedHistogramMethods(new IrregularlyBinned(hist.entries, hist.quantityName, hist.bins.map({case (x, v) => (x, anySelectedSparselyBinnedToHistogramMethods(v).selected)}), new Counted(hist.nanflow.entries)))
 
-  implicit def anySelectingSparselyBinningToPartitionedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): PartitionedHistogramMethods =
+  implicit def anySelectingSparselyBinningToPartitionedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): PartitionedHistogramMethods =
     anySelectedSparselyBinnedToPartitionedHistogramMethods(hist.ed)
 
   /** Methods that are implicitly added to container combinations that look like partitioned histograms. */
-  class PartitionedHistogramMethods(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]) {
-    def low = partitioned.cuts.head._2.cut.low
-    def high = partitioned.cuts.head._2.cut.high
-    def num = partitioned.cuts.head._2.cut.num
+  class PartitionedHistogramMethods(val partitioned: IrregularlyBinned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]) {
+    def low = partitioned.bins.head._2.cut.low
+    def high = partitioned.bins.head._2.cut.high
+    def num = partitioned.bins.head._2.cut.num
 
     partitioned.values foreach {selected =>
       if (selected.cut.low != low)

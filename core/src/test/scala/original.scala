@@ -603,7 +603,7 @@ class OriginalSuite extends FlatSpec with Matchers {
     val stacking = Stack(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Count())
     simple.foreach(stacking.fill(_))
 
-    stacking.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 10.0, 0.0 -> 6.0, 2.0 -> 3.0, 4.0 -> 1.0, 6.0 -> 1.0, 8.0 -> 0.0))
+    stacking.bins.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 10.0, 0.0 -> 6.0, 2.0 -> 3.0, 4.0 -> 1.0, 6.0 -> 1.0, 8.0 -> 0.0))
 
     checkJson(stacking)
   }
@@ -612,28 +612,28 @@ class OriginalSuite extends FlatSpec with Matchers {
     val stacking = Stack(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
     simple.foreach(stacking.fill(_))
 
-    stacking.cuts(1)._2.sum should be (14.5 +- 1e-12)
+    stacking.bins(1)._2.sum should be (14.5 +- 1e-12)
 
     checkJson(stacking)
   }
 
-  //////////////////////////////////////////////////////////////// Partition/Partitioned/Partitioning
+  //////////////////////////////////////////////////////////////// IrregularlyBin/IrregularlyBinned/IrregularlyBinning
 
-  "Partition/Partitioned/Partitioning" must "work with Count/Counting/Counted" in {
-    val partitioning = Partition(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Count())
+  "IrregularlyBin/IrregularlyBinned/IrregularlyBinning" must "work with Count/Counting/Counted" in {
+    val partitioning = IrregularlyBin(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Count())
     simple.foreach(partitioning.fill(_))
     
-    partitioning.cuts.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 4.0, 0.0 -> 3.0, 2.0 -> 2.0, 4.0 -> 0.0, 6.0 -> 1.0, 8.0 -> 0.0))
+    partitioning.bins.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 4.0, 0.0 -> 3.0, 2.0 -> 2.0, 4.0 -> 0.0, 6.0 -> 1.0, 8.0 -> 0.0))
 
     checkJson(partitioning)
   }
 
   it must "work with Sum/Summing/Summed" in {
-    val partitioning = Partition(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
+    val partitioning = IrregularlyBin(List(0.0, 2.0, 4.0, 6.0, 8.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
     simple.foreach(partitioning.fill(_))
 
-    partitioning.cuts(0)._2.sum should be (-11.2 +- 1e-12)
-    partitioning.cuts(1)._2.sum should be (1.6 +- 1e-12)
+    partitioning.bins(0)._2.sum should be (-11.2 +- 1e-12)
+    partitioning.bins(1)._2.sum should be (1.6 +- 1e-12)
 
     checkJson(partitioning)
   }
@@ -960,14 +960,14 @@ class OriginalSuite extends FlatSpec with Matchers {
     takesStackedHistogramMethods(stackingSelectingSparselyBinningCounting2)
     takesStackedHistogramMethods(stackedSelectedSparselyBinnedCounted2)
 
-    val partitioningBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()))
-    val partitionedBinnedCounted = partitioningBinningCounting.ed.as[Partitioned[Binned[Counted, Counted, Counted, Counted], Counted]]
-    val partitioningSelectingBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())))
-    val partitionedSelectedBinnedCounted = partitioningSelectingBinningCounting.ed.as[Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]]
-    val partitioningSparselyBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, SparselyBin(1, {x: Double => x}, Count()))
-    val partitionedSparselyBinnedCounted = partitioningSparselyBinningCounting.ed.as[Partitioned[SparselyBinned[Counted, Counted], Counted]]
-    val partitioningSelectingSparselyBinningCounting = Partition(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())))
-    val partitionedSelectedSparselyBinnedCounted = partitioningSelectingSparselyBinningCounting.ed.as[Partitioned[Selected[SparselyBinned[Counted, Counted]], Counted]]
+    val partitioningBinningCounting = IrregularlyBin(List(1.0, 2.0, 3.0), {x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()))
+    val partitionedBinnedCounted = partitioningBinningCounting.ed.as[IrregularlyBinned[Binned[Counted, Counted, Counted, Counted], Counted]]
+    val partitioningSelectingBinningCounting = IrregularlyBin(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())))
+    val partitionedSelectedBinnedCounted = partitioningSelectingBinningCounting.ed.as[IrregularlyBinned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]]
+    val partitioningSparselyBinningCounting = IrregularlyBin(List(1.0, 2.0, 3.0), {x: Double => x}, SparselyBin(1, {x: Double => x}, Count()))
+    val partitionedSparselyBinnedCounted = partitioningSparselyBinningCounting.ed.as[IrregularlyBinned[SparselyBinned[Counted, Counted], Counted]]
+    val partitioningSelectingSparselyBinningCounting = IrregularlyBin(List(1.0, 2.0, 3.0), {x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())))
+    val partitionedSelectedSparselyBinnedCounted = partitioningSelectingSparselyBinningCounting.ed.as[IrregularlyBinned[Selected[SparselyBinned[Counted, Counted]], Counted]]
     def takesPartitionedHistogramMethods(x: PartitionedHistogramMethods) { }
     takesPartitionedHistogramMethods(partitioningBinningCounting)
     takesPartitionedHistogramMethods(partitionedBinnedCounted)

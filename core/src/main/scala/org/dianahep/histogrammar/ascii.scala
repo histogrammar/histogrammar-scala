@@ -341,24 +341,24 @@ package object ascii {
 
   //////////////////////////////////////////////////////////////// methods for PartitionedHistogram
 
-  implicit def anyBinnedToPartitionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Binned[Counted, U, O, N], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anyBinnedToPartitionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Binned[Counted, U, O, N], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anyBinningToPartitionedHistogramMethodsAscii[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Binning[DATUM, Counting, U, O, N], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anyBinningToPartitionedHistogramMethodsAscii[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Binning[DATUM, Counting, U, O, N], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anyBinningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectedBinnedToPartitionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[Binned[Counted, U, O, N]], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anySelectedBinnedToPartitionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Selected[Binned[Counted, U, O, N]], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anySelectedBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectingBinningToPartitionedHistogramMethodsAscii[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anySelectingBinningToPartitionedHistogramMethodsAscii[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anySelectingBinningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySparselyBinnedToPartitionedHistogramMethodsAscii[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[SparselyBinned[Counted, N], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anySparselyBinnedToPartitionedHistogramMethodsAscii[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[SparselyBinned[Counted, N], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anySparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySparselyBinningToPartitionedHistogramMethodsAscii[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, SparselyBinning[DATUM, Counting, N], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anySparselyBinningToPartitionedHistogramMethodsAscii[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, SparselyBinning[DATUM, Counting, N], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anySparselyBinningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectedSparselyBinnedToPartitionedHistogramMethodsAscii[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[SparselyBinned[Counted, N]], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anySelectedSparselyBinnedToPartitionedHistogramMethodsAscii[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Selected[SparselyBinned[Counted, N]], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anySelectedSparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectingSparselyBinningToPartitionedHistogramMethodsAscii[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): PartitionedHistogramMethodsAscii =
+  implicit def anySelectingSparselyBinningToPartitionedHistogramMethodsAscii[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): PartitionedHistogramMethodsAscii =
     new PartitionedHistogramMethodsAscii(anySelectingSparselyBinningToPartitionedHistogramMethods(hist).partitioned)
 
-  class PartitionedHistogramMethodsAscii(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted])
+  class PartitionedHistogramMethodsAscii(val partitioned: IrregularlyBinned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted])
 
   //////////////////////////////////////////////////////////////// methods for FractionedHistogram
 

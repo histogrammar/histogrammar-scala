@@ -321,24 +321,24 @@ package object bokeh extends Tools {
 
   //////////////////////////////////////////////////////////////// methods for PartitionedHistogram
 
-  implicit def anyBinnedToPartitionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Binned[Counted, U, O, N], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anyBinnedToPartitionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Binned[Counted, U, O, N], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anyBinningToPartitionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Binning[DATUM, Counting, U, O, N], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anyBinningToPartitionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Binning[DATUM, Counting, U, O, N], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anyBinningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectedBinnedToPartitionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[Binned[Counted, U, O, N]], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anySelectedBinnedToPartitionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Selected[Binned[Counted, U, O, N]], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anySelectedBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectingBinningToPartitionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anySelectingBinningToPartitionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anySelectingBinningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySparselyBinnedToPartitionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[SparselyBinned[Counted, N], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anySparselyBinnedToPartitionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[SparselyBinned[Counted, N], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anySparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySparselyBinningToPartitionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, SparselyBinning[DATUM, Counting, N], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anySparselyBinningToPartitionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, SparselyBinning[DATUM, Counting, N], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anySparselyBinningToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectedSparselyBinnedToPartitionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: Partitioned[Selected[SparselyBinned[Counted, N]], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anySelectedSparselyBinnedToPartitionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation, SN <: Container[SN] with NoAggregation](hist: IrregularlyBinned[Selected[SparselyBinned[Counted, N]], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anySelectedSparselyBinnedToPartitionedHistogramMethods(hist).partitioned)
-  implicit def anySelectingSparselyBinningToPartitionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: Partitioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): PartitionedHistogramMethodsBokeh =
+  implicit def anySelectingSparselyBinningToPartitionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}, SN <: Container[SN] with Aggregation{type Datum >: DATUM}](hist: IrregularlyBinning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]], SN]): PartitionedHistogramMethodsBokeh =
     new PartitionedHistogramMethodsBokeh(anySelectingSparselyBinningToPartitionedHistogramMethods(hist).partitioned)
 
-  class PartitionedHistogramMethodsBokeh(val partitioned: Partitioned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted])
+  class PartitionedHistogramMethodsBokeh(val partitioned: IrregularlyBinned[Selected[Binned[Counted, Counted, Counted, Counted]], Counted])
 
   //////////////////////////////////////////////////////////////// methods for FractionedHistogram
 

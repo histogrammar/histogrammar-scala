@@ -20,65 +20,43 @@ import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
 package histogrammar {
-  //////////////////////////////////////////////////////////////// Stack/Stacked/Stacking
+  //////////////////////////////////////////////////////////////// IrregularlyBin/IrregularlyBinned/IrregularlyBinning
 
-  /** Accumulates a suite of aggregators, each filtered with a tighter selection on the same quantity.
+  /** Accumulate a suite of aggregators, each between two thresholds, filling exactly one per datum.
     * 
-    * This is a generalization of [[org.dianahep.histogrammar.Fraction]], which fills two aggregators, one with a cut, the other without. Stack fills `N + 1` aggregators with `N` successively tighter cut thresholds. The first is always filled (like the denominator of Fraction), the second is filled if the computed quantity exceeds its threshold, the next is filled if the computed quantity exceeds a higher threshold, and so on.
+    * This is a variation on [[org.dianahep.histogrammar.Stack]], which fills `N + 1` aggregators with `N` successively tighter cut thresholds. IrregularlyBin fills `N + 1` aggregators in the non-overlapping intervals between `N` thresholds.
     * 
-    * The thresholds are presented in increasing order and the computed value must be greater than or equal to a threshold to fill the corresponding bin, and therefore the number of entries in each filled bin is greatest in the first and least in the last.
+    * IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in that they both partition a space into irregular subdomains with no gaps and no overlaps. However, CentrallyBin is defined by bin centers and IrregularlyBin is defined by bin edges, the first and last of which are at negative and positive infinity.
     * 
-    * Although this aggregation could be visualized as a stack of histograms, stacked histograms usually represent a different thing: data from different sources, rather than different cuts on the same source. For example, it is common to stack Monte Carlo samples from different backgrounds to show that they add up to the observed data. The Stack aggregator does not make plots of this type because aggregation trees in Histogrammar draw data from exactly one source.
-    * 
-    * To make plots from different sources in Histogrammar, one must perform separate aggregation runs. It may then be convenient to stack the results of those runs as though they were created with a Stack aggregation, so that plotting code can treat both cases uniformly. For this reason, Stack has an alternate constructor to build a Stack manually from distinct aggregators, even if those aggregators came from different aggregation runs.
-    * 
-    * Factory produces mutable [[org.dianahep.histogrammar.Stacking]] and immutable [[org.dianahep.histogrammar.Stacked]] objects.
+    * Factory produces mutable [[org.dianahep.histogrammar.IrregularlyBinning]] and immutable [[org.dianahep.histogrammar.IrregularlyBinned]] objects.
     */
-  object Stack extends Factory {
-    val name = "Stack"
-    val help = "Accumulates a suite of aggregators, each filtered with a tighter selection on the same quantity."
-    val detailedHelp = """This is a generalization of [[org.dianahep.histogrammar.Fraction]], which fills two aggregators, one with a cut, the other without. Stack fills `N + 1` aggregators with `N` successively tighter cut thresholds. The first is always filled (like the denominator of Fraction), the second is filled if the computed quantity exceeds its threshold, the next is filled if the computed quantity exceeds a higher threshold, and so on.
+  object IrregularlyBin extends Factory {
+    val name = "IrregularlyBin"
+    val help = "Accumulate a suite of aggregators, each between two thresholds, filling exactly one per datum."
+    val detailedHelp = """This is a variation on [[org.dianahep.histogrammar.Stack]], which fills `N + 1` aggregators with `N` successively tighter cut thresholds. IrregularlyBin fills `N + 1` aggregators in the non-overlapping intervals between `N` thresholds.
 
-The thresholds are presented in increasing order and the computed value must be greater than or equal to a threshold to fill the corresponding bin, and therefore the number of entries in each filled bin is greatest in the first and least in the last.
+IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in that they both partition a space into irregular subdomains with no gaps and no overlaps. However, CentrallyBin is defined by bin centers and IrregularlyBin is defined by bin edges, the first and last of which are at negative and positive infinity."""
 
-Although this aggregation could be visualized as a stack of histograms, stacked histograms usually represent a different thing: data from different sources, rather than different cuts on the same source. For example, it is common to stack Monte Carlo samples from different backgrounds to show that they add up to the observed data. The Stack aggregator does not make plots of this type because aggregation trees in Histogrammar draw data from exactly one source.
-
-To make plots from different sources in Histogrammar, one must perform separate aggregation runs. It may then be convenient to stack the results of those runs as though they were created with a Stack aggregation, so that plotting code can treat both cases uniformly. For this reason, Stack has an alternate constructor to build a Stack manually from distinct aggregators, even if those aggregators came from different aggregation runs."""
-
-    /** Create an immutable [[org.dianahep.histogrammar.Stacked]] from arguments (instead of JSON).
+    /** Create an immutable [[org.dianahep.histogrammar.IrregularlyBinned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param bins Lower thresholds and their associated containers, starting with negative infinity.
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, bins: Iterable[(Double, V)], nanflow: N): Stacked[V, N] = new Stacked(entries, None, bins.toSeq, nanflow)
+    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, bins: Iterable[(Double, V)], nanflow: N) = new IrregularlyBinned(entries, None, bins.toSeq, nanflow)
 
-    /** Create an empty, mutable [[org.dianahep.histogrammar.Stacking]].
+    /** Create an empty, mutable [[org.dianahep.histogrammar.IrregularlyBinning]].
       * 
       * @param bins Thresholds that will be used to determine which datum goes into a given container; this list gets sorted, duplicates get removed, and negative infinity gets added as the first element.
       * @param quantity Numerical quantity whose value is compared with the given thresholds.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
-      * @param nanflow Container for data that resulted in `NaN`.
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
-      new Stacking((java.lang.Double.NEGATIVE_INFINITY +: SortedSet(bins.toSeq: _*).toSeq).map((_, value.zero)), quantity, nanflow, 0.0)
+      new IrregularlyBinning((java.lang.Double.NEGATIVE_INFINITY +: SortedSet(bins.toSeq: _*).toSeq).map((_, value.zero)), quantity, nanflow, 0.0)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
       apply(bins, quantity, value, nanflow)
-
-    /** Alternate constructor for [[org.dianahep.histogrammar.Stacked]] that builds from N pre-aggregated primitives (N > 0).
-      * 
-      * The ''first'' result is the one that gets filled with contributions from all others, and should be plotted ''behind'' all others (''first,'' if overlays cover each other in the usual order).
-      * 
-      * Since this kind of stacked plot is not made from numerical bins, the numerical values of the `bins` are all `NaN`.
-      */
-    def build[V <: Container[V]](x: V, xs: Container[_]*): Stacked[V, Counted] = {
-      val ys = x +: xs.map(_.asInstanceOf[V])
-      val entries = ys.map(_.entries).sum
-      val bins = ys.init.scanRight(ys.last)(_ + _).map((java.lang.Double.NaN, _))
-      new Stacked(entries, None, bins, Count.ed(0.0))
-    }
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
@@ -115,7 +93,7 @@ To make plots from different sources in Histogrammar, one must perform separate 
 
         get("data") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
-            new Stacked[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
+            new IrregularlyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
               element match {
                 case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
                   val elementGet = elementPairs.toMap
@@ -136,40 +114,35 @@ To make plots from different sources in Histogrammar, one must perform separate 
     }
   }
 
-  /** An accumulated suite of containers, each collecting data above a given cut on a given quantity.
+  /** An accumulated suite of containers, each collecting data between a pair of given cuts on a given quantity.
     * 
-    * Use the factory [[org.dianahep.histogrammar.Stack]] to construct an instance.
+    * Use the factory [[org.dianahep.histogrammar.IrregularlyBin]] to construct an instance.
     * 
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param bins Lower thresholds and their associated containers, starting with negative infinity.
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class Stacked[V <: Container[V], N <: Container[N]] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: Seq[(Double, V)], val nanflow: N) extends Container[Stacked[V, N]] with NoAggregation with QuantityName {
-    // NOTE: The type bounds ought to be V <: Container[V] with NoAggregation, but this constraint has
-    //       been relaxed to allow the alternate constructor. The standard constructor applies this
-    //       constraint, so normal Stacked objects will have the correct types. HOWEVER, this class
-    //       no longer "knows" that. I am not sure if this lack of knowledge will ever become a problem.
-
-    type Type = Stacked[V, N]
-    type EdType = Stacked[V, N]
-    def factory = Stack
+  class IrregularlyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: Seq[(Double, V)], val nanflow: N) extends Container[IrregularlyBinned[V, N]] with NoAggregation with QuantityName {
+    type Type = IrregularlyBinned[V, N]
+    type EdType = IrregularlyBinned[V, N]
+    def factory = IrregularlyBin
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     if (bins.size < 1)
-      throw new ContainerException(s"number of bins (${bins.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
+      throw new ContainerException(s"number of bins (${bins.size}) must be at least 1 (including the implicit >= -inf, which the IrregularlyBin.ing factory method adds)")
 
     def thresholds = bins.map(_._1)
     def values = bins.map(_._2)
 
-    def zero = new Stacked[V, N](0.0, quantityName, bins map {case (c, v) => (c, v.zero)}, nanflow.zero)
-    def +(that: Stacked[V, N]) = {
+    def zero = new IrregularlyBinned[V, N](0.0, quantityName, bins map {case (c, v) => (c, v.zero)}, nanflow.zero)
+    def +(that: IrregularlyBinned[V, N]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
-      new Stacked(
+      new IrregularlyBinned(
         this.entries + that.entries,
         this.quantityName,
         this.bins zip that.bins map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)},
@@ -187,45 +160,47 @@ To make plots from different sources in Histogrammar, one must perform separate 
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("data:name") -> (bins.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""<Stacked values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
+    override def toString() = s"""<IrregularlyBinned values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
-      case that: Stacked[V, N] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  (this.bins zip that.bins forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})  &&  this.nanflow == that.nanflow
+      case that: IrregularlyBinned[V, N] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  (this.bins zip that.bins forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})  &&  this.nanflow == that.nanflow
       case _ => false
     }
     override def hashCode() = (entries, quantityName, bins, nanflow).hashCode()
   }
 
-  /** Accumulating a suite of containers, each collecting data above a given cut on a given quantity.
+  /** Accumulating a suite of containers, each collecting data between a pair of given bins on a given quantity.
     * 
-    * Use the factory [[org.dianahep.histogrammar.Stack]] to construct an instance.
+    * Use the factory [[org.dianahep.histogrammar.IrregularlyBin]] to construct an instance.
     * 
     * @param bins Lower thresholds and their associated containers, starting with negative infinity.
     * @param quantity Numerical quantity whose value is compared with the given thresholds.
     * @param nanflow Container for data that resulted in `NaN`.
     * @param entries Weighted number of entries (sum of all observed weights).
     */
-  class Stacking[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar](val bins: Seq[(Double, V)], val quantity: UserFcn[DATUM, Double], val nanflow: N, var entries: Double) extends Container[Stacking[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] {
+  class IrregularlyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar](val bins: Seq[(Double, V)], val quantity: UserFcn[DATUM, Double], val nanflow: N, var entries: Double) extends Container[IrregularlyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] {
     protected val v = bins.head._2
-    type Type = Stacking[DATUM, V, N]
-    type EdType = Stacked[v.EdType, nanflow.EdType]
+    type Type = IrregularlyBinning[DATUM, V, N]
+    type EdType = IrregularlyBinned[v.EdType, nanflow.EdType]
     type Datum = DATUM
-    def factory = Stack
+    def factory = IrregularlyBin
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
     if (bins.size < 1)
-      throw new ContainerException(s"number of bins (${bins.size}) must be at least 1 (including the implicit >= -inf, which the Stack.ing factory method adds)")
+      throw new ContainerException(s"number of bins (${bins.size}) must be at least 1 (including the implicit >= -inf, which the IrregularlyBin.ing factory method adds)")
+
+    private val range = bins zip (bins.tail :+ (java.lang.Double.NaN, null))
 
     def thresholds = bins.map(_._1)
     def values = bins.map(_._2)
 
-    def zero = new Stacking[DATUM, V, N](bins map {case (c, v) => (c, v.zero)}, quantity, nanflow.zero, 0.0)
-    def +(that: Stacking[DATUM, V, N]) = {
+    def zero = new IrregularlyBinning[DATUM, V, N](bins map {case (c, v) => (c, v.zero)}, quantity, nanflow.zero, 0.0)
+    def +(that: IrregularlyBinning[DATUM, V, N]) = {
       if (this.thresholds != that.thresholds)
         throw new ContainerException(s"cannot add ${getClass.getName} because cut thresholds differ")
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
-        new Stacking(
+        new IrregularlyBinning(
           this.bins zip that.bins map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)},
           this.quantity,
           this.nanflow + that.nanflow,
@@ -239,9 +214,9 @@ To make plots from different sources in Histogrammar, one must perform separate 
         if (q.isNaN)
           nanflow.fill(datum, weight)
         else
-          bins foreach {case (threshold, sub) =>
-            if (q >= threshold)
-              sub.fill(datum, weight)
+          // !(q >= high) is true when high == NaN (even if q == +inf)
+          range find {case ((low, sub), (high, _)) => q >= low  &&  !(q >= high)} foreach {case ((_, sub), (_, _)) =>
+            sub.fill(datum, weight)
           }
 
         // no possibility of exception from here on out (for rollback)
@@ -260,9 +235,9 @@ To make plots from different sources in Histogrammar, one must perform separate 
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("data:name") -> (bins.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""<Stacking values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
+    override def toString() = s"""<IrregularlyBinning values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
-      case that: Stacking[DATUM, V, N] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  (this.bins zip that.bins forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})  &&  this.nanflow == that.nanflow
+      case that: IrregularlyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  (this.bins zip that.bins forall {case (me, you) => me._1 === you._1  &&  me._2 == you._2})  &&  this.nanflow == that.nanflow
       case _ => false
     }
     override def hashCode() = (quantity, entries, bins, nanflow).hashCode()

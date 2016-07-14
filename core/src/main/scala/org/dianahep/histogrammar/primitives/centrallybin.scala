@@ -26,27 +26,21 @@ package histogrammar {
     * 
     * Unlike irregular bins defined by explicit ranges, irregular bins defined by bin centers are guaranteed to fully partition the space with no gaps and no overlaps. It could be viewed as cluster scoring in one dimension.
     * 
-    * The first and last bins cover semi-infinite domains, so it is unclear how to interpret them as part of the probability density function (PDF). Finite-width bins approximate the PDF in piecewise steps, but the first and last bins could be taken as zero (an underestimate) or as uniform from the most extreme point to the inner bin edge (an overestimate, but one that is compensated by underestimating the region just beyond the extreme point). For the sake of the latter interpretation, the minimum and maximum values are accumulated along with the bin values.
-    * 
     * Factory produces mutable [[org.dianahep.histogrammar.CentrallyBinning]] and immutable [[org.dianahep.histogrammar.CentrallyBinned]] objects.
     */
   object CentrallyBin extends Factory {
     val name = "CentrallyBin"
     val help = "Split a quantity into bins defined by irregularly spaced bin centers, with exactly one sub-aggregator filled per datum (the closest one)."
-    val detailedHelp = """Unlike irregular bins defined by explicit ranges, irregular bins defined by bin centers are guaranteed to fully partition the space with no gaps and no overlaps. It could be viewed as cluster scoring in one dimension.
-
-The first and last bins cover semi-infinite domains, so it is unclear how to interpret them as part of the probability density function (PDF). Finite-width bins approximate the PDF in piecewise steps, but the first and last bins could be taken as zero (an underestimate) or as uniform from the most extreme point to the inner bin edge (an overestimate, but one that is compensated by underestimating the region just beyond the extreme point). For the sake of the latter interpretation, the minimum and maximum values are accumulated along with the bin values."""
+    val detailedHelp = """Unlike irregular bins defined by explicit ranges, irregular bins defined by bin centers are guaranteed to fully partition the space with no gaps and no overlaps. It could be viewed as cluster scoring in one dimension."""
 
     /** Create an immutable [[org.dianahep.histogrammar.CentrallyBinned]] from arguments (instead of JSON).
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param bins Centers and values of each bin.
-      * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
-      * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, bins: Iterable[(Double, V)], min: Double, max: Double, nanflow: N) =
-      new CentrallyBinned[V, N](entries, None, immutable.MetricSortedMap(bins.toSeq: _*), min, max, nanflow)
+    def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, bins: Iterable[(Double, V)], nanflow: N) =
+      new CentrallyBinned[V, N](entries, None, immutable.MetricSortedMap(bins.toSeq: _*), nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.CentrallyBinning]].
       * 
@@ -57,7 +51,7 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
-      new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value.zero)): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow)
+      new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value.zero)): _*), nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
@@ -69,10 +63,6 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
       def entries: Double
       /** Bin centers and their contents. */
       def bins: MetricSortedMap[Double, V]
-      /** Minimium data value observed so far or `NaN` if no data have been observed so far. */
-      def min: Double
-      /** Maximum data value observed so far or `NaN` if no data have been observed so far. */
-      def max: Double
 
       /** Set of centers of each bin. */
       def centersSet = bins.iterator.map(_._1).toSet
@@ -102,167 +92,11 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
         case (Some(below), None) => ((below + center)/2.0, java.lang.Double.POSITIVE_INFINITY)
         case _ => throw new Exception("can't get here")
       }
-
-      def pdf(x: Double): Double = pdf(List(x): _*).head
-      /** Cumulative distribution function (CDF, or "accumulation function") of one sample point.
-        * 
-        * Computed by adding bin contents from minus infinity to the point in question. This is a continuous, piecewise linear function.
-        */
-      def cdf(x: Double): Double = cdf(List(x): _*).head
-      /** Quantile function (QF, or "inverse of the accumulation function") of one sample point.
-        * 
-        * Computed like the CDF, but solving for the point in question, rather than integrating up to it. This is a continuous, piecewise linear function.
-        */
-      def qf(x: Double): Double = qf(List(x): _*).head
-
-      /** Probability distribution function (PDF) of many sample points.
-        * 
-        * Computed as the `entries` of the corresponding bins divided by total number of entries divided by bin width.
-        */
-      def pdf(xs: Double*): Seq[Double] = pdfTimesEntries(xs: _*).map(_ / entries)
-      /** Cumulative distribution function (CDF, or "accumulation function") of many sample points.
-        * 
-        * Computed by adding bin contents from minus infinity to the points in question. This is a continuous, piecewise linear function.
-        */
-      def cdf(xs: Double*): Seq[Double] = cdfTimesEntries(xs: _*).map(_ / entries)
-      /** Quantile function (QF, or "inverse of the accumulation function") of many sample points.
-        * 
-        * Computed like the CDF, but solving for the points in question, rather than integrating up to them. This is a continuous, piecewise linear function.
-        */
-      def qf(xs: Double*): Seq[Double] = qfTimesEntries(xs.map(_ * entries): _*)
-
-      /** PDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
-      def pdfTimesEntries(x: Double): Double = pdfTimesEntries(List(x): _*).head
-      /** CDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
-      def cdfTimesEntries(x: Double): Double = cdfTimesEntries(List(x): _*).head
-      /** QF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
-      def qfTimesEntries(x: Double): Double = qfTimesEntries(List(x): _*).head
-
-      /** PDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
-      def pdfTimesEntries(xs: Double*): Seq[Double] =
-        if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
-          Seq.fill(xs.size)(0.0)
-        else if (bins.size == 1)
-          xs map {case x =>
-            if (x == bins.head._1)
-              java.lang.Double.POSITIVE_INFINITY
-            else
-              0.0
-          }
-          else {
-            val binsArray = bins.toArray
-            val in = xs.zipWithIndex.toArray
-            val out = Array.fill(in.size)(0.0)
-
-            var i = 0
-            var left = min
-            while (i < binsArray.size) {
-              val right =
-                if (i < binsArray.size - 1)
-                  (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
-                else
-                  max
-              val entries = binsArray(i)._2.entries
-
-              in foreach {case (x, j) =>
-                if (left <= x  &&  x < right)
-                  out(j) = entries / (right - left)
-              }
-
-              left = right
-              i += 1
-            }
-            out.toSeq
-          }
-
-      /** CDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
-      def cdfTimesEntries(xs: Double*): Seq[Double] =
-        if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
-          Seq.fill(xs.size)(0.0)
-        else if (bins.size == 1)
-          xs map {case x =>
-            if (x < bins.head._1)
-              0.0
-            else if (x == bins.head._1)
-              bins.head._2.entries / 2.0
-            else
-              bins.head._2.entries
-          }
-          else {
-            val binsArray = bins.toArray
-            val in = xs.zipWithIndex.toArray
-            val out = Array.fill(in.size)(0.0)
-
-            var i = 0
-            var left = min
-            var cumulative = 0.0
-            while (i < binsArray.size) {
-              val right =
-                if (i < binsArray.size - 1)
-                  (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
-                else
-                  max
-              val entries = binsArray(i)._2.entries
-
-              in foreach {case (x, j) =>
-                if (left <= x  &&  x < right)
-                  out(j) = cumulative + entries * (x - left)/(right - left)
-              }
-
-              left = right
-              cumulative += entries
-              i += 1
-            }
-
-            in foreach {case (x, j) => if (x >= max) out(j) = cumulative}
-
-            out.toSeq
-          }
-
-      /** QF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
-      def qfTimesEntries(ys: Double*): Seq[Double] =
-        if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
-          Seq.fill(ys.size)(java.lang.Double.NaN)
-        else if (bins.size == 1)
-          Seq.fill(ys.size)(bins.head._1)
-        else {
-          val binsArray = bins.toArray
-          val in = ys.zipWithIndex.toArray
-          val out = Array.fill(in.size)(min)
-
-          var i = 0
-          var left = min
-          var cumulative = 0.0
-          while (i < binsArray.size) {
-            val right =
-              if (i < binsArray.size - 1)
-                (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
-              else
-                max
-            val entries = binsArray(i)._2.entries
-
-            val low = cumulative
-            val high = cumulative + entries
-
-            in foreach {case (y, j) =>
-              if (low <= y  &&  y < high)
-                out(j) = left + (right - left)*(y - low)/(high - low)
-            }
-
-            left = right
-            cumulative += entries
-            i += 1
-          }
-
-          in foreach {case (y, j) => if (y >= cumulative) out(j) = max}
-
-          out.toSeq
-        }
     }
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "min", "max", "nanflow:type", "nanflow").maybe("name").maybe("bins:name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "nanflow:type", "nanflow").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -305,23 +139,13 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
           case x => throw new JsonFormatException(x, name + ".bins")
         }
 
-        val min = get("min") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".min")
-        }
-
-        val max = get("max") match {
-          case JsonNumber(x) => x
-          case x => throw new JsonFormatException(x, name + ".max")
-        }
-
         val nanflowFactory = get("nanflow:type") match {
           case JsonString(name) => Factory(name)
           case x => throw new JsonFormatException(x, name + ".nanflow:type")
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        new CentrallyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], min, max, nanflow)
+        new CentrallyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -334,11 +158,9 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param bins Metric, sorted map of centers and values for each bin.
-    * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
-    * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class CentrallyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: immutable.MetricSortedMap[Double, V], val min: Double, val max: Double, val nanflow: N)
+  class CentrallyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: immutable.MetricSortedMap[Double, V], val nanflow: N)
     extends Container[CentrallyBinned[V, N]] with NoAggregation with QuantityName with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinned[V, N]
@@ -350,7 +172,7 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
     if (bins.size < 2)
       throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def zero = new CentrallyBinned[V, N](0.0, quantityName, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), java.lang.Double.NaN, java.lang.Double.NaN, nanflow.zero)
+    def zero = new CentrallyBinned[V, N](0.0, quantityName, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), nanflow.zero)
     def +(that: CentrallyBinned[V, N]) = {
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
@@ -359,7 +181,7 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
 
       val newbins = immutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
       
-      new CentrallyBinned[V, N](this.entries + that.entries, quantityName, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
+      new CentrallyBinned[V, N](this.entries + that.entries, quantityName, newbins, this.nanflow + that.nanflow)
     }
 
     def children = nanflow :: values.toList
@@ -368,8 +190,6 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(bins.head._2.factory.name),
       "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
-      "min" -> JsonFloat(min),
-      "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
@@ -377,10 +197,10 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
 
     override def toString() = s"""<CentrallyBinned bins=${bins.head._2.factory.name} size=${bins.size} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
-      case that: CentrallyBinned[V, N] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
+      case that: CentrallyBinned[V, N] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (entries, quantityName, bins, min, max, nanflow).hashCode
+    override def hashCode() = (entries, quantityName, bins, nanflow).hashCode
   }
 
   /** Accumulating a quantity by splitting it into bins defined by bin centers, filling only one datum per bin with no overflows or underflows.
@@ -391,12 +211,10 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
     * @param bins Metric, sorted map of centers and values for each bin.
-    * @param min Lowest observed value; used to interpret the first bin as a finite PDF (since the first bin technically extends to minus infinity).
-    * @param max Highest observed value; used to interpret the last bin as a finite PDF (since the last bin technically extends to plus infinity).
     * @param nanflow Container for data that resulted in `NaN`.
     */
   class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
-    (val quantity: UserFcn[DATUM, Double], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], var min: Double, var max: Double, val nanflow: N)
+    (val quantity: UserFcn[DATUM, Double], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], val nanflow: N)
     extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with CentrallyBin.Methods[V] {
 
     protected val v = value
@@ -410,7 +228,7 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
     if (bins.size < 2)
       throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def zero = new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), bins.head._1, bins.last._1, nanflow.zero)
+    def zero = new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), nanflow.zero)
     def +(that: CentrallyBinning[DATUM, V, N]) = {
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
@@ -419,7 +237,7 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
 
       val newbins = mutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
 
-      new CentrallyBinning[DATUM, V, N](quantity, this.entries + that.entries, value, newbins, Minimize.plus(this.min, that.min), Maximize.plus(this.max, that.max), this.nanflow + that.nanflow)
+      new CentrallyBinning[DATUM, V, N](quantity, this.entries + that.entries, value, newbins, this.nanflow + that.nanflow)
     }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
@@ -436,10 +254,6 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
 
         // no possibility of exception from here on out (for rollback)
         entries += weight
-        if (min.isNaN  ||  q < min)
-          min = q
-        if (max.isNaN  ||  q > max)
-          max = q
       }
     }
 
@@ -449,8 +263,6 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(value.factory.name),
       "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
-      "min" -> JsonFloat(min),
-      "max" -> JsonFloat(max),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
@@ -458,9 +270,9 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
 
     override def toString() = s"""<CentrallyBinning bins=${bins.head._2.factory.name} size=${bins.size} nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
-      case that: CentrallyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.min === that.min  &&  this.max === that.max  &&  this.nanflow == that.nanflow
+      case that: CentrallyBinning[DATUM, V, N] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.bins == that.bins  &&  this.nanflow == that.nanflow
       case _ => false
     }
-    override def hashCode() = (quantity, entries, bins, min, max, nanflow).hashCode
+    override def hashCode() = (quantity, entries, bins, nanflow).hashCode
   }
 }

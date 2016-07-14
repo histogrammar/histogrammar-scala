@@ -64,8 +64,15 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
       (bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
       apply(bins, quantity, value, nanflow)
 
-    trait Methods[V <: Container[V]] extends CentralBinsDistribution[V] {
+    trait Methods[V <: Container[V]] {
+      /**Weighted number of entries (sum of all observed weights). */
+      def entries: Double
+      /** Bin centers and their contents. */
       def bins: MetricSortedMap[Double, V]
+      /** Minimium data value observed so far or `NaN` if no data have been observed so far. */
+      def min: Double
+      /** Maximum data value observed so far or `NaN` if no data have been observed so far. */
+      def max: Double
 
       /** Set of centers of each bin. */
       def centersSet = bins.iterator.map(_._1).toSet
@@ -95,6 +102,162 @@ The first and last bins cover semi-infinite domains, so it is unclear how to int
         case (Some(below), None) => ((below + center)/2.0, java.lang.Double.POSITIVE_INFINITY)
         case _ => throw new Exception("can't get here")
       }
+
+      def pdf(x: Double): Double = pdf(List(x): _*).head
+      /** Cumulative distribution function (CDF, or "accumulation function") of one sample point.
+        * 
+        * Computed by adding bin contents from minus infinity to the point in question. This is a continuous, piecewise linear function.
+        */
+      def cdf(x: Double): Double = cdf(List(x): _*).head
+      /** Quantile function (QF, or "inverse of the accumulation function") of one sample point.
+        * 
+        * Computed like the CDF, but solving for the point in question, rather than integrating up to it. This is a continuous, piecewise linear function.
+        */
+      def qf(x: Double): Double = qf(List(x): _*).head
+
+      /** Probability distribution function (PDF) of many sample points.
+        * 
+        * Computed as the `entries` of the corresponding bins divided by total number of entries divided by bin width.
+        */
+      def pdf(xs: Double*): Seq[Double] = pdfTimesEntries(xs: _*).map(_ / entries)
+      /** Cumulative distribution function (CDF, or "accumulation function") of many sample points.
+        * 
+        * Computed by adding bin contents from minus infinity to the points in question. This is a continuous, piecewise linear function.
+        */
+      def cdf(xs: Double*): Seq[Double] = cdfTimesEntries(xs: _*).map(_ / entries)
+      /** Quantile function (QF, or "inverse of the accumulation function") of many sample points.
+        * 
+        * Computed like the CDF, but solving for the points in question, rather than integrating up to them. This is a continuous, piecewise linear function.
+        */
+      def qf(xs: Double*): Seq[Double] = qfTimesEntries(xs.map(_ * entries): _*)
+
+      /** PDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
+      def pdfTimesEntries(x: Double): Double = pdfTimesEntries(List(x): _*).head
+      /** CDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
+      def cdfTimesEntries(x: Double): Double = cdfTimesEntries(List(x): _*).head
+      /** QF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
+      def qfTimesEntries(x: Double): Double = qfTimesEntries(List(x): _*).head
+
+      /** PDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
+      def pdfTimesEntries(xs: Double*): Seq[Double] =
+        if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
+          Seq.fill(xs.size)(0.0)
+        else if (bins.size == 1)
+          xs map {case x =>
+            if (x == bins.head._1)
+              java.lang.Double.POSITIVE_INFINITY
+            else
+              0.0
+          }
+          else {
+            val binsArray = bins.toArray
+            val in = xs.zipWithIndex.toArray
+            val out = Array.fill(in.size)(0.0)
+
+            var i = 0
+            var left = min
+            while (i < binsArray.size) {
+              val right =
+                if (i < binsArray.size - 1)
+                  (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
+                else
+                  max
+              val entries = binsArray(i)._2.entries
+
+              in foreach {case (x, j) =>
+                if (left <= x  &&  x < right)
+                  out(j) = entries / (right - left)
+              }
+
+              left = right
+              i += 1
+            }
+            out.toSeq
+          }
+
+      /** CDF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
+      def cdfTimesEntries(xs: Double*): Seq[Double] =
+        if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
+          Seq.fill(xs.size)(0.0)
+        else if (bins.size == 1)
+          xs map {case x =>
+            if (x < bins.head._1)
+              0.0
+            else if (x == bins.head._1)
+              bins.head._2.entries / 2.0
+            else
+              bins.head._2.entries
+          }
+          else {
+            val binsArray = bins.toArray
+            val in = xs.zipWithIndex.toArray
+            val out = Array.fill(in.size)(0.0)
+
+            var i = 0
+            var left = min
+            var cumulative = 0.0
+            while (i < binsArray.size) {
+              val right =
+                if (i < binsArray.size - 1)
+                  (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
+                else
+                  max
+              val entries = binsArray(i)._2.entries
+
+              in foreach {case (x, j) =>
+                if (left <= x  &&  x < right)
+                  out(j) = cumulative + entries * (x - left)/(right - left)
+              }
+
+              left = right
+              cumulative += entries
+              i += 1
+            }
+
+            in foreach {case (x, j) => if (x >= max) out(j) = cumulative}
+
+            out.toSeq
+          }
+
+      /** QF without the non-unity number of entries removed (no division by zero when `entries` is zero). */
+      def qfTimesEntries(ys: Double*): Seq[Double] =
+        if (bins.isEmpty  ||  min.isNaN  ||  max.isNaN)
+          Seq.fill(ys.size)(java.lang.Double.NaN)
+        else if (bins.size == 1)
+          Seq.fill(ys.size)(bins.head._1)
+        else {
+          val binsArray = bins.toArray
+          val in = ys.zipWithIndex.toArray
+          val out = Array.fill(in.size)(min)
+
+          var i = 0
+          var left = min
+          var cumulative = 0.0
+          while (i < binsArray.size) {
+            val right =
+              if (i < binsArray.size - 1)
+                (binsArray(i)._1 + binsArray(i + 1)._1) / 2.0
+              else
+                max
+            val entries = binsArray(i)._2.entries
+
+            val low = cumulative
+            val high = cumulative + entries
+
+            in foreach {case (y, j) =>
+              if (low <= y  &&  y < high)
+                out(j) = left + (right - left)*(y - low)/(high - low)
+            }
+
+            left = right
+            cumulative += entries
+            i += 1
+          }
+
+          in foreach {case (y, j) => if (y >= cumulative) out(j) = max}
+
+          out.toSeq
+        }
     }
 
     import KeySetComparisons._

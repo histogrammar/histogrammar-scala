@@ -70,15 +70,12 @@ package histogrammar {
     register(Sum)
     register(Average)
     register(Deviate)
-    register(AbsoluteErr)
     register(Minimize)
     register(Maximize)
-    register(Quantile)
 
     register(Bin)
     register(SparselyBin)
     register(CentrallyBin)
-    register(AdaptivelyBin)
     register(Categorize)
 
     register(Fraction)
@@ -93,7 +90,6 @@ package histogrammar {
     register(Branch)
 
     register(Bag)
-    register(Sample)
 
     /** Get a registered container by its name. */
     def apply(name: String) = known.get(name) match {

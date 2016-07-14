@@ -391,31 +391,6 @@ class OriginalSuite extends FlatSpec with Matchers {
     }
   }
 
-  //////////////////////////////////////////////////////////////// AbsoluteErr/AbsoluteErring/AbsoluteErred
-
-  "AbsoluteErr/AbsoluteErring/AbsoluteErred" must "work" in {
-    for (i <- 0 to 10) {
-      val (left, right) = simple.splitAt(i)
-
-      val leftAbsoluteErring = AbsoluteErr({x: Double => x} named "something")
-      val rightAbsoluteErring = AbsoluteErr({x: Double => x} named "something")
-
-      left.foreach(leftAbsoluteErring.fill(_))
-      right.foreach(rightAbsoluteErring.fill(_))
-
-      val (AbsoluteErr(leftResult), AbsoluteErr(rightResult)) = (leftAbsoluteErring, rightAbsoluteErring)
-
-      leftResult should be (mae(left) +- 1e-12)
-      rightResult should be (mae(right) +- 1e-12)
-
-      val AbsoluteErr(finalResult) = leftAbsoluteErring + rightAbsoluteErring
-
-      finalResult should be (mae(simple) +- 1e-12)
-
-      checkJson(leftAbsoluteErring)
-    }
-  }
-
   //////////////////////////////////////////////////////////////// Minimize/Minimizing/Minimized
 
   "Minimize/Minimizing/Minimized" must "work" in {
@@ -472,81 +447,6 @@ class OriginalSuite extends FlatSpec with Matchers {
     }
   }
 
-  //////////////////////////////////////////////////////////////// Quantile/Quantiling/Quantiled
-
-  "Quantile/Quantiling/Quantiled" must "work" in {
-    val answers = List(
-      List(java.lang.Double.NaN, -0.481328271104, -0.481328271104),
-      List(3.4, -0.69120847042, -0.282087623378),
-      List(-0.675, -0.736543753016, -0.724235002413),
-      List(-0.58125, -0.958145383329, -0.84507676833),
-      List(0.13623046875, -1.53190059408, -0.864648168945),
-      List(0.302100585937, -0.819002197266, -0.258450805664),
-      List(-0.942007507324, -0.629296875, -0.816923254395),
-      List(0.269603994253, -0.753125, -0.0372147040231),
-      List(-0.628724939722, 0.24375, -0.454229951778),
-      List(-0.562639074418, -1.7, -0.676375166976),
-      List(-0.481328271104, java.lang.Double.NaN, -0.481328271104),
-      List(java.lang.Double.NaN, -0.329460938614, -0.329460938614),
-      List(3.4, -0.457521896462, -0.0717697068155),
-      List(-0.45, -0.511698266503, -0.499358613202),
-      List(-0.425, -0.706904919683, -0.622333443778),
-      List(0.27890625, -0.937865017361, -0.451156510417),
-      List(0.599765625, -0.65764453125, -0.028939453125),
-      List(-0.637327473958, -0.471875, -0.571146484375),
-      List(0.536730209662, -0.595833333333, 0.196961146763),
-      List(-0.423513681061, 0.4875, -0.241310944849),
-      List(-0.382340803288, -1.7, -0.514106722959),
-      List(-0.329460938614, java.lang.Double.NaN, -0.329460938614),
-      List(java.lang.Double.NaN, -0.168649887325, -0.168649887325),
-      List(3.4, -0.227037303799, 0.135666426581),
-      List(-0.225, -0.265185561995, -0.257148449596),
-      List(-0.23125, -0.386842979665, -0.340165085765),
-      List(0.42275390625, -0.477651570638, -0.117489379883),
-      List(0.889514648438, -0.394795166016, 0.247359741211),
-      List(-0.322354390462, -0.264453125, -0.299193884277),
-      List(0.798766766295, -0.344791666667, 0.455699236407),
-      List(-0.213212483191, 0.73125, -0.0243199865526),
-      List(-0.194267772368, -1.7, -0.344840995131),
-      List(-0.168649887325, java.lang.Double.NaN, -0.168649887325)
-    )
-    var line = 0
-
-    for (p <- List(0.25, 0.5, 0.75))
-      for (i <- 0 to 10) {
-        val (left, right) = simple.splitAt(i)
-
-        val leftQuantiling = Quantile(p, {x: Double => x} named "something")
-        val rightQuantiling = Quantile(p, {x: Double => x} named "something")
-
-        left.foreach(leftQuantiling.fill(_))
-        right.foreach(rightQuantiling.fill(_))
-
-        val (Quantile(leftResult), Quantile(rightResult)) = (leftQuantiling, rightQuantiling)
-        val Quantile(finalResult) = leftQuantiling + rightQuantiling
-
-        val List(leftAnswer, rightAnswer, finalAnswer) = answers(line)
-        line += 1
-
-        if (leftAnswer.isNaN)
-          leftResult === leftAnswer should be (true)
-        else
-          leftResult should be (leftAnswer +- 1e-10)
-
-        if (rightAnswer.isNaN)
-          rightResult === rightAnswer should be (true)
-        else
-          rightResult should be (rightAnswer +- 1e-10)
-
-        if (finalAnswer.isNaN)
-          finalResult === finalAnswer should be (true)
-        else
-          finalResult should be (finalAnswer +- 1e-10)
-
-        checkJson(leftQuantiling)
-      }
-  }
-
   //////////////////////////////////////////////////////////////// Bag/Bagged/Bagging
 
   "Bag/Bagged/Bagging" must "work" in {
@@ -578,37 +478,6 @@ class OriginalSuite extends FlatSpec with Matchers {
 
     checkJson(one)
     checkJson(two)
-  }
-
-  //////////////////////////////////////////////////////////////// Sample/Sampled/Sampling
-
-  "Sample/Sampled/Sampling" must "work" in {
-    val one = Sample(100, {x: Double => x} named "something")
-    simple.foreach(one.fill(_))
-    one.values.toSet should be (Set((3.4, 1.0), (2.2, 1.0), (-1.8, 1.0), (0.0, 1.0), (7.3, 1.0), (-4.7, 1.0), (1.6, 1.0), (0.0, 1.0), (-3.0, 1.0), (-1.7, 1.0)))
-
-    val two = Sample(3, {x: Double => x})
-    simple.foreach(two.fill(_))
-    two.values.size should be (3)
-    two.size should be (3)
-
-    val three = Sample(100, {x: Double => Vector(x, x)})
-    simple.foreach(three.fill(_))
-    three.values.toSet should be (Set((Vector(3.4, 3.4), 1.0), (Vector(2.2, 2.2), 1.0), (Vector(-1.8, -1.8), 1.0), (Vector(0.0, 0.0), 1.0), (Vector(7.3, 7.3), 1.0), (Vector(-4.7, -4.7), 1.0), (Vector(1.6, 1.6), 1.0), (Vector(0.0, 0.0), 1.0), (Vector(-3.0, -3.0), 1.0), (Vector(-1.7, -1.7), 1.0)))
-
-    val four = Sample(100, {x: Struct => x.string.substring(0, 1)})
-    struct.foreach(four.fill(_))
-    four.values.sorted should be (Vector("e" -> 1.0, "f" -> 1.0, "f" -> 1.0, "n" -> 1.0, "o" -> 1.0, "s" -> 1.0, "s" -> 1.0, "t" -> 1.0, "t" -> 1.0, "t" -> 1.0))
-
-    val five = Sample(100, {x: Struct => x.string})
-    struct.foreach(five.fill(_))
-    five.values.sorted should be (Vector("eight" -> 1.0, "five" -> 1.0, "four" -> 1.0, "nine" -> 1.0, "one" -> 1.0, "seven" -> 1.0, "six" -> 1.0, "ten" -> 1.0, "three" -> 1.0, "two" -> 1.0))
-
-    checkJson(one)
-    checkJson(two)
-    checkJson(three)
-    checkJson(four)
-    checkJson(five)
   }
 
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
@@ -693,19 +562,6 @@ class OriginalSuite extends FlatSpec with Matchers {
     checkJson(one)
 
     val two = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
-    checkJson(two)
-  }
-
-  //////////////////////////////////////////////////////////////// AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning
-
-  "AdaptivelyBin/AdaptivelyBinned/AdaptivelyBinning" must "work with Count/Counting/Counted" in {
-    val one = AdaptivelyBin({x: Double => x} named "something", num = 5)
-    simple.foreach(one.fill(_))
-    one.bins.toList map {case (k, v) => (k, v.entries)} should be (List(-3.85 -> 2.0, -1.1666666666666667 -> 3.0, 0.8 -> 2.0, 2.8 -> 2.0, 7.3 -> 1.0))
-    checkJson(one)
-
-    val two = AdaptivelyBin({x: Double => x} named "something", num = 5, value = Sum({x: Double => x} named "else"))
-    simple.foreach(two.fill(_))
     checkJson(two)
   }
 

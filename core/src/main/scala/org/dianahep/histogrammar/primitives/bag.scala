@@ -26,7 +26,7 @@ package histogrammar {
     * 
     * Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Bag primitives in an analysis tree may collect different types.
     * 
-    * Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that roll over to a mere count when they exceed a limit, or [[org.dianahep.histogrammar.Sample]] for reservoir sampling.
+    * Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that roll over to a mere count when they exceed a limit.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Bagging]] and immutable [[org.dianahep.histogrammar.Bagged]] objects.
     */
@@ -37,7 +37,7 @@ package histogrammar {
 
 Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Bag primitives in an analysis tree may collect different types.
 
-Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that roll over to a mere count when they exceed a limit, or [[org.dianahep.histogrammar.Sample]] for reservoir sampling."""
+Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that roll over to a mere count when they exceed a limit."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).
       * 

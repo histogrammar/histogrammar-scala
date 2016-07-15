@@ -34,7 +34,7 @@ package histogrammar {
     * 
     * Limit can effectively swap between two descriptions if it is embedded in a collection, such as [[org.dianahep.histogrammar.Branch]]. All elements of the collection would be filled until the Limit saturates, leaving only the low-detail one. For instance, one could aggregate several [[org.dianahep.histogrammar.SparselyBin]] histograms, each with a different `binWidth`, and progressively eliminate them in order of increasing `binWidth`.
     * 
-    * Note that Limit saturates when it reaches a specified ''total weight,'' not the number of data points in a [[org.dianahep.histogrammar.Bag]], so it is not certain to control memory use. However, the total weight is of more use to data analysis. ([[org.dianahep.histogrammar.Sample]] puts a strict limit on memory use.)
+    * Note that Limit saturates when it reaches a specified ''total weight,'' not the number of data points in a [[org.dianahep.histogrammar.Bag]], so it is not certain to control memory use. However, the total weight is of more use to data analysis.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Limiting]] and immutable [[org.dianahep.histogrammar.Limited]] objects.
     */
@@ -51,7 +51,7 @@ fills a scatter plot in all x-y bins that have fewer than 10 entries and only a 
 
 Limit can effectively swap between two descriptions if it is embedded in a collection, such as [[org.dianahep.histogrammar.Branch]]. All elements of the collection would be filled until the Limit saturates, leaving only the low-detail one. For instance, one could aggregate several [[org.dianahep.histogrammar.SparselyBin]] histograms, each with a different `binWidth`, and progressively eliminate them in order of increasing `binWidth`.
 
-Note that Limit saturates when it reaches a specified ''total weight,'' not the number of data points in a [[org.dianahep.histogrammar.Bag]], so it is not certain to control memory use. However, the total weight is of more use to data analysis. ([[org.dianahep.histogrammar.Sample]] puts a strict limit on memory use.)"""
+Note that Limit saturates when it reaches a specified ''total weight,'' not the number of data points in a [[org.dianahep.histogrammar.Bag]], so it is not certain to control memory use. However, the total weight is of more use to data analysis."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Limited]] from arguments (instead of JSON).
       * 

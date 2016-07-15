@@ -2,7 +2,6 @@ language: java   # because we use Maven
 
 os:
   - linux
-  - osx
 
 jdk:
   - oraclejdk7

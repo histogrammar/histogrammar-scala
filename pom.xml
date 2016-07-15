@@ -7,7 +7,7 @@
   <groupId>org.diana-hep</groupId>
   <artifactId>histogrammar-dependencies</artifactId>
   <packaging>pom</packaging>
-  <version>0.8.0</version>
+  <version>0.9-prerelease</version>
   <name>Compile Histogrammar and its dependent subprojects in the correct order.</name>
   
   <modules>

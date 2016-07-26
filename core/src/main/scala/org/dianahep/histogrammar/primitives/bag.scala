@@ -14,6 +14,9 @@
 
 package org.dianahep
 
+import scala.reflect.classTag
+import scala.reflect.ClassTag
+
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
@@ -43,18 +46,33 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param values Distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped.
+      * @param range The data type: "N" for number, "N#" where "#" is a positive integer for vector of numbers, or "S" for string.
       */
-    def ed[RANGE](entries: Double, values: Map[RANGE, Double]) = new Bagged[RANGE](entries, None, values)
+    def ed[RANGE](entries: Double, values: Map[RANGE, Double], range: String) = new Bagged[RANGE](entries, None, values, range)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Bagging]].
       * 
       * @param quantity Function that produces numbers, vectors of numbers, or strings.
+      * @param range The data type: "N" for number, "N#" where "#" is a positive integer for vector of numbers, or "S" for string.
       */
-    def apply[DATUM, RANGE](quantity: UserFcn[DATUM, RANGE]) =
-      new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double]())
+    def apply[DATUM, RANGE : ClassTag](quantity: UserFcn[DATUM, RANGE], range: String = "") = {
+      val r =
+        if (range == "") {
+          val t = implicitly[ClassTag[RANGE]]
+          if (t == classTag[Double])
+            "N"
+          else if (classTag[String].runtimeClass.isAssignableFrom(t.runtimeClass))
+            "S"
+          else
+            throw new ContainerException("cannot infer Bag type without an explicit 'range' parameter because it is not Double or String")
+        }
+        else
+          range
+      new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double](), r)
+    }
 
     /** Synonym for `apply`. */
-    def ing[DATUM, RANGE](quantity: UserFcn[DATUM, RANGE]) = apply(quantity)
+    def ing[DATUM, RANGE : ClassTag](quantity: UserFcn[DATUM, RANGE], range: String = "") = apply(quantity, range)
 
     /** Use [[org.dianahep.histogrammar.Bagged]] in Scala pattern-matching. */
     def unapply[RANGE](x: Bagged[RANGE]) = x.values
@@ -63,7 +81,7 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "values").maybe("name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "values", "range").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -104,7 +122,14 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
           case x => throw new JsonFormatException(x, name + ".values")
         }
 
-        new Bagged[Any](entries, (nameFromParent ++ quantityName).lastOption, values)
+        val range = get("range") match {
+          case JsonString(x) if (x == "N") => "N"
+          case JsonString(x) if (x == "S") => "S"
+          case JsonString(x) if (!("^N([0-9]+)$".r.findFirstIn(x).isEmpty)) => x
+          case x => throw new JsonFormatException(x, name + ".range")
+        }
+
+        new Bagged[Any](entries, (nameFromParent ++ quantityName).lastOption, values, range)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -129,16 +154,19 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param values Distinct values and the (weighted) number of times they were observed.
+    * @param range The data type: "N" for number, "N#" where "#" is a positive integer for vector of numbers, or "S" for string.
     */
-  class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[RANGE, Double]) extends Container[Bagged[RANGE]] with NoAggregation with QuantityName {
+  class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[RANGE, Double], val range: String) extends Container[Bagged[RANGE]] with NoAggregation with QuantityName {
     type Type = Bagged[RANGE]
     type EdType = Bagged[RANGE]
     def factory = Bag
 
-    def zero = new Bagged(0.0, this.quantityName, Map[RANGE, Double]())
+    def zero = new Bagged(0.0, this.quantityName, Map[RANGE, Double](), range)
     def +(that: Bagged[RANGE]) =
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
+      else if (this.range != that.range)
+        throw new ContainerException(s"cannot add ${getClass.getName} because range differs (${this.range} vs ${that.range})")
       else {
         val newentries = this.entries + that.entries
         val newvalues = {
@@ -152,7 +180,7 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
           out.toMap
         }
 
-        new Bagged[RANGE](newentries, this.quantityName, newvalues)
+        new Bagged[RANGE](newentries, this.quantityName, newvalues, range)
       }
 
     def children = Nil
@@ -165,15 +193,16 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
           case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
-        }): _*)).maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
+        }): _*),
+        "range" -> JsonString(range)).maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
     }
 
-    override def toString() = s"""<Bagged size=${values.size}>"""
+    override def toString() = s"""<Bagged size=${values.size} range=${range}>"""
     override def equals(that: Any) = that match {
-      case that: Bagged[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values
+      case that: Bagged[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values  &&  this.range == that.range
       case _ => false
     }
-    override def hashCode() = (entries, quantityName, values).hashCode()
+    override def hashCode() = (entries, quantityName, values, range).hashCode()
   }
 
   /** An accumulated bag of numbers, vectors of numbers, or strings.
@@ -183,17 +212,26 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
     * @param quantity Function that produces numbers, vectors of numbers, or strings.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param values Distinct values and the (weighted) number of times they were observed.
+    * @param range The data type: "N" for number, "N#" where "#" is a positive integer for vector of numbers, or "S" for string.
     */
-  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double]) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
+  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double], val range: String) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
     type Type = Bagging[DATUM, RANGE]
     type EdType = Bagged[RANGE]
     type Datum = DATUM
     def factory = Bag
 
-    def zero = new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double]())
+    val dimension =
+      if (range.head == 'N'  &&  range.size > 1)
+        java.lang.Integer.parseInt(range.tail)
+      else
+        0
+
+    def zero = new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double](), range)
     def +(that: Bagging[DATUM, RANGE]) =
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
+      else if (this.range != that.range)
+        throw new ContainerException(s"cannot add ${getClass.getName} because range differs (${this.range} vs ${that.range})")
       else {
         val newentries = this.entries + that.entries
         val newvalues = {
@@ -207,13 +245,26 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
           out
         }
 
-        new Bagging[DATUM, RANGE](quantity, newentries, newvalues)
+        new Bagging[DATUM, RANGE](quantity, newentries, newvalues, range)
       }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)
+
+        if (dimension > 0) q match {
+          case v: Vector[_] if (v.size == dimension) =>
+          case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
+        }
+        else if (range == "N") q match {
+          case _: Double =>
+          case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
+        }
+        else q match {
+          case _: String =>
+          case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
+        }
 
         // no possibility of exception from here on out (for rollback)
         entries += weight
@@ -234,14 +285,15 @@ Consider using Bag with [[org.dianahep.histogrammar.Limit]] for collections that
           case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
           case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
           case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
-        }): _*)).maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
+        }): _*),
+        "range" -> JsonString(range)).maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
     }
 
-    override def toString() = s"""<Bagging values=${values.size}>"""
+    override def toString() = s"""<Bagging size=${values.size} range=$range>"""
     override def equals(that: Any) = that match {
-      case that: Bagging[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values
+      case that: Bagging[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.range == that.range
       case _ => false
     }
-    override def hashCode() = (quantity, entries, values).hashCode()
+    override def hashCode() = (quantity, entries, values, range).hashCode()
   }
 }

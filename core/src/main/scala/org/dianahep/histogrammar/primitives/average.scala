@@ -42,7 +42,7 @@ package histogrammar {
       * 
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Averaging(quantity, 0.0, 0.0)
+    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Averaging(quantity, 0.0, java.lang.Double.NaN)
 
     /** Synonym for `apply`. */
     def ing[DATUM](quantity: UserFcn[DATUM, Double]) = apply(quantity)
@@ -79,8 +79,10 @@ package histogrammar {
     }
 
     private[histogrammar] def plus(ca: Double, mua: Double, cb: Double, mub: Double) =
-      if (ca == 0.0  &&  cb == 0.0)
-        (0.0, (mua + mub)/2.0)
+      if (ca == 0.0)
+        (cb, mub)
+      else if (cb == 0.0)
+        (ca, mua)
       else
         (ca + cb, (ca*mua + cb*mub)/(ca + cb))
   }
@@ -101,7 +103,7 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Averaged(0.0, quantityName, 0.0)
+    def zero = new Averaged(0.0, quantityName, java.lang.Double.NaN)
     def +(that: Averaged) =
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
@@ -142,7 +144,7 @@ package histogrammar {
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Averaging[DATUM](quantity, 0.0, 0.0)
+    def zero = new Averaging[DATUM](quantity, 0.0, java.lang.Double.NaN)
     def +(that: Averaging[DATUM]) =
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
@@ -157,10 +159,29 @@ package histogrammar {
         val q = quantity(datum)
 
         // no possibility of exception from here on out (for rollback)
+        if (entries == 0.0)
+          mean = q
         entries += weight
-        val delta = q - mean
-        val shift = delta * weight / entries
-        mean += shift
+
+        if (mean.isNaN  ||  q.isNaN)
+          mean = java.lang.Double.NaN
+
+        else if (mean.isInfinite  ||  q.isInfinite) {
+          if (mean.isInfinite  &&  q.isInfinite  &&  mean * q < 0.0)
+            mean = java.lang.Double.NaN
+          else if (q.isInfinite)
+            mean = q
+          else
+            { }
+          if (entries.isInfinite  ||  entries.isNaN)
+            mean = java.lang.Double.NaN
+        }
+
+        else {
+          val delta = q - mean
+          val shift = delta * weight / entries
+          mean += shift
+        }
       }
     }
 

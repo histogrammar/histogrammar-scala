@@ -45,13 +45,13 @@ class OriginalSuite extends FlatSpec with Matchers {
 
   def mean(x: List[Double]) =
     if (x.isEmpty)
-      0.0
+      java.lang.Double.NaN
     else
       x.sum / x.size
 
   def mean(x: List[Double], w: List[Double]) =
     if (w.filter(_ > 0.0).isEmpty)
-      0.0
+      java.lang.Double.NaN
     else
       (x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum
 
@@ -66,18 +66,6 @@ class OriginalSuite extends FlatSpec with Matchers {
       0.0
     else
       (x zip w map {case (xi, wi) => xi * xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum - Math.pow((x zip w map {case (xi, wi) => xi * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum, 2)
-
-  def mae(x: List[Double]) =
-    if (x.isEmpty)
-      0.0
-    else
-      x.map(Math.abs).sum / x.size
-
-  def mae(x: List[Double], w: List[Double]) =
-    if (w.filter(_ > 0.0).isEmpty)
-      0.0
-    else
-      (x zip w map {case (xi, wi) => Math.abs(xi) * Math.max(wi, 0.0)} sum) / w.filter(_ > 0.0).sum
 
   def checkJson(x: Container[_]) {
     x.toJson should be (Factory.fromJson(x.toJson).toJson)
@@ -217,8 +205,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Average(leftResult), Average(rightResult)) = (leftAveraging, rightAveraging)
 
+      if (left.isEmpty)
+        leftResult.isNaN should be (true)
+      else
       leftResult should be (mean(left) +- 1e-12)
-      rightResult should be (mean(right) +- 1e-12)
+      if (right.isEmpty)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (mean(right) +- 1e-12)
 
       val Average(finalResult) = leftAveraging + rightAveraging
 
@@ -240,8 +234,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Select(Average(leftResult)), Select(Average(rightResult))) = (leftAveraging, rightAveraging)
 
-      leftResult should be (mean(left.filter(_.bool).map(_.double)) +- 1e-12)
-      rightResult should be (mean(right.filter(_.bool).map(_.double)) +- 1e-12)
+      if (left.filter(_.bool).isEmpty)
+        leftResult.isNaN should be (true)
+      else
+        leftResult should be (mean(left.filter(_.bool).map(_.double)) +- 1e-12)
+      if (right.filter(_.bool).isEmpty)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (mean(right.filter(_.bool).map(_.double)) +- 1e-12)
 
       val Select(Average(finalResult)) = leftAveraging + rightAveraging
 
@@ -263,8 +263,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Select(Average(leftResult)), Select(Average(rightResult))) = (leftAveraging, rightAveraging)
 
-      leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-      rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      if (left.map(_.int).filter(_ > 0.0).sum == 0.0)
+        leftResult.isNaN should be (true)
+      else
+        leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      if (right.map(_.int).filter(_ > 0.0).sum == 0.0)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
       val Select(Average(finalResult)) = leftAveraging + rightAveraging
 
@@ -286,8 +292,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Select(Average(leftResult)), Select(Average(rightResult))) = (leftAveraging, rightAveraging)
 
-      leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-      rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      if (left.map(_.int).filter(_ > 0.0).sum == 0.0)
+        leftResult.isNaN should be (true)
+      else
+        leftResult should be (mean(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      if (right.map(_.int).filter(_ > 0.0).sum == 0.0)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (mean(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
       val Select(Average(finalResult)) = leftAveraging + rightAveraging
 
@@ -311,8 +323,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Deviate(leftResult), Deviate(rightResult)) = (leftDeviating, rightDeviating)
 
-      leftResult should be (variance(left) +- 1e-12)
-      rightResult should be (variance(right) +- 1e-12)
+      if (left.isEmpty)
+        leftResult.isNaN should be (true)
+      else
+        leftResult should be (variance(left) +- 1e-12)
+      if (right.isEmpty)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (variance(right) +- 1e-12)
 
       val Deviate(finalResult) = leftDeviating + rightDeviating
 
@@ -334,8 +352,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Select(Deviate(leftResult)), Select(Deviate(rightResult))) = (leftDeviating, rightDeviating)
 
-      leftResult should be (variance(left.filter(_.bool).map(_.double)) +- 1e-12)
-      rightResult should be (variance(right.filter(_.bool).map(_.double)) +- 1e-12)
+      if (left.filter(_.bool).isEmpty)
+        leftResult.isNaN should be (true)
+      else
+        leftResult should be (variance(left.filter(_.bool).map(_.double)) +- 1e-12)
+      if (right.filter(_.bool).isEmpty)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (variance(right.filter(_.bool).map(_.double)) +- 1e-12)
 
       val Select(Deviate(finalResult)) = leftDeviating + rightDeviating
 
@@ -357,8 +381,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Select(Deviate(leftResult)), Select(Deviate(rightResult))) = (leftDeviating, rightDeviating)
 
-      leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-      rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      if (left.map(_.int).filter(_ > 0.0).sum == 0.0)
+        leftResult.isNaN should be (true)
+      else
+        leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      if (right.map(_.int).filter(_ > 0.0).sum == 0.0)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
       val Select(Deviate(finalResult)) = leftDeviating + rightDeviating
 
@@ -380,8 +410,14 @@ class OriginalSuite extends FlatSpec with Matchers {
 
       val (Select(Deviate(leftResult)), Select(Deviate(rightResult))) = (leftDeviating, rightDeviating)
 
-      leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
-      rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
+      if (left.map(_.int).filter(_ > 0.0).sum == 0.0)
+        leftResult.isNaN should be (true)
+      else
+        leftResult should be (variance(left.map(_.double), left.map(_.int.toDouble)) +- 1e-12)
+      if (right.map(_.int).filter(_ > 0.0).sum == 0.0)
+        rightResult.isNaN should be (true)
+      else
+        rightResult should be (variance(right.map(_.double), right.map(_.int.toDouble)) +- 1e-12)
 
       val Select(Deviate(finalResult)) = leftDeviating + rightDeviating
 

@@ -47,7 +47,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
       * 
       * @param quantity Numerical function to track.
       */
-    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Deviating(quantity, 0.0, 0.0, 0.0)
+    def apply[DATUM](quantity: UserFcn[DATUM, Double]) = new Deviating(quantity, 0.0, java.lang.Double.NaN, java.lang.Double.NaN)
 
     /** Synonym for `apply`. */
     def ing[DATUM](quantity: UserFcn[DATUM, Double]) = apply(quantity)
@@ -88,15 +88,16 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
       case _ => throw new JsonFormatException(json, name)
     }
 
-    private[histogrammar] def plus(ca: Double, mua: Double, sa: Double, cb: Double, mub: Double, sb: Double) = {
-      val muab =
-        if (ca == 0.0  &&  cb == 0.0)
-          (mua + mub)/2.0
-        else
-          (ca*mua + cb*mub)/(ca + cb)
-      val sab = sa + sb + ca*mua*mua + cb*mub*mub - 2.0*muab*(ca*mua + cb*mub) + muab*muab*(ca + cb)
-      (ca + cb, muab, sab / (ca + cb))
-    }
+    private[histogrammar] def plus(ca: Double, mua: Double, sa: Double, cb: Double, mub: Double, sb: Double) =
+      if (ca == 0.0)
+        (cb, mub, sb / cb)
+      else if (cb == 0.0)
+        (ca, mua, sa / ca)
+      else {
+        val muab = (ca*mua + cb*mub)/(ca + cb)
+        val sab = sa + sb + ca*mua*mua + cb*mub*mub - 2.0*muab*(ca*mua + cb*mub) + muab*muab*(ca + cb)
+        (ca + cb, muab, sab / (ca + cb))
+      }
   }
 
   /** An accumulated weighted variance (and mean) of a given quantity.
@@ -118,7 +119,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    def zero = new Deviated(0.0, quantityName, 0.0, 0.0)
+    def zero = new Deviated(0.0, quantityName, java.lang.Double.NaN, java.lang.Double.NaN)
     def +(that: Deviated) =
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
@@ -177,7 +178,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
       varianceTimesEntries = entries * _variance
     }
 
-    def zero = new Deviating[DATUM](quantity, 0.0, 0.0, 0.0)
+    def zero = new Deviating[DATUM](quantity, 0.0, java.lang.Double.NaN, java.lang.Double.NaN)
     def +(that: Deviating[DATUM]) =
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
@@ -193,11 +194,36 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
         val q = quantity(datum)
 
         // no possibility of exception from here on out (for rollback)
+        if (entries == 0.0) {
+          mean = q
+          varianceTimesEntries = 0.0
+        }
         entries += weight
-        val delta = q - mean
-        val shift = delta * weight / entries
-        mean += shift
-        varianceTimesEntries += weight * delta * (q - mean)   // old delta times new delta
+
+        if (mean.isNaN  ||  q.isNaN) {
+          mean = java.lang.Double.NaN
+          varianceTimesEntries = java.lang.Double.NaN
+        }
+
+        else if (mean.isInfinite  ||  q.isInfinite) {
+          if (mean.isInfinite  &&  q.isInfinite  &&  mean * q < 0.0)
+            mean = java.lang.Double.NaN
+          else if (q.isInfinite)
+            mean = q
+          else
+            { }
+          if (entries.isInfinite  ||  entries.isNaN)
+            mean = java.lang.Double.NaN
+
+          varianceTimesEntries = java.lang.Double.NaN
+        }
+
+        else {
+          val delta = q - mean
+          val shift = delta * weight / entries
+          mean += shift
+          varianceTimesEntries += weight * delta * (q - mean)   // old delta times new delta
+        }
       }
     }
 

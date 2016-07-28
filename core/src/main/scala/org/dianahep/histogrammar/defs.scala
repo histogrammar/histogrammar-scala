@@ -28,6 +28,21 @@ package histogrammar {
 
   //////////////////////////////////////////////////////////////// general definition of an container, its factory, and mix-in
 
+  object Version {
+    def version = "0.9-prerelease"
+    def specification = version.split("""[-\.]""").take(2).mkString(".")
+    def compatibleVersion(serializedVersion: String) = {
+      val Array(selfMajor, selfMinor) = specification.split("""\.""").take(2).map(java.lang.Integer.parseInt(_))
+      val Array(otherMajor, otherMinor) = serializedVersion.split("""\.""").take(2).map(java.lang.Integer.parseInt(_))
+      if (selfMajor >= otherMajor)
+        true
+      else if (selfMinor >= otherMinor)
+        true
+      else
+        false
+    }
+  }
+
   /** Interface for a container factory, always named as imperative verbs, such as "Count" and "Bin".
     * 
     * Each factory has:
@@ -101,7 +116,7 @@ package histogrammar {
       * 
       * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
       */
-    def fromJson(str: String): Container[_] with NoAggregation = Json.parse(str) match {
+    def fromJsonString(str: String): Container[_] with NoAggregation = Json.parse(str) match {
       case Some(json) => fromJson(json)
       case None => throw new InvalidJsonException(str)
     }
@@ -111,8 +126,15 @@ package histogrammar {
       * The container's type is not known at compile-time, so it must be cast (with the container's `as` method) or pattern-matched (with the corresponding `Factory`).
       */
     def fromJson(json: Json): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet == Set("type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet.contains("type")  &&  pairs.keySet.contains("data")  &&  pairs.keySet.contains("version")) =>
         val get = pairs.toMap
+
+        get("version") match {
+          case JsonString(x) =>
+            if (!Version.compatibleVersion(x))
+              throw new ContainerException(s"cannot read a Histogrammar $x document with histogrammar-scala version ${Version.version}")
+          case x => throw new JsonFormatException(x, "Factory.version")
+        }
 
         val name = get("type") match {
           case JsonString(x) => x
@@ -192,11 +214,15 @@ package histogrammar {
       */
     def copy = this + zero
 
+    def toJsonFile(file: java.io.File) { toJson.write(file) }
+    def toJsonFile(fileName: String) { toJson.write(fileName) }
+    def toJsonString: String = toJson.stringify
+
     /** Convert this container to JSON (dropping its `fill` method, making it immutable).
       * 
       * Note that the [[org.dianahep.histogrammar.json.Json]] object has a `stringify` method to serialize.
       */
-    def toJson: Json = JsonObject("type" -> JsonString(factory.name), "data" -> toJsonFragment(false))
+    def toJson: Json = JsonObject("version" -> JsonString(Version.specification), "type" -> JsonString(factory.name), "data" -> toJsonFragment(false))
     /** Used internally to convert the container to JSON without its `"type"` header. */
     def toJsonFragment(suppressName: Boolean): Json
     /** Convert any Container into a NoAggregation Container. */

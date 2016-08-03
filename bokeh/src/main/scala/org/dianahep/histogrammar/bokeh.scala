@@ -112,6 +112,8 @@ package object bokeh extends Tools {
 
    def plot(glyphs: Array[GlyphRenderer]) : Plot = plot(glyphs: _*)
 
+   def plot(xLabel:String, yLabel: String,glyphs: Array[GlyphRenderer]) : Plot = plot(xLabel,yLabel,glyphs: _*)
+
    def save(plot: Plot, fname: String) {
        val document = new Document(plot)
 
@@ -298,21 +300,23 @@ package object bokeh extends Tools {
     new StackedHistogramMethodsBokeh(anySelectedSparselyBinnedMixedToStackedHistogramMethods(hist).stacked)
 
   class StackedHistogramMethodsBokeh(stack: Stacked[Selected[Binned[Counted, Counted, Counted, Counted]], Counted]) {
-    val glyphTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle")
-    val glyphSizeDefaults = List(1,1,1,1,1,1,1)
-    val fillColorDefaults = List(Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red)
-    val lineColorDefaults = List(Color.Black,Color.Blue,Color.Red,Color.Green,Color.Brown,Color.Orange,Color.Red)
+    val glyphTypeDefaults = List("circle","circle","circle","circle","circle","circle","circle","circle","circle","circle","circle","circle")
+    val glyphSizeDefaults = List(1,1,1,1,1,1,1,1,1,1,1,1)
+    val fillColorDefaults = List(Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red)
+    val lineColorDefaults = List(Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red,Color.Red)
 
     def bokeh(glyphTypes: List[String] = glyphTypeDefaults, glyphSizes: List[Int] = glyphSizeDefaults, fillColors: List[Color] = fillColorDefaults, lineColors: List[Color] = lineColorDefaults) : Array[GlyphRenderer] = {
-      assert(glyphTypes.length == glyphSizes.length)
-      assert(glyphTypes.length == fillColors.length)
-      assert(glyphTypes.length == lineColors.length)
+      val nChildren = stack.children.length
+      assert(glyphTypes.length >= nChildren)
+      assert(glyphSizes.length >= nChildren)
+      assert(fillColors.length >= nChildren)
+      assert(lineColors.length >= nChildren)
 
       var stackedGlyphs: ArrayBuffer[GlyphRenderer] = ArrayBuffer.empty[GlyphRenderer]
       var ichild = 0
 
       for (p <- stack.children) {
-          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),fillColors(ichild),lineColors(ichild))
+          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),lineColors(ichild),fillColors(ichild))
           ichild += 1
       }
       stackedGlyphs.toArray

@@ -69,7 +69,7 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "numerator", "denominator").maybe("name").maybe("sub:name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sub:type", "numerator", "denominator").maybe("name").maybe("sub:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -83,9 +83,9 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
           case x => throw new JsonFormatException(x, name + ".name")
         }
 
-        val factory = get("type") match {
+        val factory = get("sub:type") match {
           case JsonString(name) => Factory(name)
-          case x => throw new JsonFormatException(x, name + ".type")
+          case x => throw new JsonFormatException(x, name + ".sub:type")
         }
 
         val subName = get.getOrElse("sub:name", JsonNull) match {
@@ -189,7 +189,7 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(numerator.factory.name),
+      "sub:type" -> JsonString(numerator.factory.name),
       "numerator" -> numerator.toJsonFragment(true),
       "denominator" -> denominator.toJsonFragment(true)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
@@ -248,7 +248,7 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(numerator.factory.name),
+      "sub:type" -> JsonString(numerator.factory.name),
       "numerator" -> numerator.toJsonFragment(true),
       "denominator" -> denominator.toJsonFragment(true)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).

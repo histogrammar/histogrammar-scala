@@ -53,10 +53,10 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
       * @param quantity Boolean or non-negative function that cuts or weights entries.
       * @param cut Aggregator to accumulate for values that pass the selection (`quantity`).
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], cut: V) = new Selecting[DATUM, V](0.0, quantity, cut)
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], cut: V = Count()) = new Selecting[DATUM, V](0.0, quantity, cut)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], cut: V) = apply(quantity, cut)
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}](quantity: UserFcn[DATUM, Double], cut: V = Count()) = apply(quantity, cut)
 
     /** Use [[org.dianahep.histogrammar.Selected]] in Scala pattern-matching. */
     def unapply[V <: Container[V] with NoAggregation](x: Selected[V]) = Some(x.cut)
@@ -65,7 +65,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sub:type", "data").maybe("name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -79,7 +79,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
           case x => throw new JsonFormatException(x, name + ".name")
         }
 
-        val factory = get("type") match {
+        val factory = get("sub:type") match {
           case JsonString(x) => Factory(x)
           case x => throw new JsonFormatException(x, name + ".type")
         }
@@ -124,7 +124,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(cut.factory.name),
+      "sub:type" -> JsonString(cut.factory.name),
       "data" -> cut.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
 

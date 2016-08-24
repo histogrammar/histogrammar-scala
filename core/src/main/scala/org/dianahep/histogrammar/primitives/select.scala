@@ -176,7 +176,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(cut.factory.name),
+      "sub:type" -> JsonString(cut.factory.name),
       "data" -> cut.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
 

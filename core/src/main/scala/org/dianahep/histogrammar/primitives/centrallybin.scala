@@ -122,7 +122,7 @@ package histogrammar {
         val bins = get("bins") match {
           case JsonArray(bins @ _*) if (bins.size >= 2) =>
             immutable.MetricSortedMap(bins.zipWithIndex map {
-              case (JsonObject(binpair @ _*), i) if (binpair.keySet has Set("center", "value")) =>
+              case (JsonObject(binpair @ _*), i) if (binpair.keySet has Set("center", "data")) =>
                 val binget = binpair.toMap
 
                 val center = binget("center") match {
@@ -130,7 +130,7 @@ package histogrammar {
                   case x => throw new JsonFormatException(x, name + s".bins $i center")
                 }
 
-                val value = binsFactory.fromJsonFragment(binget("value"), binsName)
+                val value = binsFactory.fromJsonFragment(binget("data"), binsName)
                 (center, value)
 
               case (x, i) => throw new JsonFormatException(x, name + s".bins $i")
@@ -189,7 +189,7 @@ package histogrammar {
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(bins.head._2.factory.name),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "data" -> v.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
@@ -262,7 +262,7 @@ package histogrammar {
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(value.factory.name),
-      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "value" -> v.toJsonFragment(true))}: _*),
+      "bins" -> JsonArray(bins.toSeq map {case (c, v) => JsonObject("center" -> JsonFloat(c), "data" -> v.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).

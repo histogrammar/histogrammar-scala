@@ -5,7 +5,7 @@ See [histogrammar.org](http://histogrammar.org) for a complete introduction to H
 
 This is a Scala implementation for Scala version 2.10.
 
-**FIXME:** add tests (and check implementation) for Scala 2.11.
+**FIXME:** add tests (and check implementation) for Scala 2.11. It should work, but still.
 
 Installation
 ============
@@ -27,25 +27,24 @@ The tests are pretty good, though not as thorough as [histogrammar-python](https
 
 Primitive implementation is mature. All primitives except `UntypedLabel` preserve type information in the Scala REPL, so you can extract values or tab-complete without casting.
 
-| Primitive         | Scala |
-|:------------------|:------|
-| Count             | done  |
-| Sum               | done  |
-| Average           | done  |
-| Deviate           | done  |
-| Minimize          | done  |
-| Maximize          | done  |
-| Bag               | done  |
-| Bin               | done  |
-| SparselyBin       | done  |
-| CentrallyBin      | done  |
-| IrregularlyBin    | done  |
-| Categorize        | done  |
-| Fraction          | done  |
-| Stack             | done  |
-| Select            | done  |
-| Limit             | done  |
-| Label             | done  |
-| UntypedLabel      | done  |
-| Index             | done  |
-| Branch            | done  |
+| Primitive         | Scala | JVM JIT |
+|:------------------|:------|:--------|
+| Count             | done  |         |
+| Sum               | done  |         |
+| Average           | done  |         |
+| Deviate           | done  |         |
+| Minimize          | done  |         |
+| Maximize          | done  |         |
+| Bag               | done  |         |
+| Bin               | done  |         |
+| SparselyBin       | done  |         |
+| CentrallyBin      | done  |         |
+| IrregularlyBin    | done  |         |
+| Categorize        | done  |         |
+| Fraction          | done  |         |
+| Stack             | done  |         |
+| Select            | done  |         |
+| Label             | done  |         |
+| UntypedLabel      | done  |         |
+| Index             | done  |         |
+| Branch            | done  |         |

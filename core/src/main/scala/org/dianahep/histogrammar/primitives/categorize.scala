@@ -59,7 +59,7 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data").maybe("name").maybe("data:name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -73,25 +73,25 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
           case x => throw new JsonFormatException(x, name + ".name")
         }
 
-        val (contentType, factory) = get("type") match {
+        val (contentType, factory) = get("bins:type") match {
           case JsonString(name) => (name, Factory(name))
-          case x => throw new JsonFormatException(x, name + ".type")
+          case x => throw new JsonFormatException(x, name + ".bins:type")
         }
 
-        val dataName = get.getOrElse("data:name", JsonNull) match {
+        val dataName = get.getOrElse("bins:name", JsonNull) match {
           case JsonString(x) => Some(x)
           case JsonNull => None
-          case x => throw new JsonFormatException(x, name + ".data:name")
+          case x => throw new JsonFormatException(x, name + ".bins:name")
         }
 
-        get("data") match {
+        get("bins") match {
           case JsonObject(categoryPairs @ _*) =>
             new Categorized[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, contentType, categoryPairs map {
               case (JsonString(category), value) =>
                 category -> factory.fromJsonFragment(value, dataName)
             }: _*)
 
-          case x => throw new JsonFormatException(x, name + ".data")
+          case x => throw new JsonFormatException(x, name + ".bins")
         }
 
       case _ => throw new JsonFormatException(json, name)
@@ -154,10 +154,10 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(contentType),
-      "data" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
+      "bins:type" -> JsonString(contentType),
+      "bins" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
-      maybe(JsonString("data:name") -> (pairs.headOption match {case Some((k, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> (pairs.headOption match {case Some((k, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""<Categorized values=$contentType size=${pairs.size}>"""
     override def equals(that: Any) = that match {
@@ -240,10 +240,10 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(value.factory.name),
-      "data" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
+      "bins:type" -> JsonString(value.factory.name),
+      "bins" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
-      maybe(JsonString("data:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
+      maybe(JsonString("bins:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
     override def toString() = s"""<Categorizing values=${value.factory.name} size=${pairs.size}>"""
     override def equals(that: Any) = that match {

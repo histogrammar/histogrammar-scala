@@ -503,19 +503,6 @@ class OriginalSuite extends FlatSpec with Matchers {
     checkJson(three)
   }
 
-  it must "work with Limit" in {
-    val one = Limit(20, Bag({x: Struct => x.string}))
-    struct.foreach(one.fill(_))
-    one.get.values should be (Map("one" -> 1.0, "two" -> 1.0, "three" -> 1.0, "four" -> 1.0, "five" -> 1.0, "six" -> 1.0, "seven" -> 1.0, "eight" -> 1.0, "nine" -> 1.0, "ten" -> 1.0))
-
-    val two = Limit(9, Bag({x: Struct => x.string}))
-    struct.foreach(two.fill(_))
-    two.saturated should be (true)
-
-    checkJson(one)
-    checkJson(two)
-  }
-
   //////////////////////////////////////////////////////////////// Bin/Binned/Binning
 
   "Bin/Binning/Binned" must "work with Count/Counting/Counted" in {

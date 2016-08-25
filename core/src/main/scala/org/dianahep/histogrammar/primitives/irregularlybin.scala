@@ -51,16 +51,16 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
       * @param quantity Numerical quantity whose value is compared with the given thresholds.
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
       new IrregularlyBinning((java.lang.Double.NEGATIVE_INFINITY +: SortedSet(bins.toSeq: _*).toSeq).map((_, value.zero)), quantity, nanflow, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
       apply(bins, quantity, value, nanflow)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data", "nanflow:type", "nanflow").maybe("name").maybe("data:name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "nanflow:type", "nanflow").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -74,15 +74,15 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
           case x => throw new JsonFormatException(x, name + ".name")
         }
 
-        val factory = get("type") match {
+        val factory = get("bins:type") match {
           case JsonString(name) => Factory(name)
-          case x => throw new JsonFormatException(x, name + ".type")
+          case x => throw new JsonFormatException(x, name + ".bins:type")
         }
 
-        val dataName = get.getOrElse("data:name", JsonNull) match {
+        val dataName = get.getOrElse("bins:name", JsonNull) match {
           case JsonString(x) => Some(x)
           case JsonNull => None
-          case x => throw new JsonFormatException(x, name + ".data:name")
+          case x => throw new JsonFormatException(x, name + ".bins:name")
         }
 
         val nanflowFactory = get("nanflow:type") match {
@@ -91,7 +91,7 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        get("data") match {
+        get("bins") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
             new IrregularlyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
               element match {
@@ -153,12 +153,12 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(bins.head._2.factory.name),
-      "data" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
+      "bins:type" -> JsonString(bins.head._2.factory.name),
+      "bins" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
-      maybe(JsonString("data:name") -> (bins.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> (bins.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""<IrregularlyBinned values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
@@ -228,12 +228,12 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(bins.head._2.factory.name),
-      "data" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
+      "bins:type" -> JsonString(bins.head._2.factory.name),
+      "bins" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
-      maybe(JsonString("data:name") -> (bins.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> (bins.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""<IrregularlyBinning values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {

@@ -60,11 +60,11 @@ To make plots from different sources in Histogrammar, one must perform separate 
       * @param value Template used to create zero values (by calling this `value`'s `zero` method).
       * @param nanflow Container for data that resulted in `NaN`.
       */
-    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
+    def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
       new Stacking((java.lang.Double.NEGATIVE_INFINITY +: SortedSet(bins.toSeq: _*).toSeq).map((_, value.zero)), quantity, nanflow, 0.0)
 
     /** Synonym for `apply`. */
-    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V, nanflow: N = Count()) =
+    def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
       apply(bins, quantity, value, nanflow)
 
     /** Alternate constructor for [[org.dianahep.histogrammar.Stacked]] that builds from N pre-aggregated primitives (N > 0).
@@ -82,7 +82,7 @@ To make plots from different sources in Histogrammar, one must perform separate 
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data", "nanflow:type", "nanflow").maybe("name").maybe("data:name")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins", "nanflow:type", "nanflow").maybe("name").maybe("bins:name")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -96,15 +96,14 @@ To make plots from different sources in Histogrammar, one must perform separate 
           case x => throw new JsonFormatException(x, name + ".name")
         }
 
-        val factory = get("type") match {
+        val factory = get("bins:type") match {
           case JsonString(name) => Factory(name)
-          case x => throw new JsonFormatException(x, name + ".type")
+          case x => throw new JsonFormatException(x, name + ".bins:type")
         }
-
-        val dataName = get.getOrElse("data:name", JsonNull) match {
+        val dataName = get.getOrElse("bins:name", JsonNull) match {
           case JsonString(x) => Some(x)
           case JsonNull => None
-          case x => throw new JsonFormatException(x, name + ".data:name")
+          case x => throw new JsonFormatException(x, name + ".bins:name")
         }
 
         val nanflowFactory = get("nanflow:type") match {
@@ -113,7 +112,7 @@ To make plots from different sources in Histogrammar, one must perform separate 
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        get("data") match {
+        get("bins") match {
           case JsonArray(elements @ _*) if (elements.size >= 1) =>
             new Stacked[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
               element match {
@@ -121,15 +120,15 @@ To make plots from different sources in Histogrammar, one must perform separate 
                   val elementGet = elementPairs.toMap
                   val atleast = elementGet("atleast") match {
                     case JsonNumber(x) => x
-                    case x => throw new JsonFormatException(x, name + s".data element $i atleast")
+                    case x => throw new JsonFormatException(x, name + s".bins element $i atleast")
                   }
                   (atleast, factory.fromJsonFragment(elementGet("data"), dataName))
 
-                case x => throw new JsonFormatException(x, name + s".data element $i")
+                case x => throw new JsonFormatException(x, name + s".bins element $i")
               }
             }, nanflow)
 
-          case x => throw new JsonFormatException(x, name + ".data")
+          case x => throw new JsonFormatException(x, name + ".bins")
         }
 
       case _ => throw new JsonFormatException(json, name)
@@ -180,12 +179,12 @@ To make plots from different sources in Histogrammar, one must perform separate 
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(bins.head._2.factory.name),
-      "data" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
+      "bins:type" -> JsonString(bins.head._2.factory.name),
+      "bins" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
-      maybe(JsonString("data:name") -> (bins.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> (bins.head match {case (atleast, sub: QuantityName) => sub.quantityName.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""<Stacked values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {
@@ -253,12 +252,12 @@ To make plots from different sources in Histogrammar, one must perform separate 
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(bins.head._2.factory.name),
-      "data" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
+      "bins:type" -> JsonString(bins.head._2.factory.name),
+      "bins" -> JsonArray(bins map {case (atleast, sub) => JsonObject("atleast" -> JsonFloat(atleast), "data" -> sub.toJsonFragment(true))}: _*),
       "nanflow:type" -> JsonString(nanflow.factory.name),
       "nanflow" -> nanflow.toJsonFragment(false)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
-      maybe(JsonString("data:name") -> (bins.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> (bins.head match {case (atleast, sub: AnyQuantity[_, _]) => sub.quantity.name.map(JsonString(_)); case _ => None}))
 
     override def toString() = s"""<Stacking values=${bins.head._2.factory.name} thresholds=(${bins.map(_._1).mkString(", ")}) nanflow=${nanflow.factory.name}>"""
     override def equals(that: Any) = that match {

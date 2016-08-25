@@ -64,7 +64,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sub:type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -73,9 +73,9 @@ In strongly typed languages, the restriction to a single type allows nested obje
         }
 
         val factory =
-          get("type") match {
+          get("sub:type") match {
             case JsonString(factory) => Factory(factory)
-            case x => throw new JsonFormatException(x, name + ".type")
+            case x => throw new JsonFormatException(x, name + ".sub:type")
           }
 
         get("data") match {
@@ -151,7 +151,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(pairs.head._2.factory.name),
+      "sub:type" -> JsonString(pairs.head._2.factory.name),
       "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment(false)}: _*))
 
     override def toString() = s"""<Labeled values=${pairs.head._2.factory.name} size=${pairs.size}>"""
@@ -241,7 +241,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
-      "type" -> JsonString(pairs.head._2.factory.name),
+      "sub:type" -> JsonString(pairs.head._2.factory.name),
       "data" -> JsonObject(pairs map {case (label, sub) => label -> sub.toJsonFragment(false)}: _*))
 
     override def toString() = s"""<Labeling values=${pairs.head._2.factory.name} size=${pairs.size}>"""
@@ -531,7 +531,7 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "type", "data")) =>
+      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "sub:type", "data")) =>
         val get = pairs.toMap
 
         val entries = get("entries") match {
@@ -540,9 +540,9 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
         }
 
         val factory =
-          get("type") match {
+          get("sub:type") match {
             case JsonString(factory) => Factory(factory)
-            case x => throw new JsonFormatException(x, name + ".type")
+            case x => throw new JsonFormatException(x, name + ".sub:type")
           }
 
         get("data") match {
@@ -612,7 +612,10 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
 
     def children = values.toList
 
-    def toJsonFragment(suppressName: Boolean) = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "sub:type" -> JsonString(values.head.factory.name),
+      "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
 
     override def toString() = s"""<Indexed values=${values.head.factory.name} size=${size}>"""
     override def equals(that: Any) = that match {
@@ -694,7 +697,10 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
 
     def children = values.toList
 
-    def toJsonFragment(suppressName: Boolean) = JsonObject("entries" -> JsonFloat(entries), "type" -> JsonString(values.head.factory.name), "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
+    def toJsonFragment(suppressName: Boolean) = JsonObject(
+      "entries" -> JsonFloat(entries),
+      "sub:type" -> JsonString(values.head.factory.name),
+      "data" -> JsonArray(values.map(_.toJsonFragment(false)): _*))
 
     override def toString() = s"""<Indexing values=${values.head.factory.name} size=${size}>"""
     override def equals(that: Any) = that match {

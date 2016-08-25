@@ -98,7 +98,6 @@ package histogrammar {
     register(Stack)
 
     register(Select)
-    register(Limit)
     register(Label)
     register(UntypedLabel)
     register(Index)

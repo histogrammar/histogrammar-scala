@@ -26,12 +26,22 @@ import org.dianahep.histogrammar.json._
 case class X(positive: Double, boolean: Boolean, strings: String, noholes: Double, withholes: Double)
 
 class SpecificationSuite extends FlatSpec with Matchers {
-  def expr(result: Json) = result.asInstanceOf[JsonObject].pairs.head._2.asInstanceOf[JsonString].value
-
   // used for all equality operations, on both Container and Json subclasses
-  val tolerance = 1e-12
+  val tolerance = 1e-6
   org.dianahep.histogrammar.util.relativeTolerance = tolerance
   org.dianahep.histogrammar.util.absoluteTolerance = tolerance
+
+  def expr(result: Json) = result.asInstanceOf[JsonObject].pairs.head._2.asInstanceOf[JsonString].value
+
+  def compare(x: Container[_], y: Container[_]) {
+    if (x != y) {
+      val left = x.toJson.pretty().split("\n")
+      val right = y.toJson.pretty().split("\n")
+      for ((leftline, rightline) <- left zip right)
+        System.err.println(leftline.padTo(60, ' ') + (if (leftline != rightline) " > " else " | ") + rightline)
+      false should be (true)
+    }
+  }
 
   def tests[CONTAINER <: Container[CONTAINER] with Aggregation{type Datum >: X}](result: Json, testData: Seq[X], which: String, h1: CONTAINER) {
     val m = result.asInstanceOf[JsonObject].pairs.toMap
@@ -39,9 +49,9 @@ class SpecificationSuite extends FlatSpec with Matchers {
     val one = Factory.fromJson(m(JsonString("one-" + which)))
     val two = Factory.fromJson(m(JsonString("two-" + which)))
 
-    h1.toImmutable should be (zero)
-    (h1 + h1).toImmutable should be (zero)
-    h1.zero.toImmutable should be (zero)
+    compare(h1.toImmutable, zero)
+    compare((h1 + h1).toImmutable, zero)
+    compare(h1.zero.toImmutable, zero)
 
     val h2 = h1.copy
 
@@ -50,17 +60,17 @@ class SpecificationSuite extends FlatSpec with Matchers {
       h2.fill(x)
     }
 
-    h1.toImmutable should be (one)
-    h1.zero.toImmutable should be (zero)
-    (h1 + h1.zero).toImmutable should be (one)
-    (h1.zero + h1).toImmutable should be (one)
+    compare(h1.toImmutable, one)
+    compare(h1.zero.toImmutable, zero)
+    compare((h1 + h1.zero).toImmutable, one)
+    compare((h1.zero + h1).toImmutable, one)
 
-    (h1 + h2).toImmutable should be (two)
+    compare((h1 + h2).toImmutable, two)
 
     for (x <- testData)
       h1.fill(x)
 
-    h1.toImmutable should be (two)
+    compare(h1.toImmutable, two)
   }
 
   it must "work" in {
@@ -395,9 +405,11 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
     result = resultsIterator.next()
     expr(result) should be ("""CentrallyBin([-3.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 3.0], "positive")""")
+    tests(result, testData, "anonymous", CentrallyBin(Seq(-3.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 3.0), {x: X => x.positive}))
 
     result = resultsIterator.next()
     expr(result) should be ("""CentrallyBin([-3.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 3.0], "noholes")""")
+    tests(result, testData, "anonymous", CentrallyBin(Seq(-3.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 3.0), {x: X => x.noholes}))
 
     result = resultsIterator.next()
     expr(result) should be ("""CentrallyBin([-3.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 3.0], "2 * noholes")""")
@@ -842,6 +854,7 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
     result = resultsIterator.next()
     expr(result) should be ("""Branch(Bin(10, -3.0, 3.0, "withholes"), Bin(20, -3.0, 3.0, "withholes", Average("positive")), SparselyBin(0.1, "withholes"), CentrallyBin([-3, -2, -1, 1, 2, 3], "withholes"))""")
+    // tests(result, testData, "anonymous", Branch(Bin(10, -3.0, 3.0, {x: X => x.withholes}), Bin(20, -3.0, 3.0, {x: X => x.withholes}, Average({x: X => x.positive})), SparselyBin(0.1, {x: X => x.withholes}), CentrallyBin(Seq(-3, -2, -1, 1, 2, 3), {x: X => x.withholes})))
 
     resultsIterator.isEmpty should be (true)
   }

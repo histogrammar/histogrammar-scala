@@ -67,9 +67,9 @@ package histogrammar {
       /** Set of centers of each bin. */
       def centersSet = bins.iterator.map(_._1).toSet
       /** Iterable over the centers of each bin. */
-      def centers = bins.iterator.map(_._1)
+      def centers = bins.iterator.map(_._1).toSeq
       /** Iterable over the containers associated with each bin. */
-      def values = bins.iterator.map(_._2)
+      def values = bins.iterator.map(_._2).toSeq
 
       /** Return the exact center of the bin that `x` belongs to. */
       def center(x: Double): Double = bins.closest(x).get.key

@@ -88,6 +88,7 @@ package json {
   sealed trait Json {
     /** Convert this object into a serialized JSON string. The `toString` method is ''not'' a synonym: `toString` shows structure and `stringify` serializes. */
     def stringify: String
+    def pretty(indent: Int = 0) = " " * indent + stringify
 
     /** Write this object to a UTF-8 encoded file using `stringify`. */
     def write(fileName: String) {
@@ -459,6 +460,7 @@ package json {
   case class JsonArray(elements: Json*) extends JsonContainer {
     override def toString() = "JsonArray(" + elements.mkString(", ") + ")"
     def stringify = "[" + elements.map(_.stringify).mkString(", ") + "]"
+    override def pretty(indent: Int = 0) = " " * indent + "[\n" + elements.map(_.pretty(indent + 2)).mkString(",\n") + "\n" + (" " * indent) + "]"
     def to[T <: Json] = elements.map(_.asInstanceOf[T])
     def apply(index: Int) = elements(index)
   }
@@ -515,6 +517,10 @@ package json {
   case class JsonObject(pairs: (JsonString, Json)*) extends JsonContainer {
     override def toString() = "JsonObject(" + pairs.map({case (k, v) => k.toString + " -> " + v.toString}).mkString(", ") + ")"
     def stringify = "{" + pairs.map({case (k, v) => k.stringify + ": " + v.stringify}).mkString(", ") + "}"
+    override def pretty(indent: Int = 0) = " " * indent + "{\n" + pairs.map({
+      case (k, v: JsonPrimitive) => k.pretty(indent + 2) + ": " + v.stringify
+      case (k, v) => k.pretty(indent + 2) + ":\n" + v.pretty(indent + 2)
+    }).mkString(",\n") + "\n" + (" " * indent) + "}"
     def to[T <: Json] = pairs.map({case (k, v) => (k.value, v.asInstanceOf[T])})
 
     def apply(key: JsonString) = pairs.find(_._1 == key).get._2

@@ -26,10 +26,8 @@ package histogrammar {
   /** Exception type for improperly configured containers. */
   class ContainerException(message: String, cause: Exception = null) extends Exception(message, cause)
 
-  //////////////////////////////////////////////////////////////// general definition of an container, its factory, and mix-in
-
   object Version {
-    def version = "0.9-prerelease"
+    def version = "1.0.0"
     def specification = version.split("""[-\.]""").take(2).mkString(".")
     def compatibleVersion(serializedVersion: String) = {
       val Array(selfMajor, selfMinor) = specification.split("""\.""").take(2).map(java.lang.Integer.parseInt(_))
@@ -42,6 +40,8 @@ package histogrammar {
         false
     }
   }
+
+  //////////////////////////////////////////////////////////////// general definition of an container, its factory, and mix-in
 
   /** Interface for a container factory, always named as imperative verbs, such as "Count" and "Bin".
     * 

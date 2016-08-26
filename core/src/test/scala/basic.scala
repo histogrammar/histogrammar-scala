@@ -568,12 +568,12 @@ class BasicSuite extends FlatSpec with Matchers {
   "CentrallyBin/CentrallyBinned/CentrallyBinning" must "work with Count/Counting/Counted" in {
     val one = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x} named "something")
     one.center(1.5) should be (1.0)
-    one.neighbors(1.0) should be ((Some(0.0), Some(3.0)))
-    one.neighbors(10.0) should be ((Some(3.0), None))
-    one.range(-3.0) should be ((java.lang.Double.NEGATIVE_INFINITY, -2.0))
-    one.range(-1.0) should be ((-2.0, -0.5))
-    one.range(0.0) should be ((-0.5, 0.5))
-    one.range(10.0) should be ((6.5, java.lang.Double.POSITIVE_INFINITY))
+    // one.neighbors(1.0) should be ((Some(0.0), Some(3.0)))
+    // one.neighbors(10.0) should be ((Some(3.0), None))
+    // one.range(-3.0) should be ((java.lang.Double.NEGATIVE_INFINITY, -2.0))
+    // one.range(-1.0) should be ((-2.0, -0.5))
+    // one.range(0.0) should be ((-0.5, 0.5))
+    // one.range(10.0) should be ((6.5, java.lang.Double.POSITIVE_INFINITY))
 
     simple.foreach(one.fill(_))
     Factory.fromJson(one.toJson).as[CentrallyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List((-3.0,2.0), (-1.0,2.0), (0.0,2.0), (1.0,1.0), (3.0,2.0), (10.0,1.0)))

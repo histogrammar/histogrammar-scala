@@ -33,8 +33,10 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
   def expr(result: Json) = result.asInstanceOf[JsonObject].pairs.head._2.asInstanceOf[JsonString].value
 
-  def compare(x: Container[_], y: Container[_]) {
+  def compare(x: Container[_], y: Container[_], name: String) {
     if (x != y) {
+      System.err.println(name)
+      System.err.println("-------------------------------------------------------------+-------------------------------------------------------------")
       val left = x.toJson.pretty().split("\n")
       val right = y.toJson.pretty().split("\n")
       for ((leftline, rightline) <- left zip right)
@@ -45,13 +47,14 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
   def tests[CONTAINER <: Container[CONTAINER] with Aggregation{type Datum >: X}](result: Json, testData: Seq[X], which: String, h1: CONTAINER) {
     val m = result.asInstanceOf[JsonObject].pairs.toMap
+    val expr = m(JsonString("expr")).asInstanceOf[JsonString].value
     val zero = Factory.fromJson(m(JsonString("zero-" + which)))
     val one = Factory.fromJson(m(JsonString("one-" + which)))
     val two = Factory.fromJson(m(JsonString("two-" + which)))
 
-    compare(h1.toImmutable, zero)
-    compare((h1 + h1).toImmutable, zero)
-    compare(h1.zero.toImmutable, zero)
+    compare(h1.toImmutable, zero, which + " ZERO in " + expr)
+    compare((h1 + h1).toImmutable, zero, which + " ZERO + ZERO in " + expr)
+    compare(h1.zero.toImmutable, zero, which + " ZERO.zero in " + expr)
 
     val h2 = h1.copy
 
@@ -60,17 +63,17 @@ class SpecificationSuite extends FlatSpec with Matchers {
       h2.fill(x)
     }
 
-    compare(h1.toImmutable, one)
-    compare(h1.zero.toImmutable, zero)
-    compare((h1 + h1.zero).toImmutable, one)
-    compare((h1.zero + h1).toImmutable, one)
+    compare(h1.toImmutable, one, which + " ONE in " + expr)
+    compare(h1.zero.toImmutable, zero, which + " ONE.zero() in " + expr)
+    compare((h1 + h1.zero).toImmutable, one, which + " ONE + ZERO in " + expr)
+    compare((h1.zero + h1).toImmutable, one, which + " ZERO + ONE in " + expr)
 
-    compare((h1 + h2).toImmutable, two)
+    compare((h1 + h2).toImmutable, two, which + " TWO VIA PLUS in " + expr)
 
     for (x <- testData)
       h1.fill(x)
 
-    compare(h1.toImmutable, two)
+    compare(h1.toImmutable, two, which + " TWO VIA FILL in " + expr)
   }
 
   it must "work" in {
@@ -330,6 +333,7 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
     result = resultsIterator.next()
     expr(result) should be ("""SparselyBin(0.1, "positive")""")
+    tests(result, testData, "anonymous", SparselyBin(0.1, {x: X => x.positive}))
 
     result = resultsIterator.next()
     expr(result) should be ("""SparselyBin(0.1, "noholes")""")
@@ -342,6 +346,7 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
     result = resultsIterator.next()
     expr(result) should be ("""SparselyBin(0.1, "positive", Count("0.5 * weight"))""")
+    tests(result, testData, "anonymous", SparselyBin(0.1, {x: X => x.positive}, Count({weight: Double => 0.5 * weight})))
 
     result = resultsIterator.next()
     expr(result) should be ("""SparselyBin(0.1, "noholes", Count("0.5 * weight"))""")

@@ -199,7 +199,7 @@ Like fixed-domain binning, the bins are indexed by integers, though they are 64-
     if (binWidth <= 0.0)
       throw new ContainerException(s"binWidth ($binWidth) must be greater than zero")
 
-    def zero = new SparselyBinned[V, N](binWidth, 0.0, quantityName, contentType, SortedMap(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
+    def zero = new SparselyBinned[V, N](binWidth, 0.0, quantityName, contentType, SortedMap[Long, V](), nanflow.zero, origin)
     def +(that: SparselyBinned[V, N]) = {
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
@@ -286,7 +286,7 @@ Like fixed-domain binning, the bins are indexed by integers, though they are 64-
     if (binWidth <= 0.0)
       throw new ContainerException(s"binWidth ($binWidth) must be greater than zero")
 
-    def zero = new SparselyBinning[DATUM, V, N](binWidth, quantity, 0.0, value, mutable.Map(bins.toSeq map {case (b, v) => (b, v.zero)}: _*), nanflow.zero, origin)
+    def zero = new SparselyBinning[DATUM, V, N](binWidth, quantity, 0.0, value, mutable.Map[Long, V](), nanflow.zero, origin)
     def +(that: SparselyBinning[DATUM, V, N]) = {
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")

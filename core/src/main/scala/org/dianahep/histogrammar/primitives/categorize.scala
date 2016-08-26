@@ -41,9 +41,9 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
       * 
       * @param entries Weighted number of entries (sum of all observed weights).
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
-      * @param pairs String category and the associated container of values associated with it.
+      * @param bins String category and the associated container of values associated with it.
       */
-    def ed[V <: Container[V] with NoAggregation](entries: Double, contentType: String, pairs: (String, V)*) = new Categorized(entries, None, contentType, pairs: _*)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, contentType: String, bins: (String, V)*) = new Categorized(entries, None, contentType, bins: _*)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
       * 
@@ -59,8 +59,8 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonObject(pairs @ _*) if (pairs.keySet has Set("entries", "bins:type", "bins").maybe("name").maybe("bins:name")) =>
-        val get = pairs.toMap
+      case JsonObject(bins @ _*) if (bins.keySet has Set("entries", "bins:type", "bins").maybe("name").maybe("bins:name")) =>
+        val get = bins.toMap
 
         val entries = get("entries") match {
           case JsonNumber(x) => x
@@ -105,9 +105,9 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param quantityName Optional name given to the quantity function, passed for bookkeeping.
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
-    * @param pairs String category and the associated container of values associated with it.
+    * @param bins String category and the associated container of values associated with it.
     */
-  class Categorized[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val pairs: (String, V)*) extends Container[Categorized[V]] with NoAggregation with QuantityName {
+  class Categorized[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val bins: (String, V)*) extends Container[Categorized[V]] with NoAggregation with QuantityName {
     type Type = Categorized[V]
     type EdType = Categorized[V]
     def factory = Categorize
@@ -115,22 +115,22 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    /** Input `pairs` as a key-value map. */
-    val pairsMap = pairs.toMap
-    /** Number of `pairs`. */
-    def size = pairs.size
-    /** Iterable over the keys of the `pairs`. */
-    def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    /** Iterable over the values of the `pairs`. */
-    def values: Iterable[Container[V]] = pairs.toIterable.map(_._2)
-    /** Set of keys among the `pairs`. */
+    /** Input `bins` as a key-value map. */
+    val binsMap = bins.toMap
+    /** Number of `bins`. */
+    def size = bins.size
+    /** Iterable over the keys of the `bins`. */
+    def keys: Iterable[String] = bins.toIterable.map(_._1)
+    /** Iterable over the values of the `bins`. */
+    def values: Iterable[Container[V]] = bins.toIterable.map(_._2)
+    /** Set of keys among the `bins`. */
     def keySet: Set[String] = keys.toSet
     /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = pairsMap(x)
+    def apply(x: String) = binsMap(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
-    def get(x: String) = pairsMap.get(x)
+    def get(x: String) = binsMap.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
-    def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
+    def getOrElse(x: String, default: => V) = binsMap.getOrElse(x, default)
 
     def zero = new Categorized[V](0.0, quantityName, contentType)
     def +(that: Categorized[V]) =
@@ -142,12 +142,12 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
           this.quantityName,
           contentType,
           (this.keySet union that.keySet).toSeq map {key =>
-            if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-              (key, this.pairsMap(key) + that.pairsMap(key))
-            else if (this.pairsMap contains key)
-              (key, this.pairsMap(key))
+            if ((this.binsMap contains key)  &&  (that.binsMap contains key))
+              (key, this.binsMap(key) + that.binsMap(key))
+            else if (this.binsMap contains key)
+              (key, this.binsMap(key))
             else
-              (key, that.pairsMap(key))
+              (key, that.binsMap(key))
           }: _*)
 
     def children = values.toList
@@ -155,16 +155,16 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(contentType),
-      "bins" -> JsonObject(pairs map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
+      "bins" -> JsonObject(bins map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
-      maybe(JsonString("bins:name") -> (pairs.headOption match {case Some((k, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
+      maybe(JsonString("bins:name") -> (bins.headOption match {case Some((k, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
-    override def toString() = s"""<Categorized values=$contentType size=${pairs.size}>"""
+    override def toString() = s"""<Categorized values=$contentType size=${bins.size}>"""
     override def equals(that: Any) = that match {
-      case that: Categorized[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.pairs == that.pairs
+      case that: Categorized[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.bins == that.bins
       case _ => false
     }
-    override def hashCode() = (entries, quantityName, pairs).hashCode()
+    override def hashCode() = (entries, quantityName, bins).hashCode()
   }
 
   /** Accumulating a quantity by splitting it by its categorical (string-based) value and filling only one category per datum.
@@ -174,9 +174,9 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     * @param quantity Numerical function to track.
     * @param entries Weighted number of entries (sum of all observed weights).
     * @param value New value (note the `=>`: expression is reevaluated every time a new value is needed).
-    * @param pairs Map of string category and the associated container of values associated with it.
+    * @param bins Map of string category and the associated container of values associated with it.
     */
-  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, String], var entries: Double, value: => V, val pairs: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData with CategoricalQuantity[DATUM] {
+  class Categorizing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, String], var entries: Double, value: => V, val bins: mutable.HashMap[String, V]) extends Container[Categorizing[DATUM, V]] with AggregationOnData with CategoricalQuantity[DATUM] {
 
     protected val v = value
     type Type = Categorizing[DATUM, V]
@@ -187,24 +187,24 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    /** Input `pairs` as a key-value map. */
-    def pairsMap = pairs.toMap
-    /** Number of `pairs`. */
-    def size = pairs.size
-    /** Iterable over the keys of the `pairs`. */
-    def keys: Iterable[String] = pairs.toIterable.map(_._1)
-    /** Iterable over the values of the `pairs`. */
-    def values: Iterable[V] = pairs.toIterable.map(_._2)
-    /** Set of keys among the `pairs`. */
+    /** Input `bins` as a key-value map. */
+    def binsMap = bins.toMap
+    /** Number of `bins`. */
+    def size = bins.size
+    /** Iterable over the keys of the `bins`. */
+    def keys: Iterable[String] = bins.toIterable.map(_._1)
+    /** Iterable over the values of the `bins`. */
+    def values: Iterable[V] = bins.toIterable.map(_._2)
+    /** Set of keys among the `bins`. */
     def keySet: Set[String] = keys.toSet
     /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = pairsMap(x)
+    def apply(x: String) = binsMap(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
-    def get(x: String) = pairsMap.get(x)
+    def get(x: String) = binsMap.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
-    def getOrElse(x: String, default: => V) = pairsMap.getOrElse(x, default)
+    def getOrElse(x: String, default: => V) = binsMap.getOrElse(x, default)
 
-    def zero = new Categorizing[DATUM, V](quantity, 0.0, value, mutable.HashMap(pairs.toSeq map {case (c, v) => (c, v.zero)}: _*))
+    def zero = new Categorizing[DATUM, V](quantity, 0.0, value, mutable.HashMap(bins.toSeq map {case (c, v) => (c, v.zero)}: _*))
     def +(that: Categorizing[DATUM, V]) =
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
@@ -214,12 +214,12 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
           this.entries + that.entries,
           this.value,
           mutable.HashMap[String, V]((this.keySet union that.keySet).toSeq map {key =>
-            if ((this.pairsMap contains key)  &&  (that.pairsMap contains key))
-              (key, this.pairsMap(key) + that.pairsMap(key))
-            else if (this.pairsMap contains key)
-              (key, this.pairsMap(key))
+            if ((this.binsMap contains key)  &&  (that.binsMap contains key))
+              (key, this.binsMap(key) + that.binsMap(key))
+            else if (this.binsMap contains key)
+              (key, this.binsMap(key))
             else
-              (key, that.pairsMap(key))
+              (key, that.binsMap(key))
           }: _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
@@ -227,9 +227,9 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
       if (weight > 0.0) {
         val q = quantity(datum)
 
-        if (!(pairs contains q))
-          pairs(q) = value.zero
-        pairs(q).fill(datum, weight)
+        if (!(bins contains q))
+          bins(q) = value.zero
+        bins(q).fill(datum, weight)
 
         // no possibility of exception from here on out (for rollback)
         entries += weight
@@ -241,15 +241,15 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(value.factory.name),
-      "bins" -> JsonObject(pairs.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
+      "bins" -> JsonObject(bins.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
       maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> List(value).collect({case v: AnyQuantity[_, _] => v.quantity.name}).headOption.flatten.map(JsonString(_)))
 
-    override def toString() = s"""<Categorizing values=${value.factory.name} size=${pairs.size}>"""
+    override def toString() = s"""<Categorizing values=${value.factory.name} size=${bins.size}>"""
     override def equals(that: Any) = that match {
-      case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.pairs == that.pairs
+      case that: Categorizing[DATUM, V] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.bins == that.bins
       case _ => false
     }
-    override def hashCode() = (quantity, entries, pairs).hashCode()
+    override def hashCode() = (quantity, entries, bins).hashCode()
   }
 }

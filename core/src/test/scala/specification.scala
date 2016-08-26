@@ -859,7 +859,7 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
     result = resultsIterator.next()
     expr(result) should be ("""Branch(Bin(10, -3.0, 3.0, "withholes"), Bin(20, -3.0, 3.0, "withholes", Average("positive")), SparselyBin(0.1, "withholes"), CentrallyBin([-3, -2, -1, 1, 2, 3], "withholes"))""")
-    // tests(result, testData, "anonymous", Branch(Bin(10, -3.0, 3.0, {x: X => x.withholes}), Bin(20, -3.0, 3.0, {x: X => x.withholes}, Average({x: X => x.positive})), SparselyBin(0.1, {x: X => x.withholes}), CentrallyBin(Seq(-3, -2, -1, 1, 2, 3), {x: X => x.withholes})))
+    tests(result, testData, "anonymous", Branch(Bin(10, -3.0, 3.0, {x: X => x.withholes}), Bin(20, -3.0, 3.0, {x: X => x.withholes}, Average({x: X => x.positive})), SparselyBin(0.1, {x: X => x.withholes}), CentrallyBin(Seq(-3, -2, -1, 1, 2, 3), {x: X => x.withholes})))
 
     resultsIterator.isEmpty should be (true)
   }

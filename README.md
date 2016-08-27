@@ -23,9 +23,11 @@ Status
 
 ![Build status](https://travis-ci.org/histogrammar/histogrammar-scala.svg)
 
-The tests are pretty good, though not as thorough as [histogrammar-python](https://github.com/histogrammar/histogrammar-python).
+The Scala implementation is verified against the Python implementation by running exactly the same tests on both. They agree numerically to one part in a trillion and exchange the same JSON.
 
-Primitive implementation is mature. All primitives except `UntypedLabel` preserve type information in the Scala REPL, so you can extract values or tab-complete without casting.
+All primitives except `UntypedLabel` preserve type information in the Scala REPL, so you can extract values or tab-complete without casting.
+
+In the future, JIT-compilation will be available, similar to the ROOT/Cling interface in Python, but compiling to Java bytecode with [Janino](http://janino-compiler.github.io/janino/) instead of native bytecode with LLVM.
 
 | Primitive         | Scala | JVM JIT |
 |:------------------|:------|:--------|

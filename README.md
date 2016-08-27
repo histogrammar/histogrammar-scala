@@ -23,7 +23,7 @@ Status
 
 ![Build status](https://travis-ci.org/histogrammar/histogrammar-scala.svg)
 
-The Scala implementation is verified against the Python implementation by running exactly the same tests on both. They agree numerically to one part in a trillion and exchange the same JSON.
+The Scala implementation is verified against the Python implementation by running exactly the same tests on both. They agree numerically to one part in a trillion, with the same NaN/infinity handling, and exchange the same JSON.
 
 All primitives except `UntypedLabel` preserve type information in the Scala REPL, so you can extract values or tab-complete without casting.
 

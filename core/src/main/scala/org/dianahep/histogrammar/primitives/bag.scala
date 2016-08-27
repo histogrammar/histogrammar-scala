@@ -27,7 +27,7 @@ package histogrammar {
     * 
     * A bag is the appropriate data type for scatter plots: a container that collects raw values, maintaining multiplicity but not order. (A "bag" is also known as a "multiset.") Conceptually, it is a mapping from distinct raw values to the number of observations: when two instances of the same raw value are observed, one key is stored and their weights add.
     * 
-    * Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Bag primitives in an analysis tree may collect different types.
+    * Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix range types. For the purposes of Label and Index (which can only collect aggregators of a single type), bags with different ranges are different types.
     * 
     * Factory produces mutable [[org.dianahep.histogrammar.Bagging]] and immutable [[org.dianahep.histogrammar.Bagged]] objects.
     */
@@ -36,7 +36,7 @@ package histogrammar {
     val help = "Accumulate raw numbers, vectors of numbers, or strings, with identical values merged."
     val detailedHelp = """A bag is the appropriate data type for scatter plots: a container that collects raw values, maintaining multiplicity but not order. (A "bag" is also known as a "multiset.") Conceptually, it is a mapping from distinct raw values to the number of observations: when two instances of the same raw value are observed, one key is stored and their weights add.
 
-Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix types. Different Bag primitives in an analysis tree may collect different types."""
+    Although the user-defined function may return scalar numbers, fixed-dimension vectors of numbers, or categorical strings, it may not mix range types. For the purposes of Label and Index (which can only collect aggregators of a single type), bags with different ranges are different types."""
 
     /** Create an immutable [[org.dianahep.histogrammar.Bagged]] from arguments (instead of JSON).
       * 
@@ -44,7 +44,7 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
       * @param values Distinct multidimensional vectors and the (weighted) number of times they were observed or `None` if they were dropped.
       * @param range The data type: "N" for number, "N#" where "#" is a positive integer for vector of numbers, or "S" for string.
       */
-    def ed[RANGE](entries: Double, values: Map[RANGE, Double], range: String) = new Bagged[RANGE](entries, None, values, range)
+    def ed[RANGE](entries: Double, values: Map[RANGE, Double], range: String) = new Bagged[RANGE](entries, None, values map {case (v, n) => (toHandleNaN(v), n)}, range)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Bagging]].
       * 
@@ -64,7 +64,7 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
         }
         else
           range
-      new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double](), r)
+      new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[HandleNaN[RANGE], Double](), r)
     }
 
     /** Synonym for `apply`. */
@@ -92,7 +92,7 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
         }
 
         val values = get("values") match {
-          case JsonArray(elems @ _*) => Map[Any, Double](elems.zipWithIndex map {
+          case JsonArray(elems @ _*) => Map[Bag.HandleNaN[Any], Double](elems.zipWithIndex map {
             case (JsonObject(nv @ _*), i) if (nv.keySet has Set("w", "v")) =>
               val nvget = nv.toMap
 
@@ -101,13 +101,13 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
                 case x => throw new JsonFormatException(x, name + s".values $i n")
               }
 
-              val v: Any = nvget("v") match {
-                case JsonString(x) => x
-                case JsonNumber(x) => x
-                case JsonArray(d @ _*) => Vector(d.zipWithIndex map {
+              val v: Bag.HandleNaN[Any] = nvget("v") match {
+                case JsonString(x) => Bag.IgnoreNaN(x).asInstanceOf[Bag.HandleNaN[Any]]
+                case JsonNumber(x) => Bag.DoubleNaN(x).asInstanceOf[Bag.HandleNaN[Any]]
+                case JsonArray(d @ _*) => Bag.SeqNaN[Vector[Double]](d.zipWithIndex map {
                   case (JsonNumber(x), j) => x
                   case (x, j) => throw new JsonFormatException(x, name + s".values $i v $j")
-                }: _*)
+                }: _*).asInstanceOf[Bag.HandleNaN[Any]]
                 case x => throw new JsonFormatException(x, name + s".values $i v")
               }
 
@@ -121,7 +121,7 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
         val range = get("range") match {
           case JsonString(x) if (x == "N") => "N"
           case JsonString(x) if (x == "S") => "S"
-          case JsonString(x) if (!("^N([0-9]+)$".r.findFirstIn(x).isEmpty)) => x
+          case JsonString(x) if (!("^N([1-9][0-9]*)$".r.findFirstIn(x).isEmpty)) => x
           case x => throw new JsonFormatException(x, name + ".range")
         }
 
@@ -130,16 +130,79 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
       case _ => throw new JsonFormatException(json, name)
     }
 
-    private[histogrammar] def rangeOrdering[RANGE] = new Ordering[RANGE] {
-      def compare(x: RANGE, y: RANGE) = (x, y) match {
-        case (xx: String, yy: String) => xx compare yy
-        case (xx: Double, yy: Double) => xx compare yy
-        case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty  &&  xx.head == yy.head) => compare(xx.tail.asInstanceOf[RANGE], yy.tail.asInstanceOf[RANGE])
-        case (xx: Vector[_], yy: Vector[_]) if (!xx.isEmpty  &&  !yy.isEmpty) => xx.head.asInstanceOf[Double] compare yy.head.asInstanceOf[Double]
-        case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty  &&  yy.isEmpty) => 0
-        case (xx: Vector[_], yy: Vector[_]) if (xx.isEmpty) => -1
-        case (xx: Vector[_], yy: Vector[_]) if (yy.isEmpty) => 1
+    trait HandleNaN[RANGE] extends Ordered[HandleNaN[RANGE]] {
+      override def equals(that: Any): Boolean
+      def compare(that: HandleNaN[RANGE]): Int
+    }
+
+    case class IgnoreNaN(x: String) extends HandleNaN[String] {
+      override def equals(that: Any) = that match {
+        case that: IgnoreNaN => this.x == that.x
+        case _ => false
       }
+      def compare(that: HandleNaN[String]) = that match {
+        case that: IgnoreNaN => this.x compare that.x
+        case _ => throw new Exception
+      }
+    }
+
+    case class DoubleNaN(x: Double) extends HandleNaN[Double] {
+      override def equals(that: Any) = that match {
+        case that: DoubleNaN => (this.x.isNaN  &&  that.x.isNaN)  ||  (this.x == that.x)
+        case _ => false
+      }
+      def compare(that: HandleNaN[Double]) = that match {
+        case that: DoubleNaN =>
+          if (this.x.isNaN  &&  that.x.isNaN)
+            0
+          else if (this.x.isNaN  ||  this.x > that.x)
+            1
+          else if (that.x.isNaN  ||  this.x < that.x)
+            -1
+          else
+            0
+        case _ => throw new Exception
+      }
+    }
+
+    case class SeqNaN[RANGE](components: Double*) extends HandleNaN[RANGE] with Seq[Double] {
+      def apply(index: Int) = components(index)
+      def iterator = components.iterator
+      def length = components.length
+      override def equals(that: Any) = that match {
+        case that: SeqNaN[_] => this.length == that.length  &&  (this zip that).forall({case (x, y) => (x.isNaN  &&  y.isNaN)  ||  (x == y)})
+        case _ => false
+      }
+      def compare(that: HandleNaN[RANGE]): Int = that match {
+        case that: SeqNaN[_] =>
+          var index = 0
+          while (index < length) {
+            if (this(index).isNaN  &&  that(index).isNaN)
+            { }
+            else if (this(index).isNaN  ||  this(index) > that(index))
+              return 1
+            else if (that(index).isNaN  ||  this(index) < that(index))
+              return -1
+            index += 1
+          }
+          0
+        case _ => throw new Exception
+      }
+    }
+
+    private def toHandleNaN[RANGE](x: RANGE): Bag.HandleNaN[RANGE] = x match {
+      case v: String => Bag.IgnoreNaN(v).asInstanceOf[Bag.HandleNaN[RANGE]]
+      case v: Double => Bag.DoubleNaN(v).asInstanceOf[Bag.HandleNaN[RANGE]]
+      case v: Seq[_] => Bag.SeqNaN(v.map({
+        case vi: Double => vi
+        case vi: Float => vi.toDouble
+        case vi: Long => vi.toDouble
+        case vi: Int => vi.toDouble
+        case vi: Short => vi.toDouble
+        case vi: Byte => vi.toDouble
+        case _ => throw new Exception
+      }): _*)
+      case _ => throw new Exception
     }
   }
 
@@ -152,12 +215,12 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
     * @param values Distinct values and the (weighted) number of times they were observed.
     * @param range The data type: "N" for number, "N#" where "#" is a positive integer for vector of numbers, or "S" for string.
     */
-  class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[RANGE, Double], val range: String) extends Container[Bagged[RANGE]] with NoAggregation with QuantityName {
+  class Bagged[RANGE] private[histogrammar](val entries: Double, val quantityName: Option[String], val values: Map[Bag.HandleNaN[RANGE], Double], val range: String) extends Container[Bagged[RANGE]] with NoAggregation with QuantityName {
     type Type = Bagged[RANGE]
     type EdType = Bagged[RANGE]
     def factory = Bag
 
-    def zero = new Bagged(0.0, this.quantityName, Map[RANGE, Double](), range)
+    def zero = new Bagged(0.0, this.quantityName, Map[Bag.HandleNaN[RANGE], Double](), range)
     def +(that: Bagged[RANGE]) =
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
@@ -181,21 +244,28 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
 
     def children = Nil
 
-    def toJsonFragment(suppressName: Boolean) = {
-      implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
+    def toJsonFragment(suppressName: Boolean) =
       JsonObject(
         "entries" -> JsonFloat(entries),
         "values" -> JsonArray(values.toSeq.sortBy(_._1).map({
-          case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
-          case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
-          case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
+          case (v: Bag.IgnoreNaN, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v.x))
+          case (v: Bag.DoubleNaN, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v.x))
+          case (v: Bag.SeqNaN[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.iterator.map({case vi: Double => JsonFloat(vi)}).toSeq: _*))
         }): _*),
         "range" -> JsonString(range)).maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_))))
-    }
 
     override def toString() = s"""<Bagged size=${values.size} range=${range}>"""
     override def equals(that: Any) = that match {
-      case that: Bagged[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values  &&  this.range == that.range
+      case that: Bagged[RANGE] =>
+        if (!(this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.range == that.range  &&  this.values.size == that.values.size))
+          false
+        else {
+          val keys = this.values.keySet
+          if (keys != that.values.keySet)
+            false
+          else
+            keys.forall(k => this.values(k) === that.values(k))
+        }
       case _ => false
     }
     override def hashCode() = (entries, quantityName, values, range).hashCode()
@@ -210,19 +280,23 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
     * @param values Distinct values and the (weighted) number of times they were observed.
     * @param range The data type: "N" for number, "N#" where "#" is a positive integer for vector of numbers, or "S" for string.
     */
-  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[RANGE, Double], val range: String) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
+  class Bagging[DATUM, RANGE] private[histogrammar](val quantity: UserFcn[DATUM, RANGE], var entries: Double, var values: scala.collection.mutable.Map[Bag.HandleNaN[RANGE], Double], val range: String) extends Container[Bagging[DATUM, RANGE]] with AggregationOnData with AnyQuantity[DATUM, RANGE] {
     type Type = Bagging[DATUM, RANGE]
     type EdType = Bagged[RANGE]
     type Datum = DATUM
     def factory = Bag
 
     val dimension =
-      if (range.head == 'N'  &&  range.size > 1)
-        java.lang.Integer.parseInt(range.tail)
+      if (range.head == 'N'  &&  range.size > 1) {
+        val out = java.lang.Integer.parseInt(range.tail)
+        if (out <= 0)
+          throw new ContainerException(s"vector-valued range (${range}) must have positive dimension")
+        out
+      }
       else
         0
 
-    def zero = new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[RANGE, Double](), range)
+    def zero = new Bagging[DATUM, RANGE](quantity, 0.0, scala.collection.mutable.Map[Bag.HandleNaN[RANGE], Double](), range)
     def +(that: Bagging[DATUM, RANGE]) =
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
@@ -249,45 +323,61 @@ Although the user-defined function may return scalar numbers, fixed-dimension ve
       if (weight > 0.0) {
         val q = quantity(datum)
 
-        if (dimension > 0) q match {
-          case v: Vector[_] if (v.size == dimension) =>
-          case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
-        }
-        else if (range == "N") q match {
-          case _: Double =>
-          case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
-        }
-        else q match {
-          case _: String =>
-          case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
-        }
+        val qnan: Bag.HandleNaN[RANGE] =
+          if (dimension > 0) q match {
+            case v: Seq[_] if (v.size == dimension) => Bag.SeqNaN(v.map({
+              case vi: Double => vi
+              case vi: Float => vi.toDouble
+              case vi: Long => vi.toDouble
+              case vi: Int => vi.toDouble
+              case vi: Short => vi.toDouble
+              case vi: Byte => vi.toDouble
+              case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
+            }): _*)
+            case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
+          }
+          else if (range == "N") q match {
+            case v: Double => Bag.DoubleNaN(v).asInstanceOf[Bag.HandleNaN[RANGE]]
+            case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
+          }
+          else q match {
+            case v: String => Bag.IgnoreNaN(v).asInstanceOf[Bag.HandleNaN[RANGE]]
+            case _ => throw new ContainerException(s"Bag range declared as $range but encountered $q")
+          }
 
         // no possibility of exception from here on out (for rollback)
         entries += weight
-        if (values contains q)
-          values(q) += weight
+        if (values contains qnan)
+          values(qnan) += weight
         else
-          values(q) = weight
+          values(qnan) = weight
       }
     }
 
     def children = Nil
 
-    def toJsonFragment(suppressName: Boolean) = {
-      implicit val rangeOrdering = Bag.rangeOrdering[RANGE]
+    def toJsonFragment(suppressName: Boolean) =
       JsonObject(
         "entries" -> JsonFloat(entries),
         "values" -> JsonArray(values.toSeq.sortBy(_._1).map({
-          case (v: String, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v))
-          case (v: Double, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v))
-          case (v: Vector[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.map({case vi: Double => JsonFloat(vi)}): _*))
+          case (v: Bag.IgnoreNaN, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonString(v.x))
+          case (v: Bag.DoubleNaN, n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonFloat(v.x))
+          case (v: Bag.SeqNaN[_], n) => JsonObject("w" -> JsonFloat(n), "v" -> JsonArray(v.iterator.map({case vi: Double => JsonFloat(vi)}).toSeq: _*))
         }): _*),
         "range" -> JsonString(range)).maybe(JsonString("name") -> (if (suppressName) None else quantity.name.map(JsonString(_))))
-    }
 
     override def toString() = s"""<Bagging size=${values.size} range=$range>"""
     override def equals(that: Any) = that match {
-      case that: Bagging[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.range == that.range
+      case that: Bagging[DATUM, RANGE] =>
+        if (!(this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.range == that.range  &&  this.values.size == that.values.size))
+          false
+        else {
+          val keys = this.values.keySet
+          if (keys != that.values.keySet)
+            false
+          else
+            keys.forall(k => this.values(k) === that.values(k))
+        }
       case _ => false
     }
     override def hashCode() = (quantity, entries, values, range).hashCode()

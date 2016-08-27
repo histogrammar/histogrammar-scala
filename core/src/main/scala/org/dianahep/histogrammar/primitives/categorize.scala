@@ -15,6 +15,7 @@
 package org.dianahep
 
 import scala.collection.mutable
+import scala.language.postfixOps
 
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
@@ -43,7 +44,7 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
       * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
       * @param bins String category and the associated container of values associated with it.
       */
-    def ed[V <: Container[V] with NoAggregation](entries: Double, contentType: String, bins: (String, V)*) = new Categorized(entries, None, contentType, bins: _*)
+    def ed[V <: Container[V] with NoAggregation](entries: Double, contentType: String, bins: Map[String, V]) = new Categorized(entries, None, contentType, bins)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.Categorizing]].
       * 
@@ -89,7 +90,7 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
             new Categorized[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, contentType, categoryPairs map {
               case (JsonString(category), value) =>
                 category -> factory.fromJsonFragment(value, dataName)
-            }: _*)
+            } toMap)
 
           case x => throw new JsonFormatException(x, name + ".bins")
         }
@@ -107,7 +108,7 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     * @param contentType Name of the intended content; used as a placeholder in cases with zero bins (due to no observed data).
     * @param bins String category and the associated container of values associated with it.
     */
-  class Categorized[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val bins: (String, V)*) extends Container[Categorized[V]] with NoAggregation with QuantityName {
+  class Categorized[V <: Container[V] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], contentType: String, val bins: Map[String, V]) extends Container[Categorized[V]] with NoAggregation with QuantityName {
     type Type = Categorized[V]
     type EdType = Categorized[V]
     def factory = Categorize
@@ -115,8 +116,6 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    /** Input `bins` as a key-value map. */
-    val binsMap = bins.toMap
     /** Number of `bins`. */
     def size = bins.size
     /** Iterable over the keys of the `bins`. */
@@ -126,13 +125,13 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     /** Set of keys among the `bins`. */
     def keySet: Set[String] = keys.toSet
     /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = binsMap(x)
+    def apply(x: String) = bins(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
-    def get(x: String) = binsMap.get(x)
+    def get(x: String) = bins.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
-    def getOrElse(x: String, default: => V) = binsMap.getOrElse(x, default)
+    def getOrElse(x: String, default: => V) = bins.getOrElse(x, default)
 
-    def zero = new Categorized[V](0.0, quantityName, contentType)
+    def zero = new Categorized[V](0.0, quantityName, contentType, Map[String, V]())
     def +(that: Categorized[V]) =
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
@@ -142,20 +141,20 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
           this.quantityName,
           contentType,
           (this.keySet union that.keySet).toSeq map {key =>
-            if ((this.binsMap contains key)  &&  (that.binsMap contains key))
-              (key, this.binsMap(key) + that.binsMap(key))
-            else if (this.binsMap contains key)
-              (key, this.binsMap(key))
+            if ((this.bins contains key)  &&  (that.bins contains key))
+              (key, this.bins(key) + that.bins(key))
+            else if (this.bins contains key)
+              (key, this.bins(key))
             else
-              (key, that.binsMap(key))
-          }: _*)
+              (key, that.bins(key))
+          } toMap)
 
     def children = values.toList
 
     def toJsonFragment(suppressName: Boolean) = JsonObject(
       "entries" -> JsonFloat(entries),
       "bins:type" -> JsonString(contentType),
-      "bins" -> JsonObject(bins map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
+      "bins" -> JsonObject(bins.toSeq map {case (k, v) => (JsonString(k), v.toJsonFragment(true))}: _*)).
       maybe(JsonString("name") -> (if (suppressName) None else quantityName.map(JsonString(_)))).
       maybe(JsonString("bins:name") -> (bins.headOption match {case Some((k, v: QuantityName)) => v.quantityName.map(JsonString(_)); case _ => None}))
 
@@ -187,8 +186,6 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
 
-    /** Input `bins` as a key-value map. */
-    def binsMap = bins.toMap
     /** Number of `bins`. */
     def size = bins.size
     /** Iterable over the keys of the `bins`. */
@@ -198,13 +195,13 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     /** Set of keys among the `bins`. */
     def keySet: Set[String] = keys.toSet
     /** Attempt to get key `x`, throwing an exception if it does not exist. */
-    def apply(x: String) = binsMap(x)
+    def apply(x: String) = bins(x)
     /** Attempt to get key `x`, returning `None` if it does not exist. */
-    def get(x: String) = binsMap.get(x)
+    def get(x: String) = bins.get(x)
     /** Attempt to get key `x`, returning an alternative if it does not exist. */
-    def getOrElse(x: String, default: => V) = binsMap.getOrElse(x, default)
+    def getOrElse(x: String, default: => V) = bins.getOrElse(x, default)
 
-    def zero = new Categorizing[DATUM, V](quantity, 0.0, value, mutable.HashMap(bins.toSeq map {case (c, v) => (c, v.zero)}: _*))
+    def zero = new Categorizing[DATUM, V](quantity, 0.0, value, mutable.HashMap[String, V]())
     def +(that: Categorizing[DATUM, V]) =
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
@@ -214,12 +211,12 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
           this.entries + that.entries,
           this.value,
           mutable.HashMap[String, V]((this.keySet union that.keySet).toSeq map {key =>
-            if ((this.binsMap contains key)  &&  (that.binsMap contains key))
-              (key, this.binsMap(key) + that.binsMap(key))
-            else if (this.binsMap contains key)
-              (key, this.binsMap(key))
+            if ((this.bins contains key)  &&  (that.bins contains key))
+              (key, this.bins(key) + that.bins(key))
+            else if (this.bins contains key)
+              (key, this.bins(key))
             else
-              (key, that.binsMap(key))
+              (key, that.bins(key))
           }: _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {

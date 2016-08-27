@@ -40,7 +40,7 @@ package histogrammar {
       * @param nanflow Container for data that resulted in `NaN`.
       */
     def ed[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation](entries: Double, bins: Iterable[(Double, V)], nanflow: N) =
-      new CentrallyBinned[V, N](entries, None, immutable.MetricSortedMap(bins.toSeq: _*), nanflow)
+      new CentrallyBinned[V, N](entries, None, bins.toSeq, nanflow)
 
     /** Create an empty, mutable [[org.dianahep.histogrammar.CentrallyBinning]].
       * 
@@ -51,7 +51,7 @@ package histogrammar {
       */
     def apply[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
       (bins: Iterable[Double], quantity: UserFcn[DATUM, Double], value: => V = Count(), nanflow: N = Count()) =
-      new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap(bins.toSeq.map((_, value.zero)): _*), nanflow)
+      new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, bins.map((_, value.zero)).toSeq, nanflow)
 
     /** Synonym for `apply`. */
     def ing[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}]
@@ -62,36 +62,33 @@ package histogrammar {
       /**Weighted number of entries (sum of all observed weights). */
       def entries: Double
       /** Bin centers and their contents. */
-      def bins: MetricSortedMap[Double, V]
+      def bins: Seq[(Double, V)]
+
+      def index(x: Double): Int = {
+        var index = 0
+        while (index < bins.size - 1) {
+          val thisCenter = bins(index)._1
+          val nextCenter = bins(index + 1)._1
+          if (x < (thisCenter + nextCenter)/2.0)
+            return index
+          index += 1
+        }
+        bins.size - 1
+      }
 
       /** Set of centers of each bin. */
-      def centersSet = bins.iterator.map(_._1).toSet
+      def centersSet = bins.map(_._1).toSet
       /** Iterable over the centers of each bin. */
-      def centers = bins.iterator.map(_._1)
+      def centers = bins.map(_._1)
       /** Iterable over the containers associated with each bin. */
-      def values = bins.iterator.map(_._2)
+      def values = bins.map(_._2)
 
       /** Return the exact center of the bin that `x` belongs to. */
-      def center(x: Double): Double = bins.closest(x).get.key
+      def center(x: Double): Double = bins(index(x))._1
       /** Return the aggregator at the center of the bin that `x` belongs to. */
-      def value(x: Double): V = bins.closest(x).get.value
+      def value(x: Double): V = bins(index(x))._2
       /** Return `true` iff `x` is in the nanflow region (equal to `NaN`). */
       def nan(x: Double): Boolean = x.isNaN
-
-      /** Find the lower and upper neighbors of a bin (given by exact bin center). */
-      def neighbors(center: Double): (Option[Double], Option[Double]) = {
-        if (!bins.contains(center))
-          throw new IllegalArgumentException(s"position $center is not the exact center of a bin")
-        (bins.closest(Math.nextAfter(center, java.lang.Double.NEGATIVE_INFINITY), Some((x: Double, v: V) => x < center)).map(_.key), bins.closest(Math.nextAfter(center, java.lang.Double.POSITIVE_INFINITY), Some((x: Double, v: V) => x > center)).map(_.key))
-      }
-
-      /** Get the low and high edge of a bin (given by exact bin center). */
-      def range(center: Double): (Double, Double) = neighbors(center) match {
-        case (Some(below), Some(above)) => ((below + center)/2.0, (center + above)/2.0)
-        case (None, Some(above)) => (java.lang.Double.NEGATIVE_INFINITY, (center + above)/2.0)
-        case (Some(below), None) => ((below + center)/2.0, java.lang.Double.POSITIVE_INFINITY)
-        case _ => throw new Exception("can't get here")
-      }
     }
 
     import KeySetComparisons._
@@ -121,7 +118,7 @@ package histogrammar {
         }
         val bins = get("bins") match {
           case JsonArray(bins @ _*) if (bins.size >= 2) =>
-            immutable.MetricSortedMap(bins.zipWithIndex map {
+            bins.zipWithIndex map {
               case (JsonObject(binpair @ _*), i) if (binpair.keySet has Set("center", "data")) =>
                 val binget = binpair.toMap
 
@@ -134,7 +131,7 @@ package histogrammar {
                 (center, value)
 
               case (x, i) => throw new JsonFormatException(x, name + s".bins $i")
-            }: _*)
+            }
 
           case x => throw new JsonFormatException(x, name + ".bins")
         }
@@ -145,7 +142,7 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        new CentrallyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, bins.asInstanceOf[immutable.MetricSortedMap[Double, Container[_]]], nanflow)
+        new CentrallyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, bins.asInstanceOf[Seq[(Double, Container[_])]], nanflow)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -160,7 +157,7 @@ package histogrammar {
     * @param bins Metric, sorted map of centers and values for each bin.
     * @param nanflow Container for data that resulted in `NaN`.
     */
-  class CentrallyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: immutable.MetricSortedMap[Double, V], val nanflow: N)
+  class CentrallyBinned[V <: Container[V] with NoAggregation, N <: Container[N] with NoAggregation] private[histogrammar](val entries: Double, val quantityName: Option[String], val bins: Seq[(Double, V)], val nanflow: N)
     extends Container[CentrallyBinned[V, N]] with NoAggregation with QuantityName with CentrallyBin.Methods[V] {
 
     type Type = CentrallyBinned[V, N]
@@ -172,14 +169,14 @@ package histogrammar {
     if (bins.size < 2)
       throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def zero = new CentrallyBinned[V, N](0.0, quantityName, immutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), nanflow.zero)
+    def zero = new CentrallyBinned[V, N](0.0, quantityName, bins.map({case (c, v) => (c, v.zero)}), nanflow.zero)
     def +(that: CentrallyBinned[V, N]) = {
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       if (this.centers != that.centers)
         throw new ContainerException(s"cannot add ${getClass.getName} because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
-      val newbins = immutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
+      val newbins = this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}
       
       new CentrallyBinned[V, N](this.entries + that.entries, quantityName, newbins, this.nanflow + that.nanflow)
     }
@@ -214,7 +211,7 @@ package histogrammar {
     * @param nanflow Container for data that resulted in `NaN`.
     */
   class CentrallyBinning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}] private[histogrammar]
-    (val quantity: UserFcn[DATUM, Double], var entries: Double, value: => V, val bins: mutable.MetricSortedMap[Double, V], val nanflow: N)
+    (val quantity: UserFcn[DATUM, Double], var entries: Double, value: => V, val bins: Seq[(Double, V)], val nanflow: N)
     extends Container[CentrallyBinning[DATUM, V, N]] with AggregationOnData with NumericalQuantity[DATUM] with CentrallyBin.Methods[V] {
 
     protected val v = value
@@ -228,14 +225,14 @@ package histogrammar {
     if (bins.size < 2)
       throw new ContainerException(s"number of bins (${bins.size}) must be at least two")
 
-    def zero = new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, mutable.MetricSortedMap[Double, V](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), nanflow.zero)
+    def zero = new CentrallyBinning[DATUM, V, N](quantity, 0.0, value, Seq[(Double, V)](bins.toSeq.map({case (c, v) => (c, v.zero)}): _*), nanflow.zero)
     def +(that: CentrallyBinning[DATUM, V, N]) = {
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       if (this.centers != that.centers)
         throw new ContainerException(s"cannot add ${getClass.getName} because centers are different:\n    ${this.centers}\nvs\n    ${that.centers}")
 
-      val newbins = mutable.MetricSortedMap(this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}: _*)
+      val newbins = this.bins.toSeq zip that.bins.toSeq map {case ((c1, v1), (_, v2)) => (c1, v1 + v2)}
 
       new CentrallyBinning[DATUM, V, N](quantity, this.entries + that.entries, value, newbins, this.nanflow + that.nanflow)
     }
@@ -247,10 +244,8 @@ package histogrammar {
 
         if (nan(q))
           nanflow.fill(datum, weight)
-        else {
-          val Some(Closest(_, _, value)) = bins.closest(q)
-          value.fill(datum, weight)
-        }
+        else
+          bins(index(q))._2.fill(datum, weight)
 
         // no possibility of exception from here on out (for rollback)
         entries += weight

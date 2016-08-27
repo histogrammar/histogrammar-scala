@@ -55,6 +55,8 @@ class SpecificationSuite extends FlatSpec with Matchers {
     val one = Factory.fromJson(m(JsonString("one-" + which)))
     val two = Factory.fromJson(m(JsonString("two-" + which)))
 
+    System.err.println(s"${which.padTo(9, ' ')} $expr")
+
     compare(h1.toImmutable, zero, which + " ZERO in " + expr)
     compare((h1 + h1).toImmutable, zero, which + " ZERO + ZERO in " + expr)
     compare(h1.zero.toImmutable, zero, which + " ZERO.zero in " + expr)

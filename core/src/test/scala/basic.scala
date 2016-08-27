@@ -662,7 +662,7 @@ class BasicSuite extends FlatSpec with Matchers {
   "Categorize/Categorized/Categorizing" must "work" in {
     val categorizing = Categorize({x: Struct => x.string.substring(0, 1)} named "something")
     struct.foreach(categorizing.fill(_))
-    categorizing.binsMap map {case (k, v) => (k, v.entries)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
+    categorizing.bins map {case (k, v) => (k, v.entries)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
     checkJson(categorizing)
 
     val categorizing2 = Categorize({x: Struct => x.string.substring(0, 1)} named "something", Sum({x: Struct => x.double} named "else"))

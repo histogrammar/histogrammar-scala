@@ -256,7 +256,16 @@ package histogrammar {
 
     override def toString() = s"""<Bagged size=${values.size} range=${range}>"""
     override def equals(that: Any) = that match {
-      case that: Bagged[RANGE] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.values == that.values  &&  this.range == that.range
+      case that: Bagged[RANGE] =>
+        if (!(this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.range == that.range  &&  this.values.size == that.values.size))
+          false
+        else {
+          val keys = this.values.keySet
+          if (keys != that.values.keySet)
+            false
+          else
+            keys.forall(k => this.values(k) === that.values(k))
+        }
       case _ => false
     }
     override def hashCode() = (entries, quantityName, values, range).hashCode()
@@ -359,7 +368,16 @@ package histogrammar {
 
     override def toString() = s"""<Bagging size=${values.size} range=$range>"""
     override def equals(that: Any) = that match {
-      case that: Bagging[DATUM, RANGE] => this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.values == that.values  &&  this.range == that.range
+      case that: Bagging[DATUM, RANGE] =>
+        if (!(this.quantity == that.quantity  &&  this.entries === that.entries  &&  this.range == that.range  &&  this.values.size == that.values.size))
+          false
+        else {
+          val keys = this.values.keySet
+          if (keys != that.values.keySet)
+            false
+          else
+            keys.forall(k => this.values(k) === that.values(k))
+        }
       case _ => false
     }
     override def hashCode() = (quantity, entries, values, range).hashCode()

@@ -27,7 +27,7 @@ case class X(positive: Double, boolean: Boolean, strings: String, noholes: Doubl
 
 class SpecificationSuite extends FlatSpec with Matchers {
   // used for all equality operations, on both Container and Json subclasses
-  val tolerance = 1e-6
+  val tolerance = 1e-12
   org.dianahep.histogrammar.util.relativeTolerance = tolerance
   org.dianahep.histogrammar.util.absoluteTolerance = tolerance
 
@@ -89,8 +89,7 @@ class SpecificationSuite extends FlatSpec with Matchers {
 
   it must "work" in {
     val testDataJson = try {
-      // Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-data.json").openStream).useDelimiter("\\A").next)
-      Json.parse(new java.util.Scanner(new java.io.FileInputStream("/tmp/test-data.json")).useDelimiter("\\A").next)
+      Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-data.json").openStream).useDelimiter("\\A").next)
     }
     catch {
       case err: Exception =>
@@ -99,8 +98,7 @@ class SpecificationSuite extends FlatSpec with Matchers {
     }
 
     val testResultsJson = try {
-      // Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-results.json").openStream).useDelimiter("\\A").next)
-      Json.parse(new java.util.Scanner(new java.io.FileInputStream("/tmp/test-results.json")).useDelimiter("\\A").next)
+      Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-results.json").openStream).useDelimiter("\\A").next)
     }
     catch {
       case err: Exception =>

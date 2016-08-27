@@ -48,7 +48,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
       */
     def ed[V <: Container[V] with NoAggregation](entries: Double, cut: V) = new Selected[V](entries, None, cut)
 
-    /** Create an empty, mutable [[org.dianahep.histogrammar.Limiting]].
+    /** Create an empty, mutable [[org.dianahep.histogrammar.Selecting]].
       * 
       * @param quantity Boolean or non-negative function that cuts or weights entries.
       * @param cut Aggregator to accumulate for values that pass the selection (`quantity`).

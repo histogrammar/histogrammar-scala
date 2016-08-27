@@ -10,7 +10,7 @@ jdk:
 
 env:
   matrix:
-    - SCALA_VERSION=Scala-2.10
-    - SCALA_VERSION=Scala-2.11
+    - SCALA_VERSION=2.10
+    - SCALA_VERSION=2.11
 
-script: "mvn clean install -P ${SCALA_VERSION}"
+script: "mvn clean install -P scala-${SCALA_VERSION}"

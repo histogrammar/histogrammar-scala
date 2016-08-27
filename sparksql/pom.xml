@@ -74,7 +74,7 @@
 
     <dependency>
       <groupId>org.diana-hep</groupId>
-      <artifactId>histogrammar</artifactId>
+      <artifactId>histogrammar_${scala.binary.version}</artifactId>
       <version>1.0.0</version>
     </dependency>
 

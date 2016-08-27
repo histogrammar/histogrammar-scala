@@ -20,7 +20,7 @@
   <inceptionYear>2016</inceptionYear>
 
   <groupId>org.diana-hep</groupId>
-  <artifactId>histogrammar-sparksql</artifactId>
+  <artifactId>histogrammar-sparksql_${scala.binary.version}</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
 
@@ -32,11 +32,35 @@
     </license>
   </licenses>
 
+  <profiles>
+    <profile>
+      <id>scala-2.10</id>
+      <activation>
+        <property><name>!scala-2.11</name></property>
+      </activation>
+      <properties>
+        <scala.version>2.10.6</scala.version>
+        <scala.binary.version>2.10</scala.binary.version>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>scala-2.11</id>
+      <activation>
+        <property><name>scala-2.11</name></property>
+      </activation>
+      <properties>
+        <scala.version>2.11.8</scala.version>
+        <scala.binary.version>2.11</scala.binary.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+      </properties>
+    </profile>
+  </profiles>
+
   <properties>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
-    <scala.tools.version>2.10</scala.tools.version>
-    <scala.version>2.10.5</scala.version>
     <encoding>UTF-8</encoding>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -56,7 +80,7 @@
 
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_${scala.tools.version}</artifactId>
+      <artifactId>spark-sql_${scala.binary.version}</artifactId>
       <version>1.6.1</version>
       <scope>provided</scope>
     </dependency>
@@ -73,7 +97,7 @@
         <!-- see http://davidb.github.com/scala-maven-plugin -->
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.2.2</version>
         <executions>
           <execution>
             <goals>

@@ -289,10 +289,10 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
       * 
       * @param pairs Names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counting]].
       */
-    def apply[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = new UntypedLabeling(0.0, pairs: _*)
+    def apply[DATUM, F <: Container[F] with Aggregation](first: (String, F), rest: (String, Container[_] with Aggregation)*) = new UntypedLabeling(0.0, first, rest: _*)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = apply(pairs: _*)
+    def ing[DATUM, F <: Container[F] with Aggregation](first: (String, F), rest: (String, Container[_] with Aggregation)*) = apply(first, rest: _*)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
@@ -414,14 +414,16 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
-  class UntypedLabeling[DATUM] private[histogrammar](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData with Collection {
-    type Type = UntypedLabeled
+  class UntypedLabeling[F <: Container[F] with Aggregation] private[histogrammar](var entries: Double, first: (String, F), rest: (String, Container[_] with Aggregation)*) extends Container[UntypedLabeling[F]] with AggregationOnData with Collection {
+    type Type = UntypedLabeling[F]
     type EdType = UntypedLabeled
-    type Datum = DATUM
+    type Datum = F#Datum
     def factory = UntypedLabel
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    val pairs = first +: rest
 
     /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
@@ -453,14 +455,15 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
       case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeling: ${indexes.mkString(", ")}""")
     }
 
-    def zero = new UntypedLabeling[DATUM](0.0, pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_] with AggregationOnData {type Datum = DATUM}])}: _*)
-    def +(that: UntypedLabeling[DATUM]) =
+    def zero = new UntypedLabeling[F](0.0, (first._1, first._2.zero), rest.map({case (k, v) => (k, v.zero.asInstanceOf[Container[_] with Aggregation])}): _*)
+    def +(that: UntypedLabeling[F]) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add UntypedLabeling because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
       else
-        new UntypedLabeling[DATUM](
+        new UntypedLabeling[F](
           this.entries + that.entries,
-          this.pairs.map({case (key, mysub) =>
+          (this.first._1, this.first._2 + that.pairsMap(this.first._1).asInstanceOf[F]),
+          this.rest.map({case (key, mysub) =>
             val yoursub = that.pairsMap(key)
             if (mysub.factory != yoursub.factory)
               throw new ContainerException(s"""cannot add UntypedLabeling because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
@@ -491,7 +494,7 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
 
     override def toString() = s"""<UntypedLabeling size=${pairs.size}>"""
     override def equals(that: Any) = that match {
-      case that: UntypedLabeling[DATUM] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
+      case that: UntypedLabeling[F] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
     }
     override def hashCode() = (entries, pairsMap).hashCode

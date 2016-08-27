@@ -346,24 +346,24 @@ package object bokeh extends Tools {
 
   //////////////////////////////////////////////////////////////// methods for FractionedHistogram
 
-  implicit def anyBinnedToFractionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Binned[Counted, U, O, N]]): FractionedHistogramMethodsBokeh =
+  implicit def anyBinnedToFractionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Binned[Counted, U, O, N], Binned[Counted, U, O, N]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anyBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anyBinningToFractionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Binning[DATUM, Counting, U, O, N]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anyBinningToFractionedHistogramMethods(hist).fractioned)
-  implicit def anySelectedBinnedToFractionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Selected[Binned[Counted, U, O, N]]]): FractionedHistogramMethodsBokeh =
+  implicit def anySelectedBinnedToFractionedHistogramMethodsBokeh[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Selected[Binned[Counted, U, O, N]], Selected[Binned[Counted, U, O, N]]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anySelectedBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anySelectingBinningToFractionedHistogramMethodsBokeh[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anySelectingBinningToFractionedHistogramMethods(hist).fractioned)
-  implicit def anySparselyBinnedToFractionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: Fractioned[SparselyBinned[Counted, N]]): FractionedHistogramMethodsBokeh =
+  implicit def anySparselyBinnedToFractionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: Fractioned[SparselyBinned[Counted, N], SparselyBinned[Counted, N]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anySparselyBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anySparselyBinningToFractionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, SparselyBinning[DATUM, Counting, N]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anySparselyBinningToFractionedHistogramMethods(hist).fractioned)
-  implicit def anySelectedSparselyBinnedToFractionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: Fractioned[Selected[SparselyBinned[Counted, N]]]): FractionedHistogramMethodsBokeh =
+  implicit def anySelectedSparselyBinnedToFractionedHistogramMethodsBokeh[N <: Container[N] with NoAggregation](hist: Fractioned[Selected[SparselyBinned[Counted, N]], Selected[SparselyBinned[Counted, N]]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anySelectedSparselyBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anySelectingSparselyBinningToFractionedHistogramMethodsBokeh[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]]]): FractionedHistogramMethodsBokeh =
     new FractionedHistogramMethodsBokeh(anySelectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
 
-  class FractionedHistogramMethodsBokeh(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]])
+  class FractionedHistogramMethodsBokeh(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]], Selected[Binned[Counted, Counted, Counted, Counted]]])
 
   //////////////////////////////////////////////////////////////// methods for TwoDimensionallyHistogram and TwoDimensionallySparselyHistogram
 

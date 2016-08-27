@@ -27,7 +27,7 @@ import org.dianahep.histogrammar.json._
 case class X(positive: Double, boolean: Boolean, strings: String, noholes: Double, withholes: Double)
 
 // Turned off because it uses too much memory in JDK 7 and gets killed by Travis-CI.
-class SpecificationSuite extends FlatSpec with Matchers {
+@Ignore class SpecificationSuite extends FlatSpec with Matchers {
 
   // used for all equality operations, on both Container and Json subclasses
   val tolerance = 1e-12

@@ -14,6 +14,8 @@
 
 package org.dianahep
 
+import scala.language.existentials
+
 import scala.reflect.classTag
 import scala.reflect.ClassTag
 

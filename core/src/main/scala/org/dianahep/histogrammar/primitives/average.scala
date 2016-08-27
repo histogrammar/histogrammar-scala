@@ -14,6 +14,8 @@
 
 package org.dianahep
 
+import scala.language.existentials
+
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 

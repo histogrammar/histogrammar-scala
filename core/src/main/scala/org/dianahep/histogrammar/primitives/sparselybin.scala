@@ -171,7 +171,7 @@ Like fixed-domain binning, the bins are indexed by integers, though they are 64-
           case x => throw new JsonFormatException(x, name + ".origin")
         }
 
-        new SparselyBinned[Container[_], Container[_]](binWidth, entries, (nameFromParent ++ quantityName).lastOption, contentType, bins.asInstanceOf[SortedMap[Long, Container[_]]], nanflow, origin)
+        new SparselyBinned(binWidth, entries, (nameFromParent ++ quantityName).lastOption, contentType, bins.asInstanceOf[SortedMap[Long, C] forSome {type C <: Container[C] with NoAggregation}], nanflow.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}], origin)
 
       case _ => throw new JsonFormatException(json, name)
     }

@@ -362,24 +362,24 @@ package object ascii {
 
   //////////////////////////////////////////////////////////////// methods for FractionedHistogram
 
-  implicit def anyBinnedToFractionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Binned[Counted, U, O, N]]): FractionedHistogramMethodsAscii =
+  implicit def anyBinnedToFractionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Binned[Counted, U, O, N], Binned[Counted, U, O, N]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anyBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anyBinningToFractionedHistogramMethodsAscii[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Binning[DATUM, Counting, U, O, N]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anyBinningToFractionedHistogramMethods(hist).fractioned)
-  implicit def anySelectedBinnedToFractionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Selected[Binned[Counted, U, O, N]]]): FractionedHistogramMethodsAscii =
+  implicit def anySelectedBinnedToFractionedHistogramMethodsAscii[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Selected[Binned[Counted, U, O, N]], Selected[Binned[Counted, U, O, N]]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anySelectedBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anySelectingBinningToFractionedHistogramMethodsAscii[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anySelectingBinningToFractionedHistogramMethods(hist).fractioned)
-  implicit def anySparselyBinnedToFractionedHistogramMethodsAscii[N <: Container[N] with NoAggregation](hist: Fractioned[SparselyBinned[Counted, N]]): FractionedHistogramMethodsAscii =
+  implicit def anySparselyBinnedToFractionedHistogramMethodsAscii[N <: Container[N] with NoAggregation](hist: Fractioned[SparselyBinned[Counted, N], SparselyBinned[Counted, N]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anySparselyBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anySparselyBinningToFractionedHistogramMethodsAscii[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, SparselyBinning[DATUM, Counting, N]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anySparselyBinningToFractionedHistogramMethods(hist).fractioned)
-  implicit def anySelectedSparselyBinnedToFractionedHistogramMethodsAscii[N <: Container[N] with NoAggregation](hist: Fractioned[Selected[SparselyBinned[Counted, N]]]): FractionedHistogramMethodsAscii =
+  implicit def anySelectedSparselyBinnedToFractionedHistogramMethodsAscii[N <: Container[N] with NoAggregation](hist: Fractioned[Selected[SparselyBinned[Counted, N]], Selected[SparselyBinned[Counted, N]]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anySelectedSparselyBinnedToFractionedHistogramMethods(hist).fractioned)
   implicit def anySelectingSparselyBinningToFractionedHistogramMethodsAscii[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]]]): FractionedHistogramMethodsAscii =
     new FractionedHistogramMethodsAscii(anySelectingSparselyBinningToFractionedHistogramMethods(hist).fractioned)
 
-  class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+  class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]], Selected[Binned[Counted, Counted, Counted, Counted]]]) {
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
     def println {
       println({(n: Double, d: Double, z: Double) => n/d}, 80)

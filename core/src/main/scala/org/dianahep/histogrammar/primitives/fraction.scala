@@ -14,6 +14,8 @@
 
 package org.dianahep
 
+import scala.language.existentials
+
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
@@ -59,12 +61,12 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
       * 
       * This could be used for any bin-by-bin ratio (or even a difference or other reduction), such as a data/Monte Caro ratio. The purpose of binding the histograms together like this is to verify that they have compatible bins and to provide access to existing methods for creating ratio plots from Fractioned objects.
       */
-    def build[N <: Container[N], D <: Container[D]](numerator: N, denominator: D): Fractioned[N] = {
+    def build[N <: Container[N], D <: Container[D]](numerator: N, denominator: D): Fractioned[N, D] = {
       // check for compatibility
       val d2 = denominator.asInstanceOf[N]
       numerator + d2
       // return object
-      new Fractioned(d2.entries, None, numerator, d2)
+      new Fractioned(denominator.entries, None, numerator, denominator)
     }
 
     import KeySetComparisons._
@@ -97,7 +99,7 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
         val numerator = factory.fromJsonFragment(get("numerator"), subName)
         val denominator = factory.fromJsonFragment(get("denominator"), subName)
 
-        new Fractioned[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, numerator, denominator)
+        new Fractioned(entries, (nameFromParent ++ quantityName).lastOption, numerator.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}], denominator.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}])
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -163,14 +165,14 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
     * @param numerator Container for data that passed the given selection.
     * @param denominator Container for all data, regardless of whether it passed the given selection.
     */
-  class Fractioned[V <: Container[V]] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: V, val denominator: V) extends Container[Fractioned[V]] with NoAggregation with QuantityName with Select.Methods {
-    // NOTE: The type bounds ought to be V <: Container[V] with NoAggregation, but this constraint has
+  class Fractioned[N <: Container[N], D <: Container[D]] private[histogrammar](val entries: Double, val quantityName: Option[String], val numerator: N, val denominator: D) extends Container[Fractioned[N, D]] with NoAggregation with QuantityName with Select.Methods {
+    // NOTE: The type bounds ought to be N <: Container[N] with NoAggregation, but this constraint has
     //       been relaxed to allow the alternate constructor. The standard constructor applies this
     //       constraint, so normal Fractioned objects will have the correct types. HOWEVER, this class
     //       no longer "knows" that. I am not sure if this lack of knowledge will ever become a problem.
 
-    type Type = Fractioned[V]
-    type EdType = Fractioned[V]
+    type Type = Fractioned[N, D]
+    type EdType = Fractioned[N, D]
     def factory = Fraction
 
     if (entries < 0.0)
@@ -178,8 +180,8 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
 
     def fractionPassing = numerator.entries / entries
 
-    def zero = new Fractioned[V](0.0, quantityName, numerator.zero, denominator.zero)
-    def +(that: Fractioned[V]) =
+    def zero = new Fractioned[N, D](0.0, quantityName, numerator.zero, denominator.zero)
+    def +(that: Fractioned[N, D]) =
       if (this.quantityName != that.quantityName)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
@@ -197,7 +199,7 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
 
     override def toString() = s"""<Fractioned values=${numerator.factory.name}>"""
     override def equals(that: Any) = that match {
-      case that: Fractioned[V] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
+      case that: Fractioned[N, D] => this.entries === that.entries  &&  this.quantityName == that.quantityName  &&  this.numerator == that.numerator  &&  this.denominator == that.denominator
       case _ => false
     }
     override def hashCode() = (entries, quantityName, numerator, denominator).hashCode
@@ -214,7 +216,7 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
     */
   class Fractioning[DATUM, V <: Container[V] with Aggregation{type Datum >: DATUM}] private[histogrammar](val quantity: UserFcn[DATUM, Double], var entries: Double, val numerator: V, val denominator: V) extends Container[Fractioning[DATUM, V]] with AggregationOnData with NumericalQuantity[DATUM] with Select.Methods {
     type Type = Fractioning[DATUM, V]
-    type EdType = Fractioned[numerator.EdType]
+    type EdType = Fractioned[numerator.EdType, numerator.EdType]
     type Datum = DATUM
     def factory = Fraction
 

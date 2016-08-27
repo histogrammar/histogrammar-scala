@@ -14,6 +14,8 @@
 
 package org.dianahep
 
+import scala.language.existentials
+
 import org.dianahep.histogrammar._
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
@@ -60,7 +62,7 @@ package histogrammar {
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
-      case JsonFloat(entries) => new Counted(entries)
+      case JsonNumber(entries) => new Counted(entries)
       case _ => throw new JsonFormatException(json, name)
     }
 

@@ -14,6 +14,8 @@
 
 package org.dianahep
 
+import scala.language.existentials
+
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
@@ -196,7 +198,7 @@ and so on."""
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        new Binned[Container[_], Container[_], Container[_], Container[_]](low, high, entries, (nameFromParent ++ quantityName).lastOption, values, underflow, overflow, nanflow)
+        new Binned(low, high, entries, (nameFromParent ++ quantityName).lastOption, values.asInstanceOf[Seq[C] forSome {type C <: Container[C] with NoAggregation}], underflow.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}], overflow.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}], nanflow.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}])
 
       case _ => throw new JsonFormatException(json, name)
     }

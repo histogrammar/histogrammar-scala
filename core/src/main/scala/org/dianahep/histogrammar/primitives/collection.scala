@@ -78,11 +78,14 @@ In strongly typed languages, the restriction to a single type allows nested obje
             case x => throw new JsonFormatException(x, name + ".sub:type")
           }
 
-        get("data") match {
-          case JsonObject(labelPairs @ _*) if (labelPairs.size >= 1) =>
-            new Labeled[Container[_]](entries, labelPairs map {case (JsonString(label), sub) => label -> factory.fromJsonFragment(sub, None)}: _*)
-          case x => throw new JsonFormatException(x, name + ".data")
-        }
+        val thedata =
+          get("data") match {
+            case JsonObject(labelPairs @ _*) if (labelPairs.size >= 1) =>
+              labelPairs map {case (JsonString(label), sub) => label -> factory.fromJsonFragment(sub, None)}
+            case x => throw new JsonFormatException(x, name + ".data")
+          }
+
+        new Labeled(entries, thedata.asInstanceOf[Seq[(String, C)] forSome {type C <: Container[C] with NoAggregation}]: _*)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -286,10 +289,10 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
       * 
       * @param pairs Names (strings) associated with containers of any type except [[org.dianahep.histogrammar.Counting]].
       */
-    def apply[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = new UntypedLabeling(0.0, pairs: _*)
+    def apply[DATUM, F <: Container[F] with Aggregation](first: (String, F), rest: (String, Container[_] with Aggregation)*) = new UntypedLabeling(0.0, first, rest: _*)
 
     /** Synonym for `apply`. */
-    def ing[DATUM](pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) = apply(pairs: _*)
+    def ing[DATUM, F <: Container[F] with Aggregation](first: (String, F), rest: (String, Container[_] with Aggregation)*) = apply(first, rest: _*)
 
     import KeySetComparisons._
     def fromJsonFragment(json: Json, nameFromParent: Option[String]): Container[_] with NoAggregation = json match {
@@ -301,9 +304,10 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
           case x => throw new JsonFormatException(x, name + ".entries")
         }
 
+        val thedata =
         get("data") match {
           case JsonObject(subpairs @ _*) =>
-            new UntypedLabeled(entries, subpairs map {
+            subpairs map {
               case (JsonString(label), JsonObject(typedata @ _*)) if (typedata.keySet has Set("type", "data")) =>
                 val subget = typedata.toMap
 
@@ -312,10 +316,11 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
                   case (_, x) => throw new JsonFormatException(x, name + s""".data "$label"""")
                 }
               case (_, x) => throw new JsonFormatException(x, name + s".data")
-            }: _*)
-
+            }
             case x => throw new JsonFormatException(x, name)
         }
+
+        new UntypedLabeled(entries, thedata.asInstanceOf[Seq[(String, C)] forSome {type C <: Container[C] with NoAggregation}]: _*)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -371,7 +376,7 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
       case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeled: ${indexes.mkString(", ")}""")
     }
 
-    def zero = new UntypedLabeled(0.0, pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_]])}: _*)
+    def zero = new UntypedLabeled(0.0, (pairs map {case (k, v) => (k, v.zero)}).asInstanceOf[Seq[(String, Container[_])]]: _*)
     def +(that: UntypedLabeled) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add UntypedLabeled because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
@@ -409,14 +414,16 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
     * 
     * '''Note:''' the compiler cannot predict the type of data that is drawn from this collection, so it must be cast with `as`.
     */
-  class UntypedLabeling[DATUM] private[histogrammar](var entries: Double, val pairs: (String, Container[_] with AggregationOnData {type Datum = DATUM})*) extends Container[UntypedLabeling[DATUM]] with AggregationOnData with Collection {
-    type Type = UntypedLabeled
+  class UntypedLabeling[F <: Container[F] with Aggregation] private[histogrammar](var entries: Double, first: (String, F), rest: (String, Container[_] with Aggregation)*) extends Container[UntypedLabeling[F]] with AggregationOnData with Collection {
+    type Type = UntypedLabeling[F]
     type EdType = UntypedLabeled
-    type Datum = DATUM
+    type Datum = F#Datum
     def factory = UntypedLabel
 
     if (entries < 0.0)
       throw new ContainerException(s"entries ($entries) cannot be negative")
+
+    val pairs = first +: rest
 
     /** Input `pairs` as a key-value map. */
     val pairsMap = pairs.toMap
@@ -448,14 +455,15 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
       case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for UntypedLabeling: ${indexes.mkString(", ")}""")
     }
 
-    def zero = new UntypedLabeling[DATUM](0.0, pairs map {case (k, v) => (k, v.zero.asInstanceOf[Container[_] with AggregationOnData {type Datum = DATUM}])}: _*)
-    def +(that: UntypedLabeling[DATUM]) =
+    def zero = new UntypedLabeling[F](0.0, (first._1, first._2.zero), rest.map({case (k, v) => (k, v.zero.asInstanceOf[Container[_] with Aggregation])}): _*)
+    def +(that: UntypedLabeling[F]) =
       if (this.keySet != that.keySet)
         throw new ContainerException(s"""cannot add UntypedLabeling because they have different keys:\n    ${this.keys.toArray.sorted.mkString(" ")}\nvs\n    ${that.keys.toArray.sorted.mkString(" ")}""")
       else
-        new UntypedLabeling[DATUM](
+        new UntypedLabeling[F](
           this.entries + that.entries,
-          this.pairs.map({case (key, mysub) =>
+          (this.first._1, this.first._2 + that.pairsMap(this.first._1).asInstanceOf[F]),
+          this.rest.map({case (key, mysub) =>
             val yoursub = that.pairsMap(key)
             if (mysub.factory != yoursub.factory)
               throw new ContainerException(s"""cannot add UntypedLabeling because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
@@ -486,7 +494,7 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
 
     override def toString() = s"""<UntypedLabeling size=${pairs.size}>"""
     override def equals(that: Any) = that match {
-      case that: UntypedLabeling[DATUM] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
+      case that: UntypedLabeling[F] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
     }
     override def hashCode() = (entries, pairsMap).hashCode
@@ -545,12 +553,15 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
             case x => throw new JsonFormatException(x, name + ".sub:type")
           }
 
-        get("data") match {
-          case JsonArray(values @ _*) if (values.size >= 1) =>
-            new Indexed[Container[_]](entries, values.map(factory.fromJsonFragment(_, None)): _*)
-          case x =>
-            throw new JsonFormatException(x, name + ".data")
-        }
+        val thedata =
+          get("data") match {
+            case JsonArray(values @ _*) if (values.size >= 1) =>
+              values.map(factory.fromJsonFragment(_, None))
+            case x =>
+              throw new JsonFormatException(x, name + ".data")
+          }
+
+        new Indexed(entries, thedata.asInstanceOf[Seq[C] forSome {type C <: Container[C] with NoAggregation}]: _*)
 
       case _ => throw new JsonFormatException(json, name)
     }
@@ -804,29 +815,22 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
 
         get("data") match {
           case JsonArray(values @ _*) if (values.size >= 1) =>
-            var backwards: BranchedList = BranchedNil
+            var out: BranchedList = BranchedNil
 
-            values.zipWithIndex.toList foreach {
+            values.zipWithIndex.toList.reverse foreach {
               case (JsonObject(typedata @ _*), i) if (typedata.keySet has Set("type", "data")) =>
                 val subget = typedata.toMap
 
                 (subget("type"), subget("data")) match {
                   case (JsonString(factory), sub) =>
                     val item = Factory(factory).fromJsonFragment(sub, None).asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}]
-                    backwards = new Branched(entries, item, backwards)
+                    out = new Branched(entries, item, out)
                   case (_, x) => throw new JsonFormatException(x, name + s".data")
                 }
 
               case (x, i) => throw new JsonFormatException(x, name + s".data $i")
             }
 
-            // we've loaded it backwards, so reverse the order before returning it
-            var out: BranchedList = BranchedNil
-            while (backwards != BranchedNil) {
-              val list = backwards.asInstanceOf[Branched[C forSome {type C <: Container[C] with NoAggregation}, BranchedList]]
-              out = new Branched(list.entries, list.head, out)
-              backwards = list.tail
-            }
             out.asInstanceOf[Container[_] with NoAggregation]
 
           case x => throw new JsonFormatException(x, name + ".data")

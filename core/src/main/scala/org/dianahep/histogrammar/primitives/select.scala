@@ -86,7 +86,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
 
         val cut = factory.fromJsonFragment(get("data"), None)
 
-        new Selected[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, cut)
+        new Selected(entries, (nameFromParent ++ quantityName).lastOption, cut.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}])
 
       case _ => throw new JsonFormatException(json, name)
     }

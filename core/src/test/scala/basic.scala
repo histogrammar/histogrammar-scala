@@ -878,31 +878,31 @@ class BasicSuite extends FlatSpec with Matchers {
       checkJson(finalHist)
     }
 
-    // for (i <- 0 to 10) {
-    //   val (left, right) = simple.splitAt(i)
+    for (i <- 0 to 10) {
+      val (left, right) = simple.splitAt(i)
 
-    //   val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
-    //   val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
-    //   val sum1 = Sum({x: Double => 1.0})
-    //   val sum2 = Sum({x: Double => 1.0})
+      val hist1 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val hist2 = Bin(5, -3.0, 7.0, {x: Double => x})
+      val sum1 = Sum({x: Double => 1.0})
+      val sum2 = Sum({x: Double => 1.0})
 
-    //   val collection1 = UntypedLabel("hist" -> hist1, "sum" -> sum1)
-    //   val collection2 = UntypedLabel("hist" -> hist2, "sum" -> sum2)
+      val collection1 = UntypedLabel("hist" -> hist1, "sum" -> sum1)
+      val collection2 = UntypedLabel("hist" -> hist2, "sum" -> sum2)
 
-    //   val partialHists = Seq(
-    //     left.foldLeft(collection1)(new Increment[Double, collection1.Type]),
-    //     right.foldLeft(collection2)(new Increment[Double, collection1.Type]))
+      val partialHists = Seq(
+        left.foldLeft(collection1)(new Increment[Double, collection1.Type]),
+        right.foldLeft(collection2)(new Increment[Double, collection1.Type]))
 
-    //   val finalHist = partialHists.reduce(new Combine[collection1.Type])
+      val finalHist = partialHists.reduce(new Combine[collection1.Type])
 
-    //   finalHist("hist").as[hist1.Type].numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
-    //   finalHist("hist").as[hist1.Type].numericalUnderflow should be (1.0)
-    //   finalHist("hist").as[hist1.Type].numericalOverflow should be (1.0)
-    //   finalHist("hist").as[hist1.Type].numericalNanflow should be (0.0)
-    //   finalHist("sum").as[sum1.Type].sum should be (10.0)
+      finalHist("hist").as[hist1.Type].numericalValues should be (Seq(3.0, 2.0, 2.0, 1.0, 0.0))
+      finalHist("hist").as[hist1.Type].numericalUnderflow should be (1.0)
+      finalHist("hist").as[hist1.Type].numericalOverflow should be (1.0)
+      finalHist("hist").as[hist1.Type].numericalNanflow should be (0.0)
+      finalHist("sum").as[sum1.Type].sum should be (10.0)
 
-    //   checkJson(finalHist)
-    // }
+      checkJson(finalHist)
+    }
   }
 
   //////////////////////////////////////////////////////////////// Check all specialized conversions
@@ -998,13 +998,13 @@ class BasicSuite extends FlatSpec with Matchers {
     takesPartitionedHistogramMethods(partitionedSelectedSparselyBinnedCounted)
 
     val fractioningBinningCounting = Fraction({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count()))
-    val fractionedBinnedCounted = fractioningBinningCounting.toImmutable.as[Fractioned[Binned[Counted, Counted, Counted, Counted]]]
+    val fractionedBinnedCounted = fractioningBinningCounting.toImmutable.as[Fractioned[Binned[Counted, Counted, Counted, Counted], Binned[Counted, Counted, Counted, Counted]]]
     val fractioningSelectingBinningCounting = Fraction({x: Double => x}, Select({x: Double => x}, Bin(10, 0, 1, {x: Double => x}, Count())))
-    val fractionedSelectedBinnedCounted = fractioningSelectingBinningCounting.toImmutable.as[Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]]
+    val fractionedSelectedBinnedCounted = fractioningSelectingBinningCounting.toImmutable.as[Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]], Selected[Binned[Counted, Counted, Counted, Counted]]]]
     val fractioningSparselyBinningCounting = Fraction({x: Double => x}, SparselyBin(1, {x: Double => x}, Count()))
-    val fractionedSparselyBinnedCounted = fractioningSparselyBinningCounting.toImmutable.as[Fractioned[SparselyBinned[Counted, Counted]]]
+    val fractionedSparselyBinnedCounted = fractioningSparselyBinningCounting.toImmutable.as[Fractioned[SparselyBinned[Counted, Counted], SparselyBinned[Counted, Counted]]]
     val fractioningSelectingSparselyBinningCounting = Fraction({x: Double => x}, Select({x: Double => x}, SparselyBin(1, {x: Double => x}, Count())))
-    val fractionedSelectedSparselyBinnedCounted = fractioningSelectingSparselyBinningCounting.toImmutable.as[Fractioned[Selected[SparselyBinned[Counted, Counted]]]]
+    val fractionedSelectedSparselyBinnedCounted = fractioningSelectingSparselyBinningCounting.toImmutable.as[Fractioned[Selected[SparselyBinned[Counted, Counted]], Selected[SparselyBinned[Counted, Counted]]]]
     def takesFractionedHistogramMethods(x: FractionedHistogramMethods) { }
     takesFractionedHistogramMethods(fractioningBinningCounting)
     takesFractionedHistogramMethods(fractionedBinnedCounted)

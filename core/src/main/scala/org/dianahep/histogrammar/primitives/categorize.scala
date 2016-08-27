@@ -16,6 +16,7 @@ package org.dianahep
 
 import scala.collection.mutable
 import scala.language.postfixOps
+import scala.language.existentials
 
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
@@ -85,15 +86,17 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
           case x => throw new JsonFormatException(x, name + ".bins:name")
         }
 
-        get("bins") match {
-          case JsonObject(categoryPairs @ _*) =>
-            new Categorized[Container[_]](entries, (nameFromParent ++ quantityName).lastOption, contentType, categoryPairs map {
-              case (JsonString(category), value) =>
-                category -> factory.fromJsonFragment(value, dataName)
-            } toMap)
+        val thebins =
+          get("bins") match {
+            case JsonObject(categoryPairs @ _*) =>
+              categoryPairs map {
+                case (JsonString(category), value) =>
+                  category -> factory.fromJsonFragment(value, dataName)
+              } toMap
+            case x => throw new JsonFormatException(x, name + ".bins")
+          }
 
-          case x => throw new JsonFormatException(x, name + ".bins")
-        }
+        new Categorized(entries, (nameFromParent ++ quantityName).lastOption, contentType, thebins.asInstanceOf[Map[String, C] forSome {type C <: Container[C] with NoAggregation}])
 
       case _ => throw new JsonFormatException(json, name)
     }

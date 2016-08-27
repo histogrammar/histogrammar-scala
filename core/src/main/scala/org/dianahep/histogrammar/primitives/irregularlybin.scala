@@ -15,6 +15,7 @@
 package org.dianahep
 
 import scala.collection.immutable.SortedSet
+import scala.language.existentials
 
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
@@ -91,24 +92,25 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        get("bins") match {
-          case JsonArray(elements @ _*) if (elements.size >= 1) =>
-            new IrregularlyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, elements.zipWithIndex map {case (element, i) =>
-              element match {
-                case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
-                  val elementGet = elementPairs.toMap
-                  val atleast = elementGet("atleast") match {
-                    case JsonNumber(x) => x
-                    case x => throw new JsonFormatException(x, name + s".data element $i atleast")
-                  }
-                  (atleast, factory.fromJsonFragment(elementGet("data"), dataName))
-
-                case x => throw new JsonFormatException(x, name + s".data element $i")
+        val thebins =
+          get("bins") match {
+            case JsonArray(elements @ _*) if (elements.size >= 1) =>
+              elements.zipWithIndex map {case (element, i) =>
+                element match {
+                  case JsonObject(elementPairs @ _*) if (elementPairs.keySet has Set("atleast", "data")) =>
+                    val elementGet = elementPairs.toMap
+                    val atleast = elementGet("atleast") match {
+                      case JsonNumber(x) => x
+                      case x => throw new JsonFormatException(x, name + s".data element $i atleast")
+                    }
+                    (atleast, factory.fromJsonFragment(elementGet("data"), dataName))
+                  case x => throw new JsonFormatException(x, name + s".data element $i")
+                }
               }
-            }, nanflow)
+            case x => throw new JsonFormatException(x, name + ".data")
+          }
 
-          case x => throw new JsonFormatException(x, name + ".data")
-        }
+        new IrregularlyBinned(entries, (nameFromParent ++ quantityName).lastOption, thebins.asInstanceOf[Seq[(Double, C)] forSome {type C <: Container[C] with NoAggregation}], nanflow.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}])
 
       case _ => throw new JsonFormatException(json, name)
     }

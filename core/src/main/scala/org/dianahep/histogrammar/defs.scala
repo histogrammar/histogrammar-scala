@@ -510,7 +510,7 @@ package object histogrammar {
   }
 
   implicit class StringIndex(val string: String) extends CollectionIndex {
-    override def toString() = "\"" + scala.util.parsing.json.JSONFormat.quoteString(string) + "\""
+    override def toString() = "\"" + string + "\""
   }
   object StringIndex {
     def unapply(x: StringIndex) = Some(x.string)
@@ -1049,32 +1049,32 @@ package object histogrammar {
 
   //////////////////////////////////////////////////////////////// methods for FractionedHistogram
 
-  implicit def anyBinnedToFractionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Binned[Counted, U, O, N]]): FractionedHistogramMethods =
+  implicit def anyBinnedToFractionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Binned[Counted, U, O, N], Binned[Counted, U, O, N]]): FractionedHistogramMethods =
     new FractionedHistogramMethods(new Fractioned(hist.entries, hist.quantityName, anyBinnedToHistogramMethods(hist.numerator).selected, anyBinnedToHistogramMethods(hist.denominator).selected))
 
   implicit def anyBinningToFractionedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Binning[DATUM, Counting, U, O, N]]): FractionedHistogramMethods =
     anyBinnedToFractionedHistogramMethods(hist.toImmutable)
 
-  implicit def anySelectedBinnedToFractionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Selected[Binned[Counted, U, O, N]]]): FractionedHistogramMethods =
+  implicit def anySelectedBinnedToFractionedHistogramMethods[U <: Container[U] with NoAggregation, O <: Container[O] with NoAggregation, N <: Container[N] with NoAggregation](hist: Fractioned[Selected[Binned[Counted, U, O, N]], Selected[Binned[Counted, U, O, N]]]): FractionedHistogramMethods =
     new FractionedHistogramMethods(new Fractioned(hist.entries, hist.quantityName, anySelectedBinnedToHistogramMethods(hist.numerator).selected, anySelectedBinnedToHistogramMethods(hist.denominator).selected))
 
   implicit def anySelectingBinningToFractionedHistogramMethods[DATUM, U <: Container[U] with Aggregation{type Datum >: DATUM}, O <: Container[O] with Aggregation{type Datum >: DATUM}, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, Binning[DATUM, Counting, U, O, N]]]): FractionedHistogramMethods =
     anySelectedBinnedToFractionedHistogramMethods(hist.toImmutable)
 
-  implicit def anySparselyBinnedToFractionedHistogramMethods[N <: Container[N] with NoAggregation](hist: Fractioned[SparselyBinned[Counted, N]]): FractionedHistogramMethods =
+  implicit def anySparselyBinnedToFractionedHistogramMethods[N <: Container[N] with NoAggregation](hist: Fractioned[SparselyBinned[Counted, N], SparselyBinned[Counted, N]]): FractionedHistogramMethods =
     new FractionedHistogramMethods(new Fractioned(hist.entries, hist.quantityName, anySparselyBinnedToHistogramMethods(hist.numerator).selected, anySparselyBinnedToHistogramMethods(hist.denominator).selected))
   
   implicit def anySparselyBinningToFractionedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, SparselyBinning[DATUM, Counting, N]]): FractionedHistogramMethods =
     anySparselyBinnedToFractionedHistogramMethods(hist.toImmutable)
 
-  implicit def anySelectedSparselyBinnedToFractionedHistogramMethods[N <: Container[N] with NoAggregation](hist: Fractioned[Selected[SparselyBinned[Counted, N]]]): FractionedHistogramMethods =
+  implicit def anySelectedSparselyBinnedToFractionedHistogramMethods[N <: Container[N] with NoAggregation](hist: Fractioned[Selected[SparselyBinned[Counted, N]], Selected[SparselyBinned[Counted, N]]]): FractionedHistogramMethods =
     new FractionedHistogramMethods(new Fractioned(hist.entries, hist.quantityName, anySelectedSparselyBinnedToHistogramMethods(hist.numerator).selected, anySelectedSparselyBinnedToHistogramMethods(hist.denominator).selected))
 
   implicit def anySelectingSparselyBinningToFractionedHistogramMethods[DATUM, N <: Container[N] with Aggregation{type Datum >: DATUM}](hist: Fractioning[DATUM, Selecting[DATUM, SparselyBinning[DATUM, Counting, N]]]): FractionedHistogramMethods =
     anySelectedSparselyBinnedToFractionedHistogramMethods(hist.toImmutable)
 
   /** Methods that are implicitly added to container combinations that look like fractioned histograms. */
-  class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]]]) {
+  class FractionedHistogramMethods(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]], Selected[Binned[Counted, Counted, Counted, Counted]]]) {
     def numeratorBinned = fractioned.numerator.cut
     def denominatorBinned = fractioned.denominator.cut
 

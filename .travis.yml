@@ -7,3 +7,10 @@ jdk:
   - oraclejdk7
   - oraclejdk8
   - openjdk7
+
+env:
+  matrix:
+    - SCALA_VERSION=2.10
+    - SCALA_VERSION=2.11
+
+script: "mvn clean install -P scala-${SCALA_VERSION}"

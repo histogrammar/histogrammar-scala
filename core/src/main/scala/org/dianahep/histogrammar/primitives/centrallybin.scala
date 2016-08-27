@@ -142,7 +142,7 @@ package histogrammar {
         }
         val nanflow = nanflowFactory.fromJsonFragment(get("nanflow"), None)
 
-        new CentrallyBinned[Container[_], Container[_]](entries, (nameFromParent ++ quantityName).lastOption, bins.asInstanceOf[Seq[(Double, Container[_])]], nanflow)
+        new CentrallyBinned(entries, (nameFromParent ++ quantityName).lastOption, bins.asInstanceOf[Seq[(Double, C)] forSome {type C <: Container[C] with NoAggregation}], nanflow.asInstanceOf[C forSome {type C <: Container[C] with NoAggregation}])
 
       case _ => throw new JsonFormatException(json, name)
     }

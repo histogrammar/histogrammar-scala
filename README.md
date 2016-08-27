@@ -3,9 +3,7 @@ Scala implementation of Histogrammar
 
 See [histogrammar.org](http://histogrammar.org) for a complete introduction to Histogrammar.
 
-This is a Scala implementation for Scala version 2.10.
-
-**FIXME:** add tests (and check implementation) for Scala 2.11. It should work, but still.
+This is a Scala implementation for Scala versions 2.10 and 2.11.
 
 Installation
 ============
@@ -13,7 +11,13 @@ Installation
 Histogrammar has a standard Maven POM. With Maven 3+, run
 
 ```bash
-mvn install
+mvn install -P scala-2.10
+```
+
+or
+
+```bash
+mvn install -P scala-2.11
 ```
 
 in the base directory (to compile everything) or one of the subdirectories. All subdirectories depend on `core`, so this must be installed first.

@@ -19,13 +19,16 @@ import scala.language.postfixOps
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.Matchers
+import org.scalatest.Ignore
 
 import org.dianahep.histogrammar._
 import org.dianahep.histogrammar.json._
 
 case class X(positive: Double, boolean: Boolean, strings: String, noholes: Double, withholes: Double)
 
-class SpecificationSuite extends FlatSpec with Matchers {
+// Turned off because it uses too much memory in JDK 7 and gets killed by Travis-CI.
+@Ignore class SpecificationSuite extends FlatSpec with Matchers {
+
   // used for all equality operations, on both Container and Json subclasses
   val tolerance = 1e-12
   org.dianahep.histogrammar.util.relativeTolerance = tolerance

@@ -17,6 +17,7 @@
 
   <name>histogrammar-sparksql</name>
   <description>Adapter for using Histogrammar in SparkSQL.</description>
+  <url>http://histogrammar.org</url>
   <inceptionYear>2016</inceptionYear>
 
   <groupId>org.diana-hep</groupId>
@@ -32,6 +33,21 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <name>Jim Pivarski</name>
+      <email>jpivarski@gmail.com</email>
+      <organization>DIANA-HEP</organization>
+      <organizationUrl>http://diana-hep.org</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:histogrammar/histogrammar-scala.git</connection>
+    <developerConnection>scm:git:git@github.com:histogrammar/histogrammar-scala.git</developerConnection>
+    <url>git@github.com:histogrammar/histogrammar-scala.git</url>
+  </scm>
+
   <profiles>
     <profile>
       <id>scala-2.10</id>
@@ -43,6 +59,7 @@
         <scala.binary.version>2.10</scala.binary.version>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
+        <spark.version>1.6.2</spark.version>
       </properties>
     </profile>
 
@@ -56,6 +73,7 @@
         <scala.binary.version>2.11</scala.binary.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <spark.version>2.0.0</spark.version>
       </properties>
     </profile>
   </profiles>
@@ -81,7 +99,7 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_${scala.binary.version}</artifactId>
-      <version>1.6.1</version>
+      <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>
 
@@ -146,6 +164,62 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>2.5.2</version>
+        <configuration>
+          <createChecksum>true</createChecksum>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <quiet>true</quiet>
+          <nonavbar>true</nonavbar>
+          <notree>true</notree>
+          <nocomment>true</nocomment>
+          <nohelp>true</nohelp>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
 
     <resources>
@@ -154,4 +228,10 @@
     <testResources>
     </testResources>
   </build>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
 </project>

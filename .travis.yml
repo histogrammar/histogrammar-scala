@@ -13,4 +13,4 @@ env:
     - SCALA_VERSION=2.10
     - SCALA_VERSION=2.11
 
-script: "mvn clean install -P scala-${SCALA_VERSION}"
+script: "mvn clean install -P scala-${SCALA_VERSION} -Dgpg.skip"

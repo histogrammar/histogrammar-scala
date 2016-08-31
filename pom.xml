@@ -30,12 +30,6 @@
       <organizationUrl>http://diana-hep.org</organizationUrl>
     </developer>
   </developers>
-
-  <scm>
-    <connection>scm:git:git@github.com:histogrammar/histogrammar-scala.git</connection>
-    <developerConnection>scm:git:git@github.com:histogrammar/histogrammar-scala.git</developerConnection>
-    <url>git@github.com:histogrammar/histogrammar-scala.git</url>
-  </scm>
   
   <modules>
     <module>core</module>

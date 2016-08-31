@@ -27,7 +27,7 @@ import org.dianahep.histogrammar.json._
 case class X(positive: Double, boolean: Boolean, strings: String, noholes: Double, withholes: Double)
 
 // Turned off because it uses too much memory in JDK 7 and gets killed by Travis-CI.
-@Ignore class SpecificationSuite extends FlatSpec with Matchers {
+class SpecificationSuite extends FlatSpec with Matchers {
 
   // used for all equality operations, on both Container and Json subclasses
   val tolerance = 1e-12
@@ -90,23 +90,29 @@ case class X(positive: Double, boolean: Boolean, strings: String, noholes: Doubl
     else
       Math.round(x).toDouble
 
-  val testDataJson = try {
-    Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-data.json").openStream).useDelimiter("\\A").next)
-  }
-  catch {
-    case err: Exception =>
-      System.err.println(s"Could not download test data from http://histogrammar.org/test/${Version.specification}/test-data.json because of $err")
+  val testDataJson =
+    if (System.getenv().get("TRAVIS") == "true")
       None
-  }
+    else try {
+      Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-data.json").openStream).useDelimiter("\\A").next)
+    }
+    catch {
+      case err: Exception =>
+        System.err.println(s"Could not download test data from http://histogrammar.org/test/${Version.specification}/test-data.json because of $err")
+        None
+    }
 
-  val testResultsJson = try {
-    Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-results.json").openStream).useDelimiter("\\A").next)
-  }
-  catch {
-    case err: Exception =>
-      System.err.println(s"Could not download test results from http://histogrammar.org/test/${Version.specification}/test-results.json because of $err")
+  val testResultsJson =
+    if (System.getenv().get("TRAVIS") == "true")
       None
-  }
+    else try {
+      Json.parse(new java.util.Scanner(new java.net.URL(s"http://histogrammar.org/test/${Version.specification}/test-results.json").openStream).useDelimiter("\\A").next)
+    }
+    catch {
+      case err: Exception =>
+        System.err.println(s"Could not download test results from http://histogrammar.org/test/${Version.specification}/test-results.json because of $err")
+        None
+    }
 
   val testData = testDataJson match {
     case Some(dataArray: JsonArray) =>

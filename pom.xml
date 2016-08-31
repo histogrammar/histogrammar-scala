@@ -4,11 +4,32 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <name>histogrammar-parent</name>
+  <description>Histogrammar parent package. See org.diana-hep:histogrammar for the core functionality.</description>
+  <url>http://histogrammar.org</url>
+  <inceptionYear>2016</inceptionYear>
+
   <groupId>org.diana-hep</groupId>
-  <artifactId>histogrammar-dependencies</artifactId>
+  <artifactId>histogrammar-parent</artifactId>
   <packaging>pom</packaging>
   <version>1.0.0</version>
-  <name>Compile Histogrammar and its dependent subprojects in the correct order.</name>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Jim Pivarski</name>
+      <email>jpivarski@gmail.com</email>
+      <organization>DIANA-HEP</organization>
+      <organizationUrl>http://diana-hep.org</organizationUrl>
+    </developer>
+  </developers>
   
   <modules>
     <module>core</module>

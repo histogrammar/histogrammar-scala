@@ -82,13 +82,9 @@
       <groupId>io.continuum.bokeh</groupId>
       <artifactId>bokeh_2.10</artifactId>
       <version>0.6</version>
-      <scope>provided</scope>
     </dependency>
 
   </dependencies>
-
-  <repositories>
-  </repositories>
 
   <build>
     <plugins>
@@ -131,6 +127,7 @@
           </execution>
         </executions>
       </plugin>
+
 
       <plugin>
         <artifactId>maven-install-plugin</artifactId>

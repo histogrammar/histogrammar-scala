@@ -43,6 +43,22 @@ javaversion18 = '''    <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
 '''
 
+sourcejar = '''          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+          </execution>
+'''
+
+javadocjar = '''          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>doc-jar</goal>
+            </goals>
+          </execution>
+'''
+
 scalatest = '''      <plugin>
         <groupId>org.scalatest</groupId>
         <artifactId>scalatest-maven-plugin</artifactId>
@@ -238,18 +254,7 @@ template = '''<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http
               <!-- <useZincServer>true</useZincServer> -->
             </configuration>
           </execution>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>doc-jar</goal>
-            </goals>
-          </execution>
+{sourcejar}{javadocjar}
         </executions>
       </plugin>
 
@@ -312,6 +317,8 @@ if __name__ == "__main__":
 
   </dependencies>
 ''',
+        sourcejar = "",
+        javadocjar = "",
         scalatest = scalatest,
         copydependencies = copydependencies,
         gpgplugin = "",
@@ -343,6 +350,8 @@ if __name__ == "__main__":
 
   </dependencies>
 ''',
+        sourcejar = sourcejar,
+        javadocjar = javadocjar,
         scalatest = scalatest,
         copydependencies = "",
         gpgplugin = gpgplugin,
@@ -374,6 +383,8 @@ if __name__ == "__main__":
 
   </dependencies>
 ''',
+        sourcejar = sourcejar,
+        javadocjar = javadocjar,
         scalatest = scalatest,
         copydependencies = "",
         gpgplugin = gpgplugin,
@@ -411,6 +422,8 @@ if __name__ == "__main__":
 
   </dependencies>
 '''.format(version = VERSION),
+        sourcejar = "",
+        javadocjar = "",
         scalatest = "",
         copydependencies = copydependencies,
         gpgplugin = "",
@@ -448,6 +461,8 @@ if __name__ == "__main__":
 
   </dependencies>
 '''.format(version = VERSION),
+        sourcejar = sourcejar,
+        javadocjar = javadocjar,
         scalatest = "",
         copydependencies = "",
         gpgplugin = gpgplugin,
@@ -485,6 +500,8 @@ if __name__ == "__main__":
 
   </dependencies>
 '''.format(version = VERSION),
+        sourcejar = sourcejar,
+        javadocjar = javadocjar,
         scalatest = "",
         copydependencies = "",
         gpgplugin = gpgplugin,
@@ -521,6 +538,8 @@ if __name__ == "__main__":
 
   </dependencies>
 '''.format(version = VERSION),
+        sourcejar = "",
+        javadocjar = "",
         scalatest = "",
         copydependencies = copydependencies,
         gpgplugin = "",
@@ -557,6 +576,8 @@ if __name__ == "__main__":
 
   </dependencies>
 '''.format(version = VERSION),
+        sourcejar = sourcejar,
+        javadocjar = javadocjar,
         scalatest = "",
         copydependencies = "",
         gpgplugin = gpgplugin,
@@ -593,6 +614,8 @@ if __name__ == "__main__":
 
   </dependencies>
 '''.format(version = VERSION),
+        sourcejar = sourcejar,
+        javadocjar = javadocjar,
         scalatest = "",
         copydependencies = "",
         gpgplugin = gpgplugin,

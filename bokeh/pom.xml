@@ -142,18 +142,7 @@
               <!-- <useZincServer>true</useZincServer> -->
             </configuration>
           </execution>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>doc-jar</goal>
-            </goals>
-          </execution>
+
         </executions>
       </plugin>
 

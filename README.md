@@ -1,7 +1,7 @@
 Scala implementation of Histogrammar
 ====================================
 
-![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.61344.svg)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.61344.svg)](http://dx.doi.org/10.5281/zenodo.61344)
 
 See [histogrammar.org](http://histogrammar.org) for a complete introduction to Histogrammar.
 

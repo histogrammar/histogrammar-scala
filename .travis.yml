@@ -13,4 +13,10 @@ env:
     - SCALA_VERSION=2.10
     - SCALA_VERSION=2.11
 
-install: travis_retry mvn install -P scala-${SCALA_VERSION}
+before_install:
+  - pwd
+  - wget http://histogrammar.org/m2-repository.tgz
+  - tar -xzvf m2-repository.tgz
+  - ls .m2/repository
+
+install: mvn install -P scala-${SCALA_VERSION}

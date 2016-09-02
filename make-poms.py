@@ -534,6 +534,7 @@ if __name__ == "__main__":
       <groupId>io.continuum.bokeh</groupId>
       <artifactId>bokeh_${{scala.binary.version}}</artifactId>
       <version>0.7</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>
@@ -572,6 +573,7 @@ if __name__ == "__main__":
       <groupId>io.continuum.bokeh</groupId>
       <artifactId>bokeh_2.10</artifactId>
       <version>0.7</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>
@@ -610,6 +612,7 @@ if __name__ == "__main__":
       <groupId>io.continuum.bokeh</groupId>
       <artifactId>bokeh_2.11</artifactId>
       <version>0.7</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>

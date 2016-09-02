@@ -82,6 +82,7 @@
       <groupId>io.continuum.bokeh</groupId>
       <artifactId>bokeh_2.10</artifactId>
       <version>0.7</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>

@@ -13,4 +13,4 @@ env:
     - SCALA_VERSION=2.10
     - SCALA_VERSION=2.11
 
-install: mvn install -P scala-${SCALA_VERSION}
+install: travis_retry mvn install -P scala-${SCALA_VERSION}

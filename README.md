@@ -1,6 +1,8 @@
 Scala implementation of Histogrammar
 ====================================
 
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.61344.svg)](http://dx.doi.org/10.5281/zenodo.61344)
+
 See [histogrammar.org](http://histogrammar.org) for a complete introduction to Histogrammar.
 
 This is a Scala implementation for Scala versions 2.10 and 2.11.

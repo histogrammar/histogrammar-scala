@@ -14,9 +14,10 @@ env:
     - SCALA_VERSION=2.11
 
 before_install:
-  - pwd
+  - cd /home/travis
   - wget http://histogrammar.org/m2-repository.tgz
   - tar -xzvf m2-repository.tgz
-  - ls .m2/repository
+  - cd -
+  - pwd
 
-install: mvn install -P scala-${SCALA_VERSION}
+script: mvn install -P scala-${SCALA_VERSION}

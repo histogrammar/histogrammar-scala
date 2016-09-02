@@ -30,12 +30,31 @@
       <organizationUrl>http://diana-hep.org</organizationUrl>
     </developer>
   </developers>
-  
-  <modules>
-    <module>core</module>
-    <module>sparksql</module>
-    <module>bokeh</module>
-  </modules>
+
+  <profiles>
+    <profile>
+      <id>scala-2.10</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+        <module>core</module>
+        <module>sparksql</module>
+        <module>bokeh</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>scala-2.11</id>
+      <activation>
+        <property><name>scala-2.11</name></property>
+      </activation>
+      <modules>
+        <module>core</module>
+        <module>sparksql</module>
+        <!-- <module>bokeh</module> -->    <!-- Not supported until they fix their dependencies. -->
+      </modules>
+    </profile>
+  </profiles>
 
   <distributionManagement>
     <snapshotRepository>

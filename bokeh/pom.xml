@@ -111,7 +111,6 @@
       <groupId>io.continuum.bokeh</groupId>
       <artifactId>bokeh_${scala.binary.version}</artifactId>
       <version>0.7</version>
-      <scope>provided</scope>
     </dependency>
 
   </dependencies>

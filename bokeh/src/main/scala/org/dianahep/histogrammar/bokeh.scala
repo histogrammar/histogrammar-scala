@@ -114,6 +114,16 @@ package object bokeh extends Tools {
 
    def plot(xLabel:String, yLabel: String,glyphs: Array[GlyphRenderer]) : Plot = plot(xLabel,yLabel,glyphs: _*)
 
+   def plot(glyphs: Array[GlyphRenderer],glyph: GlyphRenderer) : Plot = {
+      val combined = glyphs:+glyph
+      plot(combined: _*)
+   }
+
+   def plot(xLabel:String, yLabel: String,glyphs: Array[GlyphRenderer],glyph: GlyphRenderer) : Plot = {
+      val combined = glyphs:+glyph
+      plot(xLabel,yLabel,combined: _*)
+   }
+
    def save(plot: Plot, fname: String) {
        val document = new Document(plot)
 

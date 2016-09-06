@@ -316,7 +316,7 @@ package object bokeh extends Tools {
       var ichild = 0
 
       for (p <- stack.children) {
-          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),lineColors(ichild),fillColors(ichild))
+          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),fillColors(ichild),lineColors(ichild))
           ichild += 1
       }
       stackedGlyphs.toArray

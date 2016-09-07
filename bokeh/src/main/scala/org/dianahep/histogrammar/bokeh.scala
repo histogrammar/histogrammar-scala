@@ -173,13 +173,13 @@ package object bokeh extends Tools {
 
       //Set marker color, fill color, line color
       val glyph = glyphType match {
-       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "square"   => new Square().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "histogram"=> new Rect().x(xh).y(yh).width(step).height(y).fill_color(fillColor).line_color(lineColor)
-       case "errors"   => new Rect().x(x).y(y).width(step).height(ci).fill_color(fillColor).line_color(lineColor)
+       case "errors"   => new Rect().x(xh).y(yh).width(step).height(ci).fill_color(fillColor).line_color(lineColor)
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
@@ -216,16 +216,20 @@ package object bokeh extends Tools {
 
       object source extends ColumnDataSource {
           val x = column(l to h by step)
-          val y = column(profile.cut.values.map(v=>v.mean))
+          val xh = column(l+step/2 to h+step/2 by step)
+          val y = column(hist.cut.values.map(_.entries))
+          val yh = column(hist.cut.values.map(v=>v.entries/2))
+          val ci = column(hist.confidenceIntervalValues().map(v => v*2.0))
       }
-      import source.{x,y}
+      import source.{x,xh,y,yh,ci}
+
 
       val glyph = glyphType match {
-       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "square"   => new Square().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
@@ -264,17 +268,19 @@ package object bokeh extends Tools {
           val x = column(l to h by step)
           val y = column(profile.cut.values.map(v=>v.mean))
           val yerr = column(profile.cut.values.map(v => if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0))
+          val xh = column(l+step/2 to h+step/2 by step)
+          val yh = column(hist.cut.values.map(v=>v.entries/2))
       }
-      import source.{x,y,yerr}
+      import source.{x,xh,y,yh,yerr}
 
       //Set marker color, fill color, line color
       val glyph = glyphType match {
-       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "errors"   => new Rect().x(x).y(y).width(step).height(yerr).fill_color(fillColor).line_color(lineColor)  
+       case "square"   => new Square().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "errors"   => new Rect().x(xh).y(yh).width(step).height(yerr).fill_color(fillColor).line_color(lineColor)  
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 

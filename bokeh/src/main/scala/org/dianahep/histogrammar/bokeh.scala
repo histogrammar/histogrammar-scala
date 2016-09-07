@@ -217,11 +217,10 @@ package object bokeh extends Tools {
       object source extends ColumnDataSource {
           val x = column(l to h by step)
           val xh = column(l+step/2 to h+step/2 by step)
-          val y = column(hist.cut.values.map(_.entries))
-          val yh = column(hist.cut.values.map(v=>v.entries/2))
-          val ci = column(hist.confidenceIntervalValues().map(v => v*2.0))
+          val y = column(profile.cut.values.map(_.entries))
+          val yh = column(profile.cut.values.map(v=>v.entries/2))
       }
-      import source.{x,xh,y,yh,ci}
+      import source.{x,xh,y,yh}
 
 
       val glyph = glyphType match {
@@ -269,7 +268,7 @@ package object bokeh extends Tools {
           val y = column(profile.cut.values.map(v=>v.mean))
           val yerr = column(profile.cut.values.map(v => if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0))
           val xh = column(l+step/2 to h+step/2 by step)
-          val yh = column(hist.cut.values.map(v=>v.entries/2))
+          val yh = column(profile.cut.values.map(v=>v.entries/2))
       }
       import source.{x,xh,y,yh,yerr}
 

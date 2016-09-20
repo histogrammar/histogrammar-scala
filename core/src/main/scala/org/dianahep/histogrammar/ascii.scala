@@ -501,8 +501,18 @@ package object ascii {
       val ciUnderflow = methods.confidenceIntervalUnderflow(confidenceInterval, 1.0)
       val ciNanflow = methods.confidenceIntervalNanflow(confidenceInterval, 1.0)
 
-      val minValue = (ciOverflow._1 :: ciUnderflow._1 :: ciNanflow._1 :: ciValues.toList.map(_._1)).filter(x => !x.isNaN  &&  !x.isInfinite).min
-      val maxValue = (ciOverflow._3 :: ciUnderflow._3 :: ciNanflow._3 :: ciValues.toList.map(_._3)).filter(x => !x.isNaN  &&  !x.isInfinite).max
+      def safemin(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.POSITIVE_INFINITY
+        else
+          x
+      def safemax(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.NEGATIVE_INFINITY
+        else
+          x
+      val minValue = (ciOverflow._1 :: ciUnderflow._1 :: ciNanflow._1 :: ciValues.toList.map(_._1)).map(safemin).min
+      val maxValue = (ciOverflow._3 :: ciUnderflow._3 :: ciNanflow._3 :: ciValues.toList.map(_._3)).map(safemax).max
       val range = maxValue - minValue
       val minEdge = Math.max(0.0, minValue - 0.1*range)
       val maxEdge = Math.min(1.0, maxValue + 0.1*range)

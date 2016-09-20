@@ -1056,4 +1056,23 @@ class BasicSuite extends FlatSpec with Matchers {
     h.println
   }
 
+  it must "plot an efficiency" in {
+    val h = Fraction({x: (Double, Double) => x._1}, Bin(20, -4.0, 4.0, {x: (Double, Double) => x._2}))
+    0 until 1000 foreach {i => h.fill((scala.util.Random.nextDouble(), scala.util.Random.nextGaussian()))}
+    h.println
+    h.numerator.underflow.entries = 9.0
+    h.denominator.underflow.entries = 10.0
+    h.numerator.values(3).entries = 0.0
+    h.denominator.values(3).entries = 0.0
+    h.numerator.values(4).entries = 1.0
+    h.denominator.values(4).entries = 1.0
+    h.numerator.values(5).entries = 1000.0
+    h.denominator.values(5).entries = 1000.0
+    h.numerator.values(6).entries = java.lang.Double.POSITIVE_INFINITY
+    h.denominator.values(6).entries = 1000.0
+    h.numerator.values(7).entries = java.lang.Double.NaN
+    h.denominator.values(7).entries = 1000.0
+    h.println
+  }
+
 }

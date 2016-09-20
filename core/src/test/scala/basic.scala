@@ -1019,13 +1019,40 @@ class BasicSuite extends FlatSpec with Matchers {
   }
 
   "ASCII art" must "plot a histogram" in {
-    val h = Bin(10, -3.0, 3.0, {x: Double => x})
+    val h = Bin(20, -4.0, 4.0, {x: Double => x})
     0 until 1000 foreach {i => h.fill(scala.util.Random.nextGaussian())}
     h.println
     h.values(3).entries = java.lang.Double.POSITIVE_INFINITY
     h.values(4).entries = java.lang.Double.NaN
     h.overflow.entries = java.lang.Double.NaN
     h.nanflow.entries = java.lang.Double.POSITIVE_INFINITY
+    h.println
+  }
+
+  it must "plot a profile" in {
+    val h = Bin(20, -4.0, 4.0, {x: (Double, Double) => x._1}, Average({x: (Double, Double) => x._2}))
+    0 until 1000 foreach {i => h.fill((scala.util.Random.nextGaussian(), scala.util.Random.nextGaussian()))}
+    h.println
+    h.values(3).mean = java.lang.Double.POSITIVE_INFINITY
+    h.values(4).mean = java.lang.Double.NaN
+    h.values(5).mean = java.lang.Double.NEGATIVE_INFINITY
+    h.println
+  }
+
+  it must "plot a profileerr" in {
+    val h = Bin(20, -4.0, 4.0, {x: (Double, Double) => x._1}, Deviate({x: (Double, Double) => x._2}))
+    0 until 1000 foreach {i => h.fill((scala.util.Random.nextGaussian(), scala.util.Random.nextGaussian()))}
+    h.println
+    h.values(3).mean = java.lang.Double.POSITIVE_INFINITY
+    h.values(4).mean = java.lang.Double.NaN
+    h.values(5).mean = java.lang.Double.NEGATIVE_INFINITY
+    h.values(6).variance = java.lang.Double.POSITIVE_INFINITY
+    h.values(7).variance = java.lang.Double.NaN
+    h.values(8).variance = java.lang.Double.NEGATIVE_INFINITY
+    h.values(9).variance = -h.values(9).variance
+    h.values(10).variance = -h.values(10).variance
+    h.values(11).variance = -h.values(11).variance
+    h.values(12).variance = 0.0
     h.println
   }
 

@@ -184,8 +184,18 @@ package object ascii {
     def ascii(width: Int): String = {
       val binned = selected.binned
 
-      val minValue = binned.values.map(dev => dev.mean).min
-      val maxValue = binned.values.map(dev => dev.mean).max
+      def safemin(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.POSITIVE_INFINITY
+        else
+          x
+      def safemax(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.NEGATIVE_INFINITY
+        else
+          x
+      val minValue = ({x: Double => if (x.isInfinite) 0.0 else x})(binned.values.map(dev => safemin(dev.mean)).min)
+      val maxValue = ({x: Double => if (x.isInfinite) 0.0 else x})(binned.values.map(dev => safemax(dev.mean)).max)
       val range = maxValue - minValue
       val minEdge = minValue - 0.1*range
       val maxEdge = maxValue + 0.1*range
@@ -232,16 +242,25 @@ package object ascii {
         val binhighSign = if (binhigh < 0) "-" else " "
         val meanSign = if (mean < 0) "-" else " "
 
-        val midIndex = Math.round(reducedWidth * (v.mean                         - minEdge) / (maxEdge - minEdge)).toInt
+        if (v.mean.isNaN  ||  v.mean.isInfinite)
+          formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs) + "|" + (0 until reducedWidth).map({i =>
+            if (i == zeroIndex)
+              "|"
+            else
+              " "
+          }).mkString + "|"
+        else {
+          val midIndex = Math.round(reducedWidth * (v.mean                         - minEdge) / (maxEdge - minEdge)).toInt
 
-        formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs) + "|" + (0 until reducedWidth).map({i =>
-          if (i == zeroIndex)
-            "|"
-          else if (i == midIndex)
-            "+"
-          else
-            " "
-        }).mkString + "|"
+          formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs) + "|" + (0 until reducedWidth).map({i =>
+            if (i == zeroIndex)
+              "|"
+            else if (i == midIndex)
+              "+"
+            else
+              " "
+          }).mkString + "|"
+        }
       }
 
       (List(zeroLine1, zeroLine2) ++ lines ++ List(zeroLine2)).mkString("\n")      
@@ -297,8 +316,18 @@ package object ascii {
         (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.mean, if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0)
       }
 
-      val minValue = prefixValues.map({case (binlow, binhigh, mean, stdev) => mean - 3.0*stdev}).min
-      val maxValue = prefixValues.map({case (binlow, binhigh, mean, stdev) => mean + 3.0*stdev}).max
+      def safemin(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.POSITIVE_INFINITY
+        else
+          x
+      def safemax(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.NEGATIVE_INFINITY
+        else
+          x
+      val minValue = ({x: Double => if (x.isInfinite) 0.0 else x})(prefixValues.map({case (binlow, binhigh, mean, stdev) => safemin(mean - 3.0*stdev)}).min)
+      val maxValue = ({x: Double => if (x.isInfinite) 0.0 else x})(prefixValues.map({case (binlow, binhigh, mean, stdev) => safemax(mean + 3.0*stdev)}).max)
       val range = maxValue - minValue
       val minEdge = minValue - 0.1*range
       val maxEdge = maxValue + 0.1*range
@@ -333,22 +362,31 @@ package object ascii {
         val meanSign = if (mean < 0) "-" else " "
         val stdevSign = if (stdev < 0) "-" else " "
 
-        val botIndex = Math.round(reducedWidth * (mean - stdev - minEdge) / (maxEdge - minEdge)).toInt
-        val midIndex = Math.round(reducedWidth * (mean         - minEdge) / (maxEdge - minEdge)).toInt
-        val topIndex = Math.round(reducedWidth * (mean + stdev - minEdge) / (maxEdge - minEdge)).toInt
+        if ((mean - stdev).isNaN  ||  (mean - stdev).isInfinite  ||  (mean + stdev).isNaN  ||  (mean + stdev).isInfinite)
+          formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs, stdevSign, stdevAbs) + "|" + (0 until reducedWidth).map({i =>
+            if (i == zeroIndex)
+              "|"
+            else
+              " "
+          }).mkString + "|"
+        else {
+          val botIndex = Math.round(reducedWidth * (mean - stdev - minEdge) / (maxEdge - minEdge)).toInt
+          val midIndex = Math.round(reducedWidth * (mean         - minEdge) / (maxEdge - minEdge)).toInt
+          val topIndex = Math.round(reducedWidth * (mean + stdev - minEdge) / (maxEdge - minEdge)).toInt
 
-        formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs, stdevSign, stdevAbs) + "|" + (0 until reducedWidth).map({i =>
-          if (i == zeroIndex)
-            "|"
-          else if (i < botIndex  ||  i > topIndex)
-            " "
-          else if (i == midIndex)
-            "+"
-          else if (i == botIndex  ||  i == topIndex)
-            "|"
-          else
-            "-"
-        }).mkString + "|"
+          formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, meanSign, meanAbs, stdevSign, stdevAbs) + "|" + (0 until reducedWidth).map({i =>
+            if (i == zeroIndex)
+              "|"
+            else if (i < botIndex  ||  i > topIndex)
+              " "
+            else if (i == midIndex)
+              "+"
+            else if (i == botIndex  ||  i == topIndex)
+              "|"
+            else
+              "-"
+          }).mkString + "|"
+        }
       }
 
       (List(zeroLine1, zeroLine2) ++ lines ++ List(zeroLine2)).mkString("\n")      

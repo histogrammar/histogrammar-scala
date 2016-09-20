@@ -56,14 +56,33 @@ package object ascii {
     def ascii(width: Int): String = {
       val binned = selected.cut
 
-      val minCount = Math.min(Math.min(Math.min(binned.values.map(_.entries).min, binned.overflow.entries), binned.underflow.entries), binned.nanflow.entries)
-      val maxCount = Math.max(Math.max(Math.max(binned.values.map(_.entries).max, binned.overflow.entries), binned.underflow.entries), binned.nanflow.entries)
+      def safemin(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.POSITIVE_INFINITY
+        else
+          x
+      def safemax(x: Double) =
+        if (x.isNaN  ||  x.isInfinite)
+          java.lang.Double.NEGATIVE_INFINITY
+        else
+          x
+      val minCount = ({x: Double => if (x.isInfinite) 0.0 else x})(Math.min(Math.min(Math.min(binned.values.map(x => safemin(x.entries)).min, safemin(binned.overflow.entries)), safemin(binned.underflow.entries)), safemin(binned.nanflow.entries)))
+      val maxCount = ({x: Double => if (x.isInfinite) 0.0 else x})(Math.max(Math.max(Math.max(binned.values.map(x => safemax(x.entries)).max, safemax(binned.overflow.entries)), safemax(binned.underflow.entries)), safemax(binned.nanflow.entries)))
+
       val range = maxCount - minCount
       val minEdge = if (minCount < 0.0) minCount - 0.1*range else 0.0
       val maxEdge = maxCount + 0.1*range
 
       val binWidth = (binned.high - binned.low) / binned.values.size
-      def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
+      def sigfigs(x: Double, n: Int) =
+        if (x.isNaN)
+          "nan"
+        else if (x.isInfinite  &&  x > 0.0)
+          "inf"
+        else if (x.isInfinite)
+          "-inf"
+        else
+          new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
 
       val prefixValues = binned.values.zipWithIndex map {case (v, i) =>
         (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.entries)
@@ -81,18 +100,28 @@ package object ascii {
       val zeroLine1 = " " * prefixWidth + " " + (if (zeroIndex > 0) " " else "") + " " * zeroIndex + "0" + " " * (reducedWidth - zeroIndex - 10) + " " + f"$maxEdge%10g"
       val zeroLine2 = " " * prefixWidth + " " + (if (zeroIndex > 0) "+" else "") + "-" * zeroIndex + "+" + "-" * (reducedWidth - zeroIndex - 1) + "-" + "+"
 
+      def makeindex(entries: Double) =
+        if (entries.isNaN)
+          zeroIndex
+        else if (entries.isInfinite  &&  entries > 0.0)
+          reducedWidth
+        else if (entries.isInfinite)
+          0
+        else
+          Math.round(reducedWidth * (entries - minEdge) / (maxEdge - minEdge)).toInt
+
       val lines = binned.values zip prefixValues zip prefixValuesStr map {case ((v, (binlow, binhigh, value)), (binlowAbs, binhighAbs, valueAbs)) =>
         val binlowSign = if (binlow < 0) "-" else " "
         val binhighSign = if (binhigh < 0) "-" else " "
         val valueSign = if (value < 0) "-" else " "
-        val peakIndex = Math.round(reducedWidth * (v.entries - minEdge) / (maxEdge - minEdge)).toInt
+        val peakIndex = makeindex(v.entries)
         if (peakIndex < zeroIndex)
           formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, valueSign, valueAbs) + (if (zeroIndex > 0) "|" else "") + " " * peakIndex + "*" * (zeroIndex - peakIndex) + "|" + " " * (reducedWidth - zeroIndex) + "|"
         else
           formatter.format(binlowSign, binlowAbs, binhighSign, binhighAbs, valueSign, valueAbs) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (peakIndex - zeroIndex) + " " * (reducedWidth - peakIndex) + "|"
       }
 
-      val underflowIndex = Math.round(reducedWidth * (binned.underflow.entries - minEdge) / (maxEdge - minEdge)).toInt
+      val underflowIndex = makeindex(binned.underflow.entries)
       val underflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
       val underflowLine =
         if (underflowIndex < zeroIndex)
@@ -100,7 +129,7 @@ package object ascii {
         else
           underflowFormatter.format("underflow", sigfigs(binned.underflow.entries, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (underflowIndex - zeroIndex) + " " * (reducedWidth - underflowIndex) + "|"
 
-      val overflowIndex = Math.round(reducedWidth * (binned.overflow.entries - minEdge) / (maxEdge - minEdge)).toInt
+      val overflowIndex = makeindex(binned.overflow.entries)
       val overflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
       val overflowLine =
         if (overflowIndex < zeroIndex)
@@ -108,7 +137,7 @@ package object ascii {
         else
           overflowFormatter.format("overflow", sigfigs(binned.overflow.entries, 4)) + (if (zeroIndex > 0) "|" else "") + " " * zeroIndex + "|" + "*" * (overflowIndex - zeroIndex) + " " * (reducedWidth - overflowIndex) + "|"
 
-      val nanflowIndex = Math.round(reducedWidth * (binned.nanflow.entries - minEdge) / (maxEdge - minEdge)).toInt
+      val nanflowIndex = makeindex(binned.nanflow.entries)
       val nanflowFormatter = s"%-${widestBinlow + widestBinhigh + 5}s    %-${widestValue}s "
       val nanflowLine =
         if (nanflowIndex < zeroIndex)
@@ -162,7 +191,15 @@ package object ascii {
       val maxEdge = maxValue + 0.1*range
 
       val binWidth = (binned.high - binned.low) / binned.values.size
-      def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
+      def sigfigs(x: Double, n: Int) =
+        if (x.isNaN)
+          "nan"
+        else if (x.isInfinite  &&  x > 0.0)
+          "inf"
+        else if (x.isInfinite)
+          "-inf"
+        else
+          new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
 
       val prefixValues = binned.values.zipWithIndex map {case (v, i) =>
         (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.mean)
@@ -247,7 +284,15 @@ package object ascii {
       val binned = selected.binned
 
       val binWidth = (binned.high - binned.low) / binned.values.size
-      def sigfigs(x: Double, n: Int) = new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
+      def sigfigs(x: Double, n: Int) =
+        if (x.isNaN)
+          "nan"
+        else if (x.isInfinite  &&  x > 0.0)
+          "inf"
+        else if (x.isInfinite)
+          "-inf"
+        else
+          new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
       val prefixValues = binned.values.zipWithIndex map {case (v, i) =>
         (i * binWidth + binned.low, (i + 1) * binWidth + binned.low, v.mean, if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0)
       }
@@ -428,8 +473,10 @@ package object ascii {
       def sigfigs(x: Double, n: Int) =
         if (x.isNaN)
           "nan"
-        else if (x.isInfinite)
+        else if (x.isInfinite  &&  x > 0.0)
           "inf"
+        else if (x.isInfinite)
+          "-inf"
         else
           new java.math.BigDecimal(x).round(new java.math.MathContext(n)).toString
 

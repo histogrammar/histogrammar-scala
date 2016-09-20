@@ -21,6 +21,7 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.Matchers
 
 import org.dianahep.histogrammar._
+import org.dianahep.histogrammar.ascii._
 
 class BasicSuite extends FlatSpec with Matchers {
   val simple = List(3.4, 2.2, -1.8, 0.0, 7.3, -4.7, 1.6, 0.0, -3.0, -1.7)
@@ -1015,6 +1016,17 @@ class BasicSuite extends FlatSpec with Matchers {
     takesFractionedHistogramMethods(fractioningSelectingSparselyBinningCounting)
     takesFractionedHistogramMethods(fractionedSelectedSparselyBinnedCounted)
 
+  }
+
+  "ASCII art" must "plot a histogram" in {
+    val h = Bin(10, -3.0, 3.0, {x: Double => x})
+    0 until 1000 foreach {i => h.fill(scala.util.Random.nextGaussian())}
+    h.println
+    h.values(3).entries = java.lang.Double.POSITIVE_INFINITY
+    h.values(4).entries = java.lang.Double.NaN
+    h.overflow.entries = java.lang.Double.NaN
+    h.nanflow.entries = java.lang.Double.POSITIVE_INFINITY
+    h.println
   }
 
 }

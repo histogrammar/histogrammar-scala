@@ -119,6 +119,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
         new Selected[V](this.entries + that.entries, this.quantityName, this.cut + that.cut)
+    def reweight(factor: Double) = new Selected[V](factor * entries, quantityName, cut.reweight(factor))
 
     def children = cut :: Nil
 
@@ -159,6 +160,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Selecting[DATUM, V](this.entries + that.entries, this.quantity, this.cut + that.cut)
+    def reweight(factor: Double) = new Selecting[DATUM, V](factor * entries, quantity, cut.reweight(factor))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

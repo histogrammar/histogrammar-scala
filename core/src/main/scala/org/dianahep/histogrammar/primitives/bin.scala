@@ -263,6 +263,7 @@ and so on."""
         this.overflow + that.overflow,
         this.nanflow + that.nanflow)
     }
+    def reweight(factor: Double) = new Binned[V, U, O, N](low, high, factor * entries, quantityName, values.map(_.reweight(factor)), underflow.reweight(factor), overflow.reweight(factor), nanflow.reweight(factor))
 
     def children = underflow :: overflow :: nanflow :: values.toList
 
@@ -350,6 +351,7 @@ and so on."""
         this.overflow + that.overflow,
         this.nanflow + that.nanflow)
     }
+    def reweight(factor: Double) = new Binning[DATUM, V, U, O, N](low, high, quantity, factor * entries, values.map(_.reweight(factor)), underflow.reweight(factor), overflow.reweight(factor), nanflow.reweight(factor))
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

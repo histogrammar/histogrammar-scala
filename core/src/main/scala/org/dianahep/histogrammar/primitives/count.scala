@@ -121,6 +121,7 @@ package histogrammar {
 
     def zero = new Counted(0.0)
     def +(that: Counted): Counted = new Counted(this.entries + that.entries)
+    def reweight(factor: Double) = new Counted(factor * entries)
 
     def children = Nil
 
@@ -153,6 +154,7 @@ package histogrammar {
 
     def zero = new Counting(0.0, transform)
     def +(that: Counting): Counting = new Counting(this.entries + that.entries, transform)
+    def reweight(factor: Double) = new Counting(factor * entries, transform)
 
     def fill[SUB <: Any](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

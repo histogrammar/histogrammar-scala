@@ -100,6 +100,7 @@ package histogrammar {
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
         new Summed(this.entries + that.entries, this.quantityName, this.sum + that.sum)
+    def reweight(factor: Double) = new Summed(factor * entries, quantityName, sum)
 
     def children = Nil
 
@@ -136,6 +137,7 @@ package histogrammar {
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Summing(this.quantity, this.entries + that.entries, this.sum + that.sum)
+    def reweight(factor: Double) = new Summing[DATUM](quantity, factor * entries, sum)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

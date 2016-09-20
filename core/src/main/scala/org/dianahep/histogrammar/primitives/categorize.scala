@@ -151,6 +151,7 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
             else
               (key, that.bins(key))
           } toMap)
+    def reweight(factor: Double) = new Categorized[V](factor * entries, quantityName, contentType, bins map {case (c, v) => (c, v.reweight(factor))})
 
     def children = values.toList
 
@@ -221,6 +222,7 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
             else
               (key, that.bins(key))
           }: _*))
+    def reweight(factor: Double) = new Categorizing[DATUM, V](quantity, factor * entries, value, mutable.HashMap[String, V](bins.toSeq.map({case (c, v) => (c, v.reweight(factor))}): _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

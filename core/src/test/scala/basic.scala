@@ -72,6 +72,15 @@ class BasicSuite extends FlatSpec with Matchers {
     x.toJson should be (Factory.fromJson(x.toJson).toJson)
   }
 
+  def checkScaling[CONTAINER <: Container[CONTAINER]](x: CONTAINER) {
+    // x * 0 should be (x.zero)
+    // x * 0.0 should be (x.zero)
+    // x * 1 should be (x)
+    // x * 1.0 should be (x)
+    // x * 2 should be (x + x)
+    // x * 2.0 should be (x + x)
+  }
+
   //////////////////////////////////////////////////////////////// Count/Counted/Counting
 
   "Count/Counting/Counted" must "work unfiltered" in {
@@ -93,6 +102,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (simple.size)
 
+      checkScaling(leftCounting)
+      checkScaling(leftCounting.toImmutable)
       checkJson(leftCounting)
     }
   }
@@ -116,7 +127,11 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (simple.filter(_ > 0.0).size)
 
+      checkScaling(leftCounting)
+      checkScaling(leftCounting.toImmutable)
       checkJson(leftCounting)
+      checkScaling(rightCounting)
+      checkScaling(rightCounting.toImmutable)
       checkJson(rightCounting)
     }
   }
@@ -142,6 +157,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (simple.sum +- 1e-12)
 
+      checkScaling(leftSumming)
+      checkScaling(leftSumming.toImmutable)
       checkJson(leftSumming)
     }
   }
@@ -165,6 +182,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (struct.filter(_.bool).map(_.double).sum +- 1e-12)
 
+      checkScaling(leftSumming)
+      checkScaling(leftSumming.toImmutable)
       checkJson(leftSumming)
     }
   }
@@ -188,6 +207,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (struct.filter(_.int >= 0).map({x => x.int * x.double}).sum +- 1e-12)
 
+      checkScaling(leftSumming)
+      checkScaling(leftSumming.toImmutable)
       checkJson(leftSumming)
     }
   }
@@ -219,6 +240,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(simple) +- 1e-12)
 
+      checkScaling(leftAveraging)
+      checkScaling(leftAveraging.toImmutable)
       checkJson(leftAveraging)
     }
   }
@@ -248,6 +271,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
+      checkScaling(leftAveraging)
+      checkScaling(leftAveraging.toImmutable)
       checkJson(leftAveraging)
     }
   }
@@ -277,6 +302,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
+      checkScaling(leftAveraging)
+      checkScaling(leftAveraging.toImmutable)
       checkJson(leftAveraging)
     }
   }
@@ -306,6 +333,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (mean(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
+      checkScaling(leftAveraging)
+      checkScaling(leftAveraging.toImmutable)
       checkJson(leftAveraging)
     }
   }
@@ -337,6 +366,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(simple) +- 1e-12)
 
+      checkScaling(leftDeviating)
+      checkScaling(leftDeviating.toImmutable)
       checkJson(leftDeviating)
     }
   }
@@ -366,6 +397,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(struct.filter(_.bool).map(_.double)) +- 1e-12)
 
+      checkScaling(leftDeviating)
+      checkScaling(leftDeviating.toImmutable)
       checkJson(leftDeviating)
     }
   }
@@ -395,6 +428,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(struct.map(_.double), struct.map(_.int.toDouble)) +- 1e-12)
 
+      checkScaling(leftDeviating)
+      checkScaling(leftDeviating.toImmutable)
       checkJson(leftDeviating)
     }
   }
@@ -424,6 +459,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
       finalResult should be (variance(backward.map(_.double), backward.map(_.int.toDouble)) +- 1e-12)
 
+      checkScaling(leftDeviating)
+      checkScaling(leftDeviating.toImmutable)
       checkJson(leftDeviating)
     }
   }
@@ -452,6 +489,8 @@ class BasicSuite extends FlatSpec with Matchers {
       if (simple.isEmpty) finalResult.isNaN should be (true)
       else finalResult should be (simple.min +- 1e-12)
 
+      checkScaling(leftMinimizing)
+      checkScaling(leftMinimizing.toImmutable)
       checkJson(leftMinimizing)
     }
   }
@@ -480,6 +519,8 @@ class BasicSuite extends FlatSpec with Matchers {
       if (simple.isEmpty) finalResult.isNaN should be (true)
       else finalResult should be (simple.max +- 1e-12)
 
+      checkScaling(leftMaximizing)
+      checkScaling(leftMaximizing.toImmutable)
       checkJson(leftMaximizing)
     }
   }
@@ -499,8 +540,14 @@ class BasicSuite extends FlatSpec with Matchers {
     struct.foreach(three.fill(_))
     // three.values should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
 
+    checkScaling(one)
+    checkScaling(one.toImmutable)
     checkJson(one)
+    checkScaling(two)
+    checkScaling(two.toImmutable)
     checkJson(two)
+    checkScaling(three)
+    checkScaling(three.toImmutable)
     checkJson(three)
   }
 
@@ -521,7 +568,11 @@ class BasicSuite extends FlatSpec with Matchers {
     two.cut.overflow.entries should be (0.0)
     two.cut.nanflow.entries should be (0.0)
 
+    checkScaling(one)
+    checkScaling(one.toImmutable)
     checkJson(one)
+    checkScaling(two)
+    checkScaling(two.toImmutable)
     checkJson(two)
   }
 
@@ -540,7 +591,11 @@ class BasicSuite extends FlatSpec with Matchers {
     two.cut.overflow.sum should be (0.0)
     two.cut.nanflow.sum should be (0.0)
 
+    checkScaling(one)
+    checkScaling(one.toImmutable)
     checkJson(one)
+    checkScaling(two)
+    checkScaling(two.toImmutable)
     checkJson(two)
   }
 
@@ -556,11 +611,15 @@ class BasicSuite extends FlatSpec with Matchers {
     one.low.get should be (-5.0)
     one.high.get should be (8.0)
 
+    checkScaling(one)
+    checkScaling(one.toImmutable)
     checkJson(one)
 
     val two = SparselyBin(1.0, {x: Double => x} named "something", Sum({x: Double => x} named "else"))
     simple.foreach(two.fill(_))
 
+    checkScaling(two)
+    checkScaling(two.toImmutable)
     checkJson(two)
   }
 
@@ -579,9 +638,13 @@ class BasicSuite extends FlatSpec with Matchers {
     simple.foreach(one.fill(_))
     Factory.fromJson(one.toJson).as[CentrallyBinned[Counted, Counted]].bins.map({case (k, v) => (k, v.entries)}).toList should be (List((-3.0,2.0), (-1.0,2.0), (0.0,2.0), (1.0,1.0), (3.0,2.0), (10.0,1.0)))
 
+    checkScaling(one)
+    checkScaling(one.toImmutable)
     checkJson(one)
 
     val two = CentrallyBin(List(-3.0, -1.0, 0.0, 1.0, 3.0, 10.0), {x: Double => x} named "something", Sum({x: Double => x} named "else"))
+    checkScaling(two)
+    checkScaling(two.toImmutable)
     checkJson(two)
   }
 
@@ -594,6 +657,8 @@ class BasicSuite extends FlatSpec with Matchers {
     fracking.numerator.entries should be (4.0)
     fracking.denominator.entries should be (10.0)
 
+    checkScaling(fracking)
+    checkScaling(fracking.toImmutable)
     checkJson(fracking)
   }
 
@@ -604,6 +669,8 @@ class BasicSuite extends FlatSpec with Matchers {
     fracking.numerator.sum should be (14.5 +- 1e-12)
     fracking.denominator.sum should be (3.3 +- 1e-12)
 
+    checkScaling(fracking)
+    checkScaling(fracking.toImmutable)
     checkJson(fracking)
   }
 
@@ -614,6 +681,8 @@ class BasicSuite extends FlatSpec with Matchers {
     fracking.numerator.numericalValues.toList should be (List(0.0, 0.0, 2.0, 1.0, 0.0))
     fracking.denominator.numericalValues.toList should be (List(3.0, 2.0, 2.0, 1.0, 0.0))
 
+    checkScaling(fracking)
+    checkScaling(fracking.toImmutable)
     checkJson(fracking)
   }
 
@@ -625,6 +694,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
     stacking.bins.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 10.0, 0.0 -> 6.0, 2.0 -> 3.0, 4.0 -> 1.0, 6.0 -> 1.0, 8.0 -> 0.0))
 
+    checkScaling(stacking)
+    checkScaling(stacking.toImmutable)
     checkJson(stacking)
   }
 
@@ -634,6 +705,8 @@ class BasicSuite extends FlatSpec with Matchers {
 
     stacking.bins(1)._2.sum should be (14.5 +- 1e-12)
 
+    checkScaling(stacking)
+    checkScaling(stacking.toImmutable)
     checkJson(stacking)
   }
 
@@ -645,6 +718,8 @@ class BasicSuite extends FlatSpec with Matchers {
     
     partitioning.bins.map({case (k, v) => (k, v.entries)}).toList should be (List(java.lang.Double.NEGATIVE_INFINITY -> 4.0, 0.0 -> 3.0, 2.0 -> 2.0, 4.0 -> 0.0, 6.0 -> 1.0, 8.0 -> 0.0))
 
+    checkScaling(partitioning)
+    checkScaling(partitioning.toImmutable)
     checkJson(partitioning)
   }
 
@@ -655,6 +730,8 @@ class BasicSuite extends FlatSpec with Matchers {
     partitioning.bins(0)._2.sum should be (-11.2 +- 1e-12)
     partitioning.bins(1)._2.sum should be (1.6 +- 1e-12)
 
+    checkScaling(partitioning)
+    checkScaling(partitioning.toImmutable)
     checkJson(partitioning)
   }
 
@@ -664,10 +741,14 @@ class BasicSuite extends FlatSpec with Matchers {
     val categorizing = Categorize({x: Struct => x.string.substring(0, 1)} named "something")
     struct.foreach(categorizing.fill(_))
     categorizing.bins map {case (k, v) => (k, v.entries)} should be (Map("n" -> 1.0, "e" -> 1.0, "t" -> 3.0, "s" -> 2.0, "f" -> 2.0, "o" -> 1.0))
+    checkScaling(categorizing)
+    checkScaling(categorizing.toImmutable)
     checkJson(categorizing)
 
     val categorizing2 = Categorize({x: Struct => x.string.substring(0, 1)} named "something", Sum({x: Struct => x.double} named "else"))
     struct.foreach(categorizing2.fill(_))
+    checkScaling(categorizing2)
+    checkScaling(categorizing2.toImmutable)
     checkJson(categorizing2)
   }
 
@@ -686,6 +767,8 @@ class BasicSuite extends FlatSpec with Matchers {
     labeling("two").numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     labeling("three").numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
 
+    checkScaling(labeling)
+    checkScaling(labeling.toImmutable)
     checkJson(labeling)
   }
 
@@ -702,6 +785,8 @@ class BasicSuite extends FlatSpec with Matchers {
     labeling("two").numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
     labeling("three").numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
 
+    checkScaling(labeling)
+    checkScaling(labeling.toImmutable)
     checkJson(labeling)
   }
 
@@ -720,6 +805,8 @@ class BasicSuite extends FlatSpec with Matchers {
     labeling("two").as[two.Type].numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     labeling("three").as[three.Type].numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
 
+    checkScaling(labeling)
+    checkScaling(labeling.toImmutable)
     checkJson(labeling)
   }
 
@@ -736,6 +823,8 @@ class BasicSuite extends FlatSpec with Matchers {
     labeling("two").as[two.Type].numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
     labeling("three").as[three.Type].numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
 
+    checkScaling(labeling)
+    checkScaling(labeling.toImmutable)
     checkJson(labeling)
   }
 
@@ -754,6 +843,8 @@ class BasicSuite extends FlatSpec with Matchers {
     mapping("three").as[three.Type].mean should be (100.33 +- 1e-12)
     mapping("three").as[three.Type].variance should be (10.8381 +- 1e-12)   // just to be different
 
+    checkScaling(mapping)
+    checkScaling(mapping.toImmutable)
     checkJson(mapping)
   }
 
@@ -772,6 +863,8 @@ class BasicSuite extends FlatSpec with Matchers {
     indexing(1).numericalValues should be (Seq(2.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     indexing(2).numericalValues should be (Seq(0.0, 2.0, 0.0, 2.0, 1.0))
 
+    checkScaling(indexing)
+    checkScaling(indexing.toImmutable)
     checkJson(indexing)
   }
 
@@ -788,6 +881,8 @@ class BasicSuite extends FlatSpec with Matchers {
     indexing(1).numericalValues should be (Seq(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0))
     indexing(2).numericalValues should be (Seq(0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 2.0, 0.0, 0.0, 0.0))
 
+    checkScaling(indexing)
+    checkScaling(indexing.toImmutable)
     checkJson(indexing)
   }
 
@@ -813,6 +908,8 @@ class BasicSuite extends FlatSpec with Matchers {
     branching.i2.mean should be (100.33 +- 1e-12)
     branching.i2.variance should be (10.8381 +- 1e-12)
 
+    checkScaling(branching)
+    checkScaling(branching.toImmutable)
     checkJson(branching)
   }
 
@@ -833,6 +930,8 @@ class BasicSuite extends FlatSpec with Matchers {
       finalHist.numericalOverflow should be (1.0)
       finalHist.numericalNanflow should be (0.0)
 
+      checkScaling(finalHist)
+      checkScaling(finalHist.toImmutable)
       checkJson(finalHist)
     }
 
@@ -853,6 +952,8 @@ class BasicSuite extends FlatSpec with Matchers {
       finalHist.numericalOverflow should be (1.0)
       finalHist.numericalNanflow should be (0.0)
 
+      checkScaling(finalHist)
+      checkScaling(finalHist.toImmutable)
       checkJson(finalHist)
     }
 
@@ -876,6 +977,8 @@ class BasicSuite extends FlatSpec with Matchers {
       finalHist("hist").numericalOverflow should be (1.0)
       finalHist("hist").numericalNanflow should be (0.0)
 
+      checkScaling(finalHist)
+      checkScaling(finalHist.toImmutable)
       checkJson(finalHist)
     }
 
@@ -902,6 +1005,8 @@ class BasicSuite extends FlatSpec with Matchers {
       finalHist("hist").as[hist1.Type].numericalNanflow should be (0.0)
       finalHist("sum").as[sum1.Type].sum should be (10.0)
 
+      checkScaling(finalHist)
+      checkScaling(finalHist.toImmutable)
       checkJson(finalHist)
     }
   }

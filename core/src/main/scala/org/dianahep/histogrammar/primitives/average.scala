@@ -113,6 +113,7 @@ package histogrammar {
         val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
         new Averaged(newentries, this.quantityName, newmean)
       }
+    def reweight(factor: Double) = new Averaged(factor * entries, quantityName, mean)
 
     def children = Nil
 
@@ -154,6 +155,7 @@ package histogrammar {
         val (newentries, newmean) = Average.plus(this.entries, this.mean, that.entries, that.mean)
         new Averaging(this.quantity, newentries, newmean)
       }
+    def reweight(factor: Double) = new Averaging(quantity, factor * entries, mean)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

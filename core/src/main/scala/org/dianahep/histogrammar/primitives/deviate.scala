@@ -130,6 +130,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
                                                               that.entries, that.mean, that.variance * that.entries)
         new Deviated(newentries, this.quantityName, newmean, newvariance)
       }
+    def reweight(factor: Double) = new Deviated(factor * entries, quantityName, mean, variance)
 
     def children = Nil
 
@@ -189,6 +190,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
                                                               that.entries, that.mean, that.variance * that.entries)
         new Deviating[DATUM](this.quantity, newentries, newmean, newvariance)
       }
+    def reweight(factor: Double) = new Deviating[DATUM](quantity, factor * entries, mean, variance)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

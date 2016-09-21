@@ -251,7 +251,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
 
     override def toString() = s"""<Labeling values=${pairs.head._2.factory.name} size=${pairs.size}>"""
     override def equals(that: Any) = that match {
-      case that: Labeled[V] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
+      case that: Labeling[V] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
     }
     override def hashCode() = (entries, pairsMap).hashCode

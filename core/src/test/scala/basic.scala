@@ -73,12 +73,12 @@ class BasicSuite extends FlatSpec with Matchers {
   }
 
   def checkScaling[CONTAINER <: Container[CONTAINER]](x: CONTAINER) {
-    // x * 0 should be (x.zero)
-    // x * 0.0 should be (x.zero)
-    // x * 1 should be (x)
-    // x * 1.0 should be (x)
-    // x * 2 should be (x + x)
-    // x * 2.0 should be (x + x)
+    x.reweight(0) should be (x.zero)
+    x.reweight(0.0) should be (x.zero)
+    x.reweight(1) should be (x)
+    x.reweight(1.0) should be (x)
+    x.reweight(2) should be (x + x)
+    x.reweight(2.0) should be (x + x)
   }
 
   //////////////////////////////////////////////////////////////// Count/Counted/Counting

@@ -109,7 +109,7 @@ package histogrammar {
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
         new Minimized(this.entries + that.entries, quantityName, Minimize.plus(this.min, that.min))
-    def reweight(factor: Double) = new Minimized(factor * entries, quantityName, min)
+    def reweight(factor: Double) = new Minimized(factor * entries, quantityName, if (factor == 0.0) java.lang.Double.NaN else min)
 
     def children = Nil
 
@@ -146,7 +146,7 @@ package histogrammar {
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Minimizing[DATUM](this.quantity, this.entries + that.entries, Minimize.plus(this.min, that.min))
-    def reweight(factor: Double) = new Minimizing[DATUM](quantity, factor * entries, min)
+    def reweight(factor: Double) = new Minimizing[DATUM](quantity, factor * entries, if (factor == 0.0) java.lang.Double.NaN else min)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
@@ -261,7 +261,7 @@ package histogrammar {
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
     else
       new Maximized(this.entries + that.entries, this.quantityName, Maximize.plus(this.max, that.max))
-    def reweight(factor: Double) = new Maximized(factor * entries, quantityName, max)
+    def reweight(factor: Double) = new Maximized(factor * entries, quantityName, if (factor == 0.0) java.lang.Double.NaN else max)
 
     def children = Nil
 
@@ -298,7 +298,7 @@ package histogrammar {
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Maximizing[DATUM](this.quantity, this.entries + that.entries, Maximize.plus(this.max, that.max))
-    def reweight(factor: Double) = new Maximizing[DATUM](quantity, factor * entries, max)
+    def reweight(factor: Double) = new Maximizing[DATUM](quantity, factor * entries, if (factor == 0.0) java.lang.Double.NaN else max)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

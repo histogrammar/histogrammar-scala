@@ -176,6 +176,11 @@ To make plots from different sources in Histogrammar, one must perform separate 
         this.bins zip that.bins map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)},
         this.nanflow + that.nanflow)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Stacked[V, N](factor * entries, quantityName, bins map {case (c, v) => (c, v * factor)}, nanflow * factor)
 
     def children = values.toList
 
@@ -232,6 +237,11 @@ To make plots from different sources in Histogrammar, one must perform separate 
           this.nanflow + that.nanflow,
           this.entries + that.entries)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Stacking[DATUM, V, N](bins map {case (c, v) => (c, v * factor)}, quantity, nanflow * factor, factor * entries)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

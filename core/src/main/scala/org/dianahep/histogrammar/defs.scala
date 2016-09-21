@@ -27,7 +27,7 @@ package histogrammar {
   class ContainerException(message: String, cause: Exception = null) extends Exception(message, cause)
 
   object Version {
-    def version = "1.0.0"
+    def version = "1.0.2"
     def specification = version.split("""[-\.]""").take(2).mkString(".")
     def compatibleVersion(serializedVersion: String) = {
       val Array(selfMajor, selfMinor) = specification.split("""\.""").take(2).map(java.lang.Integer.parseInt(_))
@@ -207,6 +207,13 @@ package histogrammar {
       * The originals are unaffected.
       */
     def +(that: CONTAINER): CONTAINER
+    /** Reweight the contents in all nested aggregators by a scalar factor, as though they had been filled with a different weight.
+      * 
+      * If the container is mutable (with [[org.dianahep.histogrammar.Aggregation]]), the new one will be, too.
+      * 
+      * The original is unaffected.
+      */
+    def *(factor: Double): CONTAINER
     /** Copy this container, making a clone with no reference to the original.
       * 
       * If these containers are mutable (with [[org.dianahep.histogrammar.Aggregation]]), the new one will be, too.
@@ -496,6 +503,10 @@ package object histogrammar {
         Math.abs(this.x - that) <= util.absoluteTolerance
       else
         this.x == that
+  }
+
+  implicit class NumberTimesContainer(factor: Double) {
+    def *[CONTAINER <: Container[CONTAINER]](container: CONTAINER) = container * factor
   }
 
   //////////////////////////////////////////////////////////////// indexes for nested collections

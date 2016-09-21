@@ -263,6 +263,11 @@ and so on."""
         this.overflow + that.overflow,
         this.nanflow + that.nanflow)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Binned[V, U, O, N](low, high, factor * entries, quantityName, values.map(_ * factor), underflow * factor, overflow * factor, nanflow * factor)
 
     def children = underflow :: overflow :: nanflow :: values.toList
 
@@ -329,7 +334,7 @@ and so on."""
     /** Extract the container at a given index. */
     def at(index: Int) = values(index)
 
-    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, 0.0, Seq.fill(values.size)(values.head.zero), underflow.zero, overflow.zero, nanflow.zero)
+    def zero = new Binning[DATUM, V, U, O, N](low, high, quantity, 0.0, values.map(_.zero), underflow.zero, overflow.zero, nanflow.zero)
     def +(that: Binning[DATUM, V, U, O, N]): Binning[DATUM, V, U, O, N] = {
       if (this.quantity.name != that.quantity.name)
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
@@ -350,6 +355,11 @@ and so on."""
         this.overflow + that.overflow,
         this.nanflow + that.nanflow)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Binning[DATUM, V, U, O, N](low, high, quantity, factor * entries, values.map(_ * factor), underflow * factor, overflow * factor, nanflow * factor)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

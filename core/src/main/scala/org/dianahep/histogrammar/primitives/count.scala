@@ -34,7 +34,7 @@ package histogrammar {
     val help = "Count entries by accumulating the sum of all observed weights or a sum of transformed weights (e.g. sum of squares of weights)."
     val detailedHelp = """An optional `transform` function can be applied to the weights before summing. To accumulate the sum of squares of weights, use `{x: Double => x*x}`, for instance. This is unlike any other primitive's `quantity` function in that its domain is the ''weights'' (always double), not ''data'' (any type)."""
 
-    val identity = new UserFcn[Double, Double] {
+    object Identity extends UserFcn[Double, Double] {
       def name = None
       def hasCache = false
       def apply[SUB <: Double](x: SUB) = x
@@ -50,10 +50,10 @@ package histogrammar {
       * 
       * @param transform Transform each weight before adding. For instance, to collect a sum of squared weights, pass {x: Double: x*x} as `transform`.
       */
-    def apply(transform: UserFcn[Double, Double] = identity) = new Counting(0.0, transform)
+    def apply(transform: UserFcn[Double, Double] = Identity) = new Counting(0.0, transform)
 
     /** Synonym for `apply`. */
-    def ing(transform: UserFcn[Double, Double] = identity) = apply(transform)
+    def ing(transform: UserFcn[Double, Double] = Identity) = apply(transform)
 
     /** Use [[org.dianahep.histogrammar.Counted]] in Scala pattern-matching. */
     def unapply(x: Counted) = Some(x.entries)
@@ -121,6 +121,11 @@ package histogrammar {
 
     def zero = new Counted(0.0)
     def +(that: Counted): Counted = new Counted(this.entries + that.entries)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Counted(factor * entries)
 
     def children = Nil
 
@@ -153,6 +158,13 @@ package histogrammar {
 
     def zero = new Counting(0.0, transform)
     def +(that: Counting): Counting = new Counting(this.entries + that.entries, transform)
+    def *(factor: Double) =
+      if (!transform.isInstanceOf[Count.Identity.type])
+        throw new ContainerException("Cannot scalar-multiply Counting with a non-identity transform.")
+      else if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Counting(factor * entries, transform)
 
     def fill[SUB <: Any](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

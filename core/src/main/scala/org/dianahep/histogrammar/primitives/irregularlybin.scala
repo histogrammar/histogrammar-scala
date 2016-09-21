@@ -150,6 +150,11 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
         this.bins zip that.bins map {case ((mycut, me), (yourcut, you)) => (mycut, me + you)},
         this.nanflow + that.nanflow)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new IrregularlyBinned[V, N](factor * entries, quantityName, bins map {case (c, v) => (c, v * factor)}, nanflow * factor)
 
     def children = values.toList
 
@@ -208,6 +213,11 @@ IrregularlyBin is also similar to [[org.dianahep.histogrammar.CentrallyBin]], in
           this.nanflow + that.nanflow,
           this.entries + that.entries)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new IrregularlyBinning[DATUM, V, N](bins map {case (c, v) => (c, v * factor)}, quantity, nanflow * factor, factor * entries)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

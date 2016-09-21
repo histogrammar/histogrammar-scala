@@ -149,6 +149,11 @@ In strongly typed languages, the restriction to a single type allows nested obje
             val yoursub = that.pairsMap(label)
             label -> (mysub + yoursub)
           }: _*)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Labeled[V](factor * entries, pairs map {case (k, v) => (k, v * factor)}: _*)
 
     def children = values.toList
 
@@ -225,6 +230,11 @@ In strongly typed languages, the restriction to a single type allows nested obje
             val yoursub = that.pairsMap(label)
             label -> (mysub + yoursub)
           }: _*)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Labeling[V](factor * entries, pairs map {case (k, v) => (k, v * factor)}: _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
@@ -249,7 +259,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
 
     override def toString() = s"""<Labeling values=${pairs.head._2.factory.name} size=${pairs.size}>"""
     override def equals(that: Any) = that match {
-      case that: Labeled[V] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
+      case that: Labeling[V] => this.entries === that.entries  &&  this.pairsMap == that.pairsMap
       case _ => false
     }
     override def hashCode() = (entries, pairsMap).hashCode
@@ -389,6 +399,11 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
               throw new ContainerException(s"""cannot add UntypedLabeled because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
             (key, UntypedLabel.combine(mysub, yoursub))
           }): _*)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new UntypedLabeled(factor * entries, (pairs map {case (k, v) => (k, v * factor)}).asInstanceOf[Seq[(String, Container[_])]]: _*)
 
     def children = values.toList
 
@@ -469,6 +484,11 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
               throw new ContainerException(s"""cannot add UntypedLabeling because key "$key" has a different type in the two maps: ${mysub.factory.name} vs ${yoursub.factory.name}""")
             (key, UntypedLabel.combine(mysub, yoursub))
           }): _*)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new UntypedLabeling[F](factor * entries, (first._1, first._2 * factor), rest.map({case (k, v) => (k, (v * factor).asInstanceOf[Container[_] with Aggregation])}): _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
@@ -620,6 +640,11 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
         throw new ContainerException(s"""cannot add Indexed because they have different sizes: (${this.size} vs ${that.size})""")
       else
         new Indexed[V](this.entries + that.entries, this.values zip that.values map {case(me, you) => me + you}: _*)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Indexed[V](factor * entries, values.map(_ * factor): _*)
 
     def children = values.toList
 
@@ -691,6 +716,11 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
         throw new ContainerException(s"""cannot add Indexing because they have different sizes: (${this.size} vs ${that.size})""")
       else
         new Indexing[V](this.entries + that.entries, this.values zip that.values map {case (me, you) => me + you}: _*)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Indexing[V](factor * entries, values.map(_ * factor): _*)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
@@ -905,6 +935,14 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
       case t: Branched[_, _] => new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, (t + that.tail.asInstanceOf[t.Type]).asInstanceOf[TAIL])
       case _: BranchedNil.type => new Branched[HEAD, TAIL](this.entries + that.entries, this.head + that.head, BranchedNil.asInstanceOf[TAIL])
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        tail match {
+          case t: Branched[_, _] => new Branched[HEAD, TAIL](factor * entries, head * factor, (t * factor).asInstanceOf[TAIL])
+          case _: BranchedNil.type => new Branched[HEAD, TAIL](factor * entries, head * factor, BranchedNil.asInstanceOf[TAIL])
+        }
 
     def children = values.toList
 
@@ -1051,6 +1089,14 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
       case t: Branching[_, _] => new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, (t + that.tail.asInstanceOf[t.Type]).asInstanceOf[TAIL])
       case _: BranchingNil.type => new Branching[HEAD, TAIL](this.entries + that.entries, this.head + that.head, BranchingNil.asInstanceOf[TAIL])
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        tail match {
+          case t: Branching[_, _] => new Branching[HEAD, TAIL](factor * entries, head * factor, (t * factor).asInstanceOf[TAIL])
+          case _: BranchingNil.type => new Branching[HEAD, TAIL](factor * entries, head * factor, BranchingNil.asInstanceOf[TAIL])
+        }
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

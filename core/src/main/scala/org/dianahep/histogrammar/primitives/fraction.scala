@@ -186,6 +186,11 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
         throw new ContainerException(s"cannot add ${getClass.getName} because quantityName differs (${this.quantityName} vs ${that.quantityName})")
       else
         new Fractioned(this.entries + that.entries, this.quantityName, this.numerator + that.numerator, this.denominator + that.denominator)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Fractioned[N, D](factor * entries, quantityName, numerator * factor, denominator * factor)
 
     def children = numerator :: denominator :: Nil
 
@@ -231,6 +236,11 @@ As a side effect of NaN values returning false for any comparison, a NaN return 
         throw new ContainerException(s"cannot add ${getClass.getName} because quantity name differs (${this.quantity.name} vs ${that.quantity.name})")
       else
         new Fractioning(this.quantity, this.entries + that.entries, this.numerator + that.numerator, this.denominator + that.denominator)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Fractioning[DATUM, V](quantity, factor * entries, numerator * factor, denominator * factor)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

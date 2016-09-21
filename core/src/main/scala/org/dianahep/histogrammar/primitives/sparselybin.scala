@@ -220,6 +220,18 @@ Like fixed-domain binning, the bins are indexed by integers, though they are 64-
 
       new SparselyBinned[V, N](binWidth, this.entries + that.entries, quantityName, contentType, newbins, this.nanflow + that.nanflow, origin)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new SparselyBinned[V, N](
+          binWidth,
+          factor * entries,
+          quantityName,
+          contentType,
+          SortedMap[Long, V](bins.toSeq map {case (i, x) => (i, x * factor)}: _*),
+          nanflow * factor,
+          origin)
 
     def numFilled = bins.size
     def num = if (bins.isEmpty) 0L else 1L + bins.last._1 - bins.head._1
@@ -307,6 +319,18 @@ Like fixed-domain binning, the bins are indexed by integers, though they are 64-
 
       new SparselyBinning[DATUM, V, N](binWidth, this.quantity, this.entries + that.entries, this.value, newbins, this.nanflow + that.nanflow, origin)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new SparselyBinning[DATUM, V, N](
+          binWidth,
+          quantity,
+          factor * entries,
+          value,
+          mutable.Map[Long, V](bins.toSeq map {case (i, x) => (i, x * factor)}: _*),
+          nanflow * factor,
+          origin)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

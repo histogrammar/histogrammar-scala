@@ -180,6 +180,11 @@ package histogrammar {
       
       new CentrallyBinned[V, N](this.entries + that.entries, quantityName, newbins, this.nanflow + that.nanflow)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new CentrallyBinned[V, N](factor * entries, quantityName, bins map {case (c, v) => (c, v * factor)}, nanflow * factor)
 
     def children = nanflow :: values.toList
 
@@ -236,6 +241,11 @@ package histogrammar {
 
       new CentrallyBinning[DATUM, V, N](quantity, this.entries + that.entries, value, newbins, this.nanflow + that.nanflow)
     }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new CentrallyBinning[DATUM, V, N](quantity, factor * entries, value, bins map {case (c, v) => (c, v * factor)}, nanflow * factor)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

@@ -151,6 +151,11 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
             else
               (key, that.bins(key))
           } toMap)
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Categorized[V](factor * entries, quantityName, contentType, bins map {case (c, v) => (c, v * factor)})
 
     def children = values.toList
 
@@ -221,6 +226,11 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
             else
               (key, that.bins(key))
           }: _*))
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Categorizing[DATUM, V](quantity, factor * entries, value, mutable.HashMap[String, V](bins.toSeq.map({case (c, v) => (c, v * factor)}): _*))
     
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

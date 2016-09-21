@@ -243,6 +243,15 @@ package histogrammar {
 
         new Bagged[RANGE](newentries, this.quantityName, newvalues, range)
       }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Bagged[RANGE](
+          factor * entries,
+          quantityName,
+          Map[Bag.HandleNaN[RANGE], Double](values.toSeq map {case (k, v) => (k, factor * v)}: _*),
+          range)
 
     def children = Nil
 
@@ -319,6 +328,15 @@ package histogrammar {
 
         new Bagging[DATUM, RANGE](quantity, newentries, newvalues, range)
       }
+    def *(factor: Double) =
+      if (factor.isNaN  ||  factor <= 0.0)
+        zero
+      else
+        new Bagging[DATUM, RANGE](
+          quantity,
+          factor * entries,
+          scala.collection.mutable.Map[Bag.HandleNaN[RANGE], Double](values.toSeq map {case (k, v) => (k, factor * v)}: _*),
+          range)
 
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()

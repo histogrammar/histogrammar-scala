@@ -207,20 +207,13 @@ package histogrammar {
       * The originals are unaffected.
       */
     def +(that: CONTAINER): CONTAINER
-    // /** Reweight the contents in all nested aggregators by a scalar factor, as though they had been filled with a different weight.
-    //   * 
-    //   * If the container is mutable (with [[org.dianahep.histogrammar.Aggregation]]), the new one will be, too.
-    //   * 
-    //   * The original is unaffected.
-    //   */
-    // def *(factor: Double): CONTAINER
-    /** Reweight the `entries` in all nested aggregators by a scalar factor, leaving the contents untouched.
+    /** Reweight the contents in all nested aggregators by a scalar factor, as though they had been filled with a different weight.
       * 
       * If the container is mutable (with [[org.dianahep.histogrammar.Aggregation]]), the new one will be, too.
       * 
       * The original is unaffected.
       */
-    def reweight(factor: Double): CONTAINER
+    def *(factor: Double): CONTAINER
     /** Copy this container, making a clone with no reference to the original.
       * 
       * If these containers are mutable (with [[org.dianahep.histogrammar.Aggregation]]), the new one will be, too.
@@ -510,6 +503,10 @@ package object histogrammar {
         Math.abs(this.x - that) <= util.absoluteTolerance
       else
         this.x == that
+  }
+
+  implicit class NumberTimesContainer(factor: Double) {
+    def *[CONTAINER <: Container[CONTAINER]](container: CONTAINER) = container * factor
   }
 
   //////////////////////////////////////////////////////////////// indexes for nested collections

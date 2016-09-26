@@ -22,7 +22,7 @@
 
   <groupId>org.diana-hep</groupId>
   <artifactId>histogrammar-bokeh_2.10</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -75,7 +75,7 @@
     <dependency>
       <groupId>org.diana-hep</groupId>
       <artifactId>histogrammar_2.10</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3</version>
     </dependency>
 
     <dependency>

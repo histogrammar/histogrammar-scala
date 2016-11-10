@@ -22,7 +22,7 @@
 
   <groupId>org.diana-hep</groupId>
   <artifactId>histogrammar_${scala.binary.version}</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.4</version>
   <packaging>jar</packaging>
 
   <licenses>

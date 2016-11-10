@@ -27,7 +27,7 @@ package histogrammar {
   class ContainerException(message: String, cause: Exception = null) extends Exception(message, cause)
 
   object Version {
-    def version = "1.0.3"
+    def version = "1.0.4"
     def specification = version.split("""[-\.]""").take(2).mkString(".")
     def compatibleVersion(serializedVersion: String) = {
       val Array(selfMajor, selfMinor) = specification.split("""\.""").take(2).map(java.lang.Integer.parseInt(_))

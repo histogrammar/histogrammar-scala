@@ -14,6 +14,7 @@
 
 package org.dianahep.histogrammar
 
+import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
 
 import org.apache.spark.sql.types.StringType
@@ -73,5 +74,66 @@ package object sparksql {
 
       df.select(columns.result: _*).rdd.aggregate(container)({(h: CONTAINER, d: Row) => h.fill(d); h}, {(h1: CONTAINER, h2: CONTAINER) => h1 + h2})
     }
+  }
+}
+
+package sparksql.pyspark {
+  import scala.language.existentials
+  import sparksql._
+
+  class AggregatorConverter {
+    type Agg = C forSome {type C <: Container[C] with Aggregation{type Datum >: Row}}
+
+    def average(quantity: Column) = Average[Row](quantity)
+
+    def bag(quantity: Column, range: String) = range match {
+      case "N" => Bag[Row, Double](quantity, range)
+      case "S" => Bag[Row, String](quantity, range)
+      case _ => Bag[Row, Seq[Double]](quantity, range)
+    }
+
+    def bin(num: Int, low: Double, high: Double, quantity: Column, value: Agg, underflow: Agg, overflow: Agg, nanflow: Agg) =
+      Bin(num, low, high, quantity, value.copy, underflow, overflow, nanflow)
+
+    def branch(i0: Agg) = new Branching(0.0, i0, BranchingNil)
+    def branch(i0: Agg, i1: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, BranchingNil))
+    def branch(i0: Agg, i1: Agg, i2: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, BranchingNil)))
+    def branch(i0: Agg, i1: Agg, i2: Agg, i3: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, BranchingNil))))
+    def branch(i0: Agg, i1: Agg, i2: Agg, i3: Agg, i4: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, BranchingNil)))))
+    def branch(i0: Agg, i1: Agg, i2: Agg, i3: Agg, i4: Agg, i5: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, BranchingNil))))))
+    def branch(i0: Agg, i1: Agg, i2: Agg, i3: Agg, i4: Agg, i5: Agg, i6: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, new Branching(0.0, i6, BranchingNil)))))))
+    def branch(i0: Agg, i1: Agg, i2: Agg, i3: Agg, i4: Agg, i5: Agg, i6: Agg, i7: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, new Branching(0.0, i6, new Branching(0.0, i7, BranchingNil))))))))
+    def branch(i0: Agg, i1: Agg, i2: Agg, i3: Agg, i4: Agg, i5: Agg, i6: Agg, i7: Agg, i8: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, new Branching(0.0, i6, new Branching(0.0, i7, new Branching(0.0, i8, BranchingNil)))))))))
+    def branch(i0: Agg, i1: Agg, i2: Agg, i3: Agg, i4: Agg, i5: Agg, i6: Agg, i7: Agg, i8: Agg, i9: Agg) = new Branching(0.0, i0, new Branching(0.0, i1, new Branching(0.0, i2, new Branching(0.0, i3, new Branching(0.0, i4, new Branching(0.0, i5, new Branching(0.0, i6, new Branching(0.0, i7, new Branching(0.0, i8, new Branching(0.0, i9, BranchingNil))))))))))
+
+    def categorize(quantity: Column, value: Agg) = Categorize(quantity, value.copy)
+
+    def centrallyBin(bins: java.lang.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = CentrallyBin(bins, quantity, value.copy, nanflow)
+
+    def count() = Count()   // TODO: handle transform
+
+    def deviate(quantity: Column) = Deviate(quantity)
+
+    def fraction(quantity: Column, value: Agg) = Fraction(quantity, value.copy)
+
+    def index(values: java.lang.Iterable[Agg]) = Index(values.toSeq: _*)
+
+    def irregularlyBin(bins: java.lang.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = IrregularlyBin(bins, quantity, value.copy, nanflow)
+
+    def label(pairs: java.lang.Iterable[(String, Agg)]) = new Labeling(0.0, pairs.toSeq.asInstanceOf[Seq[(String, Averaging[Row])]]: _*)
+
+    def maximize(quantity: Column) = Maximize(quantity)
+
+    def minimize(quantity: Column) = Minimize(quantity)
+
+    def select(quantity: Column, cut: Agg) = Select(quantity, cut)
+
+    def sparselyBin(binWidth: Double, quantity: Column, value: Agg, nanflow: Agg, origin: Double) = SparselyBin(binWidth, quantity, value.copy, nanflow, origin)
+
+    def stack(bins: java.lang.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = Stack(bins, quantity, value.copy, nanflow)
+
+    def sum(quantity: Column) = Sum(quantity)
+
+    def untypedLabel(pairs: java.lang.Iterable[(String, Agg)]) = new UntypedLabeling(0.0, pairs.head.asInstanceOf[(String, Averaging[Row])], pairs.tail.toSeq.asInstanceOf[Seq[(String, Averaging[Row])]]: _*)
   }
 }

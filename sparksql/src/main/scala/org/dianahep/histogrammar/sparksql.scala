@@ -135,6 +135,8 @@ package sparksql.pyspark {
   class AggregatorConverter {
     type Agg = C forSome {type C <: Container[C] with Aggregation{type Datum >: Row}}
 
+    def histogrammar[CONTAINER <: Container[CONTAINER] with Aggregation{type Datum = Row}](df: DataFrame, container: CONTAINER) = df.histogrammar(container)(ClassTag(container.getClass))
+
     def Average(quantity: Column) = org.dianahep.histogrammar.Average[Row](quantity)
 
     def Bag(quantity: Column, range: String) = range match {

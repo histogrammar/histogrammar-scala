@@ -227,6 +227,18 @@ template = '''<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http
 {javaversion}  </properties>
 
 {dependencies}
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>Central Repository</name>
+      <url>http://repo.maven.apache.org/maven2</url>
+      <layout>default</layout>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
   <build>
     <plugins>
 

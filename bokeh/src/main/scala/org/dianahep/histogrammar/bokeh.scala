@@ -114,6 +114,16 @@ package object bokeh extends Tools {
 
    def plot(xLabel:String, yLabel: String,glyphs: Array[GlyphRenderer]) : Plot = plot(xLabel,yLabel,glyphs: _*)
 
+   def plot(glyphs: Array[GlyphRenderer],glyph: GlyphRenderer) : Plot = {
+      val combined = glyphs:+glyph
+      plot(combined: _*)
+   }
+
+   def plot(xLabel:String, yLabel: String,glyphs: Array[GlyphRenderer],glyph: GlyphRenderer) : Plot = {
+      val combined = glyphs:+glyph
+      plot(xLabel,yLabel,combined: _*)
+   }
+
    def save(plot: Plot, fname: String) {
        val document = new Document(plot)
 
@@ -163,13 +173,13 @@ package object bokeh extends Tools {
 
       //Set marker color, fill color, line color
       val glyph = glyphType match {
-       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "square"   => new Square().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case "histogram"=> new Rect().x(xh).y(yh).width(step).height(y).fill_color(fillColor).line_color(lineColor)
-       case "errors"   => new Rect().x(x).y(y).width(step).height(ci).fill_color(fillColor).line_color(lineColor)
+       case "errors"   => new Rect().x(xh).y(yh).width(step).height(ci).fill_color(fillColor).line_color(lineColor)
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
@@ -206,16 +216,19 @@ package object bokeh extends Tools {
 
       object source extends ColumnDataSource {
           val x = column(l to h by step)
-          val y = column(profile.cut.values.map(v=>v.mean))
+          val xh = column(l+step/2 to h+step/2 by step)
+          val y = column(profile.cut.values.map(_.entries))
+          val yh = column(profile.cut.values.map(v=>v.entries/2))
       }
-      import source.{x,y}
+      import source.{x,xh,y,yh}
+
 
       val glyph = glyphType match {
-       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "square"   => new Square().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
@@ -254,17 +267,19 @@ package object bokeh extends Tools {
           val x = column(l to h by step)
           val y = column(profile.cut.values.map(v=>v.mean))
           val yerr = column(profile.cut.values.map(v => if (v.entries > 0.0) Math.sqrt(v.variance / v.entries) else 0.0))
+          val xh = column(l+step/2 to h+step/2 by step)
+          val yh = column(profile.cut.values.map(v=>v.entries/2))
       }
-      import source.{x,y,yerr}
+      import source.{x,xh,y,yh,yerr}
 
       //Set marker color, fill color, line color
       val glyph = glyphType match {
-       case "square"   => new Square().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "diamond"  => new Diamond().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "cross"    => new Cross().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "triangle" => new Triangle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "circle"   => new Circle().x(x).y(y).size(glyphSize).fill_color(fillColor).line_color(lineColor)
-       case "errors"   => new Rect().x(x).y(y).width(step).height(yerr).fill_color(fillColor).line_color(lineColor)  
+       case "square"   => new Square().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "diamond"  => new Diamond().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "cross"    => new Cross().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "triangle" => new Triangle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "circle"   => new Circle().x(xh).y(yh).size(glyphSize).fill_color(fillColor).line_color(lineColor)
+       case "errors"   => new Rect().x(xh).y(yh).width(step).height(yerr).fill_color(fillColor).line_color(lineColor)  
        case other      => new Line().x(x).y(y).line_color(lineColor).line_width(glyphSize)
       }
 
@@ -316,7 +331,7 @@ package object bokeh extends Tools {
       var ichild = 0
 
       for (p <- stack.children) {
-          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),lineColors(ichild),fillColors(ichild))
+          stackedGlyphs += p.bokeh(glyphTypes(ichild),glyphSizes(ichild),fillColors(ichild),lineColors(ichild))
           ichild += 1
       }
       stackedGlyphs.toArray

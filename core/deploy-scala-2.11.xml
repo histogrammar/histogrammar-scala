@@ -17,12 +17,12 @@
 
   <name>histogrammar</name>
   <description>Histogram abstraction to simplify complex aggregations in distributed environments.</description>
-  <url>http://histogrammar.org</url>
+  <url>https://histogrammar.github.io/histogrammar-docs</url>
   <inceptionYear>2016</inceptionYear>
 
-  <groupId>org.diana-hep</groupId>
+  <groupId>io.github.histogrammar</groupId>
   <artifactId>histogrammar_2.11</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.11</version>
   <packaging>jar</packaging>
 
   <licenses>
@@ -69,13 +69,13 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.11.8</version>
+      <version>2.11.12</version>
     </dependency>
 
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.11</artifactId>
-      <version>2.2.5</version>
+      <version>3.2.3</version>
       <scope>test</scope>
     </dependency>
 
@@ -115,7 +115,7 @@
         <!-- see http://davidb.github.com/scala-maven-plugin -->
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>4.4.0</version>
         <executions>
           <execution>
             <goals>
@@ -195,7 +195,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
-        <version>1.6</version>
+        <version>1.5</version>
         <executions>
           <execution>
             <id>sign-artifacts</id>

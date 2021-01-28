@@ -6,13 +6,13 @@
 
   <name>histogrammar-parent</name>
   <description>Histogrammar parent package. See org.diana-hep:histogrammar for the core functionality.</description>
-  <url>http://histogrammar.org</url>
+  <url>https://histogrammar.github.io/histogrammar-docs</url>
   <inceptionYear>2016</inceptionYear>
 
-  <groupId>org.diana-hep</groupId>
+  <groupId>io.github.histogrammar</groupId>
   <artifactId>histogrammar-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.0.4</version>
+  <version>1.0.11</version>
 
   <licenses>
     <license>
@@ -47,6 +47,17 @@
       <id>scala-2.11</id>
       <activation>
         <property><name>scala-2.11</name></property>
+      </activation>
+      <modules>
+        <module>core</module>
+        <module>sparksql</module>
+        <!-- <module>bokeh</module> -->    <!-- Not supported until they fix their dependencies. -->
+      </modules>
+    </profile>
+    <profile>
+      <id>scala-2.12</id>
+      <activation>
+        <property><name>scala-2.12</name></property>
       </activation>
       <modules>
         <module>core</module>

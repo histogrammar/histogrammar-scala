@@ -21,7 +21,7 @@
   <inceptionYear>2016</inceptionYear>
 
   <groupId>io.github.histogrammar</groupId>
-  <artifactId>histogrammar-sparksql_2.11</artifactId>
+  <artifactId>histogrammar-sparksql_2.12</artifactId>
   <version>1.0.11</version>
   <packaging>jar</packaging>
 
@@ -69,19 +69,19 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.11.12</version>
+      <version>2.12.13</version>
     </dependency>
 
     <dependency>
       <groupId>io.github.histogrammar</groupId>
-      <artifactId>histogrammar_2.11</artifactId>
+      <artifactId>histogrammar_2.12</artifactId>
       <version>1.0.11</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.11</artifactId>
-      <version>2.0.0</version>
+      <artifactId>spark-sql_2.12</artifactId>
+      <version>3.0.1</version>
       <scope>provided</scope>
     </dependency>
 

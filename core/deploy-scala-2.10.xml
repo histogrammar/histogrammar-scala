@@ -17,12 +17,12 @@
 
   <name>histogrammar</name>
   <description>Histogram abstraction to simplify complex aggregations in distributed environments.</description>
-  <url>http://histogrammar.org</url>
+  <url>https://histogrammar.github.io/histogrammar-docs</url>
   <inceptionYear>2016</inceptionYear>
 
-  <groupId>org.diana-hep</groupId>
+  <groupId>io.github.histogrammar</groupId>
   <artifactId>histogrammar_2.10</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.20</version>
   <packaging>jar</packaging>
 
   <licenses>

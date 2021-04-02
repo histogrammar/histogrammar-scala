@@ -235,8 +235,8 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
     def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
       checkForCrossReferences()
       if (weight > 0.0) {
-        val q = quantity(datum)
-
+        val qd = quantity(datum)
+        val q = if (qd == null) "NaN" else qd
         if (!(bins contains q))
           bins(q) = value.zero
         bins(q).fill(datum, weight)

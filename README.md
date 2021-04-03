@@ -7,7 +7,7 @@ See [https://histogrammar.github.io/histogrammar-docs](https://histogrammar.gith
 
 This is a Scala implementation for Scala versions 2.10, 2.11 and 2.12.
 
-Last update: January 2021.
+Latest Scala release: v1.0.20 (April 2021).
 
 Installation
 ============

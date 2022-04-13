@@ -40,7 +40,7 @@ package object json {
     def keySet: Set[String] = pairs.map(_._1.value).toSet
   }
 
-  private[json] def whitespace(p: ParseState) {
+  private[json] def whitespace(p: ParseState): Unit = {
     while (p.remaining >= 1  &&  (p.get == ' '  ||  p.get == '\t'  ||  p.get == '\n'  ||  p.get == '\r'))
       p.update(1)
   }
@@ -66,14 +66,14 @@ package json {
   /** Status of JSON-parsing an in-memory string. Holds the position (`pos`), allows peeking (`remaining`), and manages a stack of unwind-protection. */
   case class ParseState(str: String, var pos: Int = 0) {
     private var stack = List[Int]()
-    def save() {
+    def save(): Unit = {
       stack = pos :: stack
     }
-    def restore() {
+    def restore(): Unit = {
       pos = stack.head
       stack = stack.tail
     }
-    def unsave() {
+    def unsave(): Unit = {
       stack = stack.tail
     }
     def get = str(pos)
@@ -91,31 +91,31 @@ package json {
     def pretty(indent: Int = 0) = " " * indent + stringify
 
     /** Write this object to a UTF-8 encoded file using `stringify`. */
-    def write(fileName: String) {
+    def write(fileName: String): Unit = {
       write(new java.io.File(fileName))
     }
 
     /** Write this object to a UTF-8 encoded file using `stringify`. */
-    def write(file: java.io.File) {
+    def write(file: java.io.File): Unit = {
       val f = new java.io.FileOutputStream(file, false)
       append(f)
       f.close()
     }
 
     /** Append this object to a UTF-8 encoded file using `stringify`. */
-    def append(fileName: String) {
+    def append(fileName: String): Unit = {
       append(new java.io.File(fileName))
     }
 
     /** Append this object to a UTF-8 encoded file using `stringify`. */
-    def append(file: java.io.File) {
+    def append(file: java.io.File): Unit = {
       val f = new java.io.FileOutputStream(file, true)
       append(f)
       f.close()
     }
 
     /** Append this object on an OutputStream as UTF-8 using `stringify`. */
-    def append(outputStream: java.io.OutputStream) {
+    def append(outputStream: java.io.OutputStream): Unit = {
       outputStream.write(stringify.getBytes("UTF-8"))
       outputStream.write("\n".getBytes("UTF-8"))
     }

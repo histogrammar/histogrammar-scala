@@ -181,7 +181,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
       else
         varianceTimesEntries / entries
 
-    def variance_=(_variance: Double) {
+    def variance_=(_variance: Double): Unit = {
       varianceTimesEntries = entries * _variance
     }
 
@@ -200,7 +200,7 @@ Uses the numerically stable weighted mean and weighted variance algorithms descr
       else
         new Deviating[DATUM](quantity, factor * entries, mean, variance)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)

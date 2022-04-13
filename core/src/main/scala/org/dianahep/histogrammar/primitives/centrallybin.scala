@@ -247,7 +247,7 @@ package histogrammar {
       else
         new CentrallyBinning[DATUM, V, N](quantity, factor * entries, value, bins map {case (c, v) => (c, v * factor)}, nanflow * factor)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)

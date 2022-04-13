@@ -156,7 +156,7 @@ package histogrammar {
       else
         new Minimizing[DATUM](quantity, factor * entries, min)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)
@@ -316,7 +316,7 @@ package histogrammar {
       else
         new Maximizing[DATUM](quantity, factor * entries, max)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)

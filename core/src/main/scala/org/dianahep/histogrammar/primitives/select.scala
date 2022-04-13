@@ -170,7 +170,7 @@ The efficiency of a cut in a Select aggregator named `x` is simply `x.cut.entrie
       else
         new Selecting[DATUM, V](factor * entries, quantity, cut * factor)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val w = weight * quantity(datum)

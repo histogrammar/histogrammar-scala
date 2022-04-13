@@ -15,13 +15,13 @@
   <!-- See the License for the specific language governing permissions and         -->
   <!-- limitations under the License.                                              -->
 
-  <name>histogrammar</name>
-  <description>Histogram abstraction to simplify complex aggregations in distributed environments.</description>
+  <name>histogrammar-sparksql</name>
+  <description>Adapter for using Histogrammar in SparkSQL.</description>
   <url>https://histogrammar.github.io/histogrammar-docs</url>
   <inceptionYear>2016</inceptionYear>
 
   <groupId>io.github.histogrammar</groupId>
-  <artifactId>histogrammar_${scala.binary.version}</artifactId>
+  <artifactId>histogrammar-sparksql_2.13</artifactId>
   <version>1.0.20</version>
   <packaging>jar</packaging>
 
@@ -48,69 +48,6 @@
     <url>git@github.com:histogrammar/histogrammar-scala.git</url>
   </scm>
 
-  <profiles>
-    <profile>
-      <id>scala-2.10</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <scala.version>2.10.6</scala.version>
-        <scala.binary.version>2.10</scala.binary.version>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <spark.version>1.6.2</spark.version>
-        <java.version>8</java.version>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>scala-2.11</id>
-      <activation>
-        <property><name>scala-2.11</name></property>
-      </activation>
-      <properties>
-        <scala.version>2.11.12</scala.version>
-        <scala.binary.version>2.11</scala.binary.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <spark.version>2.0.0</spark.version>
-        <java.version>8</java.version>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>scala-2.12</id>
-      <activation>
-        <property><name>scala-2.12</name></property>
-      </activation>
-      <properties>
-        <scala.version>2.12.13</scala.version>
-        <scala.binary.version>2.12</scala.binary.version>
-        <maven.compiler.source>1.9</maven.compiler.source>
-        <maven.compiler.target>1.9</maven.compiler.target>
-        <spark.version>3.0.1</spark.version>
-        <java.version>11</java.version>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>scala-2.13</id>
-      <activation>
-        <property><name>scala-2.13</name></property>
-      </activation>
-      <properties>
-        <scala.version>2.13.0</scala.version>
-        <scala.binary.version>2.13</scala.binary.version>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <spark.version>3.2.0</spark.version>
-        <java.version>11</java.version>
-      </properties>
-    </profile>
-
-  </profiles>
-
   <reporting>
     <plugins>
       <plugin>
@@ -124,20 +61,28 @@
   <properties>
     <encoding>UTF-8</encoding>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
+      <version>2.13.0</version>
     </dependency>
 
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.binary.version}</artifactId>
-      <version>3.2.3</version>
-      <scope>test</scope>
+      <groupId>io.github.histogrammar</groupId>
+      <artifactId>histogrammar_2.13</artifactId>
+      <version>1.0.11</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.13</artifactId>
+      <version>3.0.1</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>
@@ -146,7 +91,7 @@
     <repository>
       <id>central</id>
       <name>Central Repository</name>
-      <url>https://repo1.maven.org/maven2</url>
+      <url>http://repo1.maven.org/maven2</url>
       <layout>default</layout>
       <snapshots>
         <enabled>false</enabled>
@@ -158,7 +103,7 @@
     <pluginRepository>
       <id>central</id>
       <name>Maven Plugin Repository</name>
-      <url>https://repo1.maven.org/maven2</url>
+      <url>http://repo1.maven.org/maven2</url>
       <layout>default</layout>
       <snapshots>
         <enabled>false</enabled>
@@ -171,15 +116,6 @@
 
   <build>
     <plugins>
-
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
-        <configuration>
-          <source>11</source>
-          <target>11</target>
-        </configuration>
-      </plugin>
 
       <plugin>
         <!-- see http://davidb.github.com/scala-maven-plugin -->
@@ -205,47 +141,22 @@
               <!-- <useZincServer>true</useZincServer> -->
             </configuration>
           </execution>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>doc-jar</goal>
+            </goals>
+          </execution>
 
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest-maven-plugin</artifactId>
-        <version>1.0</version>
-        <configuration>
-          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-          <junitxml>.</junitxml>
-        </configuration>
-        <executions>
-          <execution>
-            <id>test</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-          <!-- keep to 2.10, this is not the scala version -->
-        <version>2.10</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>
-                target/lib
-              </outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
 
       <plugin>
         <artifactId>maven-install-plugin</artifactId>
@@ -258,46 +169,61 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>2.2.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
             <goals>
-              <goal>jar</goal>
+              <goal>jar-no-fork</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
 
-      <!-- needed to make a standalone jar package
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
         <executions>
           <execution>
-            <phase>package</phase>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
             <goals>
-              <goal>shade</goal>
+              <goal>sign</goal>
             </goals>
-            <configuration>
-              <artifactSet>
-                <excludes>
-                  <exclude>classworlds:classworlds</exclude>
-                  <exclude>junit:junit</exclude>
-                  <exclude>jmock:*</exclude>
-                  <exclude>*:xml-apis</exclude>
-                  <exclude>org.apache.maven:lib:tests</exclude>
-                  <exclude>log4j:log4j:jar:</exclude>
-                </excludes>
-              </artifactSet>
-            </configuration>
           </execution>
         </executions>
       </plugin>
-      -->
+
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
 
     </plugins>
+
+    <pluginManagement>  
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.5</version>
+          <configuration>
+            <useReleaseProfile>false</useReleaseProfile>
+            <pushChanges>false</pushChanges>
+            <localCheckout>true</localCheckout>
+            <goals>deploy</goals>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement> 
 
     <resources>
     </resources>
@@ -305,5 +231,16 @@
     <testResources>
     </testResources>
   </build>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
 
 </project>

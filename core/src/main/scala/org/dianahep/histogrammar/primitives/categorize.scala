@@ -232,7 +232,7 @@ Unlike [[org.dianahep.histogrammar.SparselyBin]], this aggregator has the potent
       else
         new Categorizing[DATUM, V](quantity, factor * entries, value, mutable.HashMap[String, V](bins.toSeq.map({case (c, v) => (c, v * factor)}): _*))
     
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val qd = quantity(datum)

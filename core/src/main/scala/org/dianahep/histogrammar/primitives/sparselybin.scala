@@ -332,7 +332,7 @@ Like fixed-domain binning, the bins are indexed by integers, though they are 64-
           nanflow * factor,
           origin)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)

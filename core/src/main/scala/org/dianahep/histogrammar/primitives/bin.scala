@@ -361,7 +361,7 @@ and so on."""
       else
         new Binning[DATUM, V, U, O, N](low, high, quantity, factor * entries, values.map(_ * factor), underflow * factor, overflow * factor, nanflow * factor)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)

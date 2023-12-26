@@ -236,7 +236,7 @@ In strongly typed languages, the restriction to a single type allows nested obje
       else
         new Labeling[V](factor * entries, pairs map {case (k, v) => (k, v * factor)}: _*)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         var i = 0
@@ -490,7 +490,7 @@ To collect aggregators of the ''same type'' without naming them, use [[org.diana
       else
         new UntypedLabeling[F](factor * entries, (first._1, first._2 * factor), rest.map({case (k, v) => (k, (v * factor).asInstanceOf[Container[_] with Aggregation])}): _*)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         var i = 0
@@ -722,7 +722,7 @@ To collect aggregators of the ''same type'' with string-based labels, use [[org.
       else
         new Indexing[V](factor * entries, values.map(_ * factor): _*)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         var i = 0
@@ -1008,71 +1008,69 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
 
     /** Attempt to get key `index`, throwing an exception if it does not exist. */
     def apply(index: CollectionIndex) = index match {
-      case SymbolIndex('i0) if (0 < size) => get(0).get
-      case SymbolIndex('i1) if (1 < size) => get(1).get
-      case SymbolIndex('i2) if (2 < size) => get(2).get
-      case SymbolIndex('i3) if (3 < size) => get(3).get
-      case SymbolIndex('i4) if (4 < size) => get(4).get
-      case SymbolIndex('i5) if (5 < size) => get(5).get
-      case SymbolIndex('i6) if (6 < size) => get(6).get
-      case SymbolIndex('i7) if (7 < size) => get(7).get
-      case SymbolIndex('i8) if (8 < size) => get(8).get
-      case SymbolIndex('i9) if (9 < size) => get(9).get
+      case SymbolIndex(Symbol("i0")) if (0 < size) => get(0).get
+      case SymbolIndex(Symbol("i1")) if (1 < size) => get(1).get
+      case SymbolIndex(Symbol("i2")) if (2 < size) => get(2).get
+      case SymbolIndex(Symbol("i3")) if (3 < size) => get(3).get
+      case SymbolIndex(Symbol("i4")) if (4 < size) => get(4).get
+      case SymbolIndex(Symbol("i5")) if (5 < size) => get(5).get
+      case SymbolIndex(Symbol("i6")) if (6 < size) => get(6).get
+      case SymbolIndex(Symbol("i7")) if (7 < size) => get(7).get
+      case SymbolIndex(Symbol("i9")) if (9 < size) => get(9).get
       case IntegerIndex(i) if (i >= 0  &&  i < size) => get(i).get
       case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: $index""")
     }
 
     /** Attempt to get key `indexes`, throwing an exception if it does not exist. */
     def apply(indexes: CollectionIndex*) = indexes.toList match {
-      case SymbolIndex('i0) :: Nil if (0 < size) => get(0).get
-      case SymbolIndex('i1) :: Nil if (1 < size) => get(1).get
-      case SymbolIndex('i2) :: Nil if (2 < size) => get(2).get
-      case SymbolIndex('i3) :: Nil if (3 < size) => get(3).get
-      case SymbolIndex('i4) :: Nil if (4 < size) => get(4).get
-      case SymbolIndex('i5) :: Nil if (5 < size) => get(5).get
-      case SymbolIndex('i6) :: Nil if (6 < size) => get(6).get
-      case SymbolIndex('i7) :: Nil if (7 < size) => get(7).get
-      case SymbolIndex('i8) :: Nil if (8 < size) => get(8).get
-      case SymbolIndex('i9) :: Nil if (9 < size) => get(9).get
+      case SymbolIndex(Symbol("i0")) :: Nil if (0 < size) => get(0).get
+      case SymbolIndex(Symbol("i1")) :: Nil if (1 < size) => get(1).get
+      case SymbolIndex(Symbol("i2")) :: Nil if (2 < size) => get(2).get
+      case SymbolIndex(Symbol("i3")) :: Nil if (3 < size) => get(3).get
+      case SymbolIndex(Symbol("i4")) :: Nil if (4 < size) => get(4).get
+      case SymbolIndex(Symbol("i5")) :: Nil if (5 < size) => get(5).get
+      case SymbolIndex(Symbol("i7")) :: Nil if (7 < size) => get(7).get
+      case SymbolIndex(Symbol("i8")) :: Nil if (8 < size) => get(8).get
+      case SymbolIndex(Symbol("i9")) :: Nil if (9 < size) => get(9).get
       case IntegerIndex(i) :: Nil if (i >= 0  &&  i < size) => get(i).get
 
-      case SymbolIndex('i0) :: rest if (0 < size) => get(0).get match {
+      case SymbolIndex(Symbol("i0")) :: rest if (0 < size) => get(0).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i1) :: rest if (1 < size) => get(1).get match {
+      case SymbolIndex(Symbol("i1")) :: rest if (1 < size) => get(1).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i2) :: rest if (2 < size) => get(2).get match {
+      case SymbolIndex(Symbol("i2")) :: rest if (2 < size) => get(2).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i3) :: rest if (3 < size) => get(3).get match {
+      case SymbolIndex(Symbol("i3")) :: rest if (3 < size) => get(3).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i4) :: rest if (4 < size) => get(4).get match {
+      case SymbolIndex(Symbol("i4")) :: rest if (4 < size) => get(4).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i5) :: rest if (5 < size) => get(5).get match {
+      case SymbolIndex(Symbol("i5")) :: rest if (5 < size) => get(5).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i6) :: rest if (6 < size) => get(6).get match {
+      case SymbolIndex(Symbol("i6")) :: rest if (6 < size) => get(6).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i7) :: rest if (7 < size) => get(7).get match {
+      case SymbolIndex(Symbol("i7")) :: rest if (7 < size) => get(7).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i8) :: rest if (8 < size) => get(8).get match {
+      case SymbolIndex(Symbol("i8")) :: rest if (8 < size) => get(8).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
-      case SymbolIndex('i9) :: rest if (9 < size) => get(9).get match {
+      case SymbolIndex(Symbol("i9")) :: rest if (9 < size) => get(9).get match {
         case sub: Collection => sub(rest: _*)
         case _ => throw new IllegalArgumentException(s"""wrong type or out of bounds index for Branching: ${indexes.mkString(", ")}""")
       }
@@ -1098,7 +1096,7 @@ To collect an unlimited number of aggregators of the ''same type'' without namin
           case _: BranchingNil.type => new Branching[HEAD, TAIL](factor * entries, head * factor, BranchingNil.asInstanceOf[TAIL])
         }
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         head.fill(datum, weight)

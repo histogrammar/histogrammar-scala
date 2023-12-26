@@ -5,9 +5,26 @@ Scala implementation of Histogrammar
 
 See [https://histogrammar.github.io/histogrammar-docs](https://histogrammar.github.io/histogrammar-docs) for a complete introduction to Histogrammar.
 
-This is a Scala implementation for Scala versions 2.10, 2.11 and 2.12.
+This is a Scala implementation for Scala versions 2.10, 2.11, 2.12 and 2.13.
 
-Latest Scala release: v1.0.20 (April 2021).
+Latest Scala release: v1.0.30 (Dec 2023).
+
+Announcements
+=============
+
+Spark 3.X
+---------
+
+With Spark 3.X, based on Scala 2.12 or 3.13, make sure to pick up the correct histogrammar jar file:
+
+.. code-block:: python
+
+  spark = SparkSession.builder.config("spark.jars.packages", "io.github.histogrammar:histogrammar_2.12:1.0.30,io.github.histogrammar:histogrammar-sparksql_2.12:1.0.30").getOrCreate()
+
+For Scala 2.13, in the string above simply replace "2.12" with "2.13".
+
+December, 2023
+
 
 Installation
 ============
@@ -15,22 +32,11 @@ Installation
 Histogrammar has a standard Maven POM. With Maven 3+, run
 
 ```bash
-mvn install -P scala-2.10
+mvn install -P scala-2.XX
 ```
 
-or
-
-```bash
-mvn install -P scala-2.11
-```
-
-or 
-
-```bash
-mvn install -P scala-2.12
-```
-
-in the base directory (to compile everything) or one of the subdirectories. All subdirectories depend on `core`, so this must be installed first.
+in the base directory (to compile everything) or one of the subdirectories, where XX selects the scala version (2.10, 2.11, 2.12, 2.13). 
+All subdirectories depend on `core`, so this must be installed first.
 
 Status
 ======

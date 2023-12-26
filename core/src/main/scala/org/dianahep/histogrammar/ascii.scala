@@ -17,6 +17,9 @@ package org.dianahep.histogrammar
 import scala.collection.mutable
 import scala.language.implicitConversions
 
+// see: https://users.scala-lang.org/t/deprecateddoubleordering/4979/14
+import Ordering.Double.TotalOrdering
+
 import org.dianahep.histogrammar._
 
 /** Methods for drawing familiar combinations of containers, such as histograms, in ASCII art. */
@@ -42,11 +45,11 @@ package object ascii {
 
   class HistogramMethodsAscii(val selected: Selected[Binned[Counted, Counted, Counted, Counted]]) {
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
-    def println {
+    def println: Unit = {
       System.out.println(ascii(80))
     }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def println(width: Int) {
+    def println(width: Int): Unit = {
       System.out.println(ascii(width))
     }
 
@@ -170,11 +173,11 @@ package object ascii {
 
   class ProfileMethodsAscii(val selected: Selected[Binned[Averaged, Counted, Counted, Counted]]) {
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
-    def println {
+    def println: Unit = {
       System.out.println(ascii(80))
     }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def println(width: Int) {
+    def println(width: Int): Unit = {
       System.out.println(ascii(width))
     }
 
@@ -288,11 +291,11 @@ package object ascii {
 
   class ProfileErrMethodsAscii(val selected: Selected[Binned[Deviated, Counted, Counted, Counted]]) {
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
-    def println {
+    def println: Unit = {
       System.out.println(ascii(80))
     }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def println(width: Int) {
+    def println(width: Int): Unit = {
       System.out.println(ascii(width))
     }
 
@@ -464,12 +467,12 @@ package object ascii {
 
   class FractionedHistogramMethodsAscii(val fractioned: Fractioned[Selected[Binned[Counted, Counted, Counted, Counted]], Selected[Binned[Counted, Counted, Counted, Counted]]]) {
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns. */
-    def println {
+    def println: Unit = {
       println({(n: Double, d: Double, z: Double) => n/d}, 80)
     }
 
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns. */
-    def println(width: Int) {
+    def println(width: Int): Unit = {
       println({(n: Double, d: Double, z: Double) => n/d}, width)
     }
 
@@ -477,7 +480,7 @@ package object ascii {
       * 
       * @param confidenceInterval confidence interval function, which takes (numerator entries, denominator entries, `z`) as arguments, where `z` is the "number of sigmas:" `z = 0` is the central value, `z = -1` is the 68% confidence level below the central value, and `z = 1` is the 68% confidence level above the central value.
       */
-    def println(confidenceInterval: (Double, Double, Double) => Double, width: Int = 80) {
+    def println(confidenceInterval: (Double, Double, Double) => Double, width: Int = 80): Unit = {
       System.out.println(ascii(confidenceInterval, width))
     }
 
@@ -666,11 +669,11 @@ package object ascii {
 
   class CollectionMethodsAscii(collection: Collection) {
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to 80 columns with 40 reserved for indexes. */
-    def println {
+    def println: Unit = {
       System.out.println(ascii(40, 80))
     }
     /** Print an ASCII representation of a histogram for debugging on headless systems. Limited to `width` columns with `indexWidth` reserved for indexes. */
-    def println(indexWidth: Int = 40, width: Int = 80) {
+    def println(indexWidth: Int = 40, width: Int = 80): Unit = {
       System.out.println(ascii(indexWidth, width))
     }
 

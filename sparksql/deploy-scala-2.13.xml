@@ -15,13 +15,13 @@
   <!-- See the License for the specific language governing permissions and         -->
   <!-- limitations under the License.                                              -->
 
-  <name>histogrammar</name>
-  <description>Histogram abstraction to simplify complex aggregations in distributed environments.</description>
+  <name>histogrammar-sparksql</name>
+  <description>Adapter for using Histogrammar in SparkSQL.</description>
   <url>https://histogrammar.github.io/histogrammar-docs</url>
   <inceptionYear>2016</inceptionYear>
 
   <groupId>io.github.histogrammar</groupId>
-  <artifactId>histogrammar_2.12</artifactId>
+  <artifactId>histogrammar-sparksql_2.13</artifactId>
   <version>1.0.30</version>
   <packaging>jar</packaging>
 
@@ -69,14 +69,20 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.12.13</version>
+      <version>2.13.12</version>
     </dependency>
 
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.12</artifactId>
-      <version>3.2.3</version>
-      <scope>test</scope>
+      <groupId>io.github.histogrammar</groupId>
+      <artifactId>histogrammar_2.13</artifactId>
+      <version>1.0.30</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.13</artifactId>
+      <version>3.4.2</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>
@@ -151,24 +157,6 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest-maven-plugin</artifactId>
-        <version>1.0</version>
-        <configuration>
-          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-          <junitxml>.</junitxml>
-        </configuration>
-        <executions>
-          <execution>
-            <id>test</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      
 
       <plugin>
         <artifactId>maven-install-plugin</artifactId>
@@ -206,6 +194,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>

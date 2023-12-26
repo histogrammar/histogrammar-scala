@@ -14,7 +14,8 @@
 
 package org.dianahep.histogrammar
 
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 import scala.language.existentials
 import scala.reflect.ClassTag
 
@@ -41,7 +42,7 @@ package object sparksql {
       var index = 0
       val columns = List.newBuilder[Column]
 
-      def gatherColumns(x: Container[_]) {
+      def gatherColumns(x: Container[_]): Unit = {
         x match {
           case y: NumericalQuantity[_] => y.quantity match {
             case z: UserFcnFromColumn[_] =>
@@ -161,7 +162,7 @@ package sparksql.pyspark {
 
     def Categorize(quantity: Column, value: Agg) = org.dianahep.histogrammar.Categorize(quantity, value.copy)
 
-    def CentrallyBin(bins: java.lang.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = org.dianahep.histogrammar.CentrallyBin(bins, quantity, value.copy, nanflow)
+    def CentrallyBin(bins: scala.collection.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = org.dianahep.histogrammar.CentrallyBin(bins, quantity, value.copy, nanflow)
 
     def Count() = org.dianahep.histogrammar.Count()   // TODO: handle transform
 
@@ -169,11 +170,11 @@ package sparksql.pyspark {
 
     def Fraction(quantity: Column, value: Agg) = org.dianahep.histogrammar.Fraction(quantity, value.copy)
 
-    def Index(values: java.lang.Iterable[Agg]) = org.dianahep.histogrammar.Index(values.toSeq: _*)
+    def Index(values: scala.collection.Iterable[Agg]) = org.dianahep.histogrammar.Index(values.toSeq: _*)
 
-    def IrregularlyBin(bins: java.lang.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = org.dianahep.histogrammar.IrregularlyBin(bins, quantity, value.copy, nanflow)
+    def IrregularlyBin(bins: scala.collection.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = org.dianahep.histogrammar.IrregularlyBin(bins, quantity, value.copy, nanflow)
 
-    def Label(pairs: java.lang.Iterable[(String, Agg)]) = new Labeling(0.0, pairs.toSeq.asInstanceOf[Seq[(String, Averaging[Row])]]: _*)
+    def Label(pairs: scala.collection.Iterable[(String, Agg)]) = new Labeling(0.0, pairs.toSeq.asInstanceOf[Seq[(String, Averaging[Row])]]: _*)
 
     def Maximize(quantity: Column) = org.dianahep.histogrammar.Maximize(quantity)
 
@@ -183,10 +184,10 @@ package sparksql.pyspark {
 
     def SparselyBin(binWidth: Double, quantity: Column, value: Agg, nanflow: Agg, origin: Double) = org.dianahep.histogrammar.SparselyBin(binWidth, quantity, value.copy, nanflow, origin)
 
-    def Stack(bins: java.lang.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = org.dianahep.histogrammar.Stack(bins, quantity, value.copy, nanflow)
+    def Stack(bins: scala.collection.Iterable[Double], quantity: Column, value: Agg, nanflow: Agg) = org.dianahep.histogrammar.Stack(bins, quantity, value.copy, nanflow)
 
     def Sum(quantity: Column) = org.dianahep.histogrammar.Sum(quantity)
 
-    def UntypedLabel(pairs: java.lang.Iterable[(String, Agg)]) = new UntypedLabeling(0.0, pairs.head.asInstanceOf[(String, Averaging[Row])], pairs.tail.toSeq.asInstanceOf[Seq[(String, Averaging[Row])]]: _*)
+    def UntypedLabel(pairs: scala.collection.Iterable[(String, Agg)]) = new UntypedLabeling(0.0, pairs.head.asInstanceOf[(String, Averaging[Row])], pairs.tail.toSeq.asInstanceOf[Seq[(String, Averaging[Row])]]: _*)
   }
 }

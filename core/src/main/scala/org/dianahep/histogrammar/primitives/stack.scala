@@ -17,6 +17,9 @@ package org.dianahep
 import scala.collection.immutable.SortedSet
 import scala.language.existentials
 
+// see: https://users.scala-lang.org/t/deprecateddoubleordering/4979/14
+import Ordering.Double.TotalOrdering
+
 import org.dianahep.histogrammar.json._
 import org.dianahep.histogrammar.util._
 
@@ -243,7 +246,7 @@ To make plots from different sources in Histogrammar, one must perform separate 
       else
         new Stacking[DATUM, V, N](bins map {case (c, v) => (c, v * factor)}, quantity, nanflow * factor, factor * entries)
 
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       if (weight > 0.0) {
         val q = quantity(datum)

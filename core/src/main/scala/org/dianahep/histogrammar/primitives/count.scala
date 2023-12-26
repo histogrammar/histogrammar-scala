@@ -166,7 +166,7 @@ package histogrammar {
       else
         new Counting(factor * entries, transform)
 
-    def fill[SUB <: Any](datum: SUB, weight: Double = 1.0) {
+    def fill[SUB <: Any](datum: SUB, weight: Double = 1.0): Unit = {
       checkForCrossReferences()
       // no possibility of exception from here on out (for rollback)
       if (weight > 0.0)

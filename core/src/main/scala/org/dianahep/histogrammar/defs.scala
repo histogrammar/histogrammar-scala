@@ -77,7 +77,7 @@ package histogrammar {
     def registered = known
 
     /** Add a new `Factory` to the registry, introducing a new container type on the fly. General users usually wouldn't do this, but they could. This method is used internally to define the standard container types. */
-    def register(factory: Factory) {
+    def register(factory: Factory): Unit = {
       known = known.updated(factory.name, factory)
     }
 
@@ -220,8 +220,8 @@ package histogrammar {
       */
     def copy = this + zero
 
-    def toJsonFile(file: java.io.File) { toJson.write(file) }
-    def toJsonFile(fileName: String) { toJson.write(fileName) }
+    def toJsonFile(file: java.io.File): Unit = { toJson.write(file) }
+    def toJsonFile(fileName: String): Unit = { toJson.write(fileName) }
     def toJsonString: String = toJson.stringify
 
     /** Convert this container to JSON (dropping its `fill` method, making it immutable).
@@ -263,18 +263,18 @@ package histogrammar {
     type Datum
 
     /** The `entries` member of mutable containers is a `var`, rather than `val`. */
-    def entries_=(x: Double)
+    def entries_=(x: Double): Unit
     /** Entry point for the general user to pass data into the container for aggregation.
       * 
       * Usually all containers in a collection of histograms take the same input data by passing it recursively through the tree. Quantities to plot are specified by the individual container's lambda functions.
       * 
       * The container is changed in-place.
       */
-    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0)
+    def fill[SUB <: Datum](datum: SUB, weight: Double = 1.0): Unit
 
     /** List of sub-aggregators, to make it possible to walk the tree. */
     protected var checkedForCrossReferences = false
-    protected def checkForCrossReferences(memo: mutable.Set[Aggregation] = mutable.Set[Aggregation]()) {
+    protected def checkForCrossReferences(memo: mutable.Set[Aggregation] = mutable.Set[Aggregation]()): Unit = {
       if (!checkedForCrossReferences) {
         if (memo.exists(_ eq this))
           throw new ContainerException(s"cannot fill a tree that contains the same aggregator twice: $this")
@@ -322,17 +322,17 @@ package histogrammar {
   class JsonDump(file: java.io.File) {
     def this(fileName: String) = this(new java.io.File(fileName))
     private val fileOutputStream = new java.io.FileOutputStream(file, true)
-    def append[C <: Container[C]](container: C) {
+    def append[C <: Container[C]](container: C): Unit = {
       fileOutputStream.write(container.toJson.stringify.getBytes("UTF-8"))
       fileOutputStream.write("\n".getBytes("UTF-8"))
       fileOutputStream.flush()
     }
-    def append(json: Json) {
+    def append(json: Json): Unit = {
       fileOutputStream.write(json.stringify.getBytes("UTF-8"))
       fileOutputStream.write("\n".getBytes("UTF-8"))
       fileOutputStream.flush()
     }
-    def close() {
+    def close(): Unit = {
       fileOutputStream.close()
     }
   }
@@ -570,53 +570,55 @@ package object histogrammar {
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
 
+      // case (vs: Collection, 1) => vs.walk(op, base :+ SymbolIndex('i0))
+
       case branched: Branched[_, _] => branched.values.zipWithIndex.flatMap {
-        case (vs: Collection, 0) => vs.walk(op, base :+ SymbolIndex('i0))
-        case (vs: Collection, 1) => vs.walk(op, base :+ SymbolIndex('i1))
-        case (vs: Collection, 2) => vs.walk(op, base :+ SymbolIndex('i2))
-        case (vs: Collection, 3) => vs.walk(op, base :+ SymbolIndex('i3))
-        case (vs: Collection, 4) => vs.walk(op, base :+ SymbolIndex('i4))
-        case (vs: Collection, 5) => vs.walk(op, base :+ SymbolIndex('i5))
-        case (vs: Collection, 6) => vs.walk(op, base :+ SymbolIndex('i6))
-        case (vs: Collection, 7) => vs.walk(op, base :+ SymbolIndex('i7))
-        case (vs: Collection, 8) => vs.walk(op, base :+ SymbolIndex('i8))
-        case (vs: Collection, 9) => vs.walk(op, base :+ SymbolIndex('i9))
+        case (vs: Collection, 0) => vs.walk(op, base :+ SymbolIndex(Symbol("i0")))
+        case (vs: Collection, 1) => vs.walk(op, base :+ SymbolIndex(Symbol("i1")))
+        case (vs: Collection, 2) => vs.walk(op, base :+ SymbolIndex(Symbol("i2")))
+        case (vs: Collection, 3) => vs.walk(op, base :+ SymbolIndex(Symbol("i3")))
+        case (vs: Collection, 4) => vs.walk(op, base :+ SymbolIndex(Symbol("i4")))
+        case (vs: Collection, 5) => vs.walk(op, base :+ SymbolIndex(Symbol("i5")))
+        case (vs: Collection, 6) => vs.walk(op, base :+ SymbolIndex(Symbol("i6")))
+        case (vs: Collection, 7) => vs.walk(op, base :+ SymbolIndex(Symbol("i7")))
+        case (vs: Collection, 8) => vs.walk(op, base :+ SymbolIndex(Symbol("i8")))
+        case (vs: Collection, 9) => vs.walk(op, base :+ SymbolIndex(Symbol("i9")))
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
-        case (v, 0) => Seq(op(base :+ SymbolIndex('i0)))
-        case (v, 1) => Seq(op(base :+ SymbolIndex('i1)))
-        case (v, 2) => Seq(op(base :+ SymbolIndex('i2)))
-        case (v, 3) => Seq(op(base :+ SymbolIndex('i3)))
-        case (v, 4) => Seq(op(base :+ SymbolIndex('i4)))
-        case (v, 5) => Seq(op(base :+ SymbolIndex('i5)))
-        case (v, 6) => Seq(op(base :+ SymbolIndex('i6)))
-        case (v, 7) => Seq(op(base :+ SymbolIndex('i7)))
-        case (v, 8) => Seq(op(base :+ SymbolIndex('i8)))
-        case (v, 9) => Seq(op(base :+ SymbolIndex('i9)))
+        case (v, 0) => Seq(op(base :+ SymbolIndex(Symbol("i0"))))
+        case (v, 1) => Seq(op(base :+ SymbolIndex(Symbol("i1"))))
+        case (v, 2) => Seq(op(base :+ SymbolIndex(Symbol("i2"))))
+        case (v, 3) => Seq(op(base :+ SymbolIndex(Symbol("i3"))))
+        case (v, 4) => Seq(op(base :+ SymbolIndex(Symbol("i4"))))
+        case (v, 5) => Seq(op(base :+ SymbolIndex(Symbol("i5"))))
+        case (v, 6) => Seq(op(base :+ SymbolIndex(Symbol("i6"))))
+        case (v, 7) => Seq(op(base :+ SymbolIndex(Symbol("i7"))))
+        case (v, 8) => Seq(op(base :+ SymbolIndex(Symbol("i8"))))
+        case (v, 9) => Seq(op(base :+ SymbolIndex(Symbol("i9"))))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
 
       case branching: Branching[_, _] => branching.values.zipWithIndex.flatMap {
-        case (vs: Collection, 0) => vs.walk(op, base :+ SymbolIndex('i0))
-        case (vs: Collection, 1) => vs.walk(op, base :+ SymbolIndex('i1))
-        case (vs: Collection, 2) => vs.walk(op, base :+ SymbolIndex('i2))
-        case (vs: Collection, 3) => vs.walk(op, base :+ SymbolIndex('i3))
-        case (vs: Collection, 4) => vs.walk(op, base :+ SymbolIndex('i4))
-        case (vs: Collection, 5) => vs.walk(op, base :+ SymbolIndex('i5))
-        case (vs: Collection, 6) => vs.walk(op, base :+ SymbolIndex('i6))
-        case (vs: Collection, 7) => vs.walk(op, base :+ SymbolIndex('i7))
-        case (vs: Collection, 8) => vs.walk(op, base :+ SymbolIndex('i8))
-        case (vs: Collection, 9) => vs.walk(op, base :+ SymbolIndex('i9))
+        case (vs: Collection, 0) => vs.walk(op, base :+ SymbolIndex(Symbol("i0")))
+        case (vs: Collection, 1) => vs.walk(op, base :+ SymbolIndex(Symbol("i1")))
+        case (vs: Collection, 2) => vs.walk(op, base :+ SymbolIndex(Symbol("i2")))
+        case (vs: Collection, 3) => vs.walk(op, base :+ SymbolIndex(Symbol("i3")))
+        case (vs: Collection, 4) => vs.walk(op, base :+ SymbolIndex(Symbol("i4")))
+        case (vs: Collection, 5) => vs.walk(op, base :+ SymbolIndex(Symbol("i5")))
+        case (vs: Collection, 6) => vs.walk(op, base :+ SymbolIndex(Symbol("i6")))
+        case (vs: Collection, 7) => vs.walk(op, base :+ SymbolIndex(Symbol("i7")))
+        case (vs: Collection, 8) => vs.walk(op, base :+ SymbolIndex(Symbol("i8")))
+        case (vs: Collection, 9) => vs.walk(op, base :+ SymbolIndex(Symbol("i9")))
         case (vs: Collection, i) => vs.walk(op, base :+ IntegerIndex(i))
-        case (v, 0) => Seq(op(base :+ SymbolIndex('i0)))
-        case (v, 1) => Seq(op(base :+ SymbolIndex('i1)))
-        case (v, 2) => Seq(op(base :+ SymbolIndex('i2)))
-        case (v, 3) => Seq(op(base :+ SymbolIndex('i3)))
-        case (v, 4) => Seq(op(base :+ SymbolIndex('i4)))
-        case (v, 5) => Seq(op(base :+ SymbolIndex('i5)))
-        case (v, 6) => Seq(op(base :+ SymbolIndex('i6)))
-        case (v, 7) => Seq(op(base :+ SymbolIndex('i7)))
-        case (v, 8) => Seq(op(base :+ SymbolIndex('i8)))
-        case (v, 9) => Seq(op(base :+ SymbolIndex('i9)))
+        case (v, 0) => Seq(op(base :+ SymbolIndex(Symbol("i0"))))
+        case (v, 1) => Seq(op(base :+ SymbolIndex(Symbol("i1"))))
+        case (v, 2) => Seq(op(base :+ SymbolIndex(Symbol("i2"))))
+        case (v, 3) => Seq(op(base :+ SymbolIndex(Symbol("i3"))))
+        case (v, 4) => Seq(op(base :+ SymbolIndex(Symbol("i4"))))
+        case (v, 5) => Seq(op(base :+ SymbolIndex(Symbol("i5"))))
+        case (v, 6) => Seq(op(base :+ SymbolIndex(Symbol("i6"))))
+        case (v, 7) => Seq(op(base :+ SymbolIndex(Symbol("i7"))))
+        case (v, 8) => Seq(op(base :+ SymbolIndex(Symbol("i8"))))
+        case (v, 9) => Seq(op(base :+ SymbolIndex(Symbol("i9"))))
         case (v, i) => Seq(op(base :+ IntegerIndex(i)))
       }
     }

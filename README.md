@@ -7,7 +7,24 @@ See [https://histogrammar.github.io/histogrammar-docs](https://histogrammar.gith
 
 This is a Scala implementation for Scala versions 2.10, 2.11, 2.12 and 2.13.
 
-Latest Scala release: v1.0.20 (April 2022).
+Latest Scala release: v1.0.30 (Dec 2023).
+
+Announcements
+=============
+
+Spark 3.X
+---------
+
+With Spark 3.X, based on Scala 2.12 or 3.13, make sure to pick up the correct histogrammar jar file:
+
+.. code-block:: python
+
+  spark = SparkSession.builder.config("spark.jars.packages", "io.github.histogrammar:histogrammar_2.12:1.0.30,io.github.histogrammar:histogrammar-sparksql_2.12:1.0.30").getOrCreate()
+
+For Scala 2.13, in the string above simply replace "2.12" with "2.13".
+
+December, 2023
+
 
 Installation
 ============

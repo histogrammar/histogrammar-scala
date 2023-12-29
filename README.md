@@ -15,7 +15,7 @@ Announcements
 Spark 3.X
 ---------
 
-With Spark 3.X, based on Scala 2.12 or 3.13, make sure to pick up the correct histogrammar jar file:
+With Spark 3.X, based on Scala 2.12 or 2.13, make sure to pick up the correct histogrammar jar file:
 
 ```
 spark = SparkSession.builder.config("spark.jars.packages", "io.github.histogrammar:histogrammar_2.12:1.0.30,io.github.histogrammar:histogrammar-sparksql_2.12:1.0.30").getOrCreate()
